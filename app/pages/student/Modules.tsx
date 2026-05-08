@@ -13,6 +13,7 @@ export default function Modules() {
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
+  const [generatingAudio, setGeneratingAudio] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -42,6 +43,23 @@ export default function Modules() {
     };
     fetchData();
   }, []);
+
+  const handleGenerateAudio = async () => {
+    if (!selectedCourse) return;
+    
+    // Pick the first lesson ID just to simulate the API call for the course
+    const firstLessonId = selectedCourse.modules?.[0]?.lessons?.[0]?.id || 1;
+    
+    setGeneratingAudio(true);
+    try {
+      const res = await api.post(`/courses/lessons/${firstLessonId}/audio`);
+      alert("Success! " + res.data.message + "\nAudio URL: " + res.data.audio_url);
+    } catch (err: any) {
+      alert("Failed to generate audio: " + (err.response?.data?.detail || err.message));
+    } finally {
+      setGeneratingAudio(false);
+    }
+  };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -169,7 +187,15 @@ export default function Modules() {
                       <Volume2 className="text-[#0B2A5B]" size={20} />
                       <div><p className="text-sm font-semibold text-[#0B2A5B]">Convert to Audio</p><p className="text-xs text-[#0B2A5B]/60">Listen on the go</p></div>
                     </div>
-                    <Button size="sm" className="bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a]"><FileAudio size={16} className="mr-2" />Generate Audio</Button>
+                    <Button 
+                      size="sm" 
+                      className="bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a]"
+                      onClick={handleGenerateAudio}
+                      disabled={generatingAudio || !selectedCourse?.modules?.length}
+                    >
+                      <FileAudio size={16} className="mr-2" />
+                      {generatingAudio ? "Generating..." : "Generate Audio"}
+                    </Button>
                   </div>
                 </Card>
                 <div className="mt-4 flex items-center gap-4">
