@@ -46,15 +46,26 @@ export default function Modules() {
   }, []);
 
   const handleGenerateAudio = async () => {
-    if (!selectedCourse) return;
-    
-    // Pick the first lesson ID just to simulate the API call for the course
-    const firstLessonId = selectedCourse.modules?.[0]?.lessons?.[0]?.id || 1;
+    if (!activeLesson || activeLesson.content_type !== "text") return;
     
     setGeneratingAudio(true);
     try {
-      const res = await api.post(`/courses/lessons/${firstLessonId}/audio`);
-      alert("Success! " + res.data.message + "\nAudio URL: " + res.data.audio_url);
+      const res = await api.post(`/courses/lessons/${activeLesson.id}/audio`);
+      setActiveLesson({ ...activeLesson, video_url: res.data.audio_url });
+      
+      // Update the course list so the change persists when navigating back and forth
+      setCourses(courses.map(c => 
+        c.id === selectedCourse?.id 
+        ? {
+            ...c,
+            modules: c.modules?.map((m: any) => ({
+              ...m,
+              lessons: m.lessons?.map((l: any) => l.id === activeLesson.id ? { ...l, video_url: res.data.audio_url } : l)
+            }))
+          }
+        : c
+      ));
+      
     } catch (err: any) {
       alert("Failed to generate audio: " + (err.response?.data?.detail || err.message));
     } finally {
@@ -156,9 +167,30 @@ export default function Modules() {
                           <FileAudio size={64} className="text-[#0B2A5B] mb-6" />
                           <audio src={activeLesson.video_url} controls className="w-full max-w-md"></audio>
                         </div>
+                      ) : activeLesson.content_type === "text" ? (
+                        <div className="space-y-6">
+                          {activeLesson.video_url ? (
+                            <div className="bg-white p-4 rounded-lg shadow-sm border border-[#0B2A5B]/10 flex flex-col items-center">
+                              <p className="text-sm font-semibold text-[#0B2A5B] mb-2">Listen to this lesson:</p>
+                              <audio src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || 'http://localhost:8000'}${activeLesson.video_url}`} controls className="w-full max-w-md"></audio>
+                            </div>
+                          ) : (
+                            <div className="flex justify-end">
+                              <Button size="sm" onClick={handleGenerateAudio} disabled={generatingAudio} className="bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a]">
+                                <Volume2 size={16} className="mr-2" />
+                                {generatingAudio ? "Generating..." : "Generate Audio"}
+                              </Button>
+                            </div>
+                          )}
+                          {activeLesson.content && (
+                            <div className="prose max-w-none text-[#0B2A5B]">
+                              <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
+                            </div>
+                          )}
+                        </div>
                       ) : activeLesson.content ? (
                         <div className="prose max-w-none text-[#0B2A5B]">
-                          {/* In a real app, this might be rendered via markdown */}
+                          {/* Fallback for other content types with text */}
                           <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
                         </div>
                       ) : (
@@ -222,24 +254,6 @@ export default function Modules() {
                   </TabsContent>
                 </Tabs>
 
-                {/* Playback Controls */}
-                <Card className="p-4 bg-[#F4F1EA] mt-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Volume2 className="text-[#0B2A5B]" size={20} />
-                      <div><p className="text-sm font-semibold text-[#0B2A5B]">Convert to Audio</p><p className="text-xs text-[#0B2A5B]/60">Listen on the go</p></div>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      className="bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a]"
-                      onClick={handleGenerateAudio}
-                      disabled={generatingAudio || !selectedCourse?.modules?.length}
-                    >
-                      <FileAudio size={16} className="mr-2" />
-                      {generatingAudio ? "Generating..." : "Generate Audio"}
-                    </Button>
-                  </div>
-                </Card>
                 <div className="mt-4 flex items-center gap-4">
                   <Settings className="text-[#0B2A5B]" size={20} />
                   <span className="text-sm text-[#0B2A5B]">Playback Speed:</span>
