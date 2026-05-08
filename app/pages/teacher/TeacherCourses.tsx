@@ -188,9 +188,9 @@ export default function TeacherCourses() {
               <div><label className="text-sm font-medium text-[#0B2A5B]">Full Description</label><textarea className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" rows={3} value={newCourse.description} onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })} /></div>
               <div className="grid grid-cols-2 gap-4">
                 <div><label className="text-sm font-medium text-[#0B2A5B]">Difficulty</label><select className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" value={newCourse.difficulty_level} onChange={(e) => setNewCourse({ ...newCourse, difficulty_level: e.target.value })}><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select></div>
-                <div><label className="text-sm font-medium text-[#0B2A5B]">Price (₹)</label><Input type="number" min="0" value={newCourse.price} onChange={(e) => setNewCourse({ ...newCourse, price: parseFloat(e.target.value) })} className="bg-[#F4F1EA]" /></div>
+                <div><label className="text-sm font-medium text-[#0B2A5B]">Price (₹)</label><Input type="number" min="0" value={newCourse.price} onChange={(e) => setNewCourse({ ...newCourse, price: parseFloat(e.target.value) || 0 })} className="bg-[#F4F1EA]" /></div>
               </div>
-              <div><label className="text-sm font-medium text-[#0B2A5B]">Duration (hours)</label><Input type="number" min="0" value={newCourse.duration_hours} onChange={(e) => setNewCourse({ ...newCourse, duration_hours: parseInt(e.target.value) })} className="bg-[#F4F1EA]" /></div>
+              <div><label className="text-sm font-medium text-[#0B2A5B]">Duration (hours)</label><Input type="number" min="0" value={newCourse.duration_hours} onChange={(e) => setNewCourse({ ...newCourse, duration_hours: parseInt(e.target.value) || 0 })} className="bg-[#F4F1EA]" /></div>
               <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Creating..." : "Create Course"}</Button>
             </form>
           </Card>

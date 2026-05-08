@@ -16,9 +16,10 @@ export default function AdminCourses() {
   const [newCourse, setNewCourse] = useState({
     title: "",
     description: "",
-    level: "Beginner",
-    base_price: 0,
-    category: "Trading"
+    short_description: "",
+    price: 0,
+    difficulty_level: "beginner",
+    duration_hours: 0
   });
 
   const fetchCourses = async () => {
@@ -41,7 +42,7 @@ export default function AdminCourses() {
     try {
       await api.post("/admin/courses", newCourse);
       setShowAddModal(false);
-      setNewCourse({ title: "", description: "", level: "Beginner", base_price: 0, category: "Trading" });
+      setNewCourse({ title: "", description: "", short_description: "", price: 0, difficulty_level: "beginner", duration_hours: 0 });
       fetchCourses();
     } catch (err: any) {
       alert("Error creating course: " + (err.response?.data?.detail || err.message));
@@ -123,22 +124,22 @@ export default function AdminCourses() {
                 <label className="text-sm font-medium">Level</label>
                 <select 
                   className="w-full p-2 border rounded mt-1 bg-gray-50"
-                  value={newCourse.level} 
-                  onChange={(e) => setNewCourse({...newCourse, level: e.target.value})}
+                  value={newCourse.difficulty_level} 
+                  onChange={(e) => setNewCourse({...newCourse, difficulty_level: e.target.value})}
                 >
-                  <option value="Beginner">Beginner</option>
-                  <option value="Intermediate">Intermediate</option>
-                  <option value="Advanced">Advanced</option>
-                  <option value="Expert">Expert</option>
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
+                  <option value="expert">Expert</option>
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium">Category</label>
-                <Input required value={newCourse.category} onChange={(e) => setNewCourse({...newCourse, category: e.target.value})} />
+                <label className="text-sm font-medium">Duration (Hours)</label>
+                <Input required type="number" min="0" value={newCourse.duration_hours} onChange={(e) => setNewCourse({...newCourse, duration_hours: parseInt(e.target.value) || 0})} />
               </div>
               <div>
                 <label className="text-sm font-medium">Base Price (₹)</label>
-                <Input required type="number" min="0" value={newCourse.base_price} onChange={(e) => setNewCourse({...newCourse, base_price: parseFloat(e.target.value)})} />
+                <Input required type="number" min="0" value={newCourse.price} onChange={(e) => setNewCourse({...newCourse, price: parseFloat(e.target.value) || 0})} />
               </div>
 
               <Button type="submit" className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">
