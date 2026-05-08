@@ -23,22 +23,29 @@ const suggestedTopics = [
   "Difference between call and put options",
 ];
 
-const initialMessages = [
-  {
-    id: 1,
-    sender: "ai",
-    content:
-      "Hello Rahul! I'm your AI tutor. I'm here to help you with any questions about trading, technical analysis, risk management, and more. How can I assist you today?",
-    time: "10:00 AM",
-  },
-];
+const getInitialMessage = (name: string) => [{
+  id: 1,
+  sender: "ai",
+  content: `Hello ${name}! I'm your AI tutor. I'm here to help you with any questions about trading, technical analysis, risk management, and more. How can I assist you today?`,
+  time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+}];
 
 export default function AITutor() {
-  const [messages, setMessages] = useState(initialMessages);
+  const [userName, setUserName] = useState("Student");
+  const [messages, setMessages] = useState(getInitialMessage("Student"));
   const [inputMessage, setInputMessage] = useState("");
   const [cannotSolve, setCannotSolve] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      const name = JSON.parse(stored).full_name || "Student";
+      setUserName(name);
+      setMessages(getInitialMessage(name));
+    }
+  }, []);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;

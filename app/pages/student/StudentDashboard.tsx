@@ -41,6 +41,8 @@ import api from "../../services/api";
 export default function StudentDashboard() {
   const [userName, setUserName] = useState("Student");
   const [upcomingLectures, setUpcoming] = useState<any[]>([]);
+  const [courseProgress, setCourseProgress] = useState(0);
+  const [enrolledCount, setEnrolledCount] = useState(0);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -50,8 +52,17 @@ export default function StudentDashboard() {
 
     api.get("/lectures").then(res => {
       const now = new Date();
-      const upcoming = res.data.filter((l: any) => new Date(l.start_time) > now || l.status === 'scheduled');
+      const upcoming = res.data.filter((l: any) => new Date(l.scheduled_at || l.start_time) > now || l.status === 'scheduled');
       setUpcoming(upcoming.slice(0, 3));
+    }).catch(err => console.error(err));
+
+    api.get("/courses/enrolled").then(res => {
+      const enrolled = res.data;
+      setEnrolledCount(enrolled.length);
+      if (enrolled.length > 0) {
+        const avg = Math.round(enrolled.reduce((s: number, e: any) => s + (e.progress_percent || 0), 0) / enrolled.length);
+        setCourseProgress(avg);
+      }
     }).catch(err => console.error(err));
   }, []);
 
@@ -69,13 +80,13 @@ export default function StudentDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-[#0B2A5B]/60 mb-1">Course Progress</p>
-              <p className="text-3xl font-bold text-[#0B2A5B]">68%</p>
+              <p className="text-3xl font-bold text-[#0B2A5B]">{courseProgress}%</p>
             </div>
             <div className="w-12 h-12 bg-[#C2A86A]/10 rounded-full flex items-center justify-center">
               <BookOpen className="text-[#C2A86A]" size={24} />
             </div>
           </div>
-          <Progress value={68} className="mt-4 h-2" />
+          <Progress value={courseProgress} className="mt-4 h-2" />
         </Card>
 
 

@@ -10,14 +10,25 @@ import {
 
 
 
+import { useState, useEffect } from "react";
+
+
+
 export default function Certificate() {
+  const [userName, setUserName] = useState("Student");
+
+  useEffect(() => {
+    const stored = localStorage.getItem("user");
+    if (stored) setUserName(JSON.parse(stored).full_name || "Student");
+  }, []);
+
   const certificateData = {
-    studentName: "Rahul Sharma",
+    studentName: userName,
     course: "Professional Trading Fundamentals",
-    completionDate: "April 10, 2026",
-    certificateId: "FT-2026-047832",
-    finalScore: "81.5%",
-    grade: "Distinction",
+    completionDate: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+    certificateId: `FT-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+    finalScore: "—",
+    grade: "—",
   };
 
   const handleDownload = () => {
