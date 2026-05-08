@@ -14,7 +14,7 @@ export default function TeacherCourses() {
 
   // Course modal
   const [showCourseModal, setShowCourseModal] = useState(false);
-  const [newCourse, setNewCourse] = useState({ title: "", description: "", short_description: "", price: 0, difficulty_level: "beginner", duration_hours: 0 });
+  const [newCourse, setNewCourse] = useState({ title: "", description: "", short_description: "", price: 0, difficulty_level: "beginner", duration_hours: 0, is_published: false });
 
   // Module modal
   const [showModuleModal, setShowModuleModal] = useState(false);
@@ -48,7 +48,7 @@ export default function TeacherCourses() {
     try {
       await api.post("/admin/courses", newCourse);
       setShowCourseModal(false);
-      setNewCourse({ title: "", description: "", short_description: "", price: 0, difficulty_level: "beginner", duration_hours: 0 });
+      setNewCourse({ title: "", description: "", short_description: "", price: 0, difficulty_level: "beginner", duration_hours: 0, is_published: false });
       fetchCourses();
     } catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
     finally { setSaving(false); }
@@ -76,6 +76,15 @@ export default function TeacherCourses() {
       if (mod) fetchCourseDetail(mod.courseId);
     } catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
     finally { setSaving(false); }
+  };
+
+  const togglePublish = async (courseId: number, currentState: boolean) => {
+    try {
+      await api.put(`/admin/courses/${courseId}`, { is_published: !currentState });
+      fetchCourses();
+    } catch (err: any) {
+      alert("Error: " + (err.response?.data?.detail || err.message));
+    }
   };
 
   const toggleExpand = (courseId: number) => {
@@ -125,6 +134,9 @@ export default function TeacherCourses() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" className={course.is_published ? "border-orange-400 text-orange-500" : "border-green-500 text-green-600"} onClick={(e) => { e.stopPropagation(); togglePublish(course.id, course.is_published); }}>
+                  {course.is_published ? "Unpublish" : "Publish"}
+                </Button>
                 <Button size="sm" variant="outline" className="border-[#C2A86A] text-[#C2A86A]" onClick={(e) => { e.stopPropagation(); setModuleForCourse(course.id); setShowModuleModal(true); }}>
                   <Layers size={14} className="mr-1" />Add Module
                 </Button>
@@ -191,6 +203,7 @@ export default function TeacherCourses() {
                 <div><label className="text-sm font-medium text-[#0B2A5B]">Price (₹)</label><Input type="number" min="0" value={newCourse.price} onChange={(e) => setNewCourse({ ...newCourse, price: parseFloat(e.target.value) || 0 })} className="bg-[#F4F1EA]" /></div>
               </div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Duration (hours)</label><Input type="number" min="0" value={newCourse.duration_hours} onChange={(e) => setNewCourse({ ...newCourse, duration_hours: parseInt(e.target.value) || 0 })} className="bg-[#F4F1EA]" /></div>
+              <div className="flex items-center gap-2"><input type="checkbox" checked={newCourse.is_published} onChange={(e) => setNewCourse({ ...newCourse, is_published: e.target.checked })} /><label className="text-sm text-[#0B2A5B]">Published (Visible to students)</label></div>
               <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Creating..." : "Create Course"}</Button>
             </form>
           </Card>

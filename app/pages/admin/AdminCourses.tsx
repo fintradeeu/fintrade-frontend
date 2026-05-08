@@ -19,7 +19,8 @@ export default function AdminCourses() {
     short_description: "",
     price: 0,
     difficulty_level: "beginner",
-    duration_hours: 0
+    duration_hours: 0,
+    is_published: false
   });
 
   const fetchCourses = async () => {
@@ -42,10 +43,19 @@ export default function AdminCourses() {
     try {
       await api.post("/admin/courses", newCourse);
       setShowAddModal(false);
-      setNewCourse({ title: "", description: "", short_description: "", price: 0, difficulty_level: "beginner", duration_hours: 0 });
+      setNewCourse({ title: "", description: "", short_description: "", price: 0, difficulty_level: "beginner", duration_hours: 0, is_published: false });
       fetchCourses();
     } catch (err: any) {
       alert("Error creating course: " + (err.response?.data?.detail || err.message));
+    }
+  };
+
+  const togglePublish = async (courseId: number, currentState: boolean) => {
+    try {
+      await api.put(`/admin/courses/${courseId}`, { is_published: !currentState });
+      fetchCourses();
+    } catch (err: any) {
+      alert("Error: " + (err.response?.data?.detail || err.message));
     }
   };
 
@@ -69,28 +79,34 @@ export default function AdminCourses() {
           <Card key={course.id} className="p-6 bg-white shadow-lg">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <Badge className="mb-2 bg-blue-100 text-blue-700">{course.level}</Badge>
+                <Badge className="mb-2 bg-blue-100 text-blue-700">{course.difficulty_level}</Badge>
                 <h3 className="text-xl font-semibold text-[#0B2A5B]">{course.title}</h3>
-                <p className="text-sm text-gray-500 line-clamp-2 mt-1">{course.description}</p>
+                <p className="text-sm text-gray-500 line-clamp-2 mt-1">{course.short_description || course.description}</p>
               </div>
-              <Badge className={course.is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}>
-                {course.is_active ? "Active" : "Inactive"}
+              <Badge className={course.is_published ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}>
+                {course.is_published ? "Published" : "Draft"}
               </Badge>
             </div>
             <div className="grid grid-cols-2 gap-4 mb-4 pb-4 border-b border-[#0B2A5B]/10">
               <div>
-                <p className="text-xs text-[#0B2A5B]/60">Category</p>
-                <p className="text-lg font-semibold text-[#0B2A5B]">{course.category}</p>
+                <p className="text-xs text-[#0B2A5B]/60">Duration</p>
+                <p className="text-lg font-semibold text-[#0B2A5B]">{course.duration_hours || 0} Hours</p>
               </div>
               <div>
                 <p className="text-xs text-[#0B2A5B]/60">Price</p>
-                <p className="text-lg font-semibold text-[#C2A86A]">₹{course.base_price?.toLocaleString() || "0"}</p>
+                <p className="text-lg font-semibold text-[#C2A86A]">₹{course.price?.toLocaleString() || "0"}</p>
               </div>
             </div>
             <div className="flex gap-2">
-              <Button size="sm" className="flex-1 bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a]">
-                <Edit size={14} className="mr-2" />
-                Edit Course
+              <Button
+                size="sm"
+                className={course.is_published
+                  ? "flex-1 bg-orange-500 text-white hover:bg-orange-600"
+                  : "flex-1 bg-green-600 text-white hover:bg-green-700"
+                }
+                onClick={() => togglePublish(course.id, course.is_published)}
+              >
+                {course.is_published ? "Unpublish" : "Publish"}
               </Button>
             </div>
           </Card>
@@ -140,6 +156,10 @@ export default function AdminCourses() {
               <div>
                 <label className="text-sm font-medium">Base Price (₹)</label>
                 <Input required type="number" min="0" value={newCourse.price} onChange={(e) => setNewCourse({...newCourse, price: parseFloat(e.target.value) || 0})} />
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" checked={newCourse.is_published} onChange={(e) => setNewCourse({...newCourse, is_published: e.target.checked})} />
+                <label className="text-sm font-medium">Published (Visible to students)</label>
               </div>
 
               <Button type="submit" className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">

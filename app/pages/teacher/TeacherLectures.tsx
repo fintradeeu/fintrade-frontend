@@ -22,7 +22,7 @@ export default function TeacherLectures() {
   useEffect(() => {
     Promise.all([
       api.get("/lectures").then((r) => setLectures(r.data)),
-      api.get("/courses").then((r) => setCourses(r.data)),
+      api.get("/admin/courses").then((r) => setCourses(r.data)),
     ]).catch(console.error).finally(() => setLoading(false));
   }, []);
 

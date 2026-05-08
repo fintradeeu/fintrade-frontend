@@ -19,7 +19,7 @@ export default function AdminDashboard() {
       try {
         const [usersRes, coursesRes, lecturesRes, offersRes] = await Promise.allSettled([
           api.get("/admin/users"),
-          api.get("/courses"),
+          api.get("/admin/courses"),
           api.get("/lectures"),
           api.get("/admin/offers/stats"),
         ]);
