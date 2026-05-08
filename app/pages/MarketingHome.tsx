@@ -257,9 +257,12 @@ export default function MarketingHome() {
         </div>
       </nav>
 
-      <div className="relative z-[50]">
-        {/* Ticker Strip */}
+      {/* Ticker Strip - Now Sticky below Navbar */}
+      <div className="sticky top-20 z-[90]">
         <TickerStrip />
+      </div>
+
+      <div className="relative z-[50]">
 
         {/* Hero Section (Soft gradient background) */}
         <section className="relative py-24 md:py-32 overflow-hidden" style={{ background: "radial-gradient(circle at 80% 20%, rgba(255,255,255,0.8) 0%, transparent 100%)" }}>
