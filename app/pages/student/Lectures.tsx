@@ -29,15 +29,17 @@ import {
 type LectureType = {
   id: number;
   title: string;
-  instructor_id: number;
-  instructor_name?: string;
-  start_time: string;
-  end_time: string;
   description: string;
-  meeting_url: string;
-  recording_url?: string;
-  status: string; // scheduled, live, completed, cancelled
-  attendees?: number;
+  course_id: number;
+  instructor_id?: number;
+  instructor_name?: string;
+  meeting_link?: string;
+  scheduled_at: string;
+  duration_minutes: number;
+  is_live: boolean;
+  is_completed: boolean;
+  max_participants: number;
+  recordings: { id: number; recording_url: string; }[];
 };
 
 export default function Lectures() {
@@ -57,13 +59,11 @@ export default function Lectures() {
         let live: LectureType | null = null;
 
         lectures.forEach(l => {
-          const start = new Date(l.start_time);
-          const end = new Date(l.end_time);
-          if (l.status === 'live' || (now >= start && now <= end)) {
+          if (l.is_live && !l.is_completed) {
             live = l;
-          } else if (now < start || l.status === 'scheduled') {
+          } else if (!l.is_live && !l.is_completed) {
             upcoming.push(l);
-          } else {
+          } else if (l.is_completed) {
             past.push(l);
           }
         });
@@ -97,15 +97,15 @@ export default function Lectures() {
                 <Badge className="mb-2 bg-white text-red-600">LIVE NOW</Badge>
                 <h3 className="text-2xl font-bold mb-1">{liveLecture.title}</h3>
                 <p className="text-white/90">
-                  with {liveLecture.instructor_name || "Instructor"} • Started at {new Date(liveLecture.start_time).toLocaleTimeString()}
+                  with {liveLecture.instructor_name || "Instructor"} • Started at {new Date(liveLecture.scheduled_at).toLocaleTimeString()}
                 </p>
                 <p className="text-sm text-white/80 flex items-center gap-2 mt-2">
                   <Users size={16} />
-                  {liveLecture.attendees || 0} viewers watching
+                  Max: {liveLecture.max_participants || "Unlimited"}
                 </p>
               </div>
             </div>
-            <a href={liveLecture.meeting_url || "#"} target="_blank" rel="noreferrer">
+            <a href={liveLecture.meeting_link || "#"} target="_blank" rel="noreferrer">
               <Button size="lg" className="bg-white text-red-600 hover:bg-gray-100 shadow-lg">
                 <Play size={20} className="mr-2" />
                 Join Now
@@ -138,15 +138,15 @@ export default function Lectures() {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-[#0B2A5B]/70">
                     <Calendar size={16} className="text-[#C2A86A]" />
-                    <span>{new Date(lecture.start_time).toLocaleDateString()}</span>
+                    <span>{new Date(lecture.scheduled_at).toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-[#0B2A5B]/70">
                     <Clock size={16} className="text-[#C2A86A]" />
-                    <span>{new Date(lecture.start_time).toLocaleTimeString()}</span>
+                    <span>{new Date(lecture.scheduled_at).toLocaleTimeString()}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-[#0B2A5B]/70">
                     <Users size={16} className="text-[#C2A86A]" />
-                    <span>{lecture.attendees || 0} registered</span>
+                    <span>Max {lecture.max_participants || "Unlimited"}</span>
                   </div>
                 </div>
 
@@ -179,16 +179,16 @@ export default function Lectures() {
                         </span>
                         <span className="flex items-center gap-1">
                           <Calendar size={14} />
-                          {new Date(lecture.start_time).toLocaleDateString()}
+                          {new Date(lecture.scheduled_at).toLocaleDateString()}
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock size={14} />
-                          2 hours
+                          {lecture.duration_minutes} mins
                         </span>
                       </div>
                       <div className="flex gap-2">
-                        {lecture.recording_url && (
-                          <a href={lecture.recording_url} target="_blank" rel="noreferrer">
+                        {lecture.recordings && lecture.recordings.length > 0 && (
+                          <a href={api.defaults.baseURL?.replace('/api', '') + lecture.recordings[0].recording_url} target="_blank" rel="noreferrer">
                             <Button
                               size="sm"
                               className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a]"
