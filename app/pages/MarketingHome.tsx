@@ -203,7 +203,7 @@ export default function MarketingHome() {
   ];
 
   return (
-    <div className="min-h-screen" style={{ 
+    <div className="min-h-screen overflow-x-hidden" style={{ 
       background: "radial-gradient(circle at 50% 50%, #FFFFFF 0%, #F8F8F8 50%, #F4F4F4 100%)",
       position: "relative" 
     }}>
@@ -336,13 +336,13 @@ export default function MarketingHome() {
         {/* Hero Section (Soft gradient background) */}
         <section className="relative py-10 md:py-16 overflow-hidden" style={{ background: "radial-gradient(circle at 80% 20%, rgba(255,255,255,0.8) 0%, transparent 100%)" }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
-          <div className="grid md:grid-cols-2 gap-20 items-center">
+          <div className="grid md:grid-cols-2 gap-10 md:gap-20 items-center">
             {/* Left Content */}
             <div className="relative z-10 pl-2 md:pl-6">
               <div className="inline-block px-4 py-2 rounded-full mb-6 border border-[#E53935]/30" style={{ background: "rgba(229, 57, 53, 0.08)" }}>
                 <span className="text-[#E53935] font-medium">🎯 India's Premier Trading Education</span>
               </div>
-              <h1 className="text-5xl md:text-6xl font-extrabold mb-6 leading-[1.1] uppercase tracking-tight" style={{ color: "#121212" }}>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-6 leading-[1.1] uppercase tracking-tight" style={{ color: "#121212" }}>
                 India&apos;s Trading <br />
                 <span className="bg-gradient-to-r from-[#E53935] via-[#ff6f60] to-[#E53935] bg-clip-text text-transparent">
                   Powerhouse
@@ -352,7 +352,7 @@ export default function MarketingHome() {
                 We are not building another trading course company. We are building <span className="text-[#E53935]">India's first Trader-to-Funded Professional Pipeline</span> — where every student has a pathway to professional capital.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 w-full">
-                <Link to="/student/contract-kyc" className="w-full sm:w-auto">
+                <Link to="/student/contract-kyc" className="block w-full sm:w-auto">
                   <Button
                     size="lg"
                     className="w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all hover:scale-105 text-lg px-8 py-6"
@@ -362,7 +362,7 @@ export default function MarketingHome() {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
-                <a href="#" className="w-full sm:w-auto">
+                <a href="#" className="block w-full sm:w-auto">
                   <Button
                     size="lg"
                     variant="outline"
@@ -816,13 +816,13 @@ export default function MarketingHome() {
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Start Your Trading Journey Today</h2>
           <p className="text-xl text-white/90 mb-8">Join 1200+ students learning to trade professionally</p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link to="/student/entrance-exam" className="w-full sm:w-auto">
+            <Link to="/student/entrance-exam" className="block w-full sm:w-auto">
               <Button size="lg" className="w-full sm:w-auto shadow-2xl hover:shadow-3xl transition-all text-lg px-8 py-6" style={{ background: "white", color: "#E53935", boxShadow: "0 0 40px rgba(255, 255, 255, 0.3)" }}>
                 Start Entrance Exam
                 <ArrowRight className="ml-2 h-6 w-6" />
               </Button>
             </Link>
-            <Link to="/student/contract-kyc" className="w-full sm:w-auto">
+            <Link to="/student/contract-kyc" className="block w-full sm:w-auto">
               <Button 
                 size="lg" 
                 variant="outline" 
