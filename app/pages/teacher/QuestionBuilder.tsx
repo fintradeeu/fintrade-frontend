@@ -9,7 +9,7 @@ import { Textarea } from "../../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Card } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../components/ui/dialog";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import api from "../../services/api";
 
@@ -615,6 +615,9 @@ export default function QuestionBuilder() {
         <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Preview New Questions</DialogTitle>
+            <DialogDescription>
+              Review the questions you've added before saving them to the exam.
+            </DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto space-y-4 py-2 pr-2">
             {questions.filter(q => q.question_text.trim()).length === 0 ? (
