@@ -841,51 +841,7 @@ export default function MarketingHome() {
       </section>
 
 
-      {/* Student Success Stories */}
-      <section className="py-24 relative z-10 bg-transparent">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-block px-4 py-2 rounded-full mb-6 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
-              <span className="text-[#E53935] font-semibold text-sm">🌟 Testimonials</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Student Success Stories</h2>
-            <p className="text-xl text-gray-600">Hear from our successful traders</p>
-          </div>
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 md:grid md:grid-cols-3 md:gap-8 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] items-stretch">
-            {[
-              { name: "Rahul Sharma", city: "Mumbai", role: "Equity Trader", testimonial: "FinTrade helped me become a disciplined trader. The structured approach and real trading simulator gave me confidence to trade professionally.", rating: 5, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80" },
-              { name: "Priya Verma", city: "Bengaluru", role: "Options Analyst", testimonial: "The AI tutor and live classes are game-changers. I went from zero knowledge to getting placed at a prop trading firm in just 9 months.", rating: 5, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80" },
-              { name: "Amit Patel", city: "Ahmedabad", role: "Swing Trader", testimonial: "Best investment I made in my career. The curriculum is comprehensive and the monthly exams keep you accountable. Highly recommend!", rating: 5, avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80" },
-            ].map((testimonial, i) => (
-              <Card key={i} className="min-w-[300px] snap-center shrink-0 md:min-w-0 md:w-auto flex flex-col overflow-hidden rounded-2xl border border-gray-200 hover:border-[#E53935]/50 transition-all duration-300 hover:shadow-2xl bg-white">
-                <div className="flex flex-col flex-1 p-7">
-                  {/* Quote Icon */}
-                  <div className="text-5xl leading-none mb-4" style={{ color: "rgba(229,57,53,0.15)" }}>"</div>
-                  
-                  {/* Testimonial */}
-                  <p className="text-gray-700 leading-relaxed mb-6 flex-1">{testimonial.testimonial}</p>
-                  
-                  {/* Rating */}
-                  <div className="flex gap-1 mb-5">
-                    {[...Array(testimonial.rating)].map((_, si) => (<Star key={si} className="h-4 w-4 fill-current" style={{ color: "#E53935" }} />))}
-                  </div>
-                  
-                  {/* Author — always at bottom */}
-                  <div className="flex items-center gap-4 pt-5 border-t border-gray-100">
-                    <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-offset-2 flex-shrink-0" style={{ ringColor: "#E53935" }}>
-                      <img src={testimonial.avatar} alt={testimonial.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm" style={{ color: "#121212" }}>{testimonial.name}</h4>
-                      <p className="text-xs text-gray-500">{testimonial.role} • {testimonial.city}</p>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       {/* CTA Section */}
       <section className="py-20 relative z-10" style={{ background: "linear-gradient(135deg, #E53935 0%, #b71c1c 100%)" }}>
