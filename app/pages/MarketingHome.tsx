@@ -457,70 +457,132 @@ export default function MarketingHome() {
       {/* 1. Featured Courses Section */}
       <section id="courses" className="py-24 relative z-10" style={{ background: "linear-gradient(to bottom, transparent, rgba(229, 57, 53, 0.02), transparent)" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4" style={{ color: "#121212" }}>Our Professional Programs</h2>
+          <div className="text-center mb-16">
+            <div className="inline-block px-4 py-2 rounded-full mb-6 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
+              <span className="text-[#E53935] font-semibold text-sm">🎓 Professional Certifications</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Our Professional Programs</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Master trading with our industry-leading certifications
             </p>
           </div>
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 md:grid md:grid-cols-3 md:gap-6 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 md:grid md:grid-cols-3 md:gap-8 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] items-stretch">
             {[
               { 
                 name: "Financial Market Foundation (FMF)", 
+                shortName: "FMF",
                 level: "Foundation", 
                 duration: "30 Days", 
                 originalPrice: "₹20,000",
-                price: "₹12,000 + GST", 
+                price: "₹12,000",
+                savings: "₹8,000",
                 description: "Master the fundamentals of financial markets and start your trading journey with confidence.", 
-                icon: BookOpen 
+                icon: BookOpen,
+                features: ["Market Fundamentals", "Chart Reading Basics", "Risk Introduction", "Live Sessions"],
+                popular: false,
               },
               { 
-                name: "Certified Analyst and Research Program (CARP)", 
+                name: "Certified Analyst & Research Program (CARP)", 
+                shortName: "CARP",
                 level: "Intermediate", 
                 duration: "60 Days", 
                 originalPrice: "₹50,000",
-                price: "₹30,000 + GST", 
+                price: "₹30,000",
+                savings: "₹20,000",
                 description: "Deep dive into research methodologies, technical analysis, and fundamental research.", 
-                icon: LineChart 
+                icon: LineChart,
+                features: ["Technical Analysis", "Fundamental Research", "Strategy Building", "Mentorship Access"],
+                popular: true,
               },
               { 
                 name: "Certified Professional Trading Program (CPTP)", 
+                shortName: "CPTP",
                 level: "Professional", 
                 duration: "90 Days", 
                 originalPrice: "₹75,000",
-                price: "₹45,000 + GST", 
+                price: "₹45,000",
+                savings: "₹30,000",
                 description: "Professional grade trading strategies, advanced risk management, and portfolio construction.", 
-                icon: Trophy 
+                icon: Trophy,
+                features: ["Advanced Strategies", "Portfolio Management", "Prop Firm Prep", "Placement Support"],
+                popular: false,
               },
             ].map((course, i) => (
-              <Card key={i} className="min-w-[280px] snap-center shrink-0 md:min-w-0 md:w-auto group hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-gray-100 hover:border-[#E53935]">
-                <div className="h-2 w-full" style={{ background: "#E53935" }} />
-                <div className="p-5 md:p-6">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg mb-4" style={{ background: "rgba(229, 57, 53, 0.1)" }}>
-                    <course.icon className="h-6 w-6" style={{ color: "#E53935" }} />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2" style={{ color: "#121212" }}>{course.name}</h3>
-                  <div className="inline-block px-3 py-1 rounded-full text-xs font-medium mb-3" style={{ background: "rgba(229,57,53,0.1)", color: "#E53935" }}>
-                    {course.level}
-                  </div>
-                  <p className="text-gray-600 text-sm mb-4 min-h-[60px]">{course.description}</p>
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <CheckCircle className="h-4 w-4" style={{ color: "#E53935" }} />
-                      Duration: {course.duration}
-                    </div>
-                    <div className="mt-4">
-                      <div className="text-sm text-gray-400 line-through mb-0.5">
-                        {course.originalPrice}
-                      </div>
-                      <div className="text-2xl font-bold" style={{ color: "#121212" }}>
-                        {course.price}
-                      </div>
+              <Card 
+                key={i} 
+                className={`min-w-[300px] snap-center shrink-0 md:min-w-0 md:w-auto flex flex-col group transition-all duration-500 overflow-hidden rounded-2xl ${
+                  course.popular 
+                    ? "border-2 border-[#E53935] shadow-2xl scale-[1.02] md:scale-105 relative z-10" 
+                    : "border border-gray-200 hover:border-[#E53935]/50 hover:shadow-2xl"
+                }`}
+              >
+                {/* Popular Badge */}
+                {course.popular && (
+                  <div className="absolute -top-0 left-1/2 -translate-x-1/2 z-20">
+                    <div className="px-6 py-1.5 rounded-b-xl text-xs font-bold text-white tracking-wider uppercase" style={{ background: "linear-gradient(135deg, #E53935, #b71c1c)" }}>
+                      ⭐ Most Popular
                     </div>
                   </div>
-                  <Link to="/student/courses">
-                    <Button className="w-full mt-4 group-hover:shadow-lg transition-all" style={{ background: "#E53935", color: "white" }}>
+                )}
+                
+                {/* Gradient Header */}
+                <div className="relative px-6 pt-8 pb-6" style={{ background: course.popular ? "linear-gradient(135deg, #E53935 0%, #c62828 100%)" : "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" }}>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)" }}>
+                      <course.icon className="h-7 w-7 text-white" />
+                    </div>
+                    <div className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/30" style={{ background: "rgba(255,255,255,0.1)" }}>
+                      {course.duration}
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-white mb-1 leading-snug">{course.name}</h3>
+                  <span className="text-white/70 text-xs font-medium uppercase tracking-widest">{course.level} Program</span>
+                </div>
+
+                {/* Card Body */}
+                <div className="flex flex-col flex-1 p-6 bg-white">
+                  <p className="text-gray-600 text-sm mb-5 leading-relaxed">{course.description}</p>
+                  
+                  {/* Features */}
+                  <div className="space-y-2.5 mb-6">
+                    {course.features.map((f, fi) => (
+                      <div key={fi} className="flex items-center gap-2.5 text-sm text-gray-700">
+                        <CheckCircle className="h-4 w-4 flex-shrink-0" style={{ color: "#E53935" }} />
+                        <span>{f}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Spacer to push price + button to bottom */}
+                  <div className="flex-1" />
+
+                  {/* Pricing */}
+                  <div className="border-t border-gray-100 pt-5 mb-5">
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <div className="text-sm text-gray-400 line-through">{course.originalPrice}</div>
+                        <div className="text-3xl font-extrabold tracking-tight" style={{ color: "#121212" }}>
+                          {course.price}<span className="text-sm font-normal text-gray-500 ml-1">+ GST</span>
+                        </div>
+                      </div>
+                      <div className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "rgba(76,175,80,0.1)", color: "#2e7d32" }}>
+                        Save {course.savings}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* CTA Button — always at bottom */}
+                  <Link to="/student/courses" className="block">
+                    <Button 
+                      className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 group-hover:shadow-lg"
+                      style={{ 
+                        background: course.popular ? "linear-gradient(135deg, #E53935, #b71c1c)" : "#121212", 
+                        color: "white",
+                        boxShadow: course.popular ? "0 8px 30px rgba(229,57,53,0.3)" : "none"
+                      }}
+                    >
                       View Program Details
+                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
                 </div>
@@ -584,42 +646,80 @@ export default function MarketingHome() {
       {/* 2. Live Classes Section */}
       <section className="py-24 relative z-10" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(248,248,248,0.4) 100%)", backdropFilter: "blur(2px)" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4" style={{ color: "#121212" }}>Live Classes</h2>
+          <div className="text-center mb-14">
+            <div className="inline-block px-4 py-2 rounded-full mb-6 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
+              <span className="text-[#E53935] font-semibold text-sm">📡 Real-Time Learning</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Live Classes</h2>
             <p className="text-xl text-gray-600">Learn from expert traders in real-time</p>
           </div>
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 md:grid md:grid-cols-3 md:gap-6 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 md:grid md:grid-cols-3 md:gap-8 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] items-stretch">
             {[
               { title: "Technical Analysis Masterclass", instructor: "Amit Desai", date: "April 18, 2026", time: "10:00 AM IST", students: 145, status: "live" },
               { title: "Options Trading Strategies", instructor: "Priya Sharma", date: "April 19, 2026", time: "2:00 PM IST", students: 132, status: "upcoming" },
               { title: "Risk Management Fundamentals", instructor: "Rajesh Kumar", date: "April 20, 2026", time: "4:00 PM IST", students: 178, status: "upcoming" },
             ].map((lecture, i) => (
-              <Card key={i} className="min-w-[300px] snap-center shrink-0 md:min-w-0 md:w-auto overflow-hidden border-2 border-gray-100 hover:border-[#E53935] transition-all hover:shadow-xl">
-                <div className="relative h-48 bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
-                  <div className="absolute inset-0 opacity-20">
-                    <img src="https://images.unsplash.com/photo-1616587896649-79b16d8b173d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" alt="Live class" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="relative z-10">
-                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white">
-                      <Video className="h-8 w-8 text-white" />
+              <Card key={i} className={`min-w-[300px] snap-center shrink-0 md:min-w-0 md:w-auto flex flex-col overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-2xl ${lecture.status === "live" ? "border-2 border-[#E53935] shadow-xl" : "border border-gray-200 hover:border-[#E53935]/50"}`}>
+                {/* Image Header */}
+                <div className="relative h-44 bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1616587896649-79b16d8b173d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" alt="Live class" className="absolute inset-0 w-full h-full object-cover opacity-25" />
+                  <div className="relative z-10 flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center border-2 border-white/40 mb-3">
+                      <Video className="h-7 w-7 text-white" />
                     </div>
-                    {lecture.status === "live" && <div className="absolute -top-2 -right-2 px-2 py-1 rounded-full text-xs font-bold text-white animate-pulse" style={{ background: "#E53935" }}>LIVE</div>}
+                    {lecture.status === "live" ? (
+                      <div className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold text-white animate-pulse" style={{ background: "#E53935" }}>
+                        <span className="w-2 h-2 rounded-full bg-white animate-ping" /> LIVE NOW
+                      </div>
+                    ) : (
+                      <div className="px-4 py-1.5 rounded-full text-xs font-bold text-white border border-white/30" style={{ background: "rgba(255,255,255,0.1)" }}>
+                        UPCOMING
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="p-6">
-                  <h3 className="font-bold text-lg mb-3" style={{ color: "#121212" }}>{lecture.title}</h3>
-                  <div className="space-y-2 mb-4 text-sm text-gray-600">
-                    <div className="flex items-center gap-2"><Users className="h-4 w-4" style={{ color: "#E53935" }} />{lecture.instructor}</div>
-                    <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4" style={{ color: "#E53935" }} />{lecture.date} • {lecture.time}</div>
-                    <div className="flex items-center gap-2"><Star className="h-4 w-4" style={{ color: "#E53935" }} />{lecture.students} students enrolled</div>
+                
+                {/* Card Body */}
+                <div className="flex flex-col flex-1 p-6 bg-white">
+                  <h3 className="font-bold text-lg mb-4 leading-snug" style={{ color: "#121212" }}>{lecture.title}</h3>
+                  <div className="space-y-3 mb-6 text-sm">
+                    <div className="flex items-center gap-3 text-gray-700">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(229,57,53,0.08)" }}>
+                        <Users className="h-4 w-4" style={{ color: "#E53935" }} />
+                      </div>
+                      <span className="font-medium">{lecture.instructor}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-gray-600">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(229,57,53,0.08)" }}>
+                        <CheckCircle className="h-4 w-4" style={{ color: "#E53935" }} />
+                      </div>
+                      <span>{lecture.date} • {lecture.time}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-gray-600">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(229,57,53,0.08)" }}>
+                        <Star className="h-4 w-4" style={{ color: "#E53935" }} />
+                      </div>
+                      <span>{lecture.students} students enrolled</span>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Link to="/student/lectures" className="flex-1">
-                      <Button className="w-full" style={{ background: "#E53935", color: "white" }}>
-                        {lecture.status === "live" ? "Join Now" : "Enroll Now"}
-                      </Button>
-                    </Link>
-                  </div>
+                  
+                  {/* Spacer */}
+                  <div className="flex-1" />
+
+                  {/* CTA — always at bottom */}
+                  <Link to="/student/lectures" className="block">
+                    <Button 
+                      className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-300"
+                      style={{ 
+                        background: lecture.status === "live" ? "linear-gradient(135deg, #E53935, #b71c1c)" : "#121212", 
+                        color: "white",
+                        boxShadow: lecture.status === "live" ? "0 8px 30px rgba(229,57,53,0.3)" : "none"
+                      }}
+                    >
+                      {lecture.status === "live" ? "Join Now" : "Register Now"}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
                 </div>
               </Card>
             ))}
@@ -790,25 +890,35 @@ export default function MarketingHome() {
 
 
       {/* 8. Why Choose FinTrade */}
-      <section id="about" className="py-20 bg-transparent relative z-10">
+      <section id="about" className="py-24 relative z-10" style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(248,248,248,0.6))" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4" style={{ color: "#121212" }}>Why Choose FinTrade</h2>
+          <div className="text-center mb-16">
+            <div className="inline-block px-4 py-2 rounded-full mb-6 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
+              <span className="text-[#E53935] font-semibold text-sm">💡 Our Edge</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Why Choose FinTrade</h2>
             <p className="text-xl text-gray-600">Everything you need to become a successful trader</p>
           </div>
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-8 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] items-stretch">
             {[
-              { icon: Brain, title: "AI Tutor Support", description: "Get 24/7 assistance from our AI-powered trading assistant for doubts and guidance" },
-              { icon: BookOpen, title: "Structured Curriculum", description: "Follow a proven learning path from basics to advanced strategies with expert content" },
-              { icon: LineChart, title: "Real Trading Simulation", description: "Practice with ₹10 lakh virtual capital in realistic market conditions without risk" },
-              { icon: Trophy, title: "Placement Opportunities", description: "Top performers get placed in leading prop trading firms and financial institutions" },
+              { icon: Brain, title: "AI Tutor Support", description: "Get 24/7 assistance from our AI-powered trading assistant for doubts and guidance", num: "01" },
+              { icon: BookOpen, title: "Structured Curriculum", description: "Follow a proven learning path from basics to advanced strategies with expert content", num: "02" },
+              { icon: LineChart, title: "Real Trading Simulation", description: "Practice with ₹10 lakh virtual capital in realistic market conditions without risk", num: "03" },
+              { icon: Trophy, title: "Placement Opportunities", description: "Top performers get placed in leading prop trading firms and financial institutions", num: "04" },
             ].map((feature, i) => (
-              <Card key={i} className="min-w-[260px] snap-center shrink-0 md:min-w-0 md:w-auto p-6 md:p-8 text-center border-2 border-gray-100 hover:border-[#E53935] transition-all hover:shadow-xl group">
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 group-hover:scale-110 transition-transform" style={{ background: "rgba(229, 57, 53, 0.1)" }}>
-                  <feature.icon className="h-10 w-10" style={{ color: "#E53935" }} />
+              <Card key={i} className="min-w-[260px] snap-center shrink-0 md:min-w-0 md:w-auto flex flex-col overflow-hidden rounded-2xl border border-gray-200 hover:border-[#E53935]/50 transition-all duration-300 hover:shadow-2xl group bg-white">
+                <div className="flex flex-col flex-1 p-7 text-center">
+                  {/* Number Badge */}
+                  <div className="text-xs font-bold text-gray-300 mb-4 tracking-widest">{feature.num}</div>
+                  {/* Icon */}
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mx-auto mb-5 group-hover:scale-110 transition-transform duration-300" style={{ background: "linear-gradient(135deg, rgba(229,57,53,0.08), rgba(229,57,53,0.15))" }}>
+                    <feature.icon className="h-8 w-8" style={{ color: "#E53935" }} />
+                  </div>
+                  <h3 className="text-lg font-bold mb-3" style={{ color: "#121212" }}>{feature.title}</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
                 </div>
-                <h3 className="text-xl font-bold mb-3" style={{ color: "#121212" }}>{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
+                {/* Bottom accent */}
+                <div className="h-1 w-full" style={{ background: "linear-gradient(to right, transparent, #E53935, transparent)" }} />
               </Card>
             ))}
           </div>
@@ -817,32 +927,45 @@ export default function MarketingHome() {
 
 
       {/* Student Success Stories */}
-      <section className="py-20 relative z-10 bg-transparent">
+      <section className="py-24 relative z-10 bg-transparent">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4" style={{ color: "#121212" }}>Student Success Stories</h2>
+          <div className="text-center mb-16">
+            <div className="inline-block px-4 py-2 rounded-full mb-6 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
+              <span className="text-[#E53935] font-semibold text-sm">🌟 Testimonials</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Student Success Stories</h2>
             <p className="text-xl text-gray-600">Hear from our successful traders</p>
           </div>
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 md:grid md:grid-cols-3 md:gap-8 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 md:grid md:grid-cols-3 md:gap-8 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] items-stretch">
             {[
-              { name: "Rahul Sharma", city: "Mumbai", testimonial: "FinTrade helped me become a disciplined trader. The structured approach and real trading simulator gave me confidence to trade professionally.", rating: 5 },
-              { name: "Priya Verma", city: "Bengaluru", testimonial: "The AI tutor and live classes are game-changers. I went from zero knowledge to getting placed at a prop trading firm in just 9 months.", rating: 5 },
-              { name: "Amit Patel", city: "Ahmedabad", testimonial: "Best investment I made in my career. The curriculum is comprehensive and the monthly exams keep you accountable. Highly recommend!", rating: 5 },
+              { name: "Rahul Sharma", city: "Mumbai", role: "Equity Trader", testimonial: "FinTrade helped me become a disciplined trader. The structured approach and real trading simulator gave me confidence to trade professionally.", rating: 5, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80" },
+              { name: "Priya Verma", city: "Bengaluru", role: "Options Analyst", testimonial: "The AI tutor and live classes are game-changers. I went from zero knowledge to getting placed at a prop trading firm in just 9 months.", rating: 5, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80" },
+              { name: "Amit Patel", city: "Ahmedabad", role: "Swing Trader", testimonial: "Best investment I made in my career. The curriculum is comprehensive and the monthly exams keep you accountable. Highly recommend!", rating: 5, avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80" },
             ].map((testimonial, i) => (
-              <Card key={i} className="min-w-[280px] snap-center shrink-0 md:min-w-0 md:w-auto p-5 md:p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all hover:shadow-xl bg-white">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 rounded-full overflow-hidden border-2" style={{ borderColor: "#E53935" }}>
-                    <img src="https://images.unsplash.com/photo-1659353221405-29b7d087f9e5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200" alt={testimonial.name} className="w-full h-full object-cover" />
+              <Card key={i} className="min-w-[300px] snap-center shrink-0 md:min-w-0 md:w-auto flex flex-col overflow-hidden rounded-2xl border border-gray-200 hover:border-[#E53935]/50 transition-all duration-300 hover:shadow-2xl bg-white">
+                <div className="flex flex-col flex-1 p-7">
+                  {/* Quote Icon */}
+                  <div className="text-5xl leading-none mb-4" style={{ color: "rgba(229,57,53,0.15)" }}>"</div>
+                  
+                  {/* Testimonial */}
+                  <p className="text-gray-700 leading-relaxed mb-6 flex-1">{testimonial.testimonial}</p>
+                  
+                  {/* Rating */}
+                  <div className="flex gap-1 mb-5">
+                    {[...Array(testimonial.rating)].map((_, si) => (<Star key={si} className="h-4 w-4 fill-current" style={{ color: "#E53935" }} />))}
                   </div>
-                  <div>
-                    <h4 className="font-bold" style={{ color: "#121212" }}>{testimonial.name}</h4>
-                    <p className="text-sm text-gray-600">{testimonial.city}</p>
+                  
+                  {/* Author — always at bottom */}
+                  <div className="flex items-center gap-4 pt-5 border-t border-gray-100">
+                    <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-offset-2 flex-shrink-0" style={{ ringColor: "#E53935" }}>
+                      <img src={testimonial.avatar} alt={testimonial.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm" style={{ color: "#121212" }}>{testimonial.name}</h4>
+                      <p className="text-xs text-gray-500">{testimonial.role} • {testimonial.city}</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex gap-1 mb-3">
-                  {[...Array(testimonial.rating)].map((_, i) => (<Star key={i} className="h-4 w-4 fill-current" style={{ color: "#E53935" }} />))}
-                </div>
-                <p className="text-gray-700 italic">"{testimonial.testimonial}"</p>
               </Card>
             ))}
           </div>
