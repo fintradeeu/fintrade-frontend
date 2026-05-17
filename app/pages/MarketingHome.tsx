@@ -307,6 +307,7 @@ function CourseCard({ course }: { course: any }) {
   const [showFullTitle, setShowFullTitle] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'modules'>('overview');
+  const [expandedModuleIdx, setExpandedModuleIdx] = useState<number | null>(0);
   const MAX_DESC_LENGTH = 100;
   const MAX_TITLE_LENGTH = 45;
 
@@ -453,27 +454,59 @@ function CourseCard({ course }: { course: any }) {
               </div>
             )}
 
-            {/* Tab content: Modules */}
+            {/* Tab content: Modules (Accordion style) */}
             {activeTab === 'modules' && (
-              <div className="space-y-4 max-h-[340px] overflow-y-auto pr-2 scrollbar-thin">
-                {details.modules.map((mod, idx) => (
-                  <div key={idx} className="p-4 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-3 mb-2.5">
-                      <div className="w-7 h-7 rounded-full bg-[#E53935]/10 text-[#E53935] flex items-center justify-center text-xs font-bold border border-[#E53935]/20">
-                        {idx + 1}
+              <div className="space-y-3 max-h-[340px] overflow-y-auto pr-2 scrollbar-thin">
+                {details.modules.map((mod, idx) => {
+                  const isExpanded = expandedModuleIdx === idx;
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`rounded-2xl border transition-all duration-300 ${
+                        isExpanded 
+                          ? 'border-[#E53935]/30 bg-[#E53935]/5 shadow-xs' 
+                          : 'border-gray-100 bg-gray-50/50 hover:bg-gray-50'
+                      }`}
+                    >
+                      {/* Accordion Trigger Header */}
+                      <button
+                        type="button"
+                        onClick={() => setExpandedModuleIdx(isExpanded ? null : idx)}
+                        className="w-full flex items-center justify-between p-4 cursor-pointer text-left select-none"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border transition-colors ${
+                            isExpanded 
+                              ? 'bg-[#E53935] text-white border-[#E53935]' 
+                              : 'bg-[#E53935]/10 text-[#E53935] border-[#E53935]/20'
+                          }`}>
+                            {idx + 1}
+                          </div>
+                          <h4 className="font-bold text-gray-800 text-sm leading-snug">{mod.title}</h4>
+                        </div>
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4 text-[#E53935] transition-transform duration-300" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-gray-400 transition-transform duration-300" />
+                        )}
+                      </button>
+
+                      {/* Accordion Content Panels */}
+                      <div className={`transition-all duration-300 overflow-hidden ${
+                        isExpanded ? 'max-h-[300px] border-t border-[#E53935]/10 p-4 pt-3' : 'max-h-0'
+                      }`}>
+                        <ul className="space-y-2.5 pl-10">
+                          {mod.lessons.map((lesson, lIdx) => (
+                            <li key={lIdx} className="text-xs text-gray-600 flex items-start gap-2.5 leading-relaxed font-medium">
+                              <span className="text-[#E53935] mt-1 text-xs">•</span>
+                              <span>{lesson}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                      <h4 className="font-bold text-gray-800 text-sm leading-snug">{mod.title}</h4>
                     </div>
-                    <ul className="space-y-2 pl-10">
-                      {mod.lessons.map((lesson, lIdx) => (
-                        <li key={lIdx} className="text-xs text-gray-600 flex items-start gap-2.5 leading-relaxed font-medium">
-                          <span className="text-[#E53935] mt-1 text-xs">•</span>
-                          <span>{lesson}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
