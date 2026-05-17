@@ -19,11 +19,11 @@ export default function KeyInsights() {
           <h2 className="text-4xl font-bold mb-4" style={{ color: "#121212" }}>Key Market Insights</h2>
           <p className="text-xl text-gray-600">Real-time data and analytics (data will be integrated soon)</p>
         </div>
-        <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 px-4 -mx-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="grid grid-cols-1 gap-6 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 items-stretch">
           {insightsPlaceholder.map((insight, i) => (
             <Card
               key={i}
-              className="min-w-[80vw] snap-center shrink-0 md:min-w-0 md:w-auto p-6 text-center border-2 border-dashed border-gray-200 hover:border-[#E53935]/30 transition-all"
+              className="w-full p-6 text-center border-2 border-dashed border-gray-200 hover:border-[#E53935]/30 transition-all"
               style={{ background: "rgba(229,57,53,0.02)" }}
             >
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-full mb-4" style={{ background: "rgba(229,57,53,0.1)" }}>

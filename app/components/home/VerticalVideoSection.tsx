@@ -50,6 +50,9 @@ const verticalVideos = [
 
 export default function VerticalVideoSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
 
   const scroll = (dir: "left" | "right") => {
     if (!scrollRef.current) return;
@@ -57,36 +60,69 @@ export default function VerticalVideoSection() {
     scrollRef.current.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current || (e.target as HTMLElement).closest('button')) return;
+    isDragging.current = true;
+    startX.current = e.pageX - scrollRef.current.offsetLeft;
+    scrollLeft.current = scrollRef.current.scrollLeft;
+    if (scrollRef.current) {
+      scrollRef.current.style.cursor = "grabbing";
+      scrollRef.current.style.userSelect = "none";
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX.current) * 2; // Increased scroll speed for better feel
+    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+  };
+
+  const handleMouseUpOrLeave = () => {
+    isDragging.current = false;
+    if (scrollRef.current) {
+      scrollRef.current.style.cursor = "grab";
+      scrollRef.current.style.removeProperty("user-select");
+    }
+  };
+
   return (
-    <section className="py-20 relative z-10" style={{ background: "linear-gradient(135deg, #121212 0%, #1a1a1a 100%)" }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10">
-          <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#E53935]/40" style={{ background: "rgba(229,57,53,0.1)" }}>
+    <section className="py-8 relative z-10" style={{ background: "linear-gradient(135deg, #121212 0%, #1a1a1a 100%)" }}>
+      <div 
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUpOrLeave}
+        onMouseLeave={handleMouseUpOrLeave}
+      >
+        <div className="text-center mb-6 cursor-grab active:cursor-grabbing select-none">
+          <div className="inline-block px-4 py-2 rounded-full mb-3 border border-[#E53935]/40" style={{ background: "rgba(229,57,53,0.1)" }}>
             <span className="text-[#E53935] font-semibold text-sm">📱 Short Videos</span>
           </div>
-          <h2 className="text-4xl font-bold mb-4 text-white">Quick Trading Tips</h2>
+          <h2 className="text-4xl font-bold mb-3 text-white">Quick Trading Tips</h2>
           <p className="text-xl text-gray-400">Bite-sized trading wisdom from our community</p>
         </div>
 
         <div className="relative">
           {/* Scroll Buttons */}
           <button
-            onClick={() => scroll("left")}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors -ml-2 lg:-ml-5"
+            onClick={(e) => { e.stopPropagation(); scroll("left"); }}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-[100] w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-[#E53935] transition-all -ml-2 lg:-ml-6 shadow-xl border border-white/10"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-6 w-6" />
           </button>
           <button
-            onClick={() => scroll("right")}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors -mr-2 lg:-mr-5"
+            onClick={(e) => { e.stopPropagation(); scroll("right"); }}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-[100] w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-[#E53935] transition-all -mr-2 lg:-mr-6 shadow-xl border border-white/10"
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-6 w-6" />
           </button>
 
           {/* Scrollable Container */}
           <div
             ref={scrollRef}
-            className="flex gap-5 overflow-x-auto pb-4 scrollbar-hide"
+            className="flex gap-5 overflow-x-auto pb-4 scrollbar-hide cursor-grab select-none active:cursor-grabbing"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {verticalVideos.map((vid) => (

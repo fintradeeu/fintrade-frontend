@@ -33,3 +33,7 @@ coverage/
 
 # Guidelines (not needed in deploy)
 guidelines/
+
+# Nested git checkouts
+fintrade-frontend/
+

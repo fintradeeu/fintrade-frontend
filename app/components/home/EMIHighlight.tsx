@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 
 export default function EMIHighlight() {
   return (
-    <section className="py-16 relative z-10">
+    <section className="py-8 relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Card
           className="overflow-hidden border-2 border-[#E53935]/20 hover:border-[#E53935]/40 transition-all"

@@ -21,9 +21,9 @@ export default function PlatformFeatures() {
           <h2 className="text-4xl font-bold mb-4" style={{ color: "#121212" }}>What You'll Get</h2>
           <p className="text-xl text-gray-600">Everything included in your FinTrade journey</p>
         </div>
-        <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 px-4 -mx-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="grid grid-cols-1 gap-6 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 items-stretch">
           {features.map((f, i) => (
-            <Card key={i} className="min-w-[85vw] snap-center shrink-0 md:min-w-0 md:w-auto p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all hover:shadow-xl group">
+            <Card key={i} className="w-full p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all hover:shadow-xl group">
               <div className="flex items-start gap-4">
                 <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform" style={{ background: "rgba(229,57,53,0.1)" }}>
                   <f.icon className="h-7 w-7" style={{ color: "#E53935" }} />

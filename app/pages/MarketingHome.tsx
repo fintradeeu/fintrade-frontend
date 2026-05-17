@@ -172,6 +172,83 @@ function VideoModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+// Course Card Component to handle local state for Read More
+function CourseCard({ course }: { course: any }) {
+  const [showFullDesc, setShowFullDesc] = useState(false);
+  const [showFullTitle, setShowFullTitle] = useState(false);
+  const MAX_DESC_LENGTH = 100;
+  const MAX_TITLE_LENGTH = 45;
+
+  return (
+    <Card 
+      className="w-full flex flex-col group transition-all duration-500 overflow-hidden rounded-2xl border border-gray-200 hover:border-[#E53935]/50 hover:shadow-2xl"
+    >
+      {/* Gradient Header */}
+      <div className="relative px-6 pt-6 pb-4 min-h-[210px] flex flex-col justify-between" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" }}>
+        <div>
+          <div className="flex items-start justify-between mb-3">
+            <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)" }}>
+              <course.icon className="h-7 w-7 text-white" />
+            </div>
+            <div className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/30" style={{ background: "rgba(255,255,255,0.1)" }}>
+              {course.duration}
+            </div>
+          </div>
+          <h3 className="text-lg font-bold text-white mb-1 leading-snug">
+            {showFullTitle || course.name.length <= MAX_TITLE_LENGTH ? course.name : `${course.name.substring(0, MAX_TITLE_LENGTH)}...`}
+            {course.name.length > MAX_TITLE_LENGTH && (
+              <button onClick={(e) => { e.preventDefault(); setShowFullTitle(!showFullTitle); }} className="text-[#E53935] text-[10px] ml-1 hover:underline">
+                {showFullTitle ? "Read Less" : "Read More"}
+              </button>
+            )}
+          </h3>
+        </div>
+        <span className="text-white/70 text-xs font-medium uppercase tracking-widest block">{course.level} Program</span>
+      </div>
+
+      {/* Card Body */}
+      <div className="flex flex-col flex-1 p-4 bg-white">
+        <div className="text-gray-600 text-sm mb-4 leading-relaxed">
+          <p>
+            {showFullDesc || course.description.length <= MAX_DESC_LENGTH ? course.description : `${course.description.substring(0, MAX_DESC_LENGTH)}...`}
+            {course.description.length > MAX_DESC_LENGTH && (
+              <button onClick={(e) => { e.preventDefault(); setShowFullDesc(!showFullDesc); }} className="text-[#E53935] font-bold ml-1 hover:underline">
+                {showFullDesc ? "Read Less" : "Read More"}
+              </button>
+            )}
+          </p>
+        </div>
+
+        <div className="flex-1" />
+
+        <div className="border-t border-gray-100 pt-5 mb-5">
+          <div className="flex items-end justify-between">
+            <div>
+              <div className="text-sm text-gray-400 line-through">{course.originalPrice}</div>
+              <div className="text-3xl font-extrabold tracking-tight" style={{ color: "#121212" }}>
+                {course.price}<span className="text-sm font-normal text-gray-500 ml-1">+ GST</span>
+              </div>
+            </div>
+            <div className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "rgba(76,175,80,0.1)", color: "#2e7d32" }}>
+              Save {course.savings}
+            </div>
+          </div>
+        </div>
+
+        <Link to="/student/courses" className="block">
+          <Button 
+            className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 group-hover:shadow-lg"
+            style={{ background: "#121212", color: "white" }}
+          >
+            View Program Details
+            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+          </Button>
+        </Link>
+      </div>
+    </Card>
+  );
+}
+
 export default function MarketingHome() {
   const [videoOpen, setVideoOpen] = useState(false);
   const [activeVideoIdx, setActiveVideoIdx] = useState<number | null>(null);
@@ -455,10 +532,10 @@ export default function MarketingHome() {
         </div>
       </section>
       {/* 1. Featured Courses Section */}
-      <section id="courses" className="py-24 relative z-10" style={{ background: "linear-gradient(to bottom, transparent, rgba(229, 57, 53, 0.02), transparent)" }}>
+      <section id="courses" className="py-8 relative z-10" style={{ background: "linear-gradient(to bottom, transparent, rgba(229, 57, 53, 0.02), transparent)" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-block px-4 py-2 rounded-full mb-6 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
+          <div className="text-center mb-10">
+            <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#E53935]/30" style={{ background: "rgba(229, 57, 53, 0.08)" }}>
               <span className="text-[#E53935] font-semibold text-sm">🎓 Professional Certifications</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Our Professional Programs</h2>
@@ -466,7 +543,7 @@ export default function MarketingHome() {
               Master trading with our industry-leading certifications
             </p>
           </div>
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 md:grid md:grid-cols-3 md:gap-8 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] items-stretch">
+          <div className="grid grid-cols-1 gap-8 md:grid md:grid-cols-3 md:gap-8 items-stretch">
             {[
               { 
                 name: "Financial Market Foundation (FMF)", 
@@ -499,58 +576,7 @@ export default function MarketingHome() {
                 icon: Trophy,
               },
             ].map((course, i) => (
-              <Card 
-                key={i} 
-                className="min-w-[300px] snap-center shrink-0 md:min-w-0 md:w-auto flex flex-col group transition-all duration-500 overflow-hidden rounded-2xl border border-gray-200 hover:border-[#E53935]/50 hover:shadow-2xl"
-              >
-                {/* Gradient Header */}
-                <div className="relative px-6 pt-8 pb-6" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" }}>
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)" }}>
-                      <course.icon className="h-7 w-7 text-white" />
-                    </div>
-                    <div className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/30" style={{ background: "rgba(255,255,255,0.1)" }}>
-                      {course.duration}
-                    </div>
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-1 leading-snug">{course.name}</h3>
-                  <span className="text-white/70 text-xs font-medium uppercase tracking-widest">{course.level} Program</span>
-                </div>
-
-                {/* Card Body */}
-                <div className="flex flex-col flex-1 p-6 bg-white">
-                  <p className="text-gray-600 text-sm mb-6 leading-relaxed">{course.description}</p>
-
-                  {/* Spacer to push price + button to bottom */}
-                  <div className="flex-1" />
-
-                  {/* Pricing */}
-                  <div className="border-t border-gray-100 pt-5 mb-5">
-                    <div className="flex items-end justify-between">
-                      <div>
-                        <div className="text-sm text-gray-400 line-through">{course.originalPrice}</div>
-                        <div className="text-3xl font-extrabold tracking-tight" style={{ color: "#121212" }}>
-                          {course.price}<span className="text-sm font-normal text-gray-500 ml-1">+ GST</span>
-                        </div>
-                      </div>
-                      <div className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "rgba(76,175,80,0.1)", color: "#2e7d32" }}>
-                        Save {course.savings}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* CTA Button — always at bottom */}
-                  <Link to="/student/courses" className="block">
-                    <Button 
-                      className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 group-hover:shadow-lg"
-                      style={{ background: "#121212", color: "white" }}
-                    >
-                      View Program Details
-                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </Link>
-                </div>
-              </Card>
+              <CourseCard key={i} course={course} />
             ))}
           </div>
         </div>
@@ -559,22 +585,22 @@ export default function MarketingHome() {
 
 
       {/* 2. Live Classes Section */}
-      <section className="py-24 relative z-10" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(248,248,248,0.4) 100%)", backdropFilter: "blur(2px)" }}>
+      <section className="py-8 relative z-10" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(248,248,248,0.4) 100%)", backdropFilter: "blur(2px)" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <div className="inline-block px-4 py-2 rounded-full mb-6 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
+          <div className="text-center mb-6">
+            <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
               <span className="text-[#E53935] font-semibold text-sm">📡 Real-Time Learning</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Live Classes</h2>
             <p className="text-xl text-gray-600">Learn from expert traders in real-time</p>
           </div>
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 md:grid md:grid-cols-3 md:gap-8 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] items-stretch">
+          <div className="grid grid-cols-1 gap-8 md:grid md:grid-cols-3 md:gap-8 items-stretch">
             {[
               { title: "Technical Analysis Masterclass", instructor: "Amit Desai", date: "April 18, 2026", time: "10:00 AM IST", students: 145, status: "live" },
               { title: "Options Trading Strategies", instructor: "Priya Sharma", date: "April 19, 2026", time: "2:00 PM IST", students: 132, status: "upcoming" },
               { title: "Risk Management Fundamentals", instructor: "Rajesh Kumar", date: "April 20, 2026", time: "4:00 PM IST", students: 178, status: "upcoming" },
             ].map((lecture, i) => (
-              <Card key={i} className={`min-w-[300px] snap-center shrink-0 md:min-w-0 md:w-auto flex flex-col overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-2xl ${lecture.status === "live" ? "border-2 border-[#E53935] shadow-xl" : "border border-gray-200 hover:border-[#E53935]/50"}`}>
+              <Card key={i} className={`w-full flex flex-col overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-2xl ${lecture.status === "live" ? "border-2 border-[#E53935] shadow-xl" : "border border-gray-200 hover:border-[#E53935]/50"}`}>
                 {/* Image Header */}
                 <div className="relative h-44 bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center overflow-hidden">
                   <img src="https://images.unsplash.com/photo-1616587896649-79b16d8b173d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" alt="Live class" className="absolute inset-0 w-full h-full object-cover opacity-25" />
@@ -643,10 +669,10 @@ export default function MarketingHome() {
       </section>
 
       {/* 3. Learning Journey Section */}
-      <section className="py-20 bg-transparent relative z-10">
+      <section className="py-6 bg-transparent relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4" style={{ color: "#121212" }}>Your Learning Journey</h2>
+          <div className="text-center mb-6">
+            <h2 className="text-4xl font-bold mb-2" style={{ color: "#121212" }}>Your Learning Journey</h2>
             <p className="text-xl text-gray-600">From beginner to professional trader in 5 structured steps</p>
           </div>
           <div className="relative">
@@ -697,11 +723,11 @@ export default function MarketingHome() {
       <VerticalVideoSection />
 
       {/* 5. FinTrade Blog Section */}
-      <section className="py-24 relative z-10" style={{ background: "linear-gradient(to right, rgba(255,255,255,0.5), rgba(229, 57, 53, 0.03), rgba(255,255,255,0.5))" }}>
+      <section className="py-8 relative z-10" style={{ background: "linear-gradient(to right, rgba(255,255,255,0.5), rgba(229, 57, 53, 0.03), rgba(255,255,255,0.5))" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-6">
             <div>
-              <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
+              <div className="inline-block px-4 py-2 rounded-full mb-2 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
                 <span className="text-[#E53935] font-semibold text-sm">✍️ Latest from Blog</span>
               </div>
               <h2 className="text-4xl font-bold mb-4" style={{ color: "#121212" }}>Market Insights & Articles</h2>
@@ -715,14 +741,14 @@ export default function MarketingHome() {
             </Link>
           </div>
           
-          <div className="grid lg:grid-cols-12 gap-8 items-start">
+          <div className="grid lg:grid-cols-12 gap-8 items-stretch">
             {/* Featured Video (Left Side) */}
             <div className="lg:col-span-5">
-              <Card className="overflow-hidden border-0 shadow-2xl relative group h-full">
-                <div className="relative h-[300px] lg:h-[450px]">
+              <Card className="overflow-hidden border-0 shadow-2xl relative group h-full flex flex-col">
+                <div className="relative flex-1 min-h-[300px]">
                   <img 
                     src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80" 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     alt="Featured Video"
                   />
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -792,7 +818,7 @@ export default function MarketingHome() {
 
 
       {/* 6. Curriculum Roadmap Section */}
-      <section className="py-20 relative z-10" style={{ background: "#121212" }}>
+      <section className="py-6 relative z-10" style={{ background: "#121212" }}>
         <ModuleRoadmap />
       </section>
 
@@ -805,23 +831,23 @@ export default function MarketingHome() {
 
 
       {/* 8. Why Choose FinTrade */}
-      <section id="about" className="py-24 relative z-10" style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(248,248,248,0.6))" }}>
+      <section id="about" className="py-8 relative z-10" style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(248,248,248,0.6))" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-block px-4 py-2 rounded-full mb-6 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
+          <div className="text-center mb-8">
+            <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
               <span className="text-[#E53935] font-semibold text-sm">💡 Our Edge</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Why Choose FinTrade</h2>
             <p className="text-xl text-gray-600">Everything you need to become a successful trader</p>
           </div>
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-8 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] items-stretch">
+          <div className="grid grid-cols-1 gap-8 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-8 items-stretch">
             {[
               { icon: Brain, title: "AI Tutor Support", description: "Get 24/7 assistance from our AI-powered trading assistant for doubts and guidance", num: "01" },
               { icon: BookOpen, title: "Structured Curriculum", description: "Follow a proven learning path from basics to advanced strategies with expert content", num: "02" },
               { icon: LineChart, title: "Real Trading Simulation", description: "Practice with ₹10 lakh virtual capital in realistic market conditions without risk", num: "03" },
               { icon: Trophy, title: "Placement Opportunities", description: "Top performers get placed in leading prop trading firms and financial institutions", num: "04" },
             ].map((feature, i) => (
-              <Card key={i} className="min-w-[260px] snap-center shrink-0 md:min-w-0 md:w-auto flex flex-col overflow-hidden rounded-2xl border border-gray-200 hover:border-[#E53935]/50 transition-all duration-300 hover:shadow-2xl group bg-white">
+              <Card key={i} className="w-full flex flex-col overflow-hidden rounded-2xl border border-gray-200 hover:border-[#E53935]/50 transition-all duration-300 hover:shadow-2xl group bg-white">
                 <div className="flex flex-col flex-1 p-7 text-center">
                   {/* Number Badge */}
                   <div className="text-xs font-bold text-gray-300 mb-4 tracking-widest">{feature.num}</div>
@@ -844,7 +870,7 @@ export default function MarketingHome() {
 
 
       {/* CTA Section */}
-      <section className="py-20 relative z-10" style={{ background: "linear-gradient(135deg, #E53935 0%, #b71c1c 100%)" }}>
+      <section className="py-8 relative z-10" style={{ background: "linear-gradient(135deg, #E53935 0%, #b71c1c 100%)" }}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Start Your Trading Journey Today</h2>
           <p className="text-xl text-white/90 mb-8">Join 1200+ students learning to trade professionally</p>

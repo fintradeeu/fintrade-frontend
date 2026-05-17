@@ -131,7 +131,7 @@ export default function CategoryPage() {
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-2" style={{ color: "#121212" }}>
                 <BookOpen className="h-6 w-6" style={{ color: "#E53935" }} /> Courses
               </h2>
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {category.courses.map((c, i) => (
                   <Card key={i} className="p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all hover:shadow-xl">
                     <div className="inline-block px-3 py-1 rounded-full text-xs font-medium mb-3" style={{ background: "rgba(229,57,53,0.1)", color: "#E53935" }}>{c.level}</div>
@@ -153,7 +153,7 @@ export default function CategoryPage() {
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-2" style={{ color: "#121212" }}>
                 <Video className="h-6 w-6" style={{ color: "#E53935" }} /> Videos
               </h2>
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {category.videos.map((v, i) => (
                   <Card key={i} className="p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all hover:shadow-xl">
                     <h3 className="font-bold mb-2" style={{ color: "#121212" }}>{v.title}</h3>
