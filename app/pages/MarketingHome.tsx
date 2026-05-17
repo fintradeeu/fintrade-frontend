@@ -130,6 +130,7 @@ function AmbientGlow() {
           80% { opacity: 0.15; transform: translate(-50%, -50%) scale(1.2); }
           100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
         }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
       `}</style>
     </div>
   );
@@ -373,8 +374,7 @@ function CourseCard({ course }: { course: any }) {
 
           <Button 
             onClick={() => { setActiveTab('overview'); setIsDetailsOpen(true); }}
-            className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 group-hover:shadow-lg"
-            style={{ background: "#121212", color: "white" }}
+            className="w-full h-12 text-base font-semibold rounded-xl !bg-[#121212] !text-white hover:!bg-[#E53935] hover:!text-white transition-all duration-300 group-hover:shadow-lg"
           >
             View Program Details
             <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -515,14 +515,13 @@ function CourseCard({ course }: { course: any }) {
               <Button 
                 onClick={() => setIsDetailsOpen(false)}
                 variant="outline"
-                className="w-full sm:w-auto h-12 text-sm font-semibold rounded-xl border-gray-200 text-gray-600 hover:bg-gray-50"
+                className="w-full sm:w-auto h-12 text-sm font-semibold rounded-xl border-gray-200 text-gray-600 hover:border-[#E53935] hover:text-[#E53935] hover:bg-[#E53935]/5 transition-all duration-300"
               >
                 Close Details
               </Button>
               <Link to="/student/courses" className="w-full sm:w-auto">
                 <Button 
-                  className="w-full h-12 text-sm font-semibold rounded-xl px-8 shadow-lg hover:shadow-xl transition-all"
-                  style={{ background: "#E53935", color: "white" }}
+                  className="w-full h-12 text-sm font-semibold rounded-xl px-8 shadow-lg hover:shadow-xl !bg-[#E53935] !text-white hover:!bg-[#b71c1c] transition-all duration-300"
                 >
                   Enroll Now
                 </Button>
@@ -624,7 +623,7 @@ export default function MarketingHome() {
               <p className="font-medium mb-3" style={{ color: "#121212" }}>Popular Searches</p>
               <div className="flex flex-wrap gap-2">
                 {["Technical Analysis", "Options Trading", "Risk Management", "NIFTY", "Candlestick Patterns", "Trading Psychology"].map((t) => (
-                  <span key={t} className="px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer hover:bg-red-50 hover:text-[#E53935] transition-colors" style={{ background: "rgba(229,57,53,0.08)", color: "#E53935" }}>{t}</span>
+                  <span key={t} className="px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer hover:bg-[#E53935] hover:text-white transition-colors" style={{ background: "rgba(229,57,53,0.08)", color: "#E53935" }}>{t}</span>
                 ))}
               </div>
             </div>
@@ -692,16 +691,16 @@ export default function MarketingHome() {
               <a href="#about" className="text-gray-700 hover:text-[#E53935] transition-colors font-medium">About</a>
             </div>
             <div className="flex items-center gap-3">
-              <button onClick={() => setSearchOpen(true)} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-gray-600 hover:text-[#E53935] hover:bg-red-50 transition-all" title="Search">
+              <button onClick={() => setSearchOpen(true)} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-gray-600 hover:text-[#E53935] hover:bg-[#E53935]/10 transition-all" title="Search">
                 <Search className="h-4 w-4 md:h-5 md:w-5" />
               </button>
               <Link to="/login" className="hidden sm:block">
-                <Button variant="ghost" className="text-gray-700 hover:text-[#E53935] hover:bg-red-50" size="lg">Login</Button>
+                <Button variant="ghost" className="text-gray-700 hover:text-[#E53935] hover:bg-[#E53935]/10" size="lg">Login</Button>
               </Link>
               <Link to="/student/entrance-exam">
                 <Button
-                  className="shadow-md hover:shadow-xl transition-all hover:scale-105 h-9 px-4 md:h-11 md:px-8"
-                  style={{ background: "linear-gradient(135deg, #E53935 0%, #b71c1c 100%)", color: "white", boxShadow: "0 4px 20px rgba(229, 57, 53, 0.4)" }}
+                  className="shadow-md hover:shadow-xl transition-all hover:scale-105 h-9 px-4 md:h-11 md:px-8 bg-gradient-to-r from-[#E53935] to-[#b71c1c] text-white hover:from-[#b71c1c] hover:to-[#b71c1c]"
+                  style={{ boxShadow: "0 4px 20px rgba(229, 57, 53, 0.4)" }}
                 >
                   <span className="sm:hidden text-xs">Start</span>
                   <span className="hidden sm:inline">Start Learning</span>
@@ -741,8 +740,8 @@ export default function MarketingHome() {
                 <Link to="/student/contract-kyc" className="block w-full sm:w-auto">
                   <Button
                     size="lg"
-                    className="w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all hover:scale-105 text-lg px-8 py-6"
-                    style={{ background: "linear-gradient(135deg, #E53935 0%, #b71c1c 100%)", color: "white", boxShadow: "0 10px 40px rgba(229, 57, 53, 0.4)" }}
+                    className="w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all hover:scale-105 text-lg px-8 py-6 bg-gradient-to-r from-[#E53935] to-[#b71c1c] text-white hover:from-[#b71c1c] hover:to-[#b71c1c]"
+                    style={{ boxShadow: "0 10px 40px rgba(229, 57, 53, 0.4)" }}
                   >
                     Apply Now
                     <ArrowRight className="ml-2 h-5 w-5" />
@@ -752,7 +751,7 @@ export default function MarketingHome() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="w-full sm:w-auto border-2 border-[#E53935] text-[#E53935] hover:bg-red-50 text-lg px-8 py-6"
+                    className="w-full sm:w-auto border-2 border-[#E53935] text-[#E53935] hover:bg-[#E53935] hover:text-white text-lg px-8 py-6 transition-all duration-300"
                   >
                     <Download className="mr-2 h-5 w-5" />
                     Download Brochure
@@ -830,7 +829,10 @@ export default function MarketingHome() {
               Master trading with our industry-leading certifications
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-8 md:grid md:grid-cols-3 md:gap-8 items-stretch">
+          <div 
+            className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible pb-8 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
             {[
               { 
                 name: "Financial Market Foundation (FMF)", 
@@ -863,7 +865,9 @@ export default function MarketingHome() {
                 icon: Trophy,
               },
             ].map((course, i) => (
-              <CourseCard key={i} course={course} />
+              <div key={i} className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex">
+                <CourseCard course={course} />
+              </div>
             ))}
           </div>
         </div>
@@ -881,75 +885,82 @@ export default function MarketingHome() {
             <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Live Classes</h2>
             <p className="text-xl text-gray-600">Learn from expert traders in real-time</p>
           </div>
-          <div className="grid grid-cols-1 gap-8 md:grid md:grid-cols-3 md:gap-8 items-stretch">
+          <div 
+            className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible pb-8 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
             {[
               { title: "Technical Analysis Masterclass", instructor: "Amit Desai", date: "April 18, 2026", time: "10:00 AM IST", students: 145, status: "live" },
               { title: "Options Trading Strategies", instructor: "Priya Sharma", date: "April 19, 2026", time: "2:00 PM IST", students: 132, status: "upcoming" },
               { title: "Risk Management Fundamentals", instructor: "Rajesh Kumar", date: "April 20, 2026", time: "4:00 PM IST", students: 178, status: "upcoming" },
             ].map((lecture, i) => (
-              <Card key={i} className={`w-full flex flex-col overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-2xl ${lecture.status === "live" ? "border-2 border-[#E53935] shadow-xl" : "border border-gray-200 hover:border-[#E53935]/50"}`}>
-                {/* Image Header */}
-                <div className="relative h-44 bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center overflow-hidden">
-                  <img src="https://images.unsplash.com/photo-1616587896649-79b16d8b173d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" alt="Live class" className="absolute inset-0 w-full h-full object-cover opacity-25" />
-                  <div className="relative z-10 flex flex-col items-center">
-                    <div className="w-16 h-16 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center border-2 border-white/40 mb-3">
-                      <Video className="h-7 w-7 text-white" />
-                    </div>
-                    {lecture.status === "live" ? (
-                      <div className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold text-white animate-pulse" style={{ background: "#E53935" }}>
-                        <span className="w-2 h-2 rounded-full bg-white animate-ping" /> LIVE NOW
+              <div key={i} className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex">
+                <Card className={`w-full flex flex-col overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-2xl ${lecture.status === "live" ? "border-2 border-[#E53935] shadow-xl" : "border border-gray-200 hover:border-[#E53935]/50"}`}>
+                  {/* Image Header */}
+                  <div className="relative h-44 bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1616587896649-79b16d8b173d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" alt="Live class" className="absolute inset-0 w-full h-full object-cover opacity-25" />
+                    <div className="relative z-10 flex flex-col items-center">
+                      <div className="w-16 h-16 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center border-2 border-white/40 mb-3">
+                        <Video className="h-7 w-7 text-white" />
                       </div>
-                    ) : (
-                      <div className="px-4 py-1.5 rounded-full text-xs font-bold text-white border border-white/30" style={{ background: "rgba(255,255,255,0.1)" }}>
-                        UPCOMING
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Card Body */}
-                <div className="flex flex-col flex-1 p-6 bg-white">
-                  <h3 className="font-bold text-lg mb-4 leading-snug" style={{ color: "#121212" }}>{lecture.title}</h3>
-                  <div className="space-y-3 mb-6 text-sm">
-                    <div className="flex items-center gap-3 text-gray-700">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(229,57,53,0.08)" }}>
-                        <Users className="h-4 w-4" style={{ color: "#E53935" }} />
-                      </div>
-                      <span className="font-medium">{lecture.instructor}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-gray-600">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(229,57,53,0.08)" }}>
-                        <CheckCircle className="h-4 w-4" style={{ color: "#E53935" }} />
-                      </div>
-                      <span>{lecture.date} • {lecture.time}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-gray-600">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(229,57,53,0.08)" }}>
-                        <Star className="h-4 w-4" style={{ color: "#E53935" }} />
-                      </div>
-                      <span>{lecture.students} students enrolled</span>
+                      {lecture.status === "live" ? (
+                        <div className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold text-white animate-pulse" style={{ background: "#E53935" }}>
+                          <span className="w-2 h-2 rounded-full bg-white animate-ping" /> LIVE NOW
+                        </div>
+                      ) : (
+                        <div className="px-4 py-1.5 rounded-full text-xs font-bold text-white border border-white/30" style={{ background: "rgba(255,255,255,0.1)" }}>
+                          UPCOMING
+                        </div>
+                      )}
                     </div>
                   </div>
                   
-                  {/* Spacer */}
-                  <div className="flex-1" />
+                  {/* Card Body */}
+                  <div className="flex flex-col flex-1 p-6 bg-white">
+                    <h3 className="font-bold text-lg mb-4 leading-snug" style={{ color: "#121212" }}>{lecture.title}</h3>
+                    <div className="space-y-3 mb-6 text-sm">
+                      <div className="flex items-center gap-3 text-gray-700">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(229,57,53,0.08)" }}>
+                          <Users className="h-4 w-4" style={{ color: "#E53935" }} />
+                        </div>
+                        <span className="font-medium">{lecture.instructor}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-gray-600">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(229,57,53,0.08)" }}>
+                          <CheckCircle className="h-4 w-4" style={{ color: "#E53935" }} />
+                        </div>
+                        <span>{lecture.date} • {lecture.time}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-gray-600">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(229,57,53,0.08)" }}>
+                          <Star className="h-4 w-4" style={{ color: "#E53935" }} />
+                        </div>
+                        <span>{lecture.students} students enrolled</span>
+                      </div>
+                    </div>
+                    
+                    {/* Spacer */}
+                    <div className="flex-1" />
 
-                  {/* CTA — always at bottom */}
-                  <Link to="/student/lectures" className="block">
-                    <Button 
-                      className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-300"
-                      style={{ 
-                        background: lecture.status === "live" ? "linear-gradient(135deg, #E53935, #b71c1c)" : "#121212", 
-                        color: "white",
-                        boxShadow: lecture.status === "live" ? "0 8px 30px rgba(229,57,53,0.3)" : "none"
-                      }}
-                    >
-                      {lecture.status === "live" ? "Join Now" : "Register Now"}
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </div>
-              </Card>
+                    {/* CTA — always at bottom */}
+                    <Link to="/student/lectures" className="block">
+                      <Button 
+                        className={`w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 ${
+                          lecture.status === "live" 
+                            ? "!bg-gradient-to-r !from-[#E53935] !to-[#b71c1c] !text-white hover:!from-[#b71c1c] hover:!to-[#b71c1c]" 
+                            : "!bg-[#121212] !text-white hover:!bg-[#E53935] hover:!text-white"
+                        }`}
+                        style={{ 
+                          boxShadow: lecture.status === "live" ? "0 8px 30px rgba(229,57,53,0.3)" : "none"
+                        }}
+                      >
+                        {lecture.status === "live" ? "Join Now" : "Register Now"}
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                </Card>
+              </div>
             ))}
           </div>
         </div>
@@ -1021,7 +1032,7 @@ export default function MarketingHome() {
               <p className="text-xl text-gray-600">Stay updated with our research and trading strategies</p>
             </div>
             <Link to="/category/technical-analysis">
-              <Button variant="outline" className="border-2 border-[#E53935] text-[#E53935] hover:bg-red-50">
+              <Button variant="outline" className="border-2 border-[#E53935] text-[#E53935] hover:bg-[#E53935] hover:text-white transition-all duration-300">
                 View All Articles
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -1052,7 +1063,10 @@ export default function MarketingHome() {
             </div>
 
             {/* Blog Stories (4 Cards) */}
-            <div className="lg:col-span-7 grid md:grid-cols-2 gap-6">
+            <div 
+              className="lg:col-span-7 flex md:grid md:grid-cols-2 gap-6 overflow-x-auto lg:overflow-x-visible pb-6 lg:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 lg:px-0 lg:mx-0 items-stretch"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
               {[
                 {
                   title: "How to Start Option Trading in India",
@@ -1083,19 +1097,21 @@ export default function MarketingHome() {
                   desc: "Overcoming emotional biases and building a disciplined trading routine."
                 }
               ].map((blog, i) => (
-                <Card key={i} className="group overflow-hidden border-0 bg-white hover:shadow-xl transition-all duration-300 cursor-pointer">
-                  <div className="relative h-32 overflow-hidden">
-                    <img src={blog.img} alt={blog.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                  </div>
-                  <div className="p-4">
-                    <div className="flex items-center justify-between text-[10px] text-gray-500 mb-2 uppercase font-bold tracking-widest">
-                      <span className="text-[#E53935]">{blog.category}</span>
-                      <span>{blog.readTime}</span>
+                <div key={i} className="flex-shrink-0 w-[260px] sm:w-[320px] md:w-full md:flex-shrink snap-center flex">
+                  <Card className="group overflow-hidden border-0 bg-white hover:shadow-xl transition-all duration-300 cursor-pointer w-full flex flex-col">
+                    <div className="relative h-32 overflow-hidden">
+                      <img src={blog.img} alt={blog.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                     </div>
-                    <h3 className="text-sm font-bold mb-2 group-hover:text-[#E53935] transition-colors line-clamp-2" style={{ color: "#121212" }}>{blog.title}</h3>
-                    <p className="text-xs text-gray-500 line-clamp-2">{blog.desc}</p>
-                  </div>
-                </Card>
+                    <div className="p-4 flex-1 flex flex-col">
+                      <div className="flex items-center justify-between text-[10px] text-gray-500 mb-2 uppercase font-bold tracking-widest">
+                        <span className="text-[#E53935]">{blog.category}</span>
+                        <span>{blog.readTime}</span>
+                      </div>
+                      <h3 className="text-sm font-bold mb-2 group-hover:text-[#E53935] transition-colors line-clamp-2" style={{ color: "#121212" }}>{blog.title}</h3>
+                      <p className="text-xs text-gray-500 line-clamp-2 flex-1">{blog.desc}</p>
+                    </div>
+                  </Card>
+                </div>
               ))}
             </div>
           </div>
@@ -1127,27 +1143,32 @@ export default function MarketingHome() {
             <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Why Choose FinTrade</h2>
             <p className="text-xl text-gray-600">Everything you need to become a successful trader</p>
           </div>
-          <div className="grid grid-cols-1 gap-8 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-8 items-stretch">
+          <div 
+            className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-8 overflow-x-auto md:overflow-x-visible pb-6 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
             {[
               { icon: Brain, title: "AI Tutor Support", description: "Get 24/7 assistance from our AI-powered trading assistant for doubts and guidance", num: "01" },
               { icon: BookOpen, title: "Structured Curriculum", description: "Follow a proven learning path from basics to advanced strategies with expert content", num: "02" },
               { icon: LineChart, title: "Real Trading Simulation", description: "Practice with ₹10 lakh virtual capital in realistic market conditions without risk", num: "03" },
               { icon: Trophy, title: "Placement Opportunities", description: "Top performers get placed in leading prop trading firms and financial institutions", num: "04" },
             ].map((feature, i) => (
-              <Card key={i} className="w-full flex flex-col overflow-hidden rounded-2xl border border-gray-200 hover:border-[#E53935]/50 transition-all duration-300 hover:shadow-2xl group bg-white">
-                <div className="flex flex-col flex-1 p-7 text-center">
-                  {/* Number Badge */}
-                  <div className="text-xs font-bold text-gray-300 mb-4 tracking-widest">{feature.num}</div>
-                  {/* Icon */}
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mx-auto mb-5 group-hover:scale-110 transition-transform duration-300" style={{ background: "linear-gradient(135deg, rgba(229,57,53,0.08), rgba(229,57,53,0.15))" }}>
-                    <feature.icon className="h-8 w-8" style={{ color: "#E53935" }} />
+              <div key={i} className="flex-shrink-0 w-[260px] sm:w-[320px] md:w-full md:flex-shrink snap-center flex">
+                <Card className="w-full flex flex-col overflow-hidden rounded-2xl border border-gray-200 hover:border-[#E53935]/50 transition-all duration-300 hover:shadow-2xl group bg-white">
+                  <div className="flex flex-col flex-1 p-7 text-center">
+                    {/* Number Badge */}
+                    <div className="text-xs font-bold text-gray-300 mb-4 tracking-widest">{feature.num}</div>
+                    {/* Icon */}
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mx-auto mb-5 group-hover:scale-110 transition-transform duration-300" style={{ background: "linear-gradient(135deg, rgba(229,57,53,0.08), rgba(229,57,53,0.15))" }}>
+                      <feature.icon className="h-8 w-8" style={{ color: "#E53935" }} />
+                    </div>
+                    <h3 className="text-lg font-bold mb-3" style={{ color: "#121212" }}>{feature.title}</h3>
+                    <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
                   </div>
-                  <h3 className="text-lg font-bold mb-3" style={{ color: "#121212" }}>{feature.title}</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
-                </div>
-                {/* Bottom accent */}
-                <div className="h-1 w-full" style={{ background: "linear-gradient(to right, transparent, #E53935, transparent)" }} />
-              </Card>
+                  {/* Bottom accent */}
+                  <div className="h-1 w-full" style={{ background: "linear-gradient(to right, transparent, #E53935, transparent)" }} />
+                </Card>
+              </div>
             ))}
           </div>
         </div>
@@ -1163,7 +1184,7 @@ export default function MarketingHome() {
           <p className="text-xl text-white/90 mb-8">Join 1200+ students learning to trade professionally</p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link to="/student/entrance-exam" className="block w-full sm:w-auto">
-              <Button size="lg" className="w-full sm:w-auto shadow-2xl hover:shadow-3xl transition-all text-lg px-8 py-6" style={{ background: "white", color: "#E53935", boxShadow: "0 0 40px rgba(255, 255, 255, 0.3)" }}>
+              <Button size="lg" className="w-full sm:w-auto shadow-2xl hover:shadow-3xl transition-all text-lg px-8 py-6 bg-white text-[#E53935] hover:bg-[#E53935] hover:text-white duration-300" style={{ boxShadow: "0 0 40px rgba(255, 255, 255, 0.3)" }}>
                 Start Entrance Exam
                 <ArrowRight className="ml-2 h-6 w-6" />
               </Button>
@@ -1171,9 +1192,7 @@ export default function MarketingHome() {
             <Link to="/student/contract-kyc" className="block w-full sm:w-auto">
               <Button 
                 size="lg" 
-                variant="outline" 
-                className="w-full sm:w-auto text-lg px-8 py-6 border-2 hover:bg-white/10 transition-colors"
-                style={{ background: "transparent", borderColor: "white", color: "white" }}
+                className="w-full sm:w-auto text-lg px-8 py-6 border-2 border-white !bg-transparent !text-white hover:!bg-white hover:!text-[#E53935] transition-all duration-300"
               >
                 <FileText className="mr-2 h-5 w-5" />
                 View Contract & KYC

@@ -21,22 +21,30 @@ export default function PlatformFeatures() {
           <h2 className="text-4xl font-bold mb-4" style={{ color: "#121212" }}>What You'll Get</h2>
           <p className="text-xl text-gray-600">Everything included in your FinTrade journey</p>
         </div>
-        <div className="grid grid-cols-1 gap-6 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 items-stretch">
+        <div 
+          className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-x-auto md:overflow-x-visible pb-6 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
           {features.map((f, i) => (
-            <Card key={i} className="w-full p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all hover:shadow-xl group">
-              <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform" style={{ background: "rgba(229,57,53,0.1)" }}>
-                  <f.icon className="h-7 w-7" style={{ color: "#E53935" }} />
+            <div key={i} className="flex-shrink-0 w-[280px] sm:w-[340px] md:w-full md:flex-shrink snap-center flex">
+              <Card className="w-full p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all hover:shadow-xl group">
+                <div className="flex items-start gap-4">
+                  <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform" style={{ background: "rgba(229,57,53,0.1)" }}>
+                    <f.icon className="h-7 w-7" style={{ color: "#E53935" }} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-lg mb-2" style={{ color: "#121212" }}>{f.title}</h4>
+                    <p className="text-gray-600 text-sm">{f.desc}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-lg mb-2" style={{ color: "#121212" }}>{f.title}</h4>
-                  <p className="text-gray-600 text-sm">{f.desc}</p>
-                </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           ))}
         </div>
       </div>
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+      `}</style>
     </section>
   );
 }

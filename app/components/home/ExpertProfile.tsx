@@ -81,8 +81,8 @@ function ExpertCard({ expert }: { expert: Expert }) {
           </div>
 
           <Button
-            className="self-start shadow-lg hover:shadow-xl transition-all hover:scale-105"
-            style={{ background: "linear-gradient(135deg, #E53935 0%, #b71c1c 100%)", color: "white", boxShadow: "0 4px 20px rgba(229,57,53,0.4)" }}
+            className="self-start shadow-lg hover:shadow-xl transition-all hover:scale-105 bg-gradient-to-r from-[#E53935] to-[#b71c1c] text-white hover:from-[#b71c1c] hover:to-[#b71c1c] transition-all duration-300"
+            style={{ boxShadow: "0 4px 20px rgba(229,57,53,0.4)" }}
           >
             View Full Profile
           </Button>

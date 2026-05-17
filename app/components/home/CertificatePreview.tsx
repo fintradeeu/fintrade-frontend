@@ -114,7 +114,7 @@ export default function CertificatePreview() {
                 desc: "Certificates are awarded based on exam performance, project work, and trading simulator results.",
               },
             ].map((item, i) => (
-              <div key={i} className="flex gap-4 items-start p-4 rounded-xl hover:bg-red-50/50 transition-colors">
+              <div key={i} className="flex gap-4 items-start p-4 rounded-xl hover:bg-[#E53935]/5 transition-colors">
                 <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(229,57,53,0.1)" }}>
                   <item.icon className="h-6 w-6" style={{ color: "#E53935" }} />
                 </div>
