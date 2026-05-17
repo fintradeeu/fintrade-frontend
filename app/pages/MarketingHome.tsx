@@ -383,9 +383,9 @@ function CourseCard({ course }: { course: any }) {
 
       {/* Program Details Modal */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="sm:max-w-2xl bg-white text-[#121212] rounded-3xl overflow-hidden border border-gray-100 shadow-2xl p-0">
-          {/* Header Gradient */}
-          <div className="relative px-8 py-8 text-white" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" }}>
+        <DialogContent className="sm:max-w-2xl bg-white text-[#121212] rounded-3xl overflow-hidden border border-gray-100 shadow-2xl p-0 z-[10000] max-h-[90vh] flex flex-col">
+          {/* Header Gradient (Fixed) */}
+          <div className="relative px-8 py-8 text-white flex-shrink-0" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" }}>
             <div className="flex items-center gap-3 mb-3">
               <span className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/20 bg-white/10">
                 {course.level} Program
@@ -398,7 +398,8 @@ function CourseCard({ course }: { course: any }) {
             <p className="text-white/60 text-sm mt-1.5 font-medium">Complete Program Overview & Course Curriculum</p>
           </div>
 
-          <div className="p-8">
+          {/* Body & Actions (Scrollable if content is taller than viewport) */}
+          <div className="p-8 flex-1 overflow-y-auto">
             {/* Custom Premium Tabs Navigation */}
             <div className="flex border-b border-gray-100 mb-6">
               <button 
