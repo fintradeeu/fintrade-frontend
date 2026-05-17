@@ -694,17 +694,8 @@ export default function MarketingHome() {
               <button onClick={() => setSearchOpen(true)} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-gray-600 hover:text-[#E53935] hover:bg-[#E53935]/10 transition-all" title="Search">
                 <Search className="h-4 w-4 md:h-5 md:w-5" />
               </button>
-              <Link to="/login" className="hidden sm:block">
+              <Link to="/login">
                 <Button variant="ghost" className="text-gray-700 hover:text-[#E53935] hover:bg-[#E53935]/10" size="lg">Login</Button>
-              </Link>
-              <Link to="/student/entrance-exam">
-                <Button
-                  className="shadow-md hover:shadow-xl transition-all hover:scale-105 h-9 px-4 md:h-11 md:px-8 bg-gradient-to-r from-[#E53935] to-[#b71c1c] text-white hover:from-[#b71c1c] hover:to-[#b71c1c]"
-                  style={{ boxShadow: "0 4px 20px rgba(229, 57, 53, 0.4)" }}
-                >
-                  <span className="sm:hidden text-xs">Start</span>
-                  <span className="hidden sm:inline">Start Learning</span>
-                </Button>
               </Link>
             </div>
           </div>
