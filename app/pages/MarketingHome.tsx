@@ -172,82 +172,335 @@ function VideoModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-// Course Card Component to handle local state for Read More
+const courseDetails: Record<string, { description: string; highlights: string[]; modules: { title: string; lessons: string[] }[] }> = {
+  FMF: {
+    description: "Master the fundamentals of financial markets and start your trading journey with confidence. Learn from real-world market analysts and build a foundation in stock analysis, derivatives, and emotional discipline.",
+    highlights: [
+      "Industry Recognized Certification",
+      "Practical Market Simulator Exposure",
+      "Dedicated Mentor Support & Live Q&A"
+    ],
+    modules: [
+      {
+        title: "Module 1: Introduction to Financial Markets",
+        lessons: [
+          "Basics of Stocks, Debentures, and Mutual Funds",
+          "How Stock Exchanges (NSE/BSE) & Demat Accounts operate",
+          "Navigating a Trading Terminal (Placing orders, bid-ask spreads)"
+        ]
+      },
+      {
+        title: "Module 2: Technical Analysis Core",
+        lessons: [
+          "Introduction to Candlestick charts & basic patterns",
+          "Drawing Support & Resistance lines like a pro",
+          "Trend analysis (Uptrends, Downtrends, Consolidation) and Moving Averages"
+        ]
+      },
+      {
+        title: "Module 3: Introduction to Derivatives & F&O",
+        lessons: [
+          "What are Futures & Options contracts?",
+          "Index trading vs. Equity trading",
+          "Understanding Margins, Leverage, and contract expiry"
+        ]
+      },
+      {
+        title: "Module 4: Risk Management & Trading Psychology",
+        lessons: [
+          "Position sizing principles (Calculating risk per trade)",
+          "Placing hard Stop-Losses and profit-taking targets",
+          "Managing fear and greed: Standard rules of trading discipline"
+        ]
+      }
+    ]
+  },
+  CARP: {
+    description: "Deep dive into research methodologies, comprehensive technical analysis, and fundamental equity research. Built specifically for professionals, graduates, and traders aiming to build a career in stock market research or make informed, data-driven long-term investments.",
+    highlights: [
+      "Professional Equity Research Report Training",
+      "Structural Fundamental Valuation & DCF Models",
+      "Placement Assistance & Portfolio Showcase"
+    ],
+    modules: [
+      {
+        title: "Module 1: Advanced Technical Analysis",
+        lessons: [
+          "Deep dive into complex Chart Patterns (Double Tops/Bottoms, Head & Shoulders, Flags)",
+          "Master leading & lagging indicators (RSI, MACD, Bollinger Bands, Fibonacci Retracements)",
+          "Multi-timeframe analysis for high-probability setups"
+        ]
+      },
+      {
+        title: "Module 2: Fundamental Analysis & Financial Statements",
+        lessons: [
+          "Deconstruct Balance Sheets, Income Statements, and Cash Flow Statements",
+          "Analyzing key financial ratios (P/E, P/B, EV/EBITDA, ROE, Debt-to-Equity)",
+          "Red-flag detection: Identifying bookkeeping anomalies and accounting quality"
+        ]
+      },
+      {
+        title: "Module 3: Valuation Methodologies & Economic Analysis",
+        lessons: [
+          "Relative Valuation (Peer comparison) and Absolute Valuation (Discounted Cash Flow modeling)",
+          "Macro-economic indicators (GDP, inflation, interest rates) and their market impact",
+          "Sector-wise research frameworks (Banking, IT, Auto, Pharma, FMCG)"
+        ]
+      },
+      {
+        title: "Module 4: Equity Research Report Writing & Ethics",
+        lessons: [
+          "Drafting a professional 'Initiating Coverage' research report",
+          "Structuring Investment Thesis, Target Pricing, and Risk factors",
+          "Regulatory norms, SEBI guidelines, and financial analyst ethics"
+        ]
+      }
+    ]
+  },
+  CPTP: {
+    description: "Professional grade trading strategies, advanced risk management, and portfolio construction. Master derivatives strategies, options pricing models (Greeks), institutional price action, and order flow analysis. Includes intensive trading simulator training and a career pathway to corporate desks.",
+    highlights: [
+      "Advanced Options Greeks & Hedging Strategies",
+      "Institutional Price Action & Order Flow Analysis",
+      "Practical Prop Desk Simulator & Capital Placement Pathway"
+    ],
+    modules: [
+      {
+        title: "Module 1: Advanced Options Trading & Option Greeks",
+        lessons: [
+          "Deep dive into Options Greeks (Delta, Gamma, Vega, Theta) and their effects on premium",
+          "Constructing advanced options strategies (Spreads, Iron Condors, Straddles, Strangles)",
+          "Dynamic adjustments, delta hedging, and risk management of complex options portfolios"
+        ]
+      },
+      {
+        title: "Module 2: Intraday & Swing Trading Systems",
+        lessons: [
+          "High-probability intraday setups (Gap trading, VWAP, Breakouts, Mean Reversion)",
+          "Volume Profile analysis and identifying Value Areas (VAH/VAL/POC)",
+          "Development and backtesting of automated/rules-based trading strategies"
+        ]
+      },
+      {
+        title: "Module 3: Institutional Order Flow & Price Action",
+        lessons: [
+          "Reading order book dynamics, market depth (Level 2 data), and time & sales",
+          "Identifying institutional buying/selling footprints (Smart Money concepts)",
+          "Trade execution psychology and managing large position sizes"
+        ]
+      },
+      {
+        title: "Module 4: Capital Allocation & Professional Desk Recruitment",
+        lessons: [
+          "Advanced portfolio construction and Sharpe/Sortino ratio optimization",
+          "Proprietary desk simulation rules: Maximum drawdown limits, daily loss limits",
+          "Career preparation, placement guidance, and interview masterclass for prop trading desks"
+        ]
+      }
+    ]
+  }
+};
+
+// Course Card Component to handle local state for Read More and Program Details Dialog
 function CourseCard({ course }: { course: any }) {
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [showFullTitle, setShowFullTitle] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'modules'>('overview');
   const MAX_DESC_LENGTH = 100;
   const MAX_TITLE_LENGTH = 45;
 
+  const courseKey = course.name.includes("FMF") ? "FMF" : course.name.includes("CARP") ? "CARP" : "CPTP";
+  const details = courseDetails[courseKey];
+
   return (
-    <Card 
-      className="w-full flex flex-col group transition-all duration-500 overflow-hidden rounded-2xl border border-gray-200 hover:border-[#E53935]/50 hover:shadow-2xl"
-    >
-      {/* Gradient Header */}
-      <div className="relative px-6 pt-6 pb-4 min-h-[210px] flex flex-col justify-between" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" }}>
-        <div>
-          <div className="flex items-start justify-between mb-3">
-            <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)" }}>
-              <course.icon className="h-7 w-7 text-white" />
-            </div>
-            <div className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/30" style={{ background: "rgba(255,255,255,0.1)" }}>
-              {course.duration}
-            </div>
-          </div>
-          <h3 className="text-lg font-bold text-white mb-1 leading-snug">
-            {showFullTitle || course.name.length <= MAX_TITLE_LENGTH ? course.name : `${course.name.substring(0, MAX_TITLE_LENGTH)}...`}
-            {course.name.length > MAX_TITLE_LENGTH && (
-              <button onClick={(e) => { e.preventDefault(); setShowFullTitle(!showFullTitle); }} className="text-[#E53935] text-[10px] ml-1 hover:underline">
-                {showFullTitle ? "Read Less" : "Read More"}
-              </button>
-            )}
-          </h3>
-        </div>
-        <span className="text-white/70 text-xs font-medium uppercase tracking-widest block">{course.level} Program</span>
-      </div>
-
-      {/* Card Body */}
-      <div className="flex flex-col flex-1 p-4 bg-white">
-        <div className="text-gray-600 text-sm mb-4 leading-relaxed">
-          <p>
-            {showFullDesc || course.description.length <= MAX_DESC_LENGTH ? course.description : `${course.description.substring(0, MAX_DESC_LENGTH)}...`}
-            {course.description.length > MAX_DESC_LENGTH && (
-              <button onClick={(e) => { e.preventDefault(); setShowFullDesc(!showFullDesc); }} className="text-[#E53935] font-bold ml-1 hover:underline">
-                {showFullDesc ? "Read Less" : "Read More"}
-              </button>
-            )}
-          </p>
-        </div>
-
-        <div className="flex-1" />
-
-        <div className="border-t border-gray-100 pt-5 mb-5">
-          <div className="flex items-end justify-between">
-            <div>
-              <div className="text-sm text-gray-400 line-through">{course.originalPrice}</div>
-              <div className="text-3xl font-extrabold tracking-tight" style={{ color: "#121212" }}>
-                {course.price}<span className="text-sm font-normal text-gray-500 ml-1">+ GST</span>
+    <>
+      <Card 
+        className="w-full flex flex-col group transition-all duration-500 overflow-hidden rounded-2xl border border-gray-200 hover:border-[#E53935]/50 hover:shadow-2xl"
+      >
+        {/* Gradient Header */}
+        <div className="relative px-6 pt-6 pb-4 min-h-[210px] flex flex-col justify-between" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" }}>
+          <div>
+            <div className="flex items-start justify-between mb-3">
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)" }}>
+                <course.icon className="h-7 w-7 text-white" />
+              </div>
+              <div className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/30" style={{ background: "rgba(255,255,255,0.1)" }}>
+                {course.duration}
               </div>
             </div>
-            <div className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "rgba(76,175,80,0.1)", color: "#2e7d32" }}>
-              Save {course.savings}
-            </div>
+            <h3 className="text-lg font-bold text-white mb-1 leading-snug">
+              {showFullTitle || course.name.length <= MAX_TITLE_LENGTH ? course.name : `${course.name.substring(0, MAX_TITLE_LENGTH)}...`}
+              {course.name.length > MAX_TITLE_LENGTH && (
+                <button onClick={(e) => { e.preventDefault(); setShowFullTitle(!showFullTitle); }} className="text-[#E53935] text-[10px] ml-1 hover:underline">
+                  {showFullTitle ? "Read Less" : "Read More"}
+                </button>
+              )}
+            </h3>
           </div>
+          <span className="text-white/70 text-xs font-medium uppercase tracking-widest block">{course.level} Program</span>
         </div>
 
-        <Link to="/student/courses" className="block">
+        {/* Card Body */}
+        <div className="flex flex-col flex-1 p-4 bg-white">
+          <div className="text-gray-600 text-sm mb-4 leading-relaxed">
+            <p>
+              {showFullDesc || course.description.length <= MAX_DESC_LENGTH ? course.description : `${course.description.substring(0, MAX_DESC_LENGTH)}...`}
+              {course.description.length > MAX_DESC_LENGTH && (
+                <button onClick={(e) => { e.preventDefault(); setShowFullDesc(!showFullDesc); }} className="text-[#E53935] font-bold ml-1 hover:underline">
+                  {showFullDesc ? "Read Less" : "Read More"}
+                </button>
+              )}
+            </p>
+          </div>
+
+          <div className="flex-1" />
+
+          <div className="border-t border-gray-100 pt-5 mb-5">
+            <div className="flex items-end justify-between">
+              <div>
+                <div className="text-sm text-gray-400 line-through">{course.originalPrice}</div>
+                <div className="text-3xl font-extrabold tracking-tight" style={{ color: "#121212" }}>
+                  {course.price}<span className="text-sm font-normal text-gray-500 ml-1">+ GST</span>
+                </div>
+              </div>
+              <div className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "rgba(76,175,80,0.1)", color: "#2e7d32" }}>
+                Save {course.savings}
+              </div>
+            </div>
+          </div>
+
           <Button 
+            onClick={() => { setActiveTab('overview'); setIsDetailsOpen(true); }}
             className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 group-hover:shadow-lg"
             style={{ background: "#121212", color: "white" }}
           >
             View Program Details
             <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Button>
-        </Link>
-      </div>
-    </Card>
+        </div>
+      </Card>
+
+      {/* Program Details Modal */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="sm:max-w-2xl bg-white text-[#121212] rounded-3xl overflow-hidden border border-gray-100 shadow-2xl p-0">
+          {/* Header Gradient */}
+          <div className="relative px-8 py-8 text-white" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" }}>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/20 bg-white/10">
+                {course.level} Program
+              </span>
+              <span className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/20 bg-white/10">
+                {course.duration}
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight">{course.name}</h2>
+            <p className="text-white/60 text-sm mt-1.5 font-medium">Complete Program Overview & Course Curriculum</p>
+          </div>
+
+          <div className="p-8">
+            {/* Custom Premium Tabs Navigation */}
+            <div className="flex border-b border-gray-100 mb-6">
+              <button 
+                type="button"
+                onClick={() => setActiveTab('overview')} 
+                className={`pb-3 pr-6 text-sm font-semibold transition-all border-b-2 ${activeTab === 'overview' ? 'border-[#E53935] text-[#E53935]' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+              >
+                Overview
+              </button>
+              <button 
+                type="button"
+                onClick={() => setActiveTab('modules')} 
+                className={`pb-3 px-6 text-sm font-semibold transition-all border-b-2 ${activeTab === 'modules' ? 'border-[#E53935] text-[#E53935]' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+              >
+                Modules & Curriculum
+              </button>
+            </div>
+
+            {/* Tab content: Overview */}
+            {activeTab === 'overview' && (
+              <div className="space-y-6">
+                <div>
+                  <h4 className="font-bold text-[#121212] text-sm uppercase tracking-wider mb-2.5">About this Program</h4>
+                  <p className="text-gray-600 text-sm leading-relaxed font-medium">{details.description}</p>
+                </div>
+
+                <div>
+                  <h4 className="font-bold text-[#121212] text-sm uppercase tracking-wider mb-3">Key Highlights</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {details.highlights.map((highlight, idx) => (
+                      <div key={idx} className="flex flex-col p-4 rounded-2xl bg-gray-50 border border-gray-100 text-center hover:shadow-md transition-shadow">
+                        <span className="text-[#E53935] text-xl mb-1.5">✓</span>
+                        <span className="text-xs font-semibold text-gray-800 leading-snug">{highlight}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+                  <div>
+                    <span className="text-xs text-gray-400 font-medium">Program Enrollment Fee</span>
+                    <div className="text-3xl font-extrabold text-[#121212] tracking-tight">
+                      {course.price}
+                      <span className="text-sm font-normal text-gray-500 ml-1">+ GST</span>
+                    </div>
+                  </div>
+                  <div className="text-xs text-green-700 font-bold bg-green-50 border border-green-100 px-4 py-2 rounded-full shadow-sm">
+                    Save {course.savings} instantly
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab content: Modules */}
+            {activeTab === 'modules' && (
+              <div className="space-y-4 max-h-[340px] overflow-y-auto pr-2 scrollbar-thin">
+                {details.modules.map((mod, idx) => (
+                  <div key={idx} className="p-4 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center gap-3 mb-2.5">
+                      <div className="w-7 h-7 rounded-full bg-[#E53935]/10 text-[#E53935] flex items-center justify-center text-xs font-bold border border-[#E53935]/20">
+                        {idx + 1}
+                      </div>
+                      <h4 className="font-bold text-gray-800 text-sm leading-snug">{mod.title}</h4>
+                    </div>
+                    <ul className="space-y-2 pl-10">
+                      {mod.lessons.map((lesson, lIdx) => (
+                        <li key={lIdx} className="text-xs text-gray-600 flex items-start gap-2.5 leading-relaxed font-medium">
+                          <span className="text-[#E53935] mt-1 text-xs">•</span>
+                          <span>{lesson}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Actions Footer */}
+            <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end mt-8 pt-6 border-t border-gray-100">
+              <Button 
+                onClick={() => setIsDetailsOpen(false)}
+                variant="outline"
+                className="w-full sm:w-auto h-12 text-sm font-semibold rounded-xl border-gray-200 text-gray-600 hover:bg-gray-50"
+              >
+                Close Details
+              </Button>
+              <Link to="/student/courses" className="w-full sm:w-auto">
+                <Button 
+                  className="w-full h-12 text-sm font-semibold rounded-xl px-8 shadow-lg hover:shadow-xl transition-all"
+                  style={{ background: "#E53935", color: "white" }}
+                >
+                  Enroll Now
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
+
 
 export default function MarketingHome() {
   const [videoOpen, setVideoOpen] = useState(false);
