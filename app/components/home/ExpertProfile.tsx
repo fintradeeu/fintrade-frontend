@@ -29,7 +29,7 @@ const experts: Expert[] = [
 
 function ExpertCard({ expert }: { expert: Expert }) {
   return (
-    <Card className="overflow-hidden border-2 border-gray-100 hover:border-[#E53935] transition-all hover:shadow-2xl">
+    <Card className="overflow-hidden border-2 border-gray-100 hover:border-[#D50032] transition-all hover:shadow-2xl">
       <div className="grid md:grid-cols-5 gap-0">
         {/* Photo Side */}
         <div className="md:col-span-2 relative">
@@ -58,19 +58,19 @@ function ExpertCard({ expert }: { expert: Expert }) {
 
         {/* Info Side */}
         <div className="md:col-span-3 p-8 flex flex-col justify-center bg-white">
-          <div className="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-4 self-start" style={{ background: "rgba(229,57,53,0.1)", color: "#E53935" }}>
+          <div className="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-4 self-start" style={{ background: "rgba(213,0,50,0.1)", color: "#D50032" }}>
             Lead Expert
           </div>
           <h3 className="text-3xl font-bold mb-2" style={{ color: "#121212" }}>{expert.name}</h3>
-          <p className="text-lg font-medium mb-4" style={{ color: "#E53935" }}>{expert.title}</p>
+          <p className="text-lg font-medium mb-4" style={{ color: "#D50032" }}>{expert.title}</p>
           <p className="text-gray-600 leading-relaxed mb-6">{expert.bio}</p>
 
           {/* Achievement Grid */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             {expert.achievements.map((ach, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-lg" style={{ background: "rgba(229,57,53,0.05)" }}>
-                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(229,57,53,0.1)" }}>
-                  <ach.icon className="h-5 w-5" style={{ color: "#E53935" }} />
+              <div key={i} className="flex items-center gap-3 p-3 rounded-lg" style={{ background: "rgba(213,0,50,0.05)" }}>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(213,0,50,0.1)" }}>
+                  <ach.icon className="h-5 w-5" style={{ color: "#D50032" }} />
                 </div>
                 <div>
                   <div className="text-lg font-bold" style={{ color: "#121212" }}>{ach.value}</div>
@@ -81,8 +81,8 @@ function ExpertCard({ expert }: { expert: Expert }) {
           </div>
 
           <Button
-            className="self-start shadow-lg hover:shadow-xl transition-all hover:scale-105 bg-gradient-to-r from-[#E53935] to-[#b71c1c] text-white hover:from-[#b71c1c] hover:to-[#b71c1c] transition-all duration-300"
-            style={{ boxShadow: "0 4px 20px rgba(229,57,53,0.4)" }}
+            className="self-start shadow-lg hover:shadow-xl transition-all hover:scale-105 bg-gradient-to-r from-[#D50032] to-[#FF0000] text-white hover:from-[#FF0000] hover:to-[#FF0000] transition-all duration-300"
+            style={{ boxShadow: "0 4px 20px rgba(213,0,50,0.4)" }}
           >
             View Full Profile
           </Button>
@@ -97,8 +97,8 @@ export default function ExpertProfile() {
     <section className="py-20 bg-transparent relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
-            <span className="text-[#E53935] font-semibold text-sm">👨‍🏫 Meet the Expert</span>
+          <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#D50032]/30" style={{ background: "rgba(213,0,50,0.08)" }}>
+            <span className="text-[#D50032] font-semibold text-sm">👨‍🏫 Meet the Expert</span>
           </div>
           <h2 className="text-4xl font-bold mb-4" style={{ color: "#121212" }}>Learn From the Best</h2>
           <p className="text-xl text-gray-600">Industry veterans guiding your trading journey</p>

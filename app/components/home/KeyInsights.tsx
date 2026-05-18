@@ -13,8 +13,8 @@ export default function KeyInsights() {
     <section className="py-20 bg-transparent relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
-            <span className="text-[#E53935] font-semibold text-sm">🔍 Key Insights</span>
+          <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#D50032]/30" style={{ background: "rgba(213,0,50,0.08)" }}>
+            <span className="text-[#D50032] font-semibold text-sm">🔍 Key Insights</span>
           </div>
           <h2 className="text-4xl font-bold mb-4" style={{ color: "#121212" }}>Key Market Insights</h2>
           <p className="text-xl text-gray-600">Real-time data and analytics (data will be integrated soon)</p>
@@ -26,11 +26,11 @@ export default function KeyInsights() {
           {insightsPlaceholder.map((insight, i) => (
             <div key={i} className="flex-shrink-0 w-[240px] sm:w-[300px] md:w-full md:flex-shrink snap-center flex">
               <Card
-                className="w-full p-6 text-center border-2 border-dashed border-gray-200 hover:border-[#E53935]/30 transition-all flex flex-col items-center justify-center"
-                style={{ background: "rgba(229,57,53,0.02)" }}
+                className="w-full p-6 text-center border-2 border-dashed border-gray-200 hover:border-[#D50032]/30 transition-all flex flex-col items-center justify-center"
+                style={{ background: "rgba(213,0,50,0.02)" }}
               >
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full mb-4" style={{ background: "rgba(229,57,53,0.1)" }}>
-                  <BarChart3 className="h-7 w-7" style={{ color: "#E53935" }} />
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full mb-4" style={{ background: "rgba(213,0,50,0.1)" }}>
+                  <BarChart3 className="h-7 w-7" style={{ color: "#D50032" }} />
                 </div>
                 <div className="text-3xl font-bold mb-2" style={{ color: "#121212" }}>{insight.value}</div>
                 <div className="text-sm font-semibold mb-1" style={{ color: "#121212" }}>{insight.label}</div>

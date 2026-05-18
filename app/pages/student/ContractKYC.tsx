@@ -43,14 +43,14 @@ function StepBar({ current }: { current: number }) {
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mb-1 transition-all"
               style={{
-                background: i < current ? "#E53935" : i === current ? "#E53935" : "#e5e7eb",
+                background: i < current ? "#D50032" : i === current ? "#D50032" : "#e5e7eb",
                 color: i <= current ? "white" : "#9ca3af",
-                boxShadow: i === current ? "0 0 0 4px rgba(229,57,53,0.2)" : "none",
+                boxShadow: i === current ? "0 0 0 4px rgba(213,0,50,0.2)" : "none",
               }}
             >
               {i < current ? <CheckCircle className="h-4 w-4" /> : i + 1}
             </div>
-            <span className="text-xs text-center hidden md:block" style={{ color: i <= current ? "#E53935" : "#9ca3af", fontWeight: i === current ? 700 : 400 }}>
+            <span className="text-xs text-center hidden md:block" style={{ color: i <= current ? "#D50032" : "#9ca3af", fontWeight: i === current ? 700 : 400 }}>
               {s}
             </span>
           </div>
@@ -59,7 +59,7 @@ function StepBar({ current }: { current: number }) {
       <div className="relative h-1.5 rounded-full bg-gray-200 mt-1">
         <div
           className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
-          style={{ width: `${(current / (TOTAL_STEPS - 1)) * 100}%`, background: "linear-gradient(90deg, #E53935, #ff6f60)" }}
+          style={{ width: `${(current / (TOTAL_STEPS - 1)) * 100}%`, background: "linear-gradient(90deg, #D50032, #FF4D70)" }}
         />
       </div>
     </div>
@@ -135,8 +135,8 @@ Date: ${new Date().toLocaleDateString("en-IN")}
     <div className="min-h-screen flex flex-col items-center justify-center py-12 px-4" style={{ background: "linear-gradient(135deg, #fafafa 0%, #F5F5F5 100%)" }}>
       {/* Glow */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-        <div style={{ position: "absolute", top: "10%", right: "5%", width: 400, height: 400, borderRadius: "50%", background: "#E53935", filter: "blur(120px)", opacity: 0.07 }} />
-        <div style={{ position: "absolute", bottom: "5%", left: "5%", width: 350, height: 350, borderRadius: "50%", background: "#E53935", filter: "blur(100px)", opacity: 0.06 }} />
+        <div style={{ position: "absolute", top: "10%", right: "5%", width: 400, height: 400, borderRadius: "50%", background: "#D50032", filter: "blur(120px)", opacity: 0.07 }} />
+        <div style={{ position: "absolute", bottom: "5%", left: "5%", width: 350, height: 350, borderRadius: "50%", background: "#D50032", filter: "blur(100px)", opacity: 0.06 }} />
       </div>
 
       <div className="w-full max-w-2xl relative z-10">
@@ -145,20 +145,20 @@ Date: ${new Date().toLocaleDateString("en-IN")}
           <Link to="/"><img src={logo} alt="FinTrade" className="h-12 mx-auto mb-4" /></Link>
           <h1 className="text-2xl font-bold" style={{ color: "#121212" }}>Contract & KYC Verification</h1>
           <p className="text-gray-500 text-sm mt-1">Complete your onboarding to activate your account</p>
-          <div className="inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full text-xs" style={{ background: "rgba(229,57,53,0.08)", color: "#E53935" }}>
+          <div className="inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full text-xs" style={{ background: "rgba(213,0,50,0.08)", color: "#D50032" }}>
             <Shield className="h-3 w-3" /> Demo Mode — Pre-filled with sample data
           </div>
         </div>
 
-        <Card className="p-8 shadow-2xl border border-gray-200 bg-white" style={{ boxShadow: "0 20px 60px rgba(229,57,53,0.08), 0 4px 20px rgba(0,0,0,0.06)" }}>
+        <Card className="p-8 shadow-2xl border border-gray-200 bg-white" style={{ boxShadow: "0 20px 60px rgba(213,0,50,0.08), 0 4px 20px rgba(0,0,0,0.06)" }}>
           <StepBar current={step} />
 
           {/* Step 0: Personal Details */}
           {step === 0 && (
             <div className="space-y-5">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(229,57,53,0.1)" }}>
-                  <User className="h-5 w-5" style={{ color: "#E53935" }} />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(213,0,50,0.1)" }}>
+                  <User className="h-5 w-5" style={{ color: "#D50032" }} />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold" style={{ color: "#121212" }}>Personal Details</h2>
@@ -202,8 +202,8 @@ Date: ${new Date().toLocaleDateString("en-IN")}
           {step === 1 && (
             <div className="space-y-5">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(229,57,53,0.1)" }}>
-                  <Phone className="h-5 w-5" style={{ color: "#E53935" }} />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(213,0,50,0.1)" }}>
+                  <Phone className="h-5 w-5" style={{ color: "#D50032" }} />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold" style={{ color: "#121212" }}>Mobile Verification</h2>
@@ -225,7 +225,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                     className="text-center text-xl tracking-widest font-bold"
                     style={{ letterSpacing: "0.5em" }}
                   />
-                  <Button variant="outline" className="whitespace-nowrap border-[#E53935] text-[#E53935]" onClick={() => setMobileOtp("123456")}>
+                  <Button variant="outline" className="whitespace-nowrap border-[#D50032] text-[#D50032]" onClick={() => setMobileOtp("123456")}>
                     Auto-fill Demo
                   </Button>
                 </div>
@@ -243,8 +243,8 @@ Date: ${new Date().toLocaleDateString("en-IN")}
           {step === 2 && (
             <div className="space-y-5">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(229,57,53,0.1)" }}>
-                  <Mail className="h-5 w-5" style={{ color: "#E53935" }} />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(213,0,50,0.1)" }}>
+                  <Mail className="h-5 w-5" style={{ color: "#D50032" }} />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold" style={{ color: "#121212" }}>Email Verification</h2>
@@ -266,7 +266,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                     className="text-center text-xl tracking-widest font-bold"
                     style={{ letterSpacing: "0.5em" }}
                   />
-                  <Button variant="outline" className="whitespace-nowrap border-[#E53935] text-[#E53935]" onClick={() => setEmailOtp("654321")}>
+                  <Button variant="outline" className="whitespace-nowrap border-[#D50032] text-[#D50032]" onClick={() => setEmailOtp("654321")}>
                     Auto-fill Demo
                   </Button>
                 </div>
@@ -284,8 +284,8 @@ Date: ${new Date().toLocaleDateString("en-IN")}
           {step === 3 && (
             <div className="space-y-5">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(229,57,53,0.1)" }}>
-                  <FileText className="h-5 w-5" style={{ color: "#E53935" }} />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(213,0,50,0.1)" }}>
+                  <FileText className="h-5 w-5" style={{ color: "#D50032" }} />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold" style={{ color: "#121212" }}>KYC Documents</h2>
@@ -308,13 +308,13 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                 { label: "Passport Photo", state: photoUploaded, setState: setPhotoUploaded },
               ].map((doc, i) => (
                 <div key={i}
-                  className="border-2 border-dashed rounded-xl p-4 flex items-center justify-between cursor-pointer transition-all hover:border-[#E53935]"
+                  className="border-2 border-dashed rounded-xl p-4 flex items-center justify-between cursor-pointer transition-all hover:border-[#D50032]"
                   style={{ borderColor: doc.state ? "#4CAF50" : "#d1d5db", background: doc.state ? "rgba(76,175,80,0.05)" : "#fafafa" }}
                   onClick={() => doc.setState(true)}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: doc.state ? "rgba(76,175,80,0.1)" : "rgba(229,57,53,0.08)" }}>
-                      {doc.state ? <CheckCircle className="h-5 w-5 text-green-600" /> : <FileText className="h-5 w-5" style={{ color: "#E53935" }} />}
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: doc.state ? "rgba(76,175,80,0.1)" : "rgba(213,0,50,0.08)" }}>
+                      {doc.state ? <CheckCircle className="h-5 w-5 text-green-600" /> : <FileText className="h-5 w-5" style={{ color: "#D50032" }} />}
                     </div>
                     <div>
                       <div className="font-medium text-sm" style={{ color: "#121212" }}>{doc.label}</div>
@@ -322,7 +322,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                     </div>
                   </div>
                   {!doc.state && (
-                    <Button size="sm" variant="outline" className="border-[#E53935] text-[#E53935]">Upload</Button>
+                    <Button size="sm" variant="outline" className="border-[#D50032] text-[#D50032]">Upload</Button>
                   )}
                 </div>
               ))}
@@ -333,8 +333,8 @@ Date: ${new Date().toLocaleDateString("en-IN")}
           {step === 4 && (
             <div className="space-y-6">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(229,57,53,0.1)" }}>
-                  <Fingerprint className="h-5 w-5" style={{ color: "#E53935" }} />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(213,0,50,0.1)" }}>
+                  <Fingerprint className="h-5 w-5" style={{ color: "#D50032" }} />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold" style={{ color: "#121212" }}>Signature & Biometric</h2>
@@ -345,7 +345,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
               <div>
                 <Label className="mb-2 block">Digital Signature</Label>
                 <div
-                  className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all hover:border-[#E53935]"
+                  className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all hover:border-[#D50032]"
                   style={{ borderColor: signed ? "#4CAF50" : "#d1d5db", background: signed ? "rgba(76,175,80,0.05)" : "#fafafa" }}
                   onClick={() => setSigned(true)}
                 >
@@ -358,7 +358,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                   ) : (
                     <div>
                       <p className="text-gray-400 text-sm mb-2">Click to sign digitally (demo)</p>
-                      <Button size="sm" style={{ background: "#E53935", color: "white" }}>Draw Signature</Button>
+                      <Button size="sm" style={{ background: "#D50032", color: "white" }}>Draw Signature</Button>
                     </div>
                   )}
                 </div>
@@ -367,7 +367,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
               <div>
                 <Label className="mb-2 block">Biometric Selfie Verification</Label>
                 <div
-                  className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all hover:border-[#E53935]"
+                  className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all hover:border-[#D50032]"
                   style={{ borderColor: biometricDone ? "#4CAF50" : "#d1d5db", background: biometricDone ? "rgba(76,175,80,0.05)" : "#fafafa" }}
                   onClick={() => setBiometricDone(true)}
                 >
@@ -378,11 +378,11 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                     </div>
                   ) : (
                     <div className="flex flex-col items-center gap-3">
-                      <div className="w-20 h-20 rounded-full border-4 border-dashed flex items-center justify-center" style={{ borderColor: "#E53935" }}>
-                        <Camera className="h-8 w-8" style={{ color: "#E53935" }} />
+                      <div className="w-20 h-20 rounded-full border-4 border-dashed flex items-center justify-center" style={{ borderColor: "#D50032" }}>
+                        <Camera className="h-8 w-8" style={{ color: "#D50032" }} />
                       </div>
                       <p className="text-gray-400 text-sm">Click to capture selfie (demo)</p>
-                      <Button size="sm" style={{ background: "#E53935", color: "white" }}>Open Camera</Button>
+                      <Button size="sm" style={{ background: "#D50032", color: "white" }}>Open Camera</Button>
                     </div>
                   )}
                 </div>
@@ -394,8 +394,8 @@ Date: ${new Date().toLocaleDateString("en-IN")}
           {step === 5 && (
             <div className="text-center py-8">
               <div className="flex items-center gap-3 mb-8 justify-center">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(229,57,53,0.1)" }}>
-                  <Shield className="h-5 w-5" style={{ color: "#E53935" }} />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(213,0,50,0.1)" }}>
+                  <Shield className="h-5 w-5" style={{ color: "#D50032" }} />
                 </div>
                 <div className="text-left">
                   <h2 className="text-xl font-bold" style={{ color: "#121212" }}>KYC Verification</h2>
@@ -404,7 +404,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
               </div>
               {verifying ? (
                 <div className="flex flex-col items-center gap-4">
-                  <div className="w-20 h-20 rounded-full border-4 border-t-transparent animate-spin" style={{ borderColor: "#E53935", borderTopColor: "transparent" }} />
+                  <div className="w-20 h-20 rounded-full border-4 border-t-transparent animate-spin" style={{ borderColor: "#D50032", borderTopColor: "transparent" }} />
                   <p className="font-semibold text-gray-600">Verifying your KYC...</p>
                   <p className="text-sm text-gray-400">This usually takes a few seconds</p>
                 </div>
@@ -418,8 +418,8 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-5">
-                  <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: "rgba(229,57,53,0.1)" }}>
-                    <Shield className="h-10 w-10" style={{ color: "#E53935" }} />
+                  <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: "rgba(213,0,50,0.1)" }}>
+                    <Shield className="h-10 w-10" style={{ color: "#D50032" }} />
                   </div>
                   <p className="text-gray-600">All documents submitted. Click below to process verification.</p>
                   <div className="grid grid-cols-2 gap-3 w-full max-w-xs text-left text-sm">
@@ -445,8 +445,8 @@ Date: ${new Date().toLocaleDateString("en-IN")}
             <div className="space-y-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(229,57,53,0.1)" }}>
-                    <FileText className="h-5 w-5" style={{ color: "#E53935" }} />
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(213,0,50,0.1)" }}>
+                    <FileText className="h-5 w-5" style={{ color: "#D50032" }} />
                   </div>
                   <div>
                     <h2 className="text-xl font-bold" style={{ color: "#121212" }}>Your Contract</h2>
@@ -496,7 +496,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                     "This contract is governed by the laws of India.",
                   ].map((t, i) => (
                     <div key={i} className="flex gap-2">
-                      <span className="text-[#E53935] font-bold flex-shrink-0">{i + 1}.</span>
+                      <span className="text-[#D50032] font-bold flex-shrink-0">{i + 1}.</span>
                       <span>{t}</span>
                     </div>
                   ))}
@@ -518,7 +518,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                   id="agree"
                   checked={agreed}
                   onChange={(e) => setAgreed(e.target.checked)}
-                  className="w-4 h-4 accent-[#E53935]"
+                  className="w-4 h-4 accent-[#D50032]"
                 />
                 <label htmlFor="agree" className="text-sm text-gray-600 cursor-pointer">
                   I have read and agree to the terms and conditions of this contract
@@ -529,7 +529,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                 onClick={handleDownload}
                 disabled={!agreed}
                 className="w-full"
-                style={{ background: agreed ? "#E53935" : "#e5e7eb", color: agreed ? "white" : "#9ca3af", cursor: agreed ? "pointer" : "not-allowed" }}
+                style={{ background: agreed ? "#D50032" : "#e5e7eb", color: agreed ? "white" : "#9ca3af", cursor: agreed ? "pointer" : "not-allowed" }}
                 size="lg"
               >
                 <Download className="mr-2 h-5 w-5" />
@@ -544,14 +544,14 @@ Date: ${new Date().toLocaleDateString("en-IN")}
               variant="outline"
               onClick={back}
               disabled={step === 0}
-              className="border-gray-300 hover:border-[#E53935]"
+              className="border-gray-300 hover:border-[#D50032]"
             >
               <ArrowLeft className="mr-2 h-4 w-4" /> Back
             </Button>
             {step < 6 ? (
               <Button
                 onClick={next}
-                style={{ background: "#E53935", color: "white" }}
+                style={{ background: "#D50032", color: "white" }}
                 disabled={verifying}
               >
                 {step === 5 ? (verified ? "View Contract" : "Verify KYC") : "Continue"}

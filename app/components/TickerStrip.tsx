@@ -20,7 +20,7 @@ export default function TickerStrip() {
     <div
       style={{
         background: "#121212",
-        borderBottom: "1px solid rgba(229,57,53,0.2)",
+        borderBottom: "1px solid rgba(213,0,50,0.2)",
         overflow: "hidden",
         width: "100%",
         position: "relative",
@@ -60,7 +60,7 @@ export default function TickerStrip() {
             {t.pct && (
               <span
                 style={{
-                  color: t.up ? "#4CAF50" : "#E53935",
+                  color: t.up ? "#4CAF50" : "#D50032",
                   fontWeight: 600,
                   fontSize: "12px",
                 }}

@@ -84,8 +84,8 @@ export default function ShareButton({ title, text, url, className = "", variant 
         onClick={handleShare}
         className={
           variant === "button"
-            ? "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#E53935] hover:bg-red-50 transition-all"
-            : "w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:text-[#E53935] hover:bg-red-50 transition-all"
+            ? "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:text-[#D50032] hover:bg-red-50 transition-all"
+            : "w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:text-[#D50032] hover:bg-red-50 transition-all"
         }
         title="Share"
       >
@@ -115,7 +115,7 @@ export default function ShareButton({ title, text, url, className = "", variant 
                 style={{ color: "#121212" }}
                 onClick={() => setShowMenu(false)}
               >
-                <span className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: "#E53935" }}>
+                <span className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: "#D50032" }}>
                   {s.icon}
                 </span>
                 {s.name}
@@ -126,8 +126,8 @@ export default function ShareButton({ title, text, url, className = "", variant 
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-50 transition-colors text-sm"
               style={{ color: "#121212" }}
             >
-              <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(229,57,53,0.1)" }}>
-                {copied ? <Check className="h-4 w-4" style={{ color: "#E53935" }} /> : <Link2 className="h-4 w-4" style={{ color: "#E53935" }} />}
+              <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(213,0,50,0.1)" }}>
+                {copied ? <Check className="h-4 w-4" style={{ color: "#D50032" }} /> : <Link2 className="h-4 w-4" style={{ color: "#D50032" }} />}
               </span>
               {copied ? "Link Copied!" : "Copy Link"}
             </button>

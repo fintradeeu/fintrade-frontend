@@ -237,7 +237,7 @@ export default function AdminRoles() {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case "Super Admin":
-        return { background: '#E53935', color: 'white' };
+        return { background: '#D50032', color: 'white' };
       case "Content Admin":
         return { background: '#2196F3', color: 'white' };
       case "Finance Admin":
@@ -414,15 +414,15 @@ export default function AdminRoles() {
             <div
               className="flex items-center justify-between p-3 rounded-lg border-2"
               style={{
-                borderColor: formData.role === "Super Admin" ? "rgba(229,57,53,0.3)" : "#e5e7eb",
-                background: formData.role === "Super Admin" ? "rgba(229,57,53,0.04)" : "#f9fafb",
+                borderColor: formData.role === "Super Admin" ? "rgba(213,0,50,0.3)" : "#e5e7eb",
+                background: formData.role === "Super Admin" ? "rgba(213,0,50,0.04)" : "#f9fafb",
               }}
             >
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <Label>View Revenue Data</Label>
                   {formData.role !== "Super Admin" && formData.permissions.canViewRevenue === false && (
-                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "rgba(229,57,53,0.1)", color: "#E53935" }}>Super Admin Only</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "rgba(213,0,50,0.1)", color: "#D50032" }}>Super Admin Only</span>
                   )}
                 </div>
                 <div className="text-sm text-gray-500">Access total revenue and monthly earnings</div>
@@ -451,7 +451,7 @@ export default function AdminRoles() {
         <Button 
           onClick={onSubmit} 
           className="flex-1"
-          style={{ background: '#E53935', color: 'white' }}
+          style={{ background: '#D50032', color: 'white' }}
         >
           {submitLabel}
         </Button>
@@ -472,7 +472,7 @@ export default function AdminRoles() {
             <DialogTrigger asChild>
               <Button 
                 className="shadow-lg"
-                style={{ background: '#E53935', color: 'white' }}
+                style={{ background: '#D50032', color: 'white' }}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Admin
@@ -489,10 +489,10 @@ export default function AdminRoles() {
 
         {/* Stats */}
         <div className="grid md:grid-cols-4 gap-4">
-          <Card className="p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all">
+          <Card className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(229, 57, 53, 0.1)' }}>
-                <Users className="h-6 w-6" style={{ color: '#E53935' }} />
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
+                <Users className="h-6 w-6" style={{ color: '#D50032' }} />
               </div>
               <div>
                 <div className="text-2xl font-bold" style={{ color: '#121212' }}>{adminUsers.length}</div>
@@ -501,10 +501,10 @@ export default function AdminRoles() {
             </div>
           </Card>
 
-          <Card className="p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all">
+          <Card className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(229, 57, 53, 0.1)' }}>
-                <Shield className="h-6 w-6" style={{ color: '#E53935' }} />
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
+                <Shield className="h-6 w-6" style={{ color: '#D50032' }} />
               </div>
               <div>
                 <div className="text-2xl font-bold" style={{ color: '#121212' }}>
@@ -515,10 +515,10 @@ export default function AdminRoles() {
             </div>
           </Card>
 
-          <Card className="p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all">
+          <Card className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(229, 57, 53, 0.1)' }}>
-                <Lock className="h-6 w-6" style={{ color: '#E53935' }} />
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
+                <Lock className="h-6 w-6" style={{ color: '#D50032' }} />
               </div>
               <div>
                 <div className="text-2xl font-bold" style={{ color: '#121212' }}>
@@ -529,10 +529,10 @@ export default function AdminRoles() {
             </div>
           </Card>
 
-          <Card className="p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all">
+          <Card className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(229, 57, 53, 0.1)' }}>
-                <Users className="h-6 w-6" style={{ color: '#E53935' }} />
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
+                <Users className="h-6 w-6" style={{ color: '#D50032' }} />
               </div>
               <div>
                 <div className="text-2xl font-bold" style={{ color: '#121212' }}>
@@ -617,7 +617,7 @@ export default function AdminRoles() {
                           variant="outline"
                           size="sm"
                           onClick={() => openEditDialog(admin)}
-                          className="border-gray-300 hover:border-[#E53935] hover:text-[#E53935]"
+                          className="border-gray-300 hover:border-[#D50032] hover:text-[#D50032]"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>

@@ -2,12 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { Users, TrendingUp, MapPin, Briefcase, GraduationCap, Clock } from "lucide-react";
 
 const stats = [
-  { icon: Users, value: 1200, suffix: "+", label: "Students Trained", color: "#E53935" },
-  { icon: TrendingUp, value: 85, suffix: "%", label: "Placement Rate", color: "#E53935" },
-  { icon: MapPin, value: 15, suffix: "+", label: "Cities Across India", color: "#E53935" },
-  { icon: Briefcase, value: 30, suffix: "+", label: "Partner Firms", color: "#E53935" },
-  { icon: GraduationCap, value: 78, suffix: "%", label: "Course Completion", color: "#E53935" },
-  { icon: Clock, value: 9, suffix: " Mo", label: "Avg. Placement Time", color: "#E53935" },
+  { icon: Users, value: 1200, suffix: "+", label: "Students Trained", color: "#D50032" },
+  { icon: TrendingUp, value: 85, suffix: "%", label: "Placement Rate", color: "#D50032" },
+  { icon: MapPin, value: 15, suffix: "+", label: "Cities Across India", color: "#D50032" },
+  { icon: Briefcase, value: 30, suffix: "+", label: "Partner Firms", color: "#D50032" },
+  { icon: GraduationCap, value: 78, suffix: "%", label: "Course Completion", color: "#D50032" },
+  { icon: Clock, value: 9, suffix: " Mo", label: "Avg. Placement Time", color: "#D50032" },
 ];
 
 function useCountUp(end: number, duration: number = 2000, start: boolean = false) {
@@ -57,9 +57,9 @@ function StatCard({ icon: Icon, value, suffix, label, delay, inView }: {
     >
       <div
         className="inline-flex items-center justify-center w-10 h-10 md:w-16 md:h-16 rounded-full mb-2 md:mb-4 group-hover:scale-110 transition-transform"
-        style={{ background: "rgba(229,57,53,0.1)" }}
+        style={{ background: "rgba(213,0,50,0.1)" }}
       >
-        <Icon className="h-5 w-5 md:h-8 md:w-8" style={{ color: "#E53935" }} />
+        <Icon className="h-5 w-5 md:h-8 md:w-8" style={{ color: "#D50032" }} />
       </div>
       <div className="text-xl sm:text-2xl md:text-[2.5rem] font-bold mb-1 md:mb-2" style={{ color: "#121212" }}>
         {count}{suffix}
@@ -91,8 +91,8 @@ export default function StudentStats() {
     <section ref={ref} className="py-20 bg-white relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
-            <span className="text-[#E53935] font-semibold text-sm">📊 Our Impact</span>
+          <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#D50032]/30" style={{ background: "rgba(213,0,50,0.08)" }}>
+            <span className="text-[#D50032] font-semibold text-sm">📊 Our Impact</span>
           </div>
           <h2 className="text-4xl font-bold mb-4" style={{ color: "#121212" }}>Numbers That Speak</h2>
           <p className="text-xl text-gray-600">Real results from real students</p>

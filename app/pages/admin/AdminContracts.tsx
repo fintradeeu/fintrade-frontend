@@ -69,7 +69,7 @@ Signed Date   : ${new Date(c.signedDate).toLocaleDateString("en-IN", { day: "num
   const statusStyle = (s: string) => {
     if (s === "Verified") return { background: "#4CAF50", color: "white" };
     if (s === "Pending") return { background: "#FF9800", color: "white" };
-    return { background: "#E53935", color: "white" };
+    return { background: "#D50032", color: "white" };
   };
 
   return (
@@ -82,7 +82,7 @@ Signed Date   : ${new Date(c.signedDate).toLocaleDateString("en-IN", { day: "num
             <p className="text-gray-600 mt-1">View and download KYC contracts for all students</p>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-100 px-4 py-2 rounded-lg">
-            <Shield className="h-4 w-4" style={{ color: "#E53935" }} />
+            <Shield className="h-4 w-4" style={{ color: "#D50032" }} />
             <span>Admin View</span>
           </div>
         </div>
@@ -95,10 +95,10 @@ Signed Date   : ${new Date(c.signedDate).toLocaleDateString("en-IN", { day: "num
             { label: "Pending", value: contracts.filter(c => c.kycStatus === "Pending").length, icon: Shield },
             { label: "Rejected", value: contracts.filter(c => c.kycStatus === "Rejected").length, icon: Lock },
           ].map((s, i) => (
-            <Card key={i} className="p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all">
+            <Card key={i} className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: "rgba(229,57,53,0.1)" }}>
-                  <s.icon className="h-6 w-6" style={{ color: "#E53935" }} />
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: "rgba(213,0,50,0.1)" }}>
+                  <s.icon className="h-6 w-6" style={{ color: "#D50032" }} />
                 </div>
                 <div>
                   <div className="text-2xl font-bold" style={{ color: "#121212" }}>{s.value}</div>
@@ -116,7 +116,7 @@ Signed Date   : ${new Date(c.signedDate).toLocaleDateString("en-IN", { day: "num
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, email, or contract ID..."
-            className="pl-10 bg-white border-gray-200 focus:border-[#E53935]"
+            className="pl-10 bg-white border-gray-200 focus:border-[#D50032]"
           />
         </div>
 
@@ -138,7 +138,7 @@ Signed Date   : ${new Date(c.signedDate).toLocaleDateString("en-IN", { day: "num
                 {filtered.map((c) => (
                   <TableRow key={c.id} className="hover:bg-gray-50">
                     <TableCell>
-                      <span className="font-mono text-sm font-bold" style={{ color: "#E53935" }}>{c.contractId}</span>
+                      <span className="font-mono text-sm font-bold" style={{ color: "#D50032" }}>{c.contractId}</span>
                     </TableCell>
                     <TableCell>
                       <div>
@@ -162,14 +162,14 @@ Signed Date   : ${new Date(c.signedDate).toLocaleDateString("en-IN", { day: "num
                           variant="outline"
                           size="sm"
                           onClick={() => setSelectedContract(c)}
-                          className="border-gray-300 hover:border-[#E53935] hover:text-[#E53935]"
+                          className="border-gray-300 hover:border-[#D50032] hover:text-[#D50032]"
                         >
                           <Eye className="h-4 w-4 mr-1" /> View
                         </Button>
                         <Button
                           size="sm"
                           onClick={() => handleDownload(c)}
-                          style={{ background: "#E53935", color: "white" }}
+                          style={{ background: "#D50032", color: "white" }}
                         >
                           <Download className="h-4 w-4 mr-1" /> Download
                         </Button>
@@ -188,7 +188,7 @@ Signed Date   : ${new Date(c.signedDate).toLocaleDateString("en-IN", { day: "num
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" style={{ color: "#E53935" }} />
+                  <FileText className="h-5 w-5" style={{ color: "#D50032" }} />
                   Contract — {selectedContract.contractId}
                 </DialogTitle>
               </DialogHeader>
@@ -221,7 +221,7 @@ Signed Date   : ${new Date(c.signedDate).toLocaleDateString("en-IN", { day: "num
                   <div className="flex items-center gap-1"><Lock className="h-4 w-4" /> Signed digitally</div>
                   <div className="font-bold" style={{ fontFamily: "cursive", fontSize: 18, color: "#121212" }}>{selectedContract.name}</div>
                 </div>
-                <Button onClick={() => handleDownload(selectedContract)} className="w-full" style={{ background: "#E53935", color: "white" }}>
+                <Button onClick={() => handleDownload(selectedContract)} className="w-full" style={{ background: "#D50032", color: "white" }}>
                   <Download className="mr-2 h-4 w-4" /> Download Contract
                 </Button>
               </div>

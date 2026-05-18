@@ -43,7 +43,7 @@ export default function AdminDashboard() {
     { label: "Total Users", value: stats.totalUsers, icon: <Users className="h-6 w-6" />, color: "#4CAF50", bg: "rgba(76, 175, 80, 0.1)" },
     { label: "Active Courses", value: stats.totalCourses, icon: <BookOpen className="h-6 w-6" />, color: "#2196F3", bg: "rgba(33, 150, 243, 0.1)" },
     { label: "Scheduled Lectures", value: stats.totalLectures, icon: <Video className="h-6 w-6" />, color: "#9C27B0", bg: "rgba(156, 39, 176, 0.1)" },
-    { label: "Active Coupons", value: stats.activeCoupons, icon: <Tag className="h-6 w-6" />, color: "#E53935", bg: "rgba(229, 57, 53, 0.1)" },
+    { label: "Active Coupons", value: stats.activeCoupons, icon: <Tag className="h-6 w-6" />, color: "#D50032", bg: "rgba(213,0,50, 0.1)" },
   ];
 
   return (
@@ -56,7 +56,7 @@ export default function AdminDashboard() {
       {/* Live Stats */}
       <div className="grid md:grid-cols-4 gap-4 mb-6">
         {statCards.map((card, i) => (
-          <Card key={i} className="p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all">
+          <Card key={i} className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: card.bg }}>
                 <span style={{ color: card.color }}>{card.icon}</span>
@@ -75,7 +75,7 @@ export default function AdminDashboard() {
       <div className="grid lg:grid-cols-2 gap-6">
         <Card className="p-6 bg-white shadow-sm border border-gray-100 h-full">
           <h3 className="text-lg font-bold mb-4 flex items-center gap-2" style={{ color: "#121212" }}>
-            <TrendingUp className="h-5 w-5" style={{ color: "#E53935" }} />
+            <TrendingUp className="h-5 w-5" style={{ color: "#D50032" }} />
             Quick Management Links
           </h3>
           <div className="grid grid-cols-2 gap-2">
@@ -90,7 +90,7 @@ export default function AdminDashboard() {
               { label: "View Reports", path: "/admin/reports" },
             ].map((link, i) => (
               <a key={i} href={link.path}>
-                <Button variant="outline" className="w-full text-xs h-10 border-gray-200 hover:border-[#E53935] hover:text-[#E53935] bg-white">
+                <Button variant="outline" className="w-full text-xs h-10 border-gray-200 hover:border-[#D50032] hover:text-[#D50032] bg-white">
                   {link.label}
                 </Button>
               </a>
