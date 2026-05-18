@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Clock, BookOpen, Layers, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronUp, Clock, BookOpen, Layers } from "lucide-react";
 
 interface Module {
   num: number;
@@ -119,12 +119,15 @@ const programSections: ProgramSection[] = [
       }
     ]
   }
-];export default function ProgramModules() {
-  const [activeSectionIdx, setActiveSectionIdx] = useState(0);
-  const [activeModuleNum, setActiveModuleNum] = useState<number | null>(1);
+];
 
-  const toggleModule = (moduleNum: number) => {
-    setActiveModuleNum((prev) => (prev === moduleNum ? null : moduleNum));
+export default function ProgramModules() {
+  const [activeSectionIdx, setActiveSectionIdx] = useState(0);
+  const [expandedModuleKey, setExpandedModuleKey] = useState<string>("0-1");
+
+  const toggleModule = (sectionIdx: number, moduleNum: number) => {
+    const key = `${sectionIdx}-${moduleNum}`;
+    setExpandedModuleKey((prev) => (prev === key ? "" : key));
   };
 
   const currentSection = programSections[activeSectionIdx];
@@ -157,9 +160,9 @@ const programSections: ProgramSection[] = [
                   key={idx}
                   onClick={() => {
                     setActiveSectionIdx(idx);
-                    setActiveModuleNum(1); // Default to first module of new section
+                    setExpandedModuleKey(`${idx}-1`);
                   }}
-                  className={`text-left p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden group ${
+                  className={`text-left p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden group whitespace-normal ${
                     isActive
                       ? "border-[#D50032] bg-white shadow-[0_8px_30px_rgba(213,0,50,0.06)]"
                       : "border-gray-200 bg-white/60 hover:bg-white hover:border-gray-300 hover:shadow-md"
@@ -198,131 +201,93 @@ const programSections: ProgramSection[] = [
             })}
           </div>
 
-          {/* Stage Selector: Navigation Phases (Mobile/Tablet Slider) */}
-          <div className="lg:hidden w-full flex flex-col gap-4">
-            {/* The Active Slide Card */}
-            <div className="relative">
-              {programSections.map((sec, idx) => {
-                const isActive = activeSectionIdx === idx;
-                if (!isActive) return null;
-                return (
-                  <div
-                    key={idx}
-                    className="w-full p-6 rounded-2xl border border-[#D50032] bg-white shadow-[0_8px_30px_rgba(213,0,50,0.06)] relative overflow-hidden whitespace-normal break-words transition-all duration-300 animate-fadeIn"
-                  >
-                    {/* Left Accent Red Bar */}
-                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#D50032]" />
-
-                    <div className="flex justify-between items-start mb-3 pl-2">
-                      <span className="text-xs font-bold uppercase tracking-wider text-[#D50032]">
-                        Stage 0{idx + 1}
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border bg-[#D50032]/10 text-[#D50032] border-[#D50032]/20">
-                        <Clock className="w-3 h-3" />
-                        {sec.duration}
-                      </span>
-                    </div>
-
-                    <h3 className="text-sm font-extrabold tracking-wide uppercase leading-snug pl-2 text-[#121212]">
-                      {sec.title}
-                    </h3>
+          {/* Horizontal Scroller: Navigation Phases (Mobile/Tablet) */}
+          <div className="lg:hidden w-full overflow-x-auto pb-4 -mx-4 px-4 flex gap-3 scrollbar-hide snap-x">
+            {programSections.map((sec, idx) => {
+              const isActive = activeSectionIdx === idx;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setActiveSectionIdx(idx);
+                    setExpandedModuleKey(`${idx}-1`);
+                  }}
+                  className={`flex-shrink-0 snap-center p-4 rounded-xl border text-left min-w-[260px] max-w-[280px] transition-all relative overflow-hidden whitespace-normal flex flex-col justify-between ${
+                    isActive
+                      ? "border-[#D50032] bg-white shadow-lg"
+                      : "border-gray-200 bg-white"
+                  }`}
+                >
+                  {isActive && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D50032]" />
+                  )}
+                  <div className="flex justify-between items-center mb-1.5 pl-1.5">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? "text-[#D50032]" : "text-gray-400"}`}>
+                      Stage 0{idx + 1}
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200 flex items-center gap-1">
+                      <Clock className="w-2.5 h-2.5" />
+                      {sec.duration}
+                    </span>
                   </div>
-                );
-              })}
-            </div>
-
-            {/* Slider Navigation & Pagination */}
-            <div className="flex items-center justify-between px-2">
-              {/* Prev Button */}
-              <button
-                onClick={() => {
-                  setActiveSectionIdx((prev) => (prev > 0 ? prev - 1 : programSections.length - 1));
-                  setActiveModuleNum(1);
-                }}
-                className="w-10 h-10 rounded-full bg-white border border-gray-150 flex items-center justify-center shadow-sm hover:shadow-md transition-all active:scale-95 text-[#D50032]"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-
-              {/* Pagination Dots */}
-              <div className="flex items-center gap-2">
-                {programSections.map((_, idx) => {
-                  const isActive = activeSectionIdx === idx;
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setActiveSectionIdx(idx);
-                        setActiveModuleNum(1);
-                      }}
-                      className={`h-2 rounded-full transition-all duration-300 ${
-                        isActive ? "w-6 bg-[#D50032]" : "w-2 bg-gray-200"
-                      }`}
-                    />
-                  );
-                })}
-              </div>
-
-              {/* Next Button */}
-              <button
-                onClick={() => {
-                  setActiveSectionIdx((prev) => (prev < programSections.length - 1 ? prev + 1 : 0));
-                  setActiveModuleNum(1);
-                }}
-                className="w-10 h-10 rounded-full bg-white border border-gray-150 flex items-center justify-center shadow-sm hover:shadow-md transition-all active:scale-95 text-[#D50032]"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
+                  <h3 className={`text-xs font-bold tracking-wide uppercase whitespace-normal pl-1.5 leading-snug ${isActive ? "text-[#121212]" : "text-gray-600"}`}>
+                    {sec.title}
+                  </h3>
+                </button>
+              );
+            })}
           </div>
 
           {/* Right Column: Module Accordions */}
           <div className="lg:col-span-7 flex flex-col gap-4 w-full">
             {/* Phase title heading for mobile or reference */}
-            <div className="flex items-center gap-4 mb-4 p-5 rounded-2xl bg-white border border-gray-155 shadow-[0_8px_30px_rgba(0,0,0,0.03)] lg:hidden">
-              <div className="w-12 h-12 rounded-2xl bg-[#D50032]/10 flex items-center justify-center flex-shrink-0 text-[#D50032]">
-                <Layers className="w-6 h-6" />
+            <div className="flex items-center gap-3 mb-2 p-2 rounded-2xl bg-gray-50 border border-gray-100 lg:hidden">
+              <div className="w-10 h-10 rounded-xl bg-[#D50032]/10 flex items-center justify-center flex-shrink-0 text-[#D50032]">
+                <Layers className="w-5 h-5" />
               </div>
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Selected Stage</span>
-                <h4 className="text-sm font-extrabold uppercase text-gray-800 leading-snug">
+              <div>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Selected Stage</span>
+                <h4 className="text-xs font-extrabold uppercase text-gray-800 leading-tight">
                   {currentSection.title} ({currentSection.duration})
                 </h4>
               </div>
             </div>
 
-            {/* Accordions */}
             {currentSection.modules.map((mod) => {
-              const isExpanded = activeModuleNum === mod.num;
+              const isExpanded = expandedModuleKey === `${activeSectionIdx}-${mod.num}`;
               return (
                 <div
                   key={mod.num}
-                  onClick={() => toggleModule(mod.num)}
-                  className={`rounded-2xl border bg-white transition-all duration-300 cursor-pointer overflow-hidden ${
+                  onClick={() => toggleModule(activeSectionIdx, mod.num)}
+                  className={`rounded-2xl border transition-all duration-300 cursor-pointer overflow-hidden ${
                     isExpanded
-                      ? "border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.03)]"
-                      : "border-gray-150 shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:border-gray-200"
+                      ? "border-[#D50032]/30 bg-white shadow-[0_8px_30px_rgba(213,0,50,0.04)]"
+                      : "border-gray-200 bg-[#F9FAFB] hover:border-gray-300 hover:bg-white"
                   }`}
                 >
                   {/* Accordion Header */}
-                  <div className="p-6 flex justify-between items-start gap-4 select-none">
+                  <div className="p-5 flex justify-between items-start gap-4 select-none">
                     <div className="space-y-1">
-                      <span className="text-sm font-medium text-gray-800">
+                      <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
                         Module {mod.num}
                       </span>
                       <h3
-                        className={`text-lg sm:text-xl font-semibold leading-snug transition-colors duration-300 ${
-                          isExpanded ? "text-[#D50032]" : "text-gray-500"
+                        className={`text-lg sm:text-xl font-bold leading-snug transition-colors duration-300 ${
+                          isExpanded ? "text-[#D50032]" : "text-gray-700"
                         }`}
                       >
                         {mod.title}
                       </h3>
                     </div>
-                    <div className="flex-shrink-0 pt-1">
+                    <div
+                      className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
+                        isExpanded ? "bg-[#D50032]/10 text-[#D50032]" : "bg-gray-100 text-gray-400"
+                      }`}
+                    >
                       {isExpanded ? (
                         <ChevronUp className="w-5 h-5 text-[#D50032]" />
                       ) : (
-                        <ChevronDown className="w-5 h-5 text-[#D50032]" />
+                        <ChevronDown className="w-5 h-5" />
                       )}
                     </div>
                   </div>
@@ -333,8 +298,8 @@ const programSections: ProgramSection[] = [
                       isExpanded ? "max-h-[300px] border-t border-gray-100" : "max-h-0"
                     }`}
                   >
-                    <div className="p-6 bg-white text-sm sm:text-base leading-relaxed text-gray-500">
-                      <span className="font-semibold text-gray-900 mr-1.5">Overview :</span>
+                    <div className="p-6 bg-white/50 text-sm sm:text-base leading-relaxed text-gray-600">
+                      <span className="font-extrabold text-gray-800 mr-1.5">Overview :</span>
                       {mod.overview}
                     </div>
                   </div>

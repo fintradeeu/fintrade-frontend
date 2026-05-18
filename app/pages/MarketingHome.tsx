@@ -320,7 +320,7 @@ function CourseCard({ course }: { course: any }) {
         className="w-full flex flex-col group transition-all duration-500 overflow-hidden rounded-2xl border border-gray-200 hover:border-[#D50032]/50 hover:shadow-2xl"
       >
         {/* Gradient Header */}
-        <div className="relative px-6 pt-6 pb-4 min-h-[210px] flex flex-col justify-between" style={{ background: "linear-gradient(135deg, #4A000A 0%, #D50032 100%)" }}>
+        <div className="relative px-6 pt-6 pb-4 min-h-[210px] flex flex-col justify-between" style={{ background: "#D50032" }}>
           <div>
             <div className="flex items-start justify-between mb-3">
               <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)" }}>
@@ -373,7 +373,7 @@ function CourseCard({ course }: { course: any }) {
 
           <Button
             onClick={() => { setIsDetailsOpen(true); }}
-            className="w-full h-12 text-base font-semibold rounded-xl !bg-[#D50032] !text-white hover:!bg-[#FF0000] hover:!text-white transition-all duration-300 group-hover:shadow-lg shadow-[0_4px_15px_rgba(213,0,50,0.2)]"
+            className="w-full h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-[#D50032] to-[#FF0000] text-white hover:from-[#D50032] hover:to-[#D50032] transition-all duration-300 group-hover:shadow-lg shadow-[0_4px_15px_rgba(213,0,50,0.2)]"
           >
             View Program Details
             <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -385,7 +385,7 @@ function CourseCard({ course }: { course: any }) {
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <DialogContent className="sm:max-w-2xl bg-white text-[#121212] rounded-3xl overflow-hidden border border-gray-100 shadow-2xl p-0 z-[10000] max-h-[90vh] flex flex-col">
           {/* Header Gradient (Fixed) */}
-          <div className="relative px-8 py-8 text-white flex-shrink-0" style={{ background: "linear-gradient(135deg, #4A000A 0%, #D50032 100%)" }}>
+          <div className="relative px-8 py-8 text-white flex-shrink-0" style={{ background: "#D50032" }}>
             <div className="flex items-center gap-3 mb-3">
               <span className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/20 bg-white/10">
                 {course.level} Program
@@ -443,7 +443,7 @@ function CourseCard({ course }: { course: any }) {
               </Button>
               <Link to="/student/courses" className="w-full sm:w-auto">
                 <Button
-                  className="w-full h-12 text-sm font-semibold rounded-xl px-8 shadow-lg hover:shadow-xl !bg-[#D50032] !text-white hover:!bg-[#FF0000] transition-all duration-300"
+                  className="w-full h-12 text-sm font-semibold rounded-xl px-8 shadow-lg hover:shadow-xl bg-gradient-to-r from-[#D50032] to-[#FF0000] text-white hover:from-[#D50032] hover:to-[#D50032] transition-all duration-300"
                 >
                   Enroll Now
                 </Button>
@@ -573,7 +573,7 @@ export default function MarketingHome() {
           <div className="flex items-center justify-between h-12 text-sm">
             <div className="flex items-center gap-4">
               <a href="tel:+919876543210" className="flex items-center gap-2 text-white bg-[#D50032] px-3.5 py-1.5 rounded-full font-bold shadow-[0_0_15px_rgba(213,0,50,0.45)] hover:bg-[#FF0000] hover:scale-105 transition-all duration-300">
-                <Phone className="h-3.5 w-3.5 fill-current" /> <span className="hidden sm:inline">+91 92746 75947</span><span className="sm:hidden">Call</span>
+                <Phone className="h-3.5 w-3.5 fill-current" /> <span className="hidden sm:inline">+91 98765 43210</span><span className="sm:hidden">Call</span>
               </a>
               <span className="text-gray-600 hidden sm:inline">|</span>
               <span className="text-gray-400 hidden sm:inline">Support & Info</span>
@@ -667,7 +667,7 @@ export default function MarketingHome() {
                   <Link to="/student/contract-kyc" className="block w-full sm:w-auto">
                     <Button
                       size="lg"
-                      className="w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all hover:scale-105 text-lg px-8 py-6 bg-[#D50032] hover:bg-[#B50022] text-white border-none"
+                      className="w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all hover:scale-105 text-lg px-8 py-6 bg-gradient-to-r from-[#D50032] to-[#FF0000] text-white hover:from-[#D50032] hover:to-[#D50032]"
                       style={{ boxShadow: "0 10px 40px rgba(213,0,50, 0.4)" }}
                     >
                       Apply Now
@@ -1106,17 +1106,18 @@ export default function MarketingHome() {
         {/* CTA Section */}
         <section
           className="py-16 relative z-10"
-          style={{ background: "linear-gradient(to right, #B50022 0%, #D50032 50%, #B50022 100%)" }}
+          style={{ background: "#D50032" }}
         >
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-wide text-white mb-8">
-              THE MARKET'S MOVING, ARE YOU?
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-black uppercase tracking-wide text-white mb-8 leading-tight">
+              <div>THE MARKET'S MOVING,</div>
+              <div>ARE YOU?</div>
             </h2>
             <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
               <Link to="/login" className="block w-full sm:w-auto">
                 <Button
                   size="lg"
-                  className="w-full sm:w-auto rounded-full text-lg font-bold px-10 py-7 !bg-white hover:!bg-white !text-[#D50032] hover:!text-[#B50022] shadow-[0_4px_25px_rgba(255,255,255,0.15)] transition-all duration-300 transform hover:scale-105 border-none"
+                  className="w-full sm:w-auto rounded-full text-lg font-bold px-10 py-7 !bg-white hover:!bg-white !text-[#D50032] hover:!text-[#D50032] shadow-[0_4px_25px_rgba(255,255,255,0.15)] transition-all duration-300 transform hover:scale-105 border-none"
                 >
                   Apply Now
                 </Button>
