@@ -5,7 +5,7 @@ import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
-import { Plus, X, BookOpen, Layers, FileText, ChevronDown, ChevronUp, FileQuestion } from "lucide-react";
+import { Plus, X, BookOpen, Layers, FileText, ChevronDown, ChevronUp, FileQuestion, Upload, GripVertical } from "lucide-react";
 import api from "../../services/api";
 
 export default function TeacherCourses() {
@@ -35,6 +35,11 @@ export default function TeacherCourses() {
   const [quizCorrect, setQuizCorrect] = useState("a");
 
   const [saving, setSaving] = useState(false);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+
+  // Drag and Drop state
+  const [draggedModule, setDraggedModule] = useState<number | null>(null);
+  const [draggedLesson, setDraggedLesson] = useState<number | null>(null);
 
   const fetchCourses = async () => {
     try { const res = await api.get("/admin/courses"); setCourses(res.data); }
@@ -50,6 +55,22 @@ export default function TeacherCourses() {
   };
 
   useEffect(() => { fetchCourses(); }, []);
+
+  const handleMediaUpload = async (file: File) => {
+    setUploadingMedia(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await api.post("/admin/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      setNewLesson({ ...newLesson, video_url: res.data.url });
+    } catch (err: any) {
+      alert("Upload failed: " + (err.response?.data?.detail || err.message));
+    } finally {
+      setUploadingMedia(false);
+    }
+  };
 
   const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault(); setSaving(true);
@@ -113,6 +134,63 @@ export default function TeacherCourses() {
       await api.put(`/admin/courses/${courseId}`, { is_published: !currentState });
       fetchCourses();
     } catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
+  };
+
+  // --- Drag and Drop Handlers ---
+  const handleModuleDrop = async (e: React.DragEvent, targetCourseId: number, targetModuleId: number) => {
+    e.preventDefault();
+    if (!draggedModule || draggedModule === targetModuleId) return;
+
+    const course = courses.find((c) => c.id === targetCourseId);
+    if (!course) return;
+
+    const newModules = [...(course.modules || [])].sort((a: any, b: any) => a.order - b.order);
+    const draggedIdx = newModules.findIndex((m) => m.id === draggedModule);
+    const targetIdx = newModules.findIndex((m) => m.id === targetModuleId);
+
+    if (draggedIdx === -1 || targetIdx === -1) return;
+
+    const [removed] = newModules.splice(draggedIdx, 1);
+    newModules.splice(targetIdx, 0, removed);
+
+    newModules.forEach((m, idx) => { m.order = idx; });
+    setCourses(courses.map(c => c.id === targetCourseId ? { ...c, modules: newModules } : c));
+
+    for (const m of newModules) {
+      api.put(`/admin/modules/${m.id}`, { order: m.order }).catch(console.error);
+    }
+    setDraggedModule(null);
+  };
+
+  const handleLessonDrop = async (e: React.DragEvent, targetCourseId: number, targetModuleId: number, targetLessonId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!draggedLesson || draggedLesson === targetLessonId) return;
+
+    const course = courses.find((c) => c.id === targetCourseId);
+    if (!course) return;
+    const mod = course.modules.find((m: any) => m.id === targetModuleId);
+    if (!mod) return;
+
+    const newLessons = [...(mod.lessons || [])].sort((a: any, b: any) => a.order - b.order);
+    const draggedIdx = newLessons.findIndex((l) => l.id === draggedLesson);
+    const targetIdx = newLessons.findIndex((l) => l.id === targetLessonId);
+
+    if (draggedIdx === -1 || targetIdx === -1) return;
+
+    const [removed] = newLessons.splice(draggedIdx, 1);
+    newLessons.splice(targetIdx, 0, removed);
+
+    newLessons.forEach((l, idx) => { l.order = idx; });
+    setCourses(courses.map(c => c.id === targetCourseId ? { 
+      ...c, 
+      modules: c.modules.map((m: any) => m.id === targetModuleId ? { ...m, lessons: newLessons } : m) 
+    } : c));
+
+    for (const l of newLessons) {
+      api.put(`/admin/lessons/${l.id}`, { order: l.order }).catch(console.error);
+    }
+    setDraggedLesson(null);
   };
 
   const toggleExpand = (courseId: number) => {
@@ -187,9 +265,17 @@ export default function TeacherCourses() {
                 ) : (
                   <div className="space-y-4">
                     {(course.modules || []).sort((a: any, b: any) => a.order - b.order).map((mod: any) => (
-                      <Card key={mod.id} className="p-4 bg-white">
+                      <Card 
+                        key={mod.id} 
+                        className="p-4 bg-white border border-[#0B2A5B]/10 hover:border-[#0B2A5B]/30 transition-colors"
+                        draggable
+                        onDragStart={() => setDraggedModule(mod.id)}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => handleModuleDrop(e, course.id, mod.id)}
+                      >
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3">
+                            <div className="cursor-move text-[#0B2A5B]/40 hover:text-[#0B2A5B]"><GripVertical size={20} /></div>
                             <div className="w-8 h-8 bg-[#0B2A5B]/10 rounded flex items-center justify-center"><Layers size={16} className="text-[#0B2A5B]" /></div>
                             <div>
                               <h4 className="font-semibold text-[#0B2A5B]">{mod.title}</h4>
@@ -203,9 +289,17 @@ export default function TeacherCourses() {
                         {(mod.lessons || []).length > 0 && (
                           <div className="ml-11 space-y-2">
                             {(mod.lessons || []).sort((a: any, b: any) => a.order - b.order).map((lesson: any) => (
-                              <div key={lesson.id} className="flex items-center gap-3 p-2 bg-[#F4F1EA] rounded text-sm">
+                              <div 
+                                key={lesson.id} 
+                                className="flex items-center gap-3 p-2 bg-[#F4F1EA] rounded border border-transparent hover:border-[#C2A86A]/50 transition-colors"
+                                draggable
+                                onDragStart={(e) => { e.stopPropagation(); setDraggedLesson(lesson.id); }}
+                                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                onDrop={(e) => handleLessonDrop(e, course.id, mod.id, lesson.id)}
+                              >
+                                <div className="cursor-move text-[#0B2A5B]/40 hover:text-[#0B2A5B]"><GripVertical size={16} /></div>
                                 <FileText size={14} className="text-[#C2A86A]" />
-                                <span className="flex-1 text-[#0B2A5B]">{lesson.title}</span>
+                                <span className="flex-1 text-sm text-[#0B2A5B]">{lesson.title}</span>
                                 <Badge className={
                                   lesson.content_type === "quiz" ? "bg-purple-100 text-purple-700 text-xs" :
                                   lesson.content_type === "video" ? "bg-blue-100 text-blue-700 text-xs" :
@@ -243,7 +337,17 @@ export default function TeacherCourses() {
                 <div><label className="text-sm font-medium text-[#0B2A5B]">Difficulty *</label><select className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" value={newCourse.difficulty_level} onChange={(e) => setNewCourse({ ...newCourse, difficulty_level: e.target.value })}><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select></div>
                 <div><label className="text-sm font-medium text-[#0B2A5B]">Duration (days) *</label><Input type="number" min="0" value={newCourse.duration_days} onChange={(e) => setNewCourse({ ...newCourse, duration_days: parseInt(e.target.value) || 0 })} className="bg-[#F4F1EA]" /></div>
               </div>
-              <div className="flex items-center gap-2"><input type="checkbox" checked={newCourse.is_published} onChange={(e) => setNewCourse({ ...newCourse, is_published: e.target.checked })} /><label className="text-sm text-[#0B2A5B]">Published (Visible to students)</label></div>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-[#0B2A5B]">Status</label>
+                <Button
+                  type="button"
+                  variant={newCourse.is_published ? "default" : "outline"}
+                  onClick={() => setNewCourse({ ...newCourse, is_published: !newCourse.is_published })}
+                  className={newCourse.is_published ? "bg-green-600 hover:bg-green-700 text-white" : "text-gray-500"}
+                >
+                  {newCourse.is_published ? "Published" : "Draft"}
+                </Button>
+              </div>
               <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Creating..." : "Create Course"}</Button>
             </form>
           </Card>
@@ -259,8 +363,17 @@ export default function TeacherCourses() {
             <form onSubmit={handleCreateModule} className="space-y-4">
               <div><label className="text-sm font-medium text-[#0B2A5B]">Title *</label><Input required value={newModule.title} onChange={(e) => setNewModule({ ...newModule, title: e.target.value })} className="bg-[#F4F1EA]" /></div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Description</label><textarea className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" rows={2} value={newModule.description} onChange={(e) => setNewModule({ ...newModule, description: e.target.value })} /></div>
-              <div><label className="text-sm font-medium text-[#0B2A5B]">Order *</label><Input type="number" min="0" value={newModule.order} onChange={(e) => setNewModule({ ...newModule, order: parseInt(e.target.value) })} className="bg-[#F4F1EA]" /></div>
-              <div className="flex items-center gap-2"><input type="checkbox" checked={newModule.is_published} onChange={(e) => setNewModule({ ...newModule, is_published: e.target.checked })} /><label className="text-sm text-[#0B2A5B]">Published (Visible to students)</label></div>
+              <div className="flex items-center justify-between mt-4">
+                <label className="text-sm font-medium text-[#0B2A5B]">Status</label>
+                <Button
+                  type="button"
+                  variant={newModule.is_published ? "default" : "outline"}
+                  onClick={() => setNewModule({ ...newModule, is_published: !newModule.is_published })}
+                  className={newModule.is_published ? "bg-green-600 hover:bg-green-700 text-white" : "text-gray-500"}
+                >
+                  {newModule.is_published ? "Published" : "Draft"}
+                </Button>
+              </div>
               <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Creating..." : "Add Module"}</Button>
             </form>
           </Card>
@@ -360,18 +473,47 @@ export default function TeacherCourses() {
               )}
 
               {(newLesson.content_type === "video" || newLesson.content_type === "audio" || newLesson.content_type === "pdf") && (
-                <div>
-                  <label className="text-sm font-medium text-[#0B2A5B]">{newLesson.content_type === "pdf" ? "PDF URL" : "Media URL"}</label>
-                  <Input type="url" placeholder="https://..." value={newLesson.video_url} onChange={(e) => setNewLesson({ ...newLesson, video_url: e.target.value })} className="bg-[#F4F1EA]" />
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#0B2A5B]">Upload Media OR enter URL</label>
+                  <div className="flex gap-2">
+                    <Input 
+                      type="url" 
+                      placeholder="https://..." 
+                      value={newLesson.video_url} 
+                      onChange={(e) => setNewLesson({ ...newLesson, video_url: e.target.value })} 
+                      className="bg-[#F4F1EA] flex-1" 
+                    />
+                    <div className="relative overflow-hidden inline-block shrink-0">
+                      <Button type="button" variant="outline" className="border-[#0B2A5B]/20 bg-gray-50 text-[#0B2A5B] pointer-events-none" disabled={uploadingMedia}>
+                        <Upload size={16} className="mr-2" /> {uploadingMedia ? "Uploading..." : "Upload"}
+                      </Button>
+                      <input 
+                        type="file" 
+                        accept={newLesson.content_type === "video" ? "video/*" : newLesson.content_type === "audio" ? "audio/*" : "application/pdf"}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                        disabled={uploadingMedia}
+                        onChange={(e) => e.target.files && e.target.files[0] && handleMediaUpload(e.target.files[0])}
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div><label className="text-sm font-medium text-[#0B2A5B]">Duration (min)</label><Input type="number" min="1" value={newLesson.duration_minutes} onChange={(e) => setNewLesson({ ...newLesson, duration_minutes: parseInt(e.target.value) })} className="bg-[#F4F1EA]" /></div>
-                <div><label className="text-sm font-medium text-[#0B2A5B]">Order</label><Input type="number" min="0" value={newLesson.order} onChange={(e) => setNewLesson({ ...newLesson, order: parseInt(e.target.value) })} className="bg-[#F4F1EA]" /></div>
               </div>
-              <div className="flex items-center gap-2"><input type="checkbox" checked={newLesson.is_published} onChange={(e) => setNewLesson({ ...newLesson, is_published: e.target.checked })} /><label className="text-sm text-[#0B2A5B]">Published</label></div>
-              <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Creating..." : "Add Lesson"}</Button>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-[#0B2A5B]">Status</label>
+                <Button
+                  type="button"
+                  variant={newLesson.is_published ? "default" : "outline"}
+                  onClick={() => setNewLesson({ ...newLesson, is_published: !newLesson.is_published })}
+                  className={newLesson.is_published ? "bg-green-600 hover:bg-green-700 text-white" : "text-gray-500"}
+                >
+                  {newLesson.is_published ? "Published" : "Draft"}
+                </Button>
+              </div>
+              <Button type="submit" disabled={saving || uploadingMedia} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Creating..." : "Add Lesson"}</Button>
             </form>
           </Card>
         </div>
