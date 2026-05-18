@@ -23,13 +23,16 @@ jobs:
 
             set -e
 
+            export NVM_DIR="$HOME/.nvm"
+
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
             echo "---------- Changing Directory ---------------"
-
             cd ${{ secrets.WORK_DIR }}
-
             echo "----------------- Git Pull ------------------"
-
             git pull origin ${{ secrets.BRANCH }}
+            echo "----------------- Node Version ------------------"
+            node -v
 
             echo "----------------- Install Dependencies ------------------"
 
