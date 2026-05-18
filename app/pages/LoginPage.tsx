@@ -46,6 +46,32 @@ export default function LoginPage() {
 
     try {
       const response = await api.post("/auth/login", { email, password });
+      
+      // Check if backend bypassed OTP (e.g. for admins) and returned a token directly
+      if (response.data.access_token) {
+        const { access_token, user } = response.data;
+        localStorage.setItem("token", access_token);
+        localStorage.setItem("user", JSON.stringify(user));
+
+        const roles = user.roles || [];
+        const isSuperAdmin = roles.some((r: any) => r.name === "super_admin");
+        const isAdmin = roles.some((r: any) => r.name === "admin");
+        const isFaculty = roles.some((r: any) => r.name === "faculty");
+        const isDistributor = roles.some((r: any) => r.name === "distributor");
+
+        if (isSuperAdmin || isAdmin) {
+          navigate("/admin/dashboard");
+        } else if (isFaculty) {
+          navigate("/teacher/dashboard");
+        } else if (isDistributor) {
+          navigate("/distributor/dashboard");
+        } else {
+          navigate("/student/dashboard");
+        }
+        return;
+      }
+
+      // Normal user flow: OTP required
       const { otp_token, expires_in_seconds, channels: ch } = response.data;
 
       setOtpToken(otp_token);
