@@ -130,6 +130,7 @@ function AmbientGlow() {
           80% { opacity: 0.15; transform: translate(-50%, -50%) scale(1.2); }
           100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
         }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
       `}</style>
     </div>
   );
@@ -171,6 +172,368 @@ function VideoModal({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
+
+const courseDetails: Record<string, { description: string; highlights: string[]; modules: { title: string; lessons: string[] }[] }> = {
+  FMF: {
+    description: "Master the fundamentals of financial markets and start your trading journey with confidence. Learn from real-world market analysts and build a foundation in stock analysis, derivatives, and emotional discipline.",
+    highlights: [
+      "Industry Recognized Certification",
+      "Practical Market Simulator Exposure",
+      "Dedicated Mentor Support & Live Q&A"
+    ],
+    modules: [
+      {
+        title: "Module 1: Introduction to Financial Markets",
+        lessons: [
+          "Basics of Stocks, Debentures, and Mutual Funds",
+          "How Stock Exchanges (NSE/BSE) & Demat Accounts operate",
+          "Navigating a Trading Terminal (Placing orders, bid-ask spreads)"
+        ]
+      },
+      {
+        title: "Module 2: Technical Analysis Core",
+        lessons: [
+          "Introduction to Candlestick charts & basic patterns",
+          "Drawing Support & Resistance lines like a pro",
+          "Trend analysis (Uptrends, Downtrends, Consolidation) and Moving Averages"
+        ]
+      },
+      {
+        title: "Module 3: Introduction to Derivatives & F&O",
+        lessons: [
+          "What are Futures & Options contracts?",
+          "Index trading vs. Equity trading",
+          "Understanding Margins, Leverage, and contract expiry"
+        ]
+      },
+      {
+        title: "Module 4: Risk Management & Trading Psychology",
+        lessons: [
+          "Position sizing principles (Calculating risk per trade)",
+          "Placing hard Stop-Losses and profit-taking targets",
+          "Managing fear and greed: Standard rules of trading discipline"
+        ]
+      }
+    ]
+  },
+  CARP: {
+    description: "Deep dive into research methodologies, comprehensive technical analysis, and fundamental equity research. Built specifically for professionals, graduates, and traders aiming to build a career in stock market research or make informed, data-driven long-term investments.",
+    highlights: [
+      "Professional Equity Research Report Training",
+      "Structural Fundamental Valuation & DCF Models",
+      "Placement Assistance & Portfolio Showcase"
+    ],
+    modules: [
+      {
+        title: "Module 1: Advanced Technical Analysis",
+        lessons: [
+          "Deep dive into complex Chart Patterns (Double Tops/Bottoms, Head & Shoulders, Flags)",
+          "Master leading & lagging indicators (RSI, MACD, Bollinger Bands, Fibonacci Retracements)",
+          "Multi-timeframe analysis for high-probability setups"
+        ]
+      },
+      {
+        title: "Module 2: Fundamental Analysis & Financial Statements",
+        lessons: [
+          "Deconstruct Balance Sheets, Income Statements, and Cash Flow Statements",
+          "Analyzing key financial ratios (P/E, P/B, EV/EBITDA, ROE, Debt-to-Equity)",
+          "Red-flag detection: Identifying bookkeeping anomalies and accounting quality"
+        ]
+      },
+      {
+        title: "Module 3: Valuation Methodologies & Economic Analysis",
+        lessons: [
+          "Relative Valuation (Peer comparison) and Absolute Valuation (Discounted Cash Flow modeling)",
+          "Macro-economic indicators (GDP, inflation, interest rates) and their market impact",
+          "Sector-wise research frameworks (Banking, IT, Auto, Pharma, FMCG)"
+        ]
+      },
+      {
+        title: "Module 4: Equity Research Report Writing & Ethics",
+        lessons: [
+          "Drafting a professional 'Initiating Coverage' research report",
+          "Structuring Investment Thesis, Target Pricing, and Risk factors",
+          "Regulatory norms, SEBI guidelines, and financial analyst ethics"
+        ]
+      }
+    ]
+  },
+  CPTP: {
+    description: "Professional grade trading strategies, advanced risk management, and portfolio construction. Master derivatives strategies, options pricing models (Greeks), institutional price action, and order flow analysis. Includes intensive trading simulator training and a career pathway to corporate desks.",
+    highlights: [
+      "Advanced Options Greeks & Hedging Strategies",
+      "Institutional Price Action & Order Flow Analysis",
+      "Practical Prop Desk Simulator & Capital Placement Pathway"
+    ],
+    modules: [
+      {
+        title: "Module 1: Advanced Options Trading & Option Greeks",
+        lessons: [
+          "Deep dive into Options Greeks (Delta, Gamma, Vega, Theta) and their effects on premium",
+          "Constructing advanced options strategies (Spreads, Iron Condors, Straddles, Strangles)",
+          "Dynamic adjustments, delta hedging, and risk management of complex options portfolios"
+        ]
+      },
+      {
+        title: "Module 2: Intraday & Swing Trading Systems",
+        lessons: [
+          "High-probability intraday setups (Gap trading, VWAP, Breakouts, Mean Reversion)",
+          "Volume Profile analysis and identifying Value Areas (VAH/VAL/POC)",
+          "Development and backtesting of automated/rules-based trading strategies"
+        ]
+      },
+      {
+        title: "Module 3: Institutional Order Flow & Price Action",
+        lessons: [
+          "Reading order book dynamics, market depth (Level 2 data), and time & sales",
+          "Identifying institutional buying/selling footprints (Smart Money concepts)",
+          "Trade execution psychology and managing large position sizes"
+        ]
+      },
+      {
+        title: "Module 4: Capital Allocation & Professional Desk Recruitment",
+        lessons: [
+          "Advanced portfolio construction and Sharpe/Sortino ratio optimization",
+          "Proprietary desk simulation rules: Maximum drawdown limits, daily loss limits",
+          "Career preparation, placement guidance, and interview masterclass for prop trading desks"
+        ]
+      }
+    ]
+  }
+};
+
+// Course Card Component to handle local state for Read More and Program Details Dialog
+function CourseCard({ course }: { course: any }) {
+  const [showFullDesc, setShowFullDesc] = useState(false);
+  const [showFullTitle, setShowFullTitle] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'modules'>('overview');
+  const [expandedModuleIdx, setExpandedModuleIdx] = useState<number | null>(0);
+  const MAX_DESC_LENGTH = 100;
+  const MAX_TITLE_LENGTH = 45;
+
+  const courseKey = course.name.includes("FMF") ? "FMF" : course.name.includes("CARP") ? "CARP" : "CPTP";
+  const details = courseDetails[courseKey];
+
+  return (
+    <>
+      <Card 
+        className="w-full flex flex-col group transition-all duration-500 overflow-hidden rounded-2xl border border-gray-200 hover:border-[#E53935]/50 hover:shadow-2xl"
+      >
+        {/* Gradient Header */}
+        <div className="relative px-6 pt-6 pb-4 min-h-[210px] flex flex-col justify-between" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" }}>
+          <div>
+            <div className="flex items-start justify-between mb-3">
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)" }}>
+                <course.icon className="h-7 w-7 text-white" />
+              </div>
+              <div className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/30" style={{ background: "rgba(255,255,255,0.1)" }}>
+                {course.duration}
+              </div>
+            </div>
+            <h3 className="text-lg font-bold text-white mb-1 leading-snug">
+              {showFullTitle || course.name.length <= MAX_TITLE_LENGTH ? course.name : `${course.name.substring(0, MAX_TITLE_LENGTH)}...`}
+              {course.name.length > MAX_TITLE_LENGTH && (
+                <button onClick={(e) => { e.preventDefault(); setShowFullTitle(!showFullTitle); }} className="text-[#E53935] text-[10px] ml-1 hover:underline">
+                  {showFullTitle ? "Read Less" : "Read More"}
+                </button>
+              )}
+            </h3>
+          </div>
+          <span className="text-white/70 text-xs font-medium uppercase tracking-widest block">{course.level} Program</span>
+        </div>
+
+        {/* Card Body */}
+        <div className="flex flex-col flex-1 p-4 bg-white">
+          <div className="text-gray-600 text-sm mb-4 leading-relaxed">
+            <p>
+              {showFullDesc || course.description.length <= MAX_DESC_LENGTH ? course.description : `${course.description.substring(0, MAX_DESC_LENGTH)}...`}
+              {course.description.length > MAX_DESC_LENGTH && (
+                <button onClick={(e) => { e.preventDefault(); setShowFullDesc(!showFullDesc); }} className="text-[#E53935] font-bold ml-1 hover:underline">
+                  {showFullDesc ? "Read Less" : "Read More"}
+                </button>
+              )}
+            </p>
+          </div>
+
+          <div className="flex-1" />
+
+          <div className="border-t border-gray-100 pt-5 mb-5">
+            <div className="flex items-end justify-between">
+              <div>
+                <div className="text-sm text-gray-400 line-through">{course.originalPrice}</div>
+                <div className="text-3xl font-extrabold tracking-tight" style={{ color: "#121212" }}>
+                  {course.price}<span className="text-sm font-normal text-gray-500 ml-1">+ GST</span>
+                </div>
+              </div>
+              <div className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "rgba(76,175,80,0.1)", color: "#2e7d32" }}>
+                Save {course.savings}
+              </div>
+            </div>
+          </div>
+
+          <Button 
+            onClick={() => { setActiveTab('overview'); setIsDetailsOpen(true); }}
+            className="w-full h-12 text-base font-semibold rounded-xl !bg-[#121212] !text-white hover:!bg-[#E53935] hover:!text-white transition-all duration-300 group-hover:shadow-lg"
+          >
+            View Program Details
+            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+          </Button>
+        </div>
+      </Card>
+
+      {/* Program Details Modal */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="sm:max-w-2xl bg-white text-[#121212] rounded-3xl overflow-hidden border border-gray-100 shadow-2xl p-0 z-[10000] max-h-[90vh] flex flex-col">
+          {/* Header Gradient (Fixed) */}
+          <div className="relative px-8 py-8 text-white flex-shrink-0" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" }}>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/20 bg-white/10">
+                {course.level} Program
+              </span>
+              <span className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/20 bg-white/10">
+                {course.duration}
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight">{course.name}</h2>
+            <p className="text-white/60 text-sm mt-1.5 font-medium">Complete Program Overview & Course Curriculum</p>
+          </div>
+
+          {/* Body & Actions (Scrollable if content is taller than viewport) */}
+          <div className="p-8 flex-1 overflow-y-auto">
+            {/* Custom Premium Tabs Navigation */}
+            <div className="flex border-b border-gray-100 mb-6">
+              <button 
+                type="button"
+                onClick={() => setActiveTab('overview')} 
+                className={`pb-3 pr-6 text-sm font-semibold transition-all border-b-2 ${activeTab === 'overview' ? 'border-[#E53935] text-[#E53935]' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+              >
+                Overview
+              </button>
+              <button 
+                type="button"
+                onClick={() => setActiveTab('modules')} 
+                className={`pb-3 px-6 text-sm font-semibold transition-all border-b-2 ${activeTab === 'modules' ? 'border-[#E53935] text-[#E53935]' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+              >
+                Modules & Curriculum
+              </button>
+            </div>
+
+            {/* Tab content: Overview */}
+            {activeTab === 'overview' && (
+              <div className="space-y-6">
+                <div>
+                  <h4 className="font-bold text-[#121212] text-sm uppercase tracking-wider mb-2.5">About this Program</h4>
+                  <p className="text-gray-600 text-sm leading-relaxed font-medium">{details.description}</p>
+                </div>
+
+                <div>
+                  <h4 className="font-bold text-[#121212] text-sm uppercase tracking-wider mb-3">Key Highlights</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {details.highlights.map((highlight, idx) => (
+                      <div key={idx} className="flex flex-col p-4 rounded-2xl bg-gray-50 border border-gray-100 text-center hover:shadow-md transition-shadow">
+                        <span className="text-[#E53935] text-xl mb-1.5">✓</span>
+                        <span className="text-xs font-semibold text-gray-800 leading-snug">{highlight}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+                  <div>
+                    <span className="text-xs text-gray-400 font-medium">Program Enrollment Fee</span>
+                    <div className="text-3xl font-extrabold text-[#121212] tracking-tight">
+                      {course.price}
+                      <span className="text-sm font-normal text-gray-500 ml-1">+ GST</span>
+                    </div>
+                  </div>
+                  <div className="text-xs text-green-700 font-bold bg-green-50 border border-green-100 px-4 py-2 rounded-full shadow-sm">
+                    Save {course.savings} instantly
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab content: Modules (Accordion style) */}
+            {activeTab === 'modules' && (
+              <div className="space-y-3 max-h-[340px] overflow-y-auto pr-2 scrollbar-thin">
+                {details.modules.map((mod, idx) => {
+                  const isExpanded = expandedModuleIdx === idx;
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`rounded-2xl border transition-all duration-300 ${
+                        isExpanded 
+                          ? 'border-[#E53935]/30 bg-[#E53935]/5 shadow-xs' 
+                          : 'border-gray-100 bg-gray-50/50 hover:bg-gray-50'
+                      }`}
+                    >
+                      {/* Accordion Trigger Header */}
+                      <button
+                        type="button"
+                        onClick={() => setExpandedModuleIdx(isExpanded ? null : idx)}
+                        className="w-full flex items-center justify-between p-4 cursor-pointer text-left select-none"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border transition-colors ${
+                            isExpanded 
+                              ? 'bg-[#E53935] text-white border-[#E53935]' 
+                              : 'bg-[#E53935]/10 text-[#E53935] border-[#E53935]/20'
+                          }`}>
+                            {idx + 1}
+                          </div>
+                          <h4 className="font-bold text-gray-800 text-sm leading-snug">{mod.title}</h4>
+                        </div>
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4 text-[#E53935] transition-transform duration-300" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-gray-400 transition-transform duration-300" />
+                        )}
+                      </button>
+
+                      {/* Accordion Content Panels */}
+                      <div className={`transition-all duration-300 overflow-hidden ${
+                        isExpanded ? 'max-h-[300px] border-t border-[#E53935]/10 p-4 pt-3' : 'max-h-0'
+                      }`}>
+                        <ul className="space-y-2.5 pl-10">
+                          {mod.lessons.map((lesson, lIdx) => (
+                            <li key={lIdx} className="text-xs text-gray-600 flex items-start gap-2.5 leading-relaxed font-medium">
+                              <span className="text-[#E53935] mt-1 text-xs">•</span>
+                              <span>{lesson}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Actions Footer */}
+            <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end mt-8 pt-6 border-t border-gray-100">
+              <Button 
+                onClick={() => setIsDetailsOpen(false)}
+                variant="outline"
+                className="w-full sm:w-auto h-12 text-sm font-semibold rounded-xl border-gray-200 text-gray-600 hover:border-[#E53935] hover:text-[#E53935] hover:bg-[#E53935]/5 transition-all duration-300"
+              >
+                Close Details
+              </Button>
+              <Link to="/student/courses" className="w-full sm:w-auto">
+                <Button 
+                  className="w-full h-12 text-sm font-semibold rounded-xl px-8 shadow-lg hover:shadow-xl !bg-[#E53935] !text-white hover:!bg-[#b71c1c] transition-all duration-300"
+                >
+                  Enroll Now
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 
 export default function MarketingHome() {
   const [videoOpen, setVideoOpen] = useState(false);
@@ -260,7 +623,7 @@ export default function MarketingHome() {
               <p className="font-medium mb-3" style={{ color: "#121212" }}>Popular Searches</p>
               <div className="flex flex-wrap gap-2">
                 {["Technical Analysis", "Options Trading", "Risk Management", "NIFTY", "Candlestick Patterns", "Trading Psychology"].map((t) => (
-                  <span key={t} className="px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer hover:bg-red-50 hover:text-[#E53935] transition-colors" style={{ background: "rgba(229,57,53,0.08)", color: "#E53935" }}>{t}</span>
+                  <span key={t} className="px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer hover:bg-[#E53935] hover:text-white transition-colors" style={{ background: "rgba(229,57,53,0.08)", color: "#E53935" }}>{t}</span>
                 ))}
               </div>
             </div>
@@ -328,20 +691,11 @@ export default function MarketingHome() {
               <a href="#about" className="text-gray-700 hover:text-[#E53935] transition-colors font-medium">About</a>
             </div>
             <div className="flex items-center gap-3">
-              <button onClick={() => setSearchOpen(true)} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-gray-600 hover:text-[#E53935] hover:bg-red-50 transition-all" title="Search">
+              <button onClick={() => setSearchOpen(true)} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-gray-600 hover:text-[#E53935] hover:bg-[#E53935]/10 transition-all" title="Search">
                 <Search className="h-4 w-4 md:h-5 md:w-5" />
               </button>
-              <Link to="/login" className="hidden sm:block">
-                <Button variant="ghost" className="text-gray-700 hover:text-[#E53935] hover:bg-red-50" size="lg">Login</Button>
-              </Link>
-              <Link to="/student/entrance-exam">
-                <Button
-                  className="shadow-md hover:shadow-xl transition-all hover:scale-105 h-9 px-4 md:h-11 md:px-8"
-                  style={{ background: "linear-gradient(135deg, #E53935 0%, #b71c1c 100%)", color: "white", boxShadow: "0 4px 20px rgba(229, 57, 53, 0.4)" }}
-                >
-                  <span className="sm:hidden text-xs">Start</span>
-                  <span className="hidden sm:inline">Start Learning</span>
-                </Button>
+              <Link to="/login">
+                <Button variant="ghost" className="text-gray-700 hover:text-[#E53935] hover:bg-[#E53935]/10" size="lg">Login</Button>
               </Link>
             </div>
           </div>
@@ -377,8 +731,8 @@ export default function MarketingHome() {
                 <Link to="/student/contract-kyc" className="block w-full sm:w-auto">
                   <Button
                     size="lg"
-                    className="w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all hover:scale-105 text-lg px-8 py-6"
-                    style={{ background: "linear-gradient(135deg, #E53935 0%, #b71c1c 100%)", color: "white", boxShadow: "0 10px 40px rgba(229, 57, 53, 0.4)" }}
+                    className="w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all hover:scale-105 text-lg px-8 py-6 bg-gradient-to-r from-[#E53935] to-[#b71c1c] text-white hover:from-[#b71c1c] hover:to-[#b71c1c]"
+                    style={{ boxShadow: "0 10px 40px rgba(229, 57, 53, 0.4)" }}
                   >
                     Apply Now
                     <ArrowRight className="ml-2 h-5 w-5" />
@@ -388,7 +742,7 @@ export default function MarketingHome() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="w-full sm:w-auto border-2 border-[#E53935] text-[#E53935] hover:bg-red-50 text-lg px-8 py-6"
+                    className="w-full sm:w-auto border-2 border-[#E53935] text-[#E53935] hover:bg-[#E53935] hover:text-white text-lg px-8 py-6 transition-all duration-300"
                   >
                     <Download className="mr-2 h-5 w-5" />
                     Download Brochure
@@ -455,10 +809,10 @@ export default function MarketingHome() {
         </div>
       </section>
       {/* 1. Featured Courses Section */}
-      <section id="courses" className="py-24 relative z-10" style={{ background: "linear-gradient(to bottom, transparent, rgba(229, 57, 53, 0.02), transparent)" }}>
+      <section id="courses" className="py-8 relative z-10" style={{ background: "linear-gradient(to bottom, transparent, rgba(229, 57, 53, 0.02), transparent)" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-block px-4 py-2 rounded-full mb-6 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
+          <div className="text-center mb-10">
+            <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#E53935]/30" style={{ background: "rgba(229, 57, 53, 0.08)" }}>
               <span className="text-[#E53935] font-semibold text-sm">🎓 Professional Certifications</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Our Professional Programs</h2>
@@ -466,7 +820,10 @@ export default function MarketingHome() {
               Master trading with our industry-leading certifications
             </p>
           </div>
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 md:grid md:grid-cols-3 md:gap-8 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] items-stretch">
+          <div 
+            className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible pb-8 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
             {[
               { 
                 name: "Financial Market Foundation (FMF)", 
@@ -499,58 +856,9 @@ export default function MarketingHome() {
                 icon: Trophy,
               },
             ].map((course, i) => (
-              <Card 
-                key={i} 
-                className="min-w-[300px] snap-center shrink-0 md:min-w-0 md:w-auto flex flex-col group transition-all duration-500 overflow-hidden rounded-2xl border border-gray-200 hover:border-[#E53935]/50 hover:shadow-2xl"
-              >
-                {/* Gradient Header */}
-                <div className="relative px-6 pt-8 pb-6" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" }}>
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)" }}>
-                      <course.icon className="h-7 w-7 text-white" />
-                    </div>
-                    <div className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/30" style={{ background: "rgba(255,255,255,0.1)" }}>
-                      {course.duration}
-                    </div>
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-1 leading-snug">{course.name}</h3>
-                  <span className="text-white/70 text-xs font-medium uppercase tracking-widest">{course.level} Program</span>
-                </div>
-
-                {/* Card Body */}
-                <div className="flex flex-col flex-1 p-6 bg-white">
-                  <p className="text-gray-600 text-sm mb-6 leading-relaxed">{course.description}</p>
-
-                  {/* Spacer to push price + button to bottom */}
-                  <div className="flex-1" />
-
-                  {/* Pricing */}
-                  <div className="border-t border-gray-100 pt-5 mb-5">
-                    <div className="flex items-end justify-between">
-                      <div>
-                        <div className="text-sm text-gray-400 line-through">{course.originalPrice}</div>
-                        <div className="text-3xl font-extrabold tracking-tight" style={{ color: "#121212" }}>
-                          {course.price}<span className="text-sm font-normal text-gray-500 ml-1">+ GST</span>
-                        </div>
-                      </div>
-                      <div className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "rgba(76,175,80,0.1)", color: "#2e7d32" }}>
-                        Save {course.savings}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* CTA Button — always at bottom */}
-                  <Link to="/student/courses" className="block">
-                    <Button 
-                      className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 group-hover:shadow-lg"
-                      style={{ background: "#121212", color: "white" }}
-                    >
-                      View Program Details
-                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </Link>
-                </div>
-              </Card>
+              <div key={i} className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex">
+                <CourseCard course={course} />
+              </div>
             ))}
           </div>
         </div>
@@ -559,94 +867,101 @@ export default function MarketingHome() {
 
 
       {/* 2. Live Classes Section */}
-      <section className="py-24 relative z-10" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(248,248,248,0.4) 100%)", backdropFilter: "blur(2px)" }}>
+      <section className="py-8 relative z-10" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(248,248,248,0.4) 100%)", backdropFilter: "blur(2px)" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <div className="inline-block px-4 py-2 rounded-full mb-6 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
+          <div className="text-center mb-6">
+            <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
               <span className="text-[#E53935] font-semibold text-sm">📡 Real-Time Learning</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Live Classes</h2>
             <p className="text-xl text-gray-600">Learn from expert traders in real-time</p>
           </div>
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 md:grid md:grid-cols-3 md:gap-8 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] items-stretch">
+          <div 
+            className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible pb-8 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
             {[
               { title: "Technical Analysis Masterclass", instructor: "Amit Desai", date: "April 18, 2026", time: "10:00 AM IST", students: 145, status: "live" },
               { title: "Options Trading Strategies", instructor: "Priya Sharma", date: "April 19, 2026", time: "2:00 PM IST", students: 132, status: "upcoming" },
               { title: "Risk Management Fundamentals", instructor: "Rajesh Kumar", date: "April 20, 2026", time: "4:00 PM IST", students: 178, status: "upcoming" },
             ].map((lecture, i) => (
-              <Card key={i} className={`min-w-[300px] snap-center shrink-0 md:min-w-0 md:w-auto flex flex-col overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-2xl ${lecture.status === "live" ? "border-2 border-[#E53935] shadow-xl" : "border border-gray-200 hover:border-[#E53935]/50"}`}>
-                {/* Image Header */}
-                <div className="relative h-44 bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center overflow-hidden">
-                  <img src="https://images.unsplash.com/photo-1616587896649-79b16d8b173d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" alt="Live class" className="absolute inset-0 w-full h-full object-cover opacity-25" />
-                  <div className="relative z-10 flex flex-col items-center">
-                    <div className="w-16 h-16 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center border-2 border-white/40 mb-3">
-                      <Video className="h-7 w-7 text-white" />
-                    </div>
-                    {lecture.status === "live" ? (
-                      <div className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold text-white animate-pulse" style={{ background: "#E53935" }}>
-                        <span className="w-2 h-2 rounded-full bg-white animate-ping" /> LIVE NOW
+              <div key={i} className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex">
+                <Card className={`w-full flex flex-col overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-2xl ${lecture.status === "live" ? "border-2 border-[#E53935] shadow-xl" : "border border-gray-200 hover:border-[#E53935]/50"}`}>
+                  {/* Image Header */}
+                  <div className="relative h-44 bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1616587896649-79b16d8b173d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" alt="Live class" className="absolute inset-0 w-full h-full object-cover opacity-25" />
+                    <div className="relative z-10 flex flex-col items-center">
+                      <div className="w-16 h-16 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center border-2 border-white/40 mb-3">
+                        <Video className="h-7 w-7 text-white" />
                       </div>
-                    ) : (
-                      <div className="px-4 py-1.5 rounded-full text-xs font-bold text-white border border-white/30" style={{ background: "rgba(255,255,255,0.1)" }}>
-                        UPCOMING
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Card Body */}
-                <div className="flex flex-col flex-1 p-6 bg-white">
-                  <h3 className="font-bold text-lg mb-4 leading-snug" style={{ color: "#121212" }}>{lecture.title}</h3>
-                  <div className="space-y-3 mb-6 text-sm">
-                    <div className="flex items-center gap-3 text-gray-700">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(229,57,53,0.08)" }}>
-                        <Users className="h-4 w-4" style={{ color: "#E53935" }} />
-                      </div>
-                      <span className="font-medium">{lecture.instructor}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-gray-600">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(229,57,53,0.08)" }}>
-                        <CheckCircle className="h-4 w-4" style={{ color: "#E53935" }} />
-                      </div>
-                      <span>{lecture.date} • {lecture.time}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-gray-600">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(229,57,53,0.08)" }}>
-                        <Star className="h-4 w-4" style={{ color: "#E53935" }} />
-                      </div>
-                      <span>{lecture.students} students enrolled</span>
+                      {lecture.status === "live" ? (
+                        <div className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold text-white animate-pulse" style={{ background: "#E53935" }}>
+                          <span className="w-2 h-2 rounded-full bg-white animate-ping" /> LIVE NOW
+                        </div>
+                      ) : (
+                        <div className="px-4 py-1.5 rounded-full text-xs font-bold text-white border border-white/30" style={{ background: "rgba(255,255,255,0.1)" }}>
+                          UPCOMING
+                        </div>
+                      )}
                     </div>
                   </div>
                   
-                  {/* Spacer */}
-                  <div className="flex-1" />
+                  {/* Card Body */}
+                  <div className="flex flex-col flex-1 p-6 bg-white">
+                    <h3 className="font-bold text-lg mb-4 leading-snug" style={{ color: "#121212" }}>{lecture.title}</h3>
+                    <div className="space-y-3 mb-6 text-sm">
+                      <div className="flex items-center gap-3 text-gray-700">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(229,57,53,0.08)" }}>
+                          <Users className="h-4 w-4" style={{ color: "#E53935" }} />
+                        </div>
+                        <span className="font-medium">{lecture.instructor}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-gray-600">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(229,57,53,0.08)" }}>
+                          <CheckCircle className="h-4 w-4" style={{ color: "#E53935" }} />
+                        </div>
+                        <span>{lecture.date} • {lecture.time}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-gray-600">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(229,57,53,0.08)" }}>
+                          <Star className="h-4 w-4" style={{ color: "#E53935" }} />
+                        </div>
+                        <span>{lecture.students} students enrolled</span>
+                      </div>
+                    </div>
+                    
+                    {/* Spacer */}
+                    <div className="flex-1" />
 
-                  {/* CTA — always at bottom */}
-                  <Link to="/student/lectures" className="block">
-                    <Button 
-                      className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-300"
-                      style={{ 
-                        background: lecture.status === "live" ? "linear-gradient(135deg, #E53935, #b71c1c)" : "#121212", 
-                        color: "white",
-                        boxShadow: lecture.status === "live" ? "0 8px 30px rgba(229,57,53,0.3)" : "none"
-                      }}
-                    >
-                      {lecture.status === "live" ? "Join Now" : "Register Now"}
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </div>
-              </Card>
+                    {/* CTA — always at bottom */}
+                    <Link to="/student/lectures" className="block">
+                      <Button 
+                        className={`w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 ${
+                          lecture.status === "live" 
+                            ? "!bg-gradient-to-r !from-[#E53935] !to-[#b71c1c] !text-white hover:!from-[#b71c1c] hover:!to-[#b71c1c]" 
+                            : "!bg-[#121212] !text-white hover:!bg-[#E53935] hover:!text-white"
+                        }`}
+                        style={{ 
+                          boxShadow: lecture.status === "live" ? "0 8px 30px rgba(229,57,53,0.3)" : "none"
+                        }}
+                      >
+                        {lecture.status === "live" ? "Join Now" : "Register Now"}
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                </Card>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* 3. Learning Journey Section */}
-      <section className="py-20 bg-transparent relative z-10">
+      <section className="py-6 bg-transparent relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4" style={{ color: "#121212" }}>Your Learning Journey</h2>
+          <div className="text-center mb-6">
+            <h2 className="text-4xl font-bold mb-2" style={{ color: "#121212" }}>Your Learning Journey</h2>
             <p className="text-xl text-gray-600">From beginner to professional trader in 5 structured steps</p>
           </div>
           <div className="relative">
@@ -697,32 +1012,32 @@ export default function MarketingHome() {
       <VerticalVideoSection />
 
       {/* 5. FinTrade Blog Section */}
-      <section className="py-24 relative z-10" style={{ background: "linear-gradient(to right, rgba(255,255,255,0.5), rgba(229, 57, 53, 0.03), rgba(255,255,255,0.5))" }}>
+      <section className="py-8 relative z-10" style={{ background: "linear-gradient(to right, rgba(255,255,255,0.5), rgba(229, 57, 53, 0.03), rgba(255,255,255,0.5))" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-6">
             <div>
-              <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
+              <div className="inline-block px-4 py-2 rounded-full mb-2 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
                 <span className="text-[#E53935] font-semibold text-sm">✍️ Latest from Blog</span>
               </div>
               <h2 className="text-4xl font-bold mb-4" style={{ color: "#121212" }}>Market Insights & Articles</h2>
               <p className="text-xl text-gray-600">Stay updated with our research and trading strategies</p>
             </div>
             <Link to="/category/technical-analysis">
-              <Button variant="outline" className="border-2 border-[#E53935] text-[#E53935] hover:bg-red-50">
+              <Button variant="outline" className="border-2 border-[#E53935] text-[#E53935] hover:bg-[#E53935] hover:text-white transition-all duration-300">
                 View All Articles
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
           </div>
           
-          <div className="grid lg:grid-cols-12 gap-8 items-start">
+          <div className="grid lg:grid-cols-12 gap-8 items-stretch">
             {/* Featured Video (Left Side) */}
             <div className="lg:col-span-5">
-              <Card className="overflow-hidden border-0 shadow-2xl relative group h-full">
-                <div className="relative h-[300px] lg:h-[450px]">
+              <Card className="overflow-hidden border-0 shadow-2xl relative group h-full flex flex-col">
+                <div className="relative flex-1 min-h-[300px]">
                   <img 
                     src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80" 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     alt="Featured Video"
                   />
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -739,7 +1054,10 @@ export default function MarketingHome() {
             </div>
 
             {/* Blog Stories (4 Cards) */}
-            <div className="lg:col-span-7 grid md:grid-cols-2 gap-6">
+            <div 
+              className="lg:col-span-7 flex md:grid md:grid-cols-2 gap-6 overflow-x-auto lg:overflow-x-visible pb-6 lg:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 lg:px-0 lg:mx-0 items-stretch"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
               {[
                 {
                   title: "How to Start Option Trading in India",
@@ -770,19 +1088,21 @@ export default function MarketingHome() {
                   desc: "Overcoming emotional biases and building a disciplined trading routine."
                 }
               ].map((blog, i) => (
-                <Card key={i} className="group overflow-hidden border-0 bg-white hover:shadow-xl transition-all duration-300 cursor-pointer">
-                  <div className="relative h-32 overflow-hidden">
-                    <img src={blog.img} alt={blog.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                  </div>
-                  <div className="p-4">
-                    <div className="flex items-center justify-between text-[10px] text-gray-500 mb-2 uppercase font-bold tracking-widest">
-                      <span className="text-[#E53935]">{blog.category}</span>
-                      <span>{blog.readTime}</span>
+                <div key={i} className="flex-shrink-0 w-[260px] sm:w-[320px] md:w-full md:flex-shrink snap-center flex">
+                  <Card className="group overflow-hidden border-0 bg-white hover:shadow-xl transition-all duration-300 cursor-pointer w-full flex flex-col">
+                    <div className="relative h-32 overflow-hidden">
+                      <img src={blog.img} alt={blog.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                     </div>
-                    <h3 className="text-sm font-bold mb-2 group-hover:text-[#E53935] transition-colors line-clamp-2" style={{ color: "#121212" }}>{blog.title}</h3>
-                    <p className="text-xs text-gray-500 line-clamp-2">{blog.desc}</p>
-                  </div>
-                </Card>
+                    <div className="p-4 flex-1 flex flex-col">
+                      <div className="flex items-center justify-between text-[10px] text-gray-500 mb-2 uppercase font-bold tracking-widest">
+                        <span className="text-[#E53935]">{blog.category}</span>
+                        <span>{blog.readTime}</span>
+                      </div>
+                      <h3 className="text-sm font-bold mb-2 group-hover:text-[#E53935] transition-colors line-clamp-2" style={{ color: "#121212" }}>{blog.title}</h3>
+                      <p className="text-xs text-gray-500 line-clamp-2 flex-1">{blog.desc}</p>
+                    </div>
+                  </Card>
+                </div>
               ))}
             </div>
           </div>
@@ -792,7 +1112,7 @@ export default function MarketingHome() {
 
 
       {/* 6. Curriculum Roadmap Section */}
-      <section className="py-20 relative z-10" style={{ background: "#121212" }}>
+      <section className="py-6 relative z-10" style={{ background: "#121212" }}>
         <ModuleRoadmap />
       </section>
 
@@ -805,36 +1125,41 @@ export default function MarketingHome() {
 
 
       {/* 8. Why Choose FinTrade */}
-      <section id="about" className="py-24 relative z-10" style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(248,248,248,0.6))" }}>
+      <section id="about" className="py-8 relative z-10" style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(248,248,248,0.6))" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-block px-4 py-2 rounded-full mb-6 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
+          <div className="text-center mb-8">
+            <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
               <span className="text-[#E53935] font-semibold text-sm">💡 Our Edge</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Why Choose FinTrade</h2>
             <p className="text-xl text-gray-600">Everything you need to become a successful trader</p>
           </div>
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-8 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] items-stretch">
+          <div 
+            className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-8 overflow-x-auto md:overflow-x-visible pb-6 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
             {[
               { icon: Brain, title: "AI Tutor Support", description: "Get 24/7 assistance from our AI-powered trading assistant for doubts and guidance", num: "01" },
               { icon: BookOpen, title: "Structured Curriculum", description: "Follow a proven learning path from basics to advanced strategies with expert content", num: "02" },
               { icon: LineChart, title: "Real Trading Simulation", description: "Practice with ₹10 lakh virtual capital in realistic market conditions without risk", num: "03" },
               { icon: Trophy, title: "Placement Opportunities", description: "Top performers get placed in leading prop trading firms and financial institutions", num: "04" },
             ].map((feature, i) => (
-              <Card key={i} className="min-w-[260px] snap-center shrink-0 md:min-w-0 md:w-auto flex flex-col overflow-hidden rounded-2xl border border-gray-200 hover:border-[#E53935]/50 transition-all duration-300 hover:shadow-2xl group bg-white">
-                <div className="flex flex-col flex-1 p-7 text-center">
-                  {/* Number Badge */}
-                  <div className="text-xs font-bold text-gray-300 mb-4 tracking-widest">{feature.num}</div>
-                  {/* Icon */}
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mx-auto mb-5 group-hover:scale-110 transition-transform duration-300" style={{ background: "linear-gradient(135deg, rgba(229,57,53,0.08), rgba(229,57,53,0.15))" }}>
-                    <feature.icon className="h-8 w-8" style={{ color: "#E53935" }} />
+              <div key={i} className="flex-shrink-0 w-[260px] sm:w-[320px] md:w-full md:flex-shrink snap-center flex">
+                <Card className="w-full flex flex-col overflow-hidden rounded-2xl border border-gray-200 hover:border-[#E53935]/50 transition-all duration-300 hover:shadow-2xl group bg-white">
+                  <div className="flex flex-col flex-1 p-7 text-center">
+                    {/* Number Badge */}
+                    <div className="text-xs font-bold text-gray-300 mb-4 tracking-widest">{feature.num}</div>
+                    {/* Icon */}
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mx-auto mb-5 group-hover:scale-110 transition-transform duration-300" style={{ background: "linear-gradient(135deg, rgba(229,57,53,0.08), rgba(229,57,53,0.15))" }}>
+                      <feature.icon className="h-8 w-8" style={{ color: "#E53935" }} />
+                    </div>
+                    <h3 className="text-lg font-bold mb-3" style={{ color: "#121212" }}>{feature.title}</h3>
+                    <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
                   </div>
-                  <h3 className="text-lg font-bold mb-3" style={{ color: "#121212" }}>{feature.title}</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
-                </div>
-                {/* Bottom accent */}
-                <div className="h-1 w-full" style={{ background: "linear-gradient(to right, transparent, #E53935, transparent)" }} />
-              </Card>
+                  {/* Bottom accent */}
+                  <div className="h-1 w-full" style={{ background: "linear-gradient(to right, transparent, #E53935, transparent)" }} />
+                </Card>
+              </div>
             ))}
           </div>
         </div>
@@ -844,13 +1169,13 @@ export default function MarketingHome() {
 
 
       {/* CTA Section */}
-      <section className="py-20 relative z-10" style={{ background: "linear-gradient(135deg, #E53935 0%, #b71c1c 100%)" }}>
+      <section className="py-8 relative z-10" style={{ background: "linear-gradient(135deg, #E53935 0%, #b71c1c 100%)" }}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Start Your Trading Journey Today</h2>
           <p className="text-xl text-white/90 mb-8">Join 1200+ students learning to trade professionally</p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link to="/student/entrance-exam" className="block w-full sm:w-auto">
-              <Button size="lg" className="w-full sm:w-auto shadow-2xl hover:shadow-3xl transition-all text-lg px-8 py-6" style={{ background: "white", color: "#E53935", boxShadow: "0 0 40px rgba(255, 255, 255, 0.3)" }}>
+              <Button size="lg" className="w-full sm:w-auto shadow-2xl hover:shadow-3xl transition-all text-lg px-8 py-6 bg-white text-[#E53935] hover:bg-[#E53935] hover:text-white duration-300" style={{ boxShadow: "0 0 40px rgba(255, 255, 255, 0.3)" }}>
                 Start Entrance Exam
                 <ArrowRight className="ml-2 h-6 w-6" />
               </Button>
@@ -858,9 +1183,7 @@ export default function MarketingHome() {
             <Link to="/student/contract-kyc" className="block w-full sm:w-auto">
               <Button 
                 size="lg" 
-                variant="outline" 
-                className="w-full sm:w-auto text-lg px-8 py-6 border-2 hover:bg-white/10 transition-colors"
-                style={{ background: "transparent", borderColor: "white", color: "white" }}
+                className="w-full sm:w-auto text-lg px-8 py-6 border-2 border-white !bg-transparent !text-white hover:!bg-white hover:!text-[#E53935] transition-all duration-300"
               >
                 <FileText className="mr-2 h-5 w-5" />
                 View Contract & KYC

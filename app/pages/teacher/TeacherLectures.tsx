@@ -21,6 +21,10 @@ export default function TeacherLectures() {
 
   const [uploadingId, setUploadingId] = useState<number | null>(null);
 
+  // Resource Upload Modal State
+  const [showResourceModal, setShowResourceModal] = useState(false);
+  const [resourceLectureId, setResourceLectureId] = useState(0);
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -73,6 +77,39 @@ export default function TeacherLectures() {
     }
   };
 
+  const handleUploadResourceSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const fileInput = form.elements.namedItem('resource_file') as HTMLInputElement;
+    if (!fileInput.files || fileInput.files.length === 0) return;
+    
+    if (resourceLectureId === 0) {
+      alert("Please select a lecture.");
+      return;
+    }
+
+    const file = fileInput.files[0];
+    setSaving(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await api.post("/admin/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      const url = uploadRes.data.url;
+
+      await api.post(`/admin/lectures/${resourceLectureId}/recordings`, { recording_url: url });
+      fetchData();
+      setShowResourceModal(false);
+      setResourceLectureId(0);
+      alert("Resource uploaded successfully!");
+    } catch (err: any) {
+      alert("Error uploading resource: " + (err.response?.data?.detail || err.message));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault(); setSaving(true);
     try {
@@ -109,7 +146,9 @@ export default function TeacherLectures() {
         <Card className="p-6 bg-white shadow-lg">
           <h3 className="text-xl font-semibold text-[#0B2A5B] mb-4">Upload Notes</h3>
           <p className="text-[#0B2A5B]/70 mb-6">Share study materials with your students</p>
-          <Button variant="outline" className="border-2 border-[#0B2A5B] text-[#0B2A5B]" size="lg"><Upload size={20} className="mr-2" />Upload Resources</Button>
+          <Button variant="outline" className="border-2 border-[#0B2A5B] text-[#0B2A5B]" size="lg" onClick={() => setShowResourceModal(true)}>
+            <Upload size={20} className="mr-2" />Upload Resources
+          </Button>
         </Card>
       </div>
 
@@ -235,6 +274,32 @@ export default function TeacherLectures() {
               <div><label className="text-sm font-medium text-[#0B2A5B]">Meeting Link (Google Meet / Zoom) *</label><Input required type="url" placeholder="https://meet.google.com/..." value={newLecture.meeting_link} onChange={(e) => setNewLecture({ ...newLecture, meeting_link: e.target.value })} className="bg-[#F4F1EA]" /></div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Max Participants</label><Input type="number" min="1" value={newLecture.max_participants} onChange={(e) => setNewLecture({ ...newLecture, max_participants: parseInt(e.target.value) })} className="bg-[#F4F1EA]" /></div>
               <Button type="submit" disabled={saving || !newLecture.course_id} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Scheduling..." : "Schedule Lecture"}</Button>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {/* Upload Resource Modal */}
+      {showResourceModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md p-6 bg-white shadow-xl relative">
+            <button onClick={() => setShowResourceModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-black"><X size={20} /></button>
+            <h2 className="text-2xl font-bold text-[#0B2A5B] mb-4">Upload Notes / Resource</h2>
+            <form onSubmit={handleUploadResourceSubmit} className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-[#0B2A5B]">Select Lecture *</label>
+                <select required className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" value={resourceLectureId} onChange={(e) => setResourceLectureId(parseInt(e.target.value))}>
+                  <option value={0} disabled>Choose a lecture</option>
+                  {lectures.map((l) => <option key={l.id} value={l.id}>{l.title} ({new Date(l.scheduled_at).toLocaleDateString()})</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-[#0B2A5B]">File *</label>
+                <input required type="file" name="resource_file" className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" />
+              </div>
+              <Button type="submit" disabled={saving || !resourceLectureId} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">
+                {saving ? "Uploading..." : "Upload Resource"}
+              </Button>
             </form>
           </Card>
         </div>
