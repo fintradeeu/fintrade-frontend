@@ -5,11 +5,11 @@ import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Progress } from "../../components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
-import { FileText, Play, FileAudio, FileVideo, Download, CheckCircle, Lock, Volume2, Settings, HelpCircle } from "lucide-react";
+import { FileText, Play, FileAudio, FileVideo, Download, CheckCircle, Lock, Volume2, Settings, HelpCircle, CheckCircle2 } from "lucide-react";
 import { Input } from "../../components/ui/input";
 
 // ── Inline quiz renderer for quiz-type lessons ──
-function QuizRenderer({ content }: { content: string }) {
+function QuizRenderer({ content, onComplete }: { content: string, onComplete?: () => void }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [fillAnswer, setFillAnswer] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -20,12 +20,17 @@ function QuizRenderer({ content }: { content: string }) {
   if (!quiz || !quiz.question) return <p className="text-[#0B2A5B]/60">No quiz data found.</p>;
 
   const handleSubmit = () => {
+    let correct = false;
     if (quiz.type === "fill_blank") {
-      setIsCorrect(fillAnswer.trim().toLowerCase() === (quiz.answer || "").trim().toLowerCase());
+      correct = fillAnswer.trim().toLowerCase() === (quiz.answer || "").trim().toLowerCase();
     } else {
-      setIsCorrect(selected === quiz.correct_answer);
+      correct = selected === quiz.correct_answer;
     }
+    setIsCorrect(correct);
     setSubmitted(true);
+    if (correct && onComplete) {
+      onComplete();
+    }
   };
 
   const handleReset = () => {
@@ -125,10 +130,16 @@ export default function Modules() {
   const [loading, setLoading] = useState(true);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [generatingAudio, setGeneratingAudio] = useState(false);
+  const [completedLessonIds, setCompletedLessonIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch learning dashboard for completed lessons
+        const dashRes = await api.get("/learning/dashboard");
+        const completedIds = new Set<number>(dashRes.data.completed_lessons.map((l: any) => l.lesson_id));
+        setCompletedLessonIds(completedIds);
+
         // Fetch enrolled courses with progress
         const enrolledRes = await api.get("/courses/enrolled");
         const enrolled = enrolledRes.data;
@@ -154,6 +165,39 @@ export default function Modules() {
     };
     fetchData();
   }, []);
+
+  const markCompleted = async (lessonId: number) => {
+    if (completedLessonIds.has(lessonId)) return;
+    try {
+      await api.post("/learning/lesson/complete", {
+        course_id: selectedCourse.id,
+        lesson_id: lessonId,
+      });
+      setCompletedLessonIds(prev => new Set(prev).add(lessonId));
+      
+      // Update progress percent visually
+      setCourses(courses.map(c => {
+        if (c.id === selectedCourse.id) {
+          const totalLessons = c.modules?.reduce((acc: number, m: any) => acc + (m.lessons?.length || 0), 0) || 1;
+          const currentProgress = c.progress_percent;
+          const newProgress = Math.min(100, currentProgress + (100 / totalLessons));
+          return { ...c, progress_percent: newProgress };
+        }
+        return c;
+      }));
+    } catch (err) {
+      console.error("Failed to mark lesson complete", err);
+    }
+  };
+
+  // Automatic completion for text/pdf (after 5 seconds)
+  useEffect(() => {
+    if (!activeLesson || completedLessonIds.has(activeLesson.id)) return;
+    if (activeLesson.content_type === "text" || activeLesson.content_type === "pdf") {
+      const timer = setTimeout(() => markCompleted(activeLesson.id), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [activeLesson, completedLessonIds]);
 
   const handleGenerateAudio = async () => {
     if (!activeLesson || activeLesson.content_type !== "text") return;
@@ -194,6 +238,18 @@ export default function Modules() {
   };
 
   const totalModules = selectedCourse?.modules?.length || 0;
+
+  // Compute linear progression map
+  let orderedLessons: any[] = [];
+  if (selectedCourse?.modules) {
+    const sortedModules = [...selectedCourse.modules].sort((a: any, b: any) => a.order - b.order);
+    for (const mod of sortedModules) {
+      if (mod.lessons) {
+        const sortedLessons = [...mod.lessons].sort((a: any, b: any) => a.order - b.order);
+        orderedLessons = orderedLessons.concat(sortedLessons);
+      }
+    }
+  }
 
   return (
     <DashboardLayout role="student">
@@ -267,24 +323,27 @@ export default function Modules() {
                     
                     <div className="bg-[#F4F1EA] rounded-xl p-6 min-h-[300px]">
                       {activeLesson.content_type === "video" && activeLesson.video_url ? (
-                        <div className="w-full aspect-video rounded-lg overflow-hidden bg-black">
+                        <div className="w-full aspect-video rounded-lg overflow-hidden bg-black relative">
                           {activeLesson.video_url.includes("youtube") || activeLesson.video_url.includes("vimeo") ? (
                             <iframe src={activeLesson.video_url} className="w-full h-full" allowFullScreen></iframe>
+                            // Note: iframe onEnded can't be reliably caught without YouTube/Vimeo API. 
+                            // Text/PDF logic (5s timer) also applies to these as a fallback in the useEffect above if we wanted, 
+                            // but currently it's only text/pdf. Let's add a manual button for embedded videos just in case.
                           ) : (
-                            <video src={activeLesson.video_url} controls className="w-full h-full"></video>
+                            <video src={activeLesson.video_url} controls className="w-full h-full" onEnded={() => markCompleted(activeLesson.id)}></video>
                           )}
                         </div>
                       ) : activeLesson.content_type === "audio" && activeLesson.video_url ? (
                         <div className="flex flex-col items-center justify-center h-full py-12">
                           <FileAudio size={64} className="text-[#0B2A5B] mb-6" />
-                          <audio src={activeLesson.video_url} controls className="w-full max-w-md"></audio>
+                          <audio src={activeLesson.video_url} controls className="w-full max-w-md" onEnded={() => markCompleted(activeLesson.id)}></audio>
                         </div>
                       ) : activeLesson.content_type === "text" ? (
                         <div className="space-y-6">
                           {activeLesson.video_url ? (
                             <div className="bg-white p-4 rounded-lg shadow-sm border border-[#0B2A5B]/10 flex flex-col items-center">
                               <p className="text-sm font-semibold text-[#0B2A5B] mb-2">Listen to this lesson:</p>
-                              <audio src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || 'http://localhost:8000'}${activeLesson.video_url}`} controls className="w-full max-w-md"></audio>
+                              <audio src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || 'http://localhost:8000'}${activeLesson.video_url}`} controls className="w-full max-w-md" onEnded={() => markCompleted(activeLesson.id)}></audio>
                             </div>
                           ) : (
                             <div className="flex justify-end">
@@ -301,15 +360,27 @@ export default function Modules() {
                           )}
                         </div>
                       ) : activeLesson.content_type === "quiz" ? (
-                        <QuizRenderer content={activeLesson.content} />
+                        <QuizRenderer content={activeLesson.content} onComplete={() => markCompleted(activeLesson.id)} />
                       ) : activeLesson.content ? (
                         <div className="prose max-w-none text-[#0B2A5B]">
-                          {/* Fallback for other content types with text */}
                           <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
                         </div>
                       ) : (
                         <div className="flex items-center justify-center h-full min-h-[200px] text-[#0B2A5B]/60">
                           Content is being processed or not available.
+                        </div>
+                      )}
+                      
+                      {/* Manual Complete Button (Fallback for embedded iframes or text) */}
+                      {!completedLessonIds.has(activeLesson.id) ? (
+                        <div className="mt-8 flex justify-center">
+                          <Button onClick={() => markCompleted(activeLesson.id)} className="bg-green-600 text-white hover:bg-green-700">
+                            <CheckCircle2 size={16} className="mr-2" /> Mark as Complete
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="mt-8 flex justify-center items-center gap-2 text-green-600 font-bold">
+                          <CheckCircle2 size={20} /> Lesson Completed
                         </div>
                       )}
                     </div>
@@ -330,24 +401,46 @@ export default function Modules() {
                             <Card key={mod.id} className="p-4 bg-[#F4F1EA]">
                               <h4 className="font-semibold text-[#0B2A5B] mb-3">Module {idx + 1}: {mod.title}</h4>
                               {mod.description && <p className="text-xs text-[#0B2A5B]/60 mb-3">{mod.description}</p>}
-                              <div className="space-y-2">
-                                {(mod.lessons || []).sort((a: any, b: any) => a.order - b.order).map((lesson: any, li: number) => (
-                                  <div key={lesson.id} className="flex items-center justify-between p-3 bg-white rounded-lg">
-                                    <div className="flex items-center gap-3 flex-1">
-                                      <div className="w-8 h-8 bg-[#F4F1EA] rounded-full flex items-center justify-center">{getTypeIcon(lesson.content_type)}</div>
-                                      <div className="flex-1">
-                                        <p className="font-medium text-[#0B2A5B] text-sm">{li + 1}. {lesson.title}</p>
-                                        <div className="flex items-center gap-2 text-xs text-[#0B2A5B]/60">
-                                          <span className="capitalize">{lesson.content_type}</span>
-                                          {lesson.duration_minutes && <><span>•</span><span>{lesson.duration_minutes} min</span></>}
+                                <div className="space-y-2">
+                                  {(mod.lessons || []).sort((a: any, b: any) => a.order - b.order).map((lesson: any) => {
+                                    const globalIndex = orderedLessons.findIndex(l => l.id === lesson.id);
+                                    let isUnlocked = true;
+                                    if (globalIndex > 0) {
+                                      const prevLesson = orderedLessons[globalIndex - 1];
+                                      isUnlocked = completedLessonIds.has(prevLesson.id);
+                                    }
+                                    const isCompleted = completedLessonIds.has(lesson.id);
+
+                                    return (
+                                      <div key={lesson.id} className={`flex items-center justify-between p-3 rounded-lg border transition-all ${isUnlocked ? 'bg-white hover:shadow-sm border-gray-100' : 'bg-gray-50 border-gray-200 opacity-75'}`}>
+                                        <div className="flex items-center gap-3 flex-1">
+                                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isCompleted ? 'bg-green-100 text-green-600' : 'bg-[#F4F1EA]'}`}>
+                                            {isCompleted ? <CheckCircle2 size={16} /> : getTypeIcon(lesson.content_type)}
+                                          </div>
+                                          <div className="flex-1">
+                                            <p className={`font-medium text-sm ${isUnlocked ? 'text-[#0B2A5B]' : 'text-gray-500'}`}>
+                                              {globalIndex + 1}. {lesson.title}
+                                            </p>
+                                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                              <span className="capitalize">{lesson.content_type}</span>
+                                              {lesson.duration_minutes && <><span>•</span><span>{lesson.duration_minutes} min</span></>}
+                                            </div>
+                                          </div>
                                         </div>
+                                        {isUnlocked ? (
+                                          <Button onClick={() => setActiveLesson(lesson)} size="sm" className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a]">
+                                            {isCompleted ? "Review" : <><Play size={14} className="mr-1" />Start</>}
+                                          </Button>
+                                        ) : (
+                                          <div className="px-3 py-1.5 flex items-center gap-1.5 bg-gray-100 text-gray-500 text-xs font-semibold rounded-lg">
+                                            <Lock size={12} /> Locked
+                                          </div>
+                                        )}
                                       </div>
-                                    </div>
-                                    <Button onClick={() => setActiveLesson(lesson)} size="sm" className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a]"><Play size={14} className="mr-1" />Start</Button>
-                                  </div>
-                                ))}
-                                {(mod.lessons || []).length === 0 && <p className="text-xs text-[#0B2A5B]/50 text-center py-2">No lessons yet</p>}
-                              </div>
+                                    );
+                                  })}
+                                  {(mod.lessons || []).length === 0 && <p className="text-xs text-[#0B2A5B]/50 text-center py-2">No lessons yet</p>}
+                                </div>
                             </Card>
                           ))
                         )}

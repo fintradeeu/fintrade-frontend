@@ -12,6 +12,7 @@ export default function MonthlyExams() {
   const [monthlyExams, setMonthlyExams] = useState<any[]>([]);
   const [courseExams, setCourseExams] = useState<any[]>([]);
   const [courses, setCourses] = useState<Record<number, string>>({});
+  const [courseProgress, setCourseProgress] = useState<Record<number, number>>({});
   const [loading, setLoading] = useState(true);
   const [showRetakePayment, setShowRetakePayment] = useState(false);
   const [selectedExam, setSelectedExam] = useState<number | null>(null);
@@ -24,10 +25,13 @@ export default function MonthlyExams() {
         // Fetch enrolled courses first to build a name lookup
         const enrolledRes = await api.get("/courses/enrolled");
         const courseMap: Record<number, string> = {};
+        const progressMap: Record<number, number> = {};
         for (const e of enrolledRes.data) {
           courseMap[e.course_id] = e.course?.title || `Course #${e.course_id}`;
+          progressMap[e.course_id] = e.progress_percent || 0;
         }
         setCourses(courseMap);
+        setCourseProgress(progressMap);
 
         // Fetch course exams for enrolled courses
         const enrolledIds = Object.keys(courseMap).map(Number);
@@ -140,6 +144,11 @@ export default function MonthlyExams() {
                           {exam.type === "course_final" ? "Final" : exam.type === "monthly" ? "Monthly" : exam.type}
                         </Badge>
                         {exam.is_active && <Badge className="bg-green-100 text-green-700">Active</Badge>}
+                        {(courseProgress[exam.course_id] || 0) < 100 && (
+                          <Badge className="bg-red-100 text-red-700 border-red-200">
+                            Locked (Requires 100% Progress)
+                          </Badge>
+                        )}
                       </div>
                       <h3 className="text-xl font-semibold text-[#0B2A5B] mb-1">{exam.title}</h3>
                       <div className="flex items-center gap-1.5 text-sm text-[#C2A86A] font-medium">
@@ -192,8 +201,16 @@ export default function MonthlyExams() {
                     )}
 
                     {exam.is_active && (
-                      <Button onClick={() => handleStartExam(exam.id)} className="w-full bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a]">
-                        {exam.attempts && exam.attempts.length > 0 ? "Retake Exam" : "Start Exam"}
+                      <Button 
+                        onClick={() => handleStartExam(exam.id)} 
+                        disabled={(courseProgress[exam.course_id] || 0) < 100}
+                        className={`w-full ${
+                          (courseProgress[exam.course_id] || 0) < 100 
+                            ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+                            : "bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a]"
+                        }`}
+                      >
+                        {(courseProgress[exam.course_id] || 0) < 100 ? "Complete Course to Unlock" : (exam.attempts && exam.attempts.length > 0 ? "Retake Exam" : "Start Exam")}
                       </Button>
                     )}
                   </Card>
