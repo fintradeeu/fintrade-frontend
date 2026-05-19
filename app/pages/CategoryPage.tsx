@@ -103,7 +103,7 @@ export default function CategoryPage() {
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-4" style={{ color: "#121212" }}>Category Not Found</h1>
           <p className="text-gray-600 mb-6">The category you're looking for doesn't exist.</p>
-          <Link to="/"><Button style={{ background: "#E53935", color: "white" }}>Back to Home</Button></Link>
+          <Link to="/"><Button style={{ background: "#D50032", color: "white" }}>Back to Home</Button></Link>
         </div>
       </div>
     );
@@ -129,19 +129,19 @@ export default function CategoryPage() {
             {/* Courses */}
             <div>
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-2" style={{ color: "#121212" }}>
-                <BookOpen className="h-6 w-6" style={{ color: "#E53935" }} /> Courses
+                <BookOpen className="h-6 w-6" style={{ color: "#D50032" }} /> Courses
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {category.courses.map((c, i) => (
-                  <Card key={i} className="p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all hover:shadow-xl">
-                    <div className="inline-block px-3 py-1 rounded-full text-xs font-medium mb-3" style={{ background: "rgba(229,57,53,0.1)", color: "#E53935" }}>{c.level}</div>
+                  <Card key={i} className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all hover:shadow-xl">
+                    <div className="inline-block px-3 py-1 rounded-full text-xs font-medium mb-3" style={{ background: "rgba(213,0,50,0.1)", color: "#D50032" }}>{c.level}</div>
                     <h3 className="text-lg font-bold mb-2" style={{ color: "#121212" }}>{c.name}</h3>
                     <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
                       <span className="flex items-center gap-1"><Clock className="h-4 w-4" /> {c.duration}</span>
                       <span className="flex items-center gap-1"><Users className="h-4 w-4" /> {c.students}</span>
                     </div>
                     <Link to="/student/courses">
-                      <Button className="w-full" style={{ background: "#E53935", color: "white" }}>View Course</Button>
+                      <Button className="w-full" style={{ background: "#D50032", color: "white" }}>View Course</Button>
                     </Link>
                   </Card>
                 ))}
@@ -151,11 +151,11 @@ export default function CategoryPage() {
             {/* Videos */}
             <div>
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-2" style={{ color: "#121212" }}>
-                <Video className="h-6 w-6" style={{ color: "#E53935" }} /> Videos
+                <Video className="h-6 w-6" style={{ color: "#D50032" }} /> Videos
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {category.videos.map((v, i) => (
-                  <Card key={i} className="p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all hover:shadow-xl">
+                  <Card key={i} className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all hover:shadow-xl">
                     <h3 className="font-bold mb-2" style={{ color: "#121212" }}>{v.title}</h3>
                     <span className="text-sm text-gray-500">{v.views} views</span>
                   </Card>
@@ -166,11 +166,11 @@ export default function CategoryPage() {
             {/* Articles */}
             <div>
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-2" style={{ color: "#121212" }}>
-                <FileText className="h-6 w-6" style={{ color: "#E53935" }} /> Articles
+                <FileText className="h-6 w-6" style={{ color: "#D50032" }} /> Articles
               </h2>
               <div className="space-y-4">
                 {category.articles.map((a, i) => (
-                  <Card key={i} className="p-5 border-2 border-gray-100 hover:border-[#E53935] transition-all hover:shadow-md cursor-pointer">
+                  <Card key={i} className="p-5 border-2 border-gray-100 hover:border-[#D50032] transition-all hover:shadow-md cursor-pointer">
                     <div className="flex items-center justify-between">
                       <h3 className="font-bold" style={{ color: "#121212" }}>{a.title}</h3>
                       <span className="text-sm text-gray-400">{a.readTime} read</span>
@@ -190,8 +190,8 @@ export default function CategoryPage() {
                   <Link
                     key={cat.slug}
                     to={`/category/${cat.slug}`}
-                    className={`block px-4 py-3 rounded-lg transition-all text-sm font-medium ${cat.slug === slug ? "text-white" : "text-gray-700 hover:bg-red-50 hover:text-[#E53935]"}`}
-                    style={cat.slug === slug ? { background: "#E53935" } : {}}
+                    className={`block px-4 py-3 rounded-lg transition-all text-sm font-medium ${cat.slug === slug ? "text-white" : "text-gray-700 hover:bg-red-50 hover:text-[#D50032]"}`}
+                    style={cat.slug === slug ? { background: "#D50032" } : {}}
                   >
                     {cat.title}
                   </Link>

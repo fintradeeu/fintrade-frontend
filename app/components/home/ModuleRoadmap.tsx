@@ -12,8 +12,8 @@ const modules = [
   { id: 8, title: "Certification & Placement", desc: "Final assessment and placement preparation", icon: Trophy, status: "upcoming" as const },
 ];
 
-function getColor(s: string) { return s === "upcoming" ? "#9CA3AF" : "#E53935"; }
-function getBg(s: string) { return s === "upcoming" ? "rgba(156,163,175,0.1)" : "rgba(229,57,53,0.1)"; }
+function getColor(s: string) { return s === "upcoming" ? "#9CA3AF" : "#D50032"; }
+function getBg(s: string) { return s === "upcoming" ? "rgba(156,163,175,0.1)" : "rgba(213,0,50,0.1)"; }
 
 export default function ModuleRoadmap() {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -35,11 +35,11 @@ export default function ModuleRoadmap() {
   }, []);
 
   return (
-    <section className="py-4 relative z-10" style={{ background: "linear-gradient(to bottom, transparent, rgba(229,57,53,0.02), transparent)" }}>
+    <section className="py-4 relative z-10" style={{ background: "linear-gradient(to bottom, transparent, rgba(213,0,50,0.02), transparent)" }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-6">
-          <div className="inline-block px-4 py-2 rounded-full mb-2 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
-            <span className="text-[#E53935] font-semibold text-sm">🗺️ Course Roadmap</span>
+          <div className="inline-block px-4 py-2 rounded-full mb-2 border border-[#D50032]/30" style={{ background: "rgba(213,0,50,0.08)" }}>
+            <span className="text-[#D50032] font-semibold text-sm">🗺️ Course Roadmap</span>
           </div>
           <h2 className="text-4xl font-bold mb-2" style={{ color: "#121212" }}>Your Learning Path</h2>
           <p className="text-xl text-gray-600">A structured roadmap from beginner to professional trader</p>
@@ -52,9 +52,9 @@ export default function ModuleRoadmap() {
               key={mod.id}
               className="p-5 rounded-2xl border-2 transition-all hover:shadow-xl hover:scale-[1.02] cursor-pointer"
               style={{
-                borderColor: mod.status === "active" ? "#E53935" : `${getColor(mod.status)}30`,
-                background: mod.status === "active" ? "rgba(229,57,53,0.05)" : "white",
-                boxShadow: mod.status === "active" ? "0 0 30px rgba(229,57,53,0.15)" : "0 2px 8px rgba(0,0,0,0.06)",
+                borderColor: mod.status === "active" ? "#D50032" : `${getColor(mod.status)}30`,
+                background: mod.status === "active" ? "rgba(213,0,50,0.05)" : "white",
+                boxShadow: mod.status === "active" ? "0 0 30px rgba(213,0,50,0.15)" : "0 2px 8px rgba(0,0,0,0.06)",
               }}
             >
               <div className="flex items-center gap-3 mb-3">
@@ -68,7 +68,7 @@ export default function ModuleRoadmap() {
               <h4 className="font-bold mb-1" style={{ color: mod.status === "upcoming" ? "#9CA3AF" : "#121212" }}>{mod.title}</h4>
               <p className="text-xs" style={{ color: mod.status === "upcoming" ? "#D1D5DB" : "#6B7280" }}>{mod.desc}</p>
               {mod.status === "active" && (
-                <div className="mt-3 px-3 py-1 rounded-full text-xs font-bold inline-block animate-pulse" style={{ background: "#E53935", color: "white" }}>Current Module</div>
+                <div className="mt-3 px-3 py-1 rounded-full text-xs font-bold inline-block animate-pulse" style={{ background: "#D50032", color: "white" }}>Current Module</div>
               )}
             </div>
           ))}
@@ -86,8 +86,8 @@ export default function ModuleRoadmap() {
                 key={mod.id}
                 className="flex-shrink-0 w-[280px] snap-center p-5 rounded-2xl border-2 transition-all hover:shadow-xl cursor-pointer bg-white"
                 style={{
-                  borderColor: mod.status === "active" ? "#E53935" : `${getColor(mod.status)}30`,
-                  boxShadow: mod.status === "active" ? "0 0 30px rgba(229,57,53,0.15)" : "0 2px 8px rgba(0,0,0,0.06)",
+                  borderColor: mod.status === "active" ? "#D50032" : `${getColor(mod.status)}30`,
+                  boxShadow: mod.status === "active" ? "0 0 30px rgba(213,0,50,0.15)" : "0 2px 8px rgba(0,0,0,0.06)",
                 }}
               >
                 <div className="flex items-center gap-3 mb-3">
@@ -101,7 +101,7 @@ export default function ModuleRoadmap() {
                 <h4 className="font-bold mb-1" style={{ color: mod.status === "upcoming" ? "#9CA3AF" : "#121212" }}>{mod.title}</h4>
                 <p className="text-xs mb-3" style={{ color: mod.status === "upcoming" ? "#D1D5DB" : "#6B7280" }}>{mod.desc}</p>
                 {mod.status === "active" && (
-                  <div className="px-3 py-1 rounded-full text-xs font-bold inline-block animate-pulse" style={{ background: "#E53935", color: "white" }}>Current Module</div>
+                  <div className="px-3 py-1 rounded-full text-xs font-bold inline-block animate-pulse" style={{ background: "#D50032", color: "white" }}>Current Module</div>
                 )}
               </div>
             ))}

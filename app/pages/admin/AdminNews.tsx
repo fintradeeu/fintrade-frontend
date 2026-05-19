@@ -49,7 +49,7 @@ export default function AdminNews() {
           <Card className="p-6 bg-white shadow-lg">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-[#0B2A5B]">Market Analysis & Videos</h3>
-              <Button style={{ background: '#E53935', color: 'white' }}><Plus className="w-4 h-4 mr-2" /> Add Update</Button>
+              <Button style={{ background: '#D50032', color: 'white' }}><Plus className="w-4 h-4 mr-2" /> Add Update</Button>
             </div>
             <p className="text-sm text-gray-500 mb-4">Manage the YouTube analysis videos and market updates shown on the homepage.</p>
             {/* Table placeholder - reuse existing logic if needed */}
@@ -63,7 +63,7 @@ export default function AdminNews() {
           <Card className="p-6 bg-white shadow-lg">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-[#0B2A5B]">Blog Management</h3>
-              <Button style={{ background: '#E53935', color: 'white' }}><Plus className="w-4 h-4 mr-2" /> New Blog</Button>
+              <Button style={{ background: '#D50032', color: 'white' }}><Plus className="w-4 h-4 mr-2" /> New Blog</Button>
             </div>
             <p className="text-sm text-gray-500 mb-4">Create and edit articles for the website blog section.</p>
             <div className="bg-[#F4F1EA] p-8 rounded-xl text-center border-2 border-dashed border-gray-200">

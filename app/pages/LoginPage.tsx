@@ -46,6 +46,7 @@ export default function LoginPage() {
 
     try {
       const response = await api.post("/auth/login", { email, password });
+<<<<<<< HEAD
       
       // Check if backend bypassed OTP (e.g. for admins) and returned a token directly
       if (response.data.access_token) {
@@ -102,6 +103,8 @@ export default function LoginPage() {
         otp_token: otpToken,
         code,
       });
+=======
+>>>>>>> origin/mahil
       const { access_token, user } = response.data;
 
       localStorage.setItem("token", access_token);
@@ -199,19 +202,29 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, #121212 0%, #2d2d2d 100%)' }}>
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-[#E53935] rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#E53935] rounded-full blur-3xl"></div>
+        <div className="absolute top-20 left-10 w-72 h-72 bg-[#D50032] rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#D50032] rounded-full blur-3xl"></div>
       </div>
 
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center relative z-10">
         {/* Left Side - Branding */}
         <div className="hidden lg:block text-white">
-          <Link to="/" className="inline-flex items-center gap-2 text-white hover:text-[#E53935] transition-colors mb-8">
+          <Link to="/" className="inline-flex items-center gap-2 text-white hover:text-[#D50032] transition-colors mb-8">
             <ArrowLeft size={20} />
             <span>Back to Home</span>
           </Link>
-          <div className="mb-8">
-            <img src={logo} alt="FinTrade" className="h-16 mb-6" />
+          <div className="mb-8 flex flex-col gap-4">
+            <div className="flex items-center h-[85px] w-[240px] pb-3 overflow-hidden">
+              <img
+                src={logo}
+                alt="FinTrade"
+                className="h-full w-full object-contain scale-[3.5] -translate-x-4 -translate-y-1.5"
+                style={{
+                  filter: "invert(1) hue-rotate(180deg) brightness(1.35) contrast(1.05) drop-shadow(0 4px 12px rgba(255,255,255,0.08))",
+                  transformOrigin: "center center"
+                }}
+              />
+            </div>
             <p className="text-gray-300">Professional Trading Education Platform</p>
           </div>
           <h2 className="text-3xl font-bold mb-4">Welcome Back</h2>
@@ -221,19 +234,19 @@ export default function LoginPage() {
           </p>
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#E53935' }}>
+              <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#D50032' }}>
                 <span className="text-white text-xs">✓</span>
               </div>
               <span>Real-time market simulations</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#E53935' }}>
+              <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#D50032' }}>
                 <span className="text-white text-xs">✓</span>
               </div>
               <span>Expert mentor support</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#E53935' }}>
+              <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#D50032' }}>
                 <span className="text-white text-xs">✓</span>
               </div>
               <span>AI-powered learning assistance</span>
@@ -243,11 +256,22 @@ export default function LoginPage() {
 
         {/* Right Side - Login Form / OTP Form */}
         <Card className="p-8 bg-white shadow-2xl border-none">
-          <div className="lg:hidden mb-6">
-            <Link to="/" className="inline-flex items-center gap-2 hover:text-[#E53935] transition-colors" style={{ color: '#121212' }}>
+          <div className="lg:hidden mb-6 flex justify-between items-center">
+            <Link to="/" className="inline-flex items-center gap-2 hover:text-[#D50032] transition-colors" style={{ color: '#121212' }}>
               <ArrowLeft size={20} />
               <span>Back to Home</span>
             </Link>
+            <div className="flex items-center h-[45px] w-[140px] overflow-hidden">
+              <img
+                src={logo}
+                alt="FinTrade"
+                className="h-full w-full object-contain scale-[2.5] -translate-x-1"
+                style={{
+                  filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.08))",
+                  transformOrigin: "center center"
+                }}
+              />
+            </div>
           </div>
 
           {step === "credentials" ? (
@@ -261,6 +285,7 @@ export default function LoginPage() {
                   {errorMsg}
                 </div>
               )}
+
 
               <form onSubmit={handleLogin} className="space-y-6">
                 <div>
@@ -314,6 +339,7 @@ export default function LoginPage() {
                   style={{ background: '#E53935', boxShadow: '0 0 20px rgba(229, 57, 53, 0.3)' }}
                   size="lg"
                   disabled={loading}
+
                 >
                   {loading ? "Verifying..." : "Login"}
                 </Button>
@@ -424,8 +450,10 @@ export default function LoginPage() {
                   {resending ? "Sending..." : "Resend Code"}
                 </button>
               </div>
+
             </>
           )}
+
         </Card>
       </div>
     </div>

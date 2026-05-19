@@ -198,8 +198,8 @@ export function DashboardLayout({
                       }
                     `}
                     style={isActive ? { 
-                      background: 'linear-gradient(135deg, #E53935 0%, #b71c1c 100%)',
-                      boxShadow: '0 4px 12px rgba(229, 57, 53, 0.3)'
+                      background: 'linear-gradient(135deg, #D50032 0%, #FF0000 100%)',
+                      boxShadow: '0 4px 12px rgba(213,0,50, 0.3)'
                     } : {}}
                   >
                     <span className={isActive ? "scale-110" : ""}>{item.icon}</span>
@@ -213,7 +213,7 @@ export function DashboardLayout({
           {/* User Info */}
           <div className="p-4 border-t border-[#0B2A5B]/10">
             <div className="flex items-center gap-3 px-4 py-3 rounded-lg mb-2" style={{ background: '#DDD8C9' }}>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-md" style={{ background: '#E53935' }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-md" style={{ background: '#D50032' }}>
                 <span className="text-white font-bold text-sm">
                   {displayName.split(" ").map(n => n[0]).join("")}
                 </span>

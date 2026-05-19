@@ -4,9 +4,9 @@
   --font-size: 16px;
   
   /* FinTrade NEW Color System - RED/BLACK Theme */
-  --red-primary: #E53935;
-  --red-dark: #b71c1c;
-  --red-light: #ff6f60;
+  --red-primary: #D50032;
+  --red-dark: #FF0000;
+  --red-light: #FF4D70;
   --black-primary: #121212;
   --black-light: #2d2d2d;
   --gray-bg: #F5F5F5;
@@ -19,13 +19,13 @@
   --card-foreground: #121212;
   --popover: #ffffff;
   --popover-foreground: #121212;
-  --primary: #E53935;
+  --primary: #D50032;
   --primary-foreground: #ffffff;
   --secondary: #121212;
   --secondary-foreground: #ffffff;
   --muted: #e0e0e0;
   --muted-foreground: #666666;
-  --accent: #E53935;
+  --accent: #D50032;
   --accent-foreground: #ffffff;
   --destructive: #d32f2f;
   --destructive-foreground: #ffffff;
@@ -35,21 +35,21 @@
   --switch-background: #cbced4;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: #E53935;
-  --chart-1: #E53935;
+  --ring: #D50032;
+  --chart-1: #D50032;
   --chart-2: #121212;
-  --chart-3: #ff6f60;
+  --chart-3: #FF4D70;
   --chart-4: #2d2d2d;
-  --chart-5: #b71c1c;
+  --chart-5: #FF0000;
   --radius: 0.5rem;
   --sidebar: #121212;
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #E53935;
+  --sidebar-primary: #D50032;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #2d2d2d;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-ring: #E53935;
+  --sidebar-ring: #D50032;
 }
 
 .dark {

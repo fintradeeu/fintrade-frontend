@@ -15,8 +15,8 @@ export default function PlatformFeatures() {
     <section className="py-20 bg-white relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#E53935]/30" style={{ background: "rgba(229,57,53,0.08)" }}>
-            <span className="text-[#E53935] font-semibold text-sm">🎯 Platform Highlights</span>
+          <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#D50032]/30" style={{ background: "rgba(213,0,50,0.08)" }}>
+            <span className="text-[#D50032] font-semibold text-sm">🎯 Platform Highlights</span>
           </div>
           <h2 className="text-4xl font-bold mb-4" style={{ color: "#121212" }}>What You'll Get</h2>
           <p className="text-xl text-gray-600">Everything included in your FinTrade journey</p>
@@ -27,10 +27,10 @@ export default function PlatformFeatures() {
         >
           {features.map((f, i) => (
             <div key={i} className="flex-shrink-0 w-[280px] sm:w-[340px] md:w-full md:flex-shrink snap-center flex">
-              <Card className="w-full p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all hover:shadow-xl group">
+              <Card className="w-full p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all hover:shadow-xl group">
                 <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform" style={{ background: "rgba(229,57,53,0.1)" }}>
-                    <f.icon className="h-7 w-7" style={{ color: "#E53935" }} />
+                  <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform" style={{ background: "rgba(213,0,50,0.1)" }}>
+                    <f.icon className="h-7 w-7" style={{ color: "#D50032" }} />
                   </div>
                   <div>
                     <h4 className="font-bold text-lg mb-2" style={{ color: "#121212" }}>{f.title}</h4>

@@ -32,7 +32,7 @@ export default function AdminSimulator() {
 
       <div className="grid md:grid-cols-4 gap-4 mb-8">
         {[
-          { label: "Active Sessions", value: "342", icon: Users, color: "#E53935" },
+          { label: "Active Sessions", value: "342", icon: Users, color: "#D50032" },
           { label: "Server Load", value: "68%", icon: Activity, color: "#4CAF50" },
           { label: "Data Feed", value: "Stable", icon: CheckCircle, color: "#2196F3" },
           { label: "Total Orders (Today)", value: "12,854", icon: TrendingUp, color: "#9C27B0" },
@@ -93,7 +93,7 @@ export default function AdminSimulator() {
               {activeSessions.map((session, i) => (
                 <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-gray-50 border border-gray-100">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center font-bold text-xs" style={{ color: "#E53935", border: "1px solid #eee" }}>
+                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center font-bold text-xs" style={{ color: "#D50032", border: "1px solid #eee" }}>
                       {session.student.split(" ").map(n => n[0]).join("")}
                     </div>
                     <div>
@@ -122,7 +122,7 @@ export default function AdminSimulator() {
                 <span className="flex items-center gap-2"><Play className="h-4 w-4" /> Start Market Feed</span>
                 <ArrowUpRight className="h-4 w-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </Button>
-              <Button variant="outline" className="w-full h-12 flex items-center justify-between px-4 border-gray-200 hover:border-[#E53935] hover:text-[#E53935]">
+              <Button variant="outline" className="w-full h-12 flex items-center justify-between px-4 border-gray-200 hover:border-[#D50032] hover:text-[#D50032]">
                 <span className="flex items-center gap-2"><Settings className="h-4 w-4" /> Advance Config</span>
               </Button>
               <Button variant="outline" className="w-full h-12 flex items-center justify-between px-4 border-gray-200 text-red-500 hover:bg-red-50">
@@ -142,7 +142,7 @@ export default function AdminSimulator() {
           {/* Quick Logs */}
           <Card className="p-6 bg-white shadow-sm border border-gray-100">
              <h3 className="text-lg font-bold mb-4 flex items-center gap-2" style={{ color: "#121212" }}>
-              <Clock className="h-5 w-5" style={{ color: "#E53935" }} />
+              <Clock className="h-5 w-5" style={{ color: "#D50032" }} />
               System Event Log
             </h3>
             <div className="space-y-3">

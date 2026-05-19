@@ -325,7 +325,7 @@ export default function LandingPage() {
               <h4 className="font-semibold mb-4">Contact</h4>
               <ul className="space-y-2 text-sm text-[#F4F1EA]/70">
                 <li>support@fintrade.com</li>
-                <li>+91 98765 43210</li>
+                <li>+91 92746 75947</li>
                 <li>Mumbai, India</li>
               </ul>
             </div>

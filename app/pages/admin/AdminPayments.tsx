@@ -206,7 +206,7 @@ export default function AdminPayments() {
         <Button 
           onClick={onSubmit} 
           className="flex-1"
-          style={{ background: '#E53935', color: 'white' }}
+          style={{ background: '#D50032', color: 'white' }}
         >
           {submitLabel}
         </Button>
@@ -230,7 +230,7 @@ export default function AdminPayments() {
             <DialogTrigger asChild>
               <Button 
                 className="shadow-lg"
-                style={{ background: '#E53935', color: 'white' }}
+                style={{ background: '#D50032', color: 'white' }}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Create Coupon
@@ -248,8 +248,8 @@ export default function AdminPayments() {
         {/* Revenue Stats */}
         {!canViewRevenue ? (
           <Card className="p-8 border-2 border-orange-200 bg-orange-50 flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(229,57,53,0.1)" }}>
-              <ShieldAlert className="h-7 w-7" style={{ color: "#E53935" }} />
+            <div className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(213,0,50,0.1)" }}>
+              <ShieldAlert className="h-7 w-7" style={{ color: "#D50032" }} />
             </div>
             <div>
               <div className="font-bold text-lg" style={{ color: "#121212" }}>Revenue Access Restricted</div>
@@ -258,7 +258,7 @@ export default function AdminPayments() {
           </Card>
         ) : (
         <div className="grid md:grid-cols-4 gap-4">
-          <Card className="p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all">
+          <Card className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(76, 175, 80, 0.1)' }}>
                 <IndianRupee className="h-6 w-6" style={{ color: '#4CAF50' }} />
@@ -270,10 +270,10 @@ export default function AdminPayments() {
             </div>
           </Card>
 
-          <Card className="p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all">
+          <Card className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(229, 57, 53, 0.1)' }}>
-                <TrendingUp className="h-6 w-6" style={{ color: '#E53935' }} />
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
+                <TrendingUp className="h-6 w-6" style={{ color: '#D50032' }} />
               </div>
               <div>
                 <div className="text-2xl font-bold" style={{ color: '#121212' }}>{monthlyRevenue}</div>
@@ -282,10 +282,10 @@ export default function AdminPayments() {
             </div>
           </Card>
 
-          <Card className="p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all">
+          <Card className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(229, 57, 53, 0.1)' }}>
-                <Tag className="h-6 w-6" style={{ color: '#E53935' }} />
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
+                <Tag className="h-6 w-6" style={{ color: '#D50032' }} />
               </div>
               <div>
                 <div className="text-2xl font-bold" style={{ color: '#121212' }}>{stats.active_coupons}</div>
@@ -294,10 +294,10 @@ export default function AdminPayments() {
             </div>
           </Card>
 
-          <Card className="p-6 border-2 border-gray-100 hover:border-[#E53935] transition-all">
+          <Card className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(229, 57, 53, 0.1)' }}>
-                <Users className="h-6 w-6" style={{ color: '#E53935' }} />
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
+                <Users className="h-6 w-6" style={{ color: '#D50032' }} />
               </div>
               <div>
                 <div className="text-2xl font-bold" style={{ color: '#121212' }}>{stats.total_usage}</div>
@@ -329,14 +329,14 @@ export default function AdminPayments() {
                   <TableRow key={coupon.id} className="hover:bg-gray-50">
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded flex items-center justify-center" style={{ background: 'rgba(229, 57, 53, 0.1)' }}>
-                          <Tag className="h-4 w-4" style={{ color: '#E53935' }} />
+                        <div className="w-8 h-8 rounded flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
+                          <Tag className="h-4 w-4" style={{ color: '#D50032' }} />
                         </div>
                         <span className="font-bold" style={{ color: '#121212' }}>{coupon.code}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="font-medium" style={{ color: '#E53935' }}>
+                      <span className="font-medium" style={{ color: '#D50032' }}>
                         {coupon.discount_value}%
                       </span>
                     </TableCell>
@@ -365,7 +365,7 @@ export default function AdminPayments() {
                           variant="outline"
                           size="sm"
                           onClick={() => openEditDialog(coupon)}
-                          className="border-gray-300 hover:border-[#E53935] hover:text-[#E53935]"
+                          className="border-gray-300 hover:border-[#D50032] hover:text-[#D50032]"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
