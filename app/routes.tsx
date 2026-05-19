@@ -48,6 +48,7 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminNews from "./pages/admin/AdminNews";
 import AdminRoles from "./pages/admin/AdminRoles";
 import AdminLoginDetails from "./pages/admin/AdminLoginDetails";
+import AdminCMS from "./pages/admin/AdminCMS";
 
 // Distributor Pages
 import DistributorDashboard from "./pages/distributor/DistributorDashboard";
@@ -227,6 +228,10 @@ export const router = createBrowserRouter([
   {
     path: "/admin/contracts",
     Component: AdminContracts,
+  },
+  {
+    path: "/admin/cms",
+    Component: AdminCMS,
   },
   // Distributor Routes
   {

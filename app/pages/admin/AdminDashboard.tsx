@@ -82,6 +82,7 @@ export default function AdminDashboard() {
             {[
               { label: "Manage Roles", path: "/admin/roles" },
               { label: "Market Updates", path: "/admin/news" },
+              { label: "Site Content", path: "/admin/cms" },
               { label: "Platform Settings", path: "/admin/settings" },
               { label: "Student List", path: "/admin/students" },
               { label: "Manage Courses", path: "/admin/courses" },

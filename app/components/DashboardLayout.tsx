@@ -1,6 +1,6 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
-import { Menu, X, LogOut, Home, Users, BookOpen, Video, FileQuestion, IndianRupee, Bot, TrendingUp, BarChart3, Settings, Award, GraduationCap, MessageCircle, LineChart, Target, Briefcase, Shield, Newspaper, FileText, Trophy } from "lucide-react";
+import { Menu, X, LogOut, Home, Users, BookOpen, Video, FileQuestion, IndianRupee, Bot, TrendingUp, BarChart3, Settings, Award, GraduationCap, MessageCircle, LineChart, Target, Briefcase, Shield, Newspaper, FileText, Trophy, LayoutTemplate } from "lucide-react";
 import { Button } from "./ui/button";
 import logo from "../../imports/fintrade_logo.png";
 
@@ -58,6 +58,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "Payments & Coupons", path: "/admin/payments", icon: <IndianRupee size={20} /> },
         { label: "Login Details", path: "/admin/login-details", icon: <Users size={20} /> },
         { label: "Blog & CMS", path: "/admin/news", icon: <Newspaper size={20} /> },
+        { label: "Site Content", path: "/admin/cms", icon: <LayoutTemplate size={20} /> },
         { label: "Admin Roles", path: "/admin/roles", icon: <Shield size={20} /> },
         { label: "AI Chatbot", path: "/admin/ai-chatbot", icon: <Bot size={20} /> },
         { label: "Simulator", path: "/admin/simulator", icon: <TrendingUp size={20} /> },
