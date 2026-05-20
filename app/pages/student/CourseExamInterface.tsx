@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../../services/api";
-import { useNavigate, useParams, useLocation } from "react-router";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { Progress } from "../../components/ui/progress";

@@ -2,7 +2,7 @@ import DashboardLayout from "../../components/DashboardLayout";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Progress } from "../../components/ui/progress";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import {
   Home,
   BookOpen,

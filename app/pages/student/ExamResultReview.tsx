@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import api from "../../services/api";
 import DashboardLayout from "../../components/DashboardLayout";
 import { Card } from "../../components/ui/card";
