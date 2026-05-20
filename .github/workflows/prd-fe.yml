@@ -1,45 +1,37 @@
 name: fintrade-frontend-deploy
-
 on:
   push:
     branches: [ prd ]
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v3
-
+      - uses: actions/checkout@v5
       - name: Install SSH keys
         run: |
           install -m 600 -D /dev/null ~/.ssh/id_rsa
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
-
       - name: Connect SSH and deploy
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-
             set -e
-
             export NVM_DIR="$HOME/.nvm"
-
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
             echo "---------- Changing Directory ---------------"
             cd ${{ secrets.WORK_DIR }}
+
             echo "----------------- Git Pull ------------------"
             git pull origin ${{ secrets.BRANCH }}
+
             echo "----------------- Node Version ------------------"
             node -v
 
             echo "----------------- Install Dependencies ------------------"
-
             npm install
 
             echo "----------------- Build React App ------------------"
-
             npm run build
 
             echo "----------------------- Pipeline executed Successfully ----------------------------"
@@ -47,4 +39,6 @@ jobs:
           EOF
 
       - name: Cleanup
-        run: rm -rf ~/.ssh
+        if: always()
+        run: |
+          rm -rf ~/.ssh
