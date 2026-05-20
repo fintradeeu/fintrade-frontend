@@ -112,7 +112,9 @@ export default function RegisterPage() {
               <Label htmlFor="fullName">Full Name</Label>
               <Input
                 id="fullName"
+                name="name"
                 type="text"
+                autoComplete="name"
                 placeholder="Rahul Sharma"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
@@ -125,7 +127,9 @@ export default function RegisterPage() {
               <Label htmlFor="email">Email Address</Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
+                autoComplete="email"
                 placeholder="rahul.sharma@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -138,7 +142,9 @@ export default function RegisterPage() {
               <Label htmlFor="phone">Phone Number</Label>
               <Input
                 id="phone"
+                name="phone"
                 type="tel"
+                autoComplete="tel"
                 placeholder="+91 98765 43210"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -152,7 +158,9 @@ export default function RegisterPage() {
               <div className="relative mt-1">
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
                   placeholder="Create a strong password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

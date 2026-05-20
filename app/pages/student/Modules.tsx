@@ -326,17 +326,14 @@ export default function Modules() {
                         <div className="w-full aspect-video rounded-lg overflow-hidden bg-black relative">
                           {activeLesson.video_url.includes("youtube") || activeLesson.video_url.includes("vimeo") ? (
                             <iframe src={activeLesson.video_url} className="w-full h-full" allowFullScreen></iframe>
-                            // Note: iframe onEnded can't be reliably caught without YouTube/Vimeo API. 
-                            // Text/PDF logic (5s timer) also applies to these as a fallback in the useEffect above if we wanted, 
-                            // but currently it's only text/pdf. Let's add a manual button for embedded videos just in case.
                           ) : (
-                            <video src={activeLesson.video_url} controls className="w-full h-full" onEnded={() => markCompleted(activeLesson.id)}></video>
+                            <video src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || ''}${activeLesson.video_url}`} controls className="w-full h-full" onEnded={() => markCompleted(activeLesson.id)}></video>
                           )}
                         </div>
                       ) : activeLesson.content_type === "audio" && activeLesson.video_url ? (
                         <div className="flex flex-col items-center justify-center h-full py-12">
                           <FileAudio size={64} className="text-[#0B2A5B] mb-6" />
-                          <audio src={activeLesson.video_url} controls className="w-full max-w-md" onEnded={() => markCompleted(activeLesson.id)}></audio>
+                          <audio src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || ''}${activeLesson.video_url}`} controls className="w-full max-w-md" onEnded={() => markCompleted(activeLesson.id)}></audio>
                         </div>
                       ) : activeLesson.content_type === "text" ? (
                         <div className="space-y-6">
