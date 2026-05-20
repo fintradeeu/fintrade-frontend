@@ -5,7 +5,7 @@ import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
-import { Plus, X, BookOpen, Layers, FileText, ChevronDown, ChevronUp, FileQuestion, Upload, GripVertical } from "lucide-react";
+import { Plus, X, BookOpen, Layers, FileText, ChevronDown, ChevronUp, FileQuestion, Upload, GripVertical, Pencil, Trash2 } from "lucide-react";
 import api from "../../services/api";
 
 export default function TeacherCourses() {
@@ -36,6 +36,16 @@ export default function TeacherCourses() {
 
   const [saving, setSaving] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState(false);
+
+  // Edit module modal
+  const [showEditModuleModal, setShowEditModuleModal] = useState(false);
+  const [editModuleId, setEditModuleId] = useState<number | null>(null);
+  const [editModule, setEditModule] = useState({ title: "", description: "", order: 0, is_published: false });
+
+  // Edit lesson modal
+  const [showEditLessonModal, setShowEditLessonModal] = useState(false);
+  const [editLessonId, setEditLessonId] = useState<number | null>(null);
+  const [editLessonData, setEditLessonData] = useState({ title: "", content: "", content_type: "text", video_url: "", duration_minutes: 15, order: 0, is_published: false });
 
   // Drag and Drop state
   const [draggedModule, setDraggedModule] = useState<number | null>(null);
@@ -134,6 +144,69 @@ export default function TeacherCourses() {
       await api.put(`/admin/courses/${courseId}`, { is_published: !currentState });
       fetchCourses();
     } catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
+  };
+
+  // ── Edit Module ──
+  const openEditModule = (mod: any) => {
+    setEditModuleId(mod.id);
+    setEditModule({ title: mod.title || "", description: mod.description || "", order: mod.order || 0, is_published: mod.is_published || false });
+    setShowEditModuleModal(true);
+  };
+
+  const handleEditModule = async (e: React.FormEvent) => {
+    e.preventDefault(); setSaving(true);
+    try {
+      await api.put(`/admin/modules/${editModuleId}`, editModule);
+      setShowEditModuleModal(false);
+      if (expandedCourse) fetchCourseDetail(expandedCourse);
+    } catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
+    finally { setSaving(false); }
+  };
+
+  // ── Delete Module ──
+  const handleDeleteModule = async (courseId: number, moduleId: number, moduleTitle: string) => {
+    if (!confirm(`Delete module "${moduleTitle}" and all its lessons? This cannot be undone.`)) return;
+    try {
+      await api.delete(`/admin/modules/${moduleId}`);
+      fetchCourseDetail(courseId);
+    } catch (err: any) { alert("Error deleting module: " + (err.response?.data?.detail || err.message)); }
+  };
+
+  // ── Edit Lesson ──
+  const openEditLesson = (lesson: any) => {
+    setEditLessonId(lesson.id);
+    setEditLessonData({
+      title: lesson.title || "",
+      content: lesson.content || "",
+      content_type: lesson.content_type || "text",
+      video_url: lesson.video_url || "",
+      duration_minutes: lesson.duration_minutes || 15,
+      order: lesson.order || 0,
+      is_published: lesson.is_published || false,
+    });
+    setShowEditLessonModal(true);
+  };
+
+  const handleEditLesson = async (e: React.FormEvent) => {
+    e.preventDefault(); setSaving(true);
+    try {
+      await api.put(`/admin/lessons/${editLessonId}`, {
+        ...editLessonData,
+        video_url: editLessonData.video_url || undefined,
+      });
+      setShowEditLessonModal(false);
+      if (expandedCourse) fetchCourseDetail(expandedCourse);
+    } catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
+    finally { setSaving(false); }
+  };
+
+  // ── Delete Lesson ──
+  const handleDeleteLesson = async (courseId: number, lessonId: number, lessonTitle: string) => {
+    if (!confirm(`Delete lesson "${lessonTitle}"? This cannot be undone.`)) return;
+    try {
+      await api.delete(`/admin/lessons/${lessonId}`);
+      fetchCourseDetail(courseId);
+    } catch (err: any) { alert("Error deleting lesson: " + (err.response?.data?.detail || err.message)); }
   };
 
   // --- Drag and Drop Handlers ---
@@ -282,16 +355,24 @@ export default function TeacherCourses() {
                               <p className="text-xs text-[#0B2A5B]/50">{mod.description || "No description"} • Order: {mod.order}</p>
                             </div>
                           </div>
-                          <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B]" onClick={() => { setLessonForModule(mod.id); setShowLessonModal(true); }}>
-                            <FileText size={14} className="mr-1" />Add Lesson
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button size="sm" variant="ghost" className="text-[#0B2A5B]/50 hover:text-[#0B2A5B] h-8 w-8 p-0" onClick={(e) => { e.stopPropagation(); openEditModule(mod); }} title="Edit Module">
+                              <Pencil size={14} />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="text-red-400 hover:text-red-600 h-8 w-8 p-0" onClick={(e) => { e.stopPropagation(); handleDeleteModule(course.id, mod.id, mod.title); }} title="Delete Module">
+                              <Trash2 size={14} />
+                            </Button>
+                            <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B]" onClick={() => { setLessonForModule(mod.id); setShowLessonModal(true); }}>
+                              <FileText size={14} className="mr-1" />Add Lesson
+                            </Button>
+                          </div>
                         </div>
                         {(mod.lessons || []).length > 0 && (
                           <div className="ml-11 space-y-2">
                             {(mod.lessons || []).sort((a: any, b: any) => a.order - b.order).map((lesson: any) => (
                               <div 
                                 key={lesson.id} 
-                                className="flex items-center gap-3 p-2 bg-[#F4F1EA] rounded border border-transparent hover:border-[#C2A86A]/50 transition-colors"
+                                className="flex items-center gap-3 p-2 bg-[#F4F1EA] rounded border border-transparent hover:border-[#C2A86A]/50 transition-colors group"
                                 draggable
                                 onDragStart={(e) => { e.stopPropagation(); setDraggedLesson(lesson.id); }}
                                 onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
@@ -308,6 +389,14 @@ export default function TeacherCourses() {
                                   "bg-gray-100 text-gray-600 text-xs"
                                 }>{lesson.content_type}</Badge>
                                 {lesson.duration_minutes && <span className="text-xs text-[#0B2A5B]/50">{lesson.duration_minutes} min</span>}
+                                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button onClick={(e) => { e.stopPropagation(); openEditLesson(lesson); }} className="p-1 rounded hover:bg-[#0B2A5B]/10 text-[#0B2A5B]/50 hover:text-[#0B2A5B]" title="Edit Lesson">
+                                    <Pencil size={13} />
+                                  </button>
+                                  <button onClick={(e) => { e.stopPropagation(); handleDeleteLesson(course.id, lesson.id, lesson.title); }} className="p-1 rounded hover:bg-red-100 text-red-400 hover:text-red-600" title="Delete Lesson">
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -514,6 +603,91 @@ export default function TeacherCourses() {
                 </Button>
               </div>
               <Button type="submit" disabled={saving || uploadingMedia} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Creating..." : "Add Lesson"}</Button>
+            </form>
+          </Card>
+        </div>
+      )}
+      {/* Edit Module Modal */}
+      {showEditModuleModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md p-6 bg-white shadow-xl relative">
+            <button onClick={() => setShowEditModuleModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-black"><X size={20} /></button>
+            <h2 className="text-2xl font-bold text-[#0B2A5B] mb-4">Edit Module</h2>
+            <form onSubmit={handleEditModule} className="space-y-4">
+              <div><label className="text-sm font-medium text-[#0B2A5B]">Title *</label><Input required value={editModule.title} onChange={(e) => setEditModule({ ...editModule, title: e.target.value })} className="bg-[#F4F1EA]" /></div>
+              <div><label className="text-sm font-medium text-[#0B2A5B]">Description</label><textarea className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" rows={2} value={editModule.description} onChange={(e) => setEditModule({ ...editModule, description: e.target.value })} /></div>
+              <div className="flex items-center justify-between mt-4">
+                <label className="text-sm font-medium text-[#0B2A5B]">Status</label>
+                <Button
+                  type="button"
+                  variant={editModule.is_published ? "default" : "outline"}
+                  onClick={() => setEditModule({ ...editModule, is_published: !editModule.is_published })}
+                  className={editModule.is_published ? "bg-green-600 hover:bg-green-700 text-white" : "text-gray-500"}
+                >
+                  {editModule.is_published ? "Published" : "Draft"}
+                </Button>
+              </div>
+              <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Saving..." : "Save Changes"}</Button>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {/* Edit Lesson Modal */}
+      {showEditLessonModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <Card className="w-full max-w-lg p-6 bg-white shadow-xl relative my-8">
+            <button onClick={() => setShowEditLessonModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-black"><X size={20} /></button>
+            <h2 className="text-2xl font-bold text-[#0B2A5B] mb-4">Edit Lesson</h2>
+            <form onSubmit={handleEditLesson} className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-[#0B2A5B]">Title *</label>
+                <Input required value={editLessonData.title} onChange={(e) => setEditLessonData({ ...editLessonData, title: e.target.value })} className="bg-[#F4F1EA]" />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-[#0B2A5B]">Content Type</label>
+                <select className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" value={editLessonData.content_type} onChange={(e) => setEditLessonData({ ...editLessonData, content_type: e.target.value })}>
+                  <option value="text">Text</option>
+                  <option value="video">Video</option>
+                  <option value="audio">Audio</option>
+                  <option value="quiz">Quiz</option>
+                  <option value="pdf">PDF</option>
+                </select>
+              </div>
+              {editLessonData.content_type !== "quiz" && (
+                <div>
+                  <label className="text-sm font-medium text-[#0B2A5B]">Content</label>
+                  <textarea className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" rows={3} value={editLessonData.content} onChange={(e) => setEditLessonData({ ...editLessonData, content: e.target.value })} />
+                </div>
+              )}
+              {(editLessonData.content_type === "video" || editLessonData.content_type === "audio" || editLessonData.content_type === "pdf") && (
+                <div>
+                  <label className="text-sm font-medium text-[#0B2A5B]">Media URL</label>
+                  <Input
+                    type="text"
+                    placeholder="https://... or /uploads/..."
+                    value={editLessonData.video_url}
+                    onChange={(e) => setEditLessonData({ ...editLessonData, video_url: e.target.value })}
+                    className="bg-[#F4F1EA]"
+                  />
+                </div>
+              )}
+              <div>
+                <label className="text-sm font-medium text-[#0B2A5B]">Duration (min)</label>
+                <Input type="number" min="1" value={editLessonData.duration_minutes} onChange={(e) => setEditLessonData({ ...editLessonData, duration_minutes: parseInt(e.target.value) })} className="bg-[#F4F1EA]" />
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-[#0B2A5B]">Status</label>
+                <Button
+                  type="button"
+                  variant={editLessonData.is_published ? "default" : "outline"}
+                  onClick={() => setEditLessonData({ ...editLessonData, is_published: !editLessonData.is_published })}
+                  className={editLessonData.is_published ? "bg-green-600 hover:bg-green-700 text-white" : "text-gray-500"}
+                >
+                  {editLessonData.is_published ? "Published" : "Draft"}
+                </Button>
+              </div>
+              <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Saving..." : "Save Changes"}</Button>
             </form>
           </Card>
         </div>
