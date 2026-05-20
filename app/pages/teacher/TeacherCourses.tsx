@@ -37,15 +37,9 @@ export default function TeacherCourses() {
   const [saving, setSaving] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState(false);
 
-  // Edit module modal
-  const [showEditModuleModal, setShowEditModuleModal] = useState(false);
+  // Edit mode tracking (null = create, number = editing that ID)
   const [editModuleId, setEditModuleId] = useState<number | null>(null);
-  const [editModule, setEditModule] = useState({ title: "", description: "", order: 0, is_published: false });
-
-  // Edit lesson modal
-  const [showEditLessonModal, setShowEditLessonModal] = useState(false);
   const [editLessonId, setEditLessonId] = useState<number | null>(null);
-  const [editLessonData, setEditLessonData] = useState({ title: "", content: "", content_type: "text", video_url: "", duration_minutes: 15, order: 0, is_published: false });
 
   // Drag and Drop state
   const [draggedModule, setDraggedModule] = useState<number | null>(null);
@@ -96,10 +90,14 @@ export default function TeacherCourses() {
   const handleCreateModule = async (e: React.FormEvent) => {
     e.preventDefault(); setSaving(true);
     try {
-      await api.post("/admin/modules", { ...newModule, course_id: moduleForCourse });
-      setShowModuleModal(false);
-      setNewModule({ title: "", description: "", order: 0, is_published: false });
+      if (editModuleId) {
+        await api.put(`/admin/modules/${editModuleId}`, newModule);
+      } else {
+        await api.post("/admin/modules", { ...newModule, course_id: moduleForCourse });
+      }
+      resetModuleModal();
       if (moduleForCourse) fetchCourseDetail(moduleForCourse);
+      if (expandedCourse && expandedCourse !== moduleForCourse) fetchCourseDetail(expandedCourse);
     } catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
     finally { setSaving(false); }
   };
@@ -126,15 +124,19 @@ export default function TeacherCourses() {
         lessonContent = JSON.stringify(quizData);
       }
 
-      await api.post("/admin/lessons", {
+      const payload = {
         ...newLesson,
         content: lessonContent,
-        module_id: lessonForModule,
         video_url: newLesson.video_url || undefined,
-      });
+      };
+
+      if (editLessonId) {
+        await api.put(`/admin/lessons/${editLessonId}`, payload);
+      } else {
+        await api.post("/admin/lessons", { ...payload, module_id: lessonForModule });
+      }
       resetLessonModal();
-      const mod = courses.flatMap((c) => (c.modules || []).map((m: any) => ({ ...m, courseId: c.id }))).find((m: any) => m.id === lessonForModule);
-      if (mod) fetchCourseDetail(mod.courseId);
+      if (expandedCourse) fetchCourseDetail(expandedCourse);
     } catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
     finally { setSaving(false); }
   };
@@ -146,21 +148,12 @@ export default function TeacherCourses() {
     } catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
   };
 
-  // ── Edit Module ──
-  const openEditModule = (mod: any) => {
+  // ── Edit Module (reuses create modal) ──
+  const openEditModule = (mod: any, courseId: number) => {
     setEditModuleId(mod.id);
-    setEditModule({ title: mod.title || "", description: mod.description || "", order: mod.order || 0, is_published: mod.is_published || false });
-    setShowEditModuleModal(true);
-  };
-
-  const handleEditModule = async (e: React.FormEvent) => {
-    e.preventDefault(); setSaving(true);
-    try {
-      await api.put(`/admin/modules/${editModuleId}`, editModule);
-      setShowEditModuleModal(false);
-      if (expandedCourse) fetchCourseDetail(expandedCourse);
-    } catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
-    finally { setSaving(false); }
+    setModuleForCourse(courseId);
+    setNewModule({ title: mod.title || "", description: mod.description || "", order: mod.order || 0, is_published: mod.is_published || false });
+    setShowModuleModal(true);
   };
 
   // ── Delete Module ──
@@ -172,10 +165,10 @@ export default function TeacherCourses() {
     } catch (err: any) { alert("Error deleting module: " + (err.response?.data?.detail || err.message)); }
   };
 
-  // ── Edit Lesson ──
+  // ── Edit Lesson (reuses create modal with quiz parsing) ──
   const openEditLesson = (lesson: any) => {
     setEditLessonId(lesson.id);
-    setEditLessonData({
+    setNewLesson({
       title: lesson.title || "",
       content: lesson.content || "",
       content_type: lesson.content_type || "text",
@@ -184,20 +177,27 @@ export default function TeacherCourses() {
       order: lesson.order || 0,
       is_published: lesson.is_published || false,
     });
-    setShowEditLessonModal(true);
-  };
 
-  const handleEditLesson = async (e: React.FormEvent) => {
-    e.preventDefault(); setSaving(true);
-    try {
-      await api.put(`/admin/lessons/${editLessonId}`, {
-        ...editLessonData,
-        video_url: editLessonData.video_url || undefined,
-      });
-      setShowEditLessonModal(false);
-      if (expandedCourse) fetchCourseDetail(expandedCourse);
-    } catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
-    finally { setSaving(false); }
+    // If quiz, parse JSON content back into quiz fields
+    if (lesson.content_type === "quiz" && lesson.content) {
+      try {
+        const quiz = JSON.parse(lesson.content);
+        setQuizQuestion(quiz.question || "");
+        setQuizType(quiz.type || "mcq");
+        setQuizCorrect(quiz.correct_answer || "a");
+        if (quiz.type === "fill_blank") {
+          setQuizOptions([quiz.answer || "", "", "", ""]);
+        } else if (quiz.options && Array.isArray(quiz.options)) {
+          const opts = ["", "", "", ""];
+          quiz.options.forEach((o: any, i: number) => { if (i < 4) opts[i] = o.text || ""; });
+          setQuizOptions(opts);
+        }
+      } catch { /* ignore parse error, user can re-enter */ }
+    } else {
+      setQuizQuestion(""); setQuizOptions(["", "", "", ""]); setQuizCorrect("a"); setQuizType("mcq");
+    }
+
+    setShowLessonModal(true);
   };
 
   // ── Delete Lesson ──
@@ -272,8 +272,15 @@ export default function TeacherCourses() {
     fetchCourseDetail(courseId);
   };
 
+  const resetModuleModal = () => {
+    setShowModuleModal(false);
+    setEditModuleId(null);
+    setNewModule({ title: "", description: "", order: 0, is_published: false });
+  };
+
   const resetLessonModal = () => {
     setShowLessonModal(false);
+    setEditLessonId(null);
     setNewLesson({ title: "", content: "", content_type: "text", video_url: "", duration_minutes: 15, order: 0, is_published: false });
     setQuizQuestion(""); setQuizOptions(["", "", "", ""]); setQuizCorrect("a"); setQuizType("mcq");
   };
@@ -356,13 +363,13 @@ export default function TeacherCourses() {
                             </div>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Button size="sm" variant="ghost" className="text-[#0B2A5B]/50 hover:text-[#0B2A5B] h-8 w-8 p-0" onClick={(e) => { e.stopPropagation(); openEditModule(mod); }} title="Edit Module">
+                            <Button size="sm" variant="ghost" className="text-[#0B2A5B]/50 hover:text-[#0B2A5B] h-8 w-8 p-0" onClick={(e) => { e.stopPropagation(); openEditModule(mod, course.id); }} title="Edit Module">
                               <Pencil size={14} />
                             </Button>
                             <Button size="sm" variant="ghost" className="text-red-400 hover:text-red-600 h-8 w-8 p-0" onClick={(e) => { e.stopPropagation(); handleDeleteModule(course.id, mod.id, mod.title); }} title="Delete Module">
                               <Trash2 size={14} />
                             </Button>
-                            <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B]" onClick={() => { setLessonForModule(mod.id); setShowLessonModal(true); }}>
+                            <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B]" onClick={() => { setEditModuleId(null); setLessonForModule(mod.id); setNewModule({ title: "", description: "", order: 0, is_published: false }); setModuleForCourse(course.id); setShowLessonModal(true); setEditLessonId(null); setNewLesson({ title: "", content: "", content_type: "text", video_url: "", duration_minutes: 15, order: 0, is_published: false }); setQuizQuestion(""); setQuizOptions(["", "", "", ""]); setQuizCorrect("a"); setQuizType("mcq"); }}>
                               <FileText size={14} className="mr-1" />Add Lesson
                             </Button>
                           </div>
@@ -443,12 +450,12 @@ export default function TeacherCourses() {
         </div>
       )}
 
-      {/* Create Module Modal */}
+      {/* Module Modal (Create + Edit) */}
       {showModuleModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <Card className="w-full max-w-md p-6 bg-white shadow-xl relative">
-            <button onClick={() => setShowModuleModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-black"><X size={20} /></button>
-            <h2 className="text-2xl font-bold text-[#0B2A5B] mb-4">Add Module</h2>
+            <button onClick={resetModuleModal} className="absolute top-4 right-4 text-gray-500 hover:text-black"><X size={20} /></button>
+            <h2 className="text-2xl font-bold text-[#0B2A5B] mb-4">{editModuleId ? "Edit Module" : "Add Module"}</h2>
             <form onSubmit={handleCreateModule} className="space-y-4">
               <div><label className="text-sm font-medium text-[#0B2A5B]">Title *</label><Input required value={newModule.title} onChange={(e) => setNewModule({ ...newModule, title: e.target.value })} className="bg-[#F4F1EA]" /></div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Description</label><textarea className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" rows={2} value={newModule.description} onChange={(e) => setNewModule({ ...newModule, description: e.target.value })} /></div>
@@ -463,18 +470,18 @@ export default function TeacherCourses() {
                   {newModule.is_published ? "Published" : "Draft"}
                 </Button>
               </div>
-              <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Creating..." : "Add Module"}</Button>
+              <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Saving..." : editModuleId ? "Save Changes" : "Add Module"}</Button>
             </form>
           </Card>
         </div>
       )}
 
-      {/* Create Lesson Modal */}
+      {/* Lesson Modal (Create + Edit) */}
       {showLessonModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
           <Card className="w-full max-w-lg p-6 bg-white shadow-xl relative my-8">
             <button onClick={resetLessonModal} className="absolute top-4 right-4 text-gray-500 hover:text-black"><X size={20} /></button>
-            <h2 className="text-2xl font-bold text-[#0B2A5B] mb-4">Add Lesson</h2>
+            <h2 className="text-2xl font-bold text-[#0B2A5B] mb-4">{editLessonId ? "Edit Lesson" : "Add Lesson"}</h2>
             <form onSubmit={handleCreateLesson} className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-[#0B2A5B]">Title *</label>
@@ -602,92 +609,7 @@ export default function TeacherCourses() {
                   {newLesson.is_published ? "Published" : "Draft"}
                 </Button>
               </div>
-              <Button type="submit" disabled={saving || uploadingMedia} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Creating..." : "Add Lesson"}</Button>
-            </form>
-          </Card>
-        </div>
-      )}
-      {/* Edit Module Modal */}
-      {showEditModuleModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md p-6 bg-white shadow-xl relative">
-            <button onClick={() => setShowEditModuleModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-black"><X size={20} /></button>
-            <h2 className="text-2xl font-bold text-[#0B2A5B] mb-4">Edit Module</h2>
-            <form onSubmit={handleEditModule} className="space-y-4">
-              <div><label className="text-sm font-medium text-[#0B2A5B]">Title *</label><Input required value={editModule.title} onChange={(e) => setEditModule({ ...editModule, title: e.target.value })} className="bg-[#F4F1EA]" /></div>
-              <div><label className="text-sm font-medium text-[#0B2A5B]">Description</label><textarea className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" rows={2} value={editModule.description} onChange={(e) => setEditModule({ ...editModule, description: e.target.value })} /></div>
-              <div className="flex items-center justify-between mt-4">
-                <label className="text-sm font-medium text-[#0B2A5B]">Status</label>
-                <Button
-                  type="button"
-                  variant={editModule.is_published ? "default" : "outline"}
-                  onClick={() => setEditModule({ ...editModule, is_published: !editModule.is_published })}
-                  className={editModule.is_published ? "bg-green-600 hover:bg-green-700 text-white" : "text-gray-500"}
-                >
-                  {editModule.is_published ? "Published" : "Draft"}
-                </Button>
-              </div>
-              <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Saving..." : "Save Changes"}</Button>
-            </form>
-          </Card>
-        </div>
-      )}
-
-      {/* Edit Lesson Modal */}
-      {showEditLessonModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <Card className="w-full max-w-lg p-6 bg-white shadow-xl relative my-8">
-            <button onClick={() => setShowEditLessonModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-black"><X size={20} /></button>
-            <h2 className="text-2xl font-bold text-[#0B2A5B] mb-4">Edit Lesson</h2>
-            <form onSubmit={handleEditLesson} className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-[#0B2A5B]">Title *</label>
-                <Input required value={editLessonData.title} onChange={(e) => setEditLessonData({ ...editLessonData, title: e.target.value })} className="bg-[#F4F1EA]" />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-[#0B2A5B]">Content Type</label>
-                <select className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" value={editLessonData.content_type} onChange={(e) => setEditLessonData({ ...editLessonData, content_type: e.target.value })}>
-                  <option value="text">Text</option>
-                  <option value="video">Video</option>
-                  <option value="audio">Audio</option>
-                  <option value="quiz">Quiz</option>
-                  <option value="pdf">PDF</option>
-                </select>
-              </div>
-              {editLessonData.content_type !== "quiz" && (
-                <div>
-                  <label className="text-sm font-medium text-[#0B2A5B]">Content</label>
-                  <textarea className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" rows={3} value={editLessonData.content} onChange={(e) => setEditLessonData({ ...editLessonData, content: e.target.value })} />
-                </div>
-              )}
-              {(editLessonData.content_type === "video" || editLessonData.content_type === "audio" || editLessonData.content_type === "pdf") && (
-                <div>
-                  <label className="text-sm font-medium text-[#0B2A5B]">Media URL</label>
-                  <Input
-                    type="text"
-                    placeholder="https://... or /uploads/..."
-                    value={editLessonData.video_url}
-                    onChange={(e) => setEditLessonData({ ...editLessonData, video_url: e.target.value })}
-                    className="bg-[#F4F1EA]"
-                  />
-                </div>
-              )}
-              <div>
-                <label className="text-sm font-medium text-[#0B2A5B]">Duration (min)</label>
-                <Input type="number" min="1" value={editLessonData.duration_minutes} onChange={(e) => setEditLessonData({ ...editLessonData, duration_minutes: parseInt(e.target.value) })} className="bg-[#F4F1EA]" />
-              </div>
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-[#0B2A5B]">Status</label>
-                <Button
-                  type="button"
-                  variant={editLessonData.is_published ? "default" : "outline"}
-                  onClick={() => setEditLessonData({ ...editLessonData, is_published: !editLessonData.is_published })}
-                  className={editLessonData.is_published ? "bg-green-600 hover:bg-green-700 text-white" : "text-gray-500"}
-                >
-                  {editLessonData.is_published ? "Published" : "Draft"}
-                </Button>
-              </div>
-              <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Saving..." : "Save Changes"}</Button>
+              <Button type="submit" disabled={saving || uploadingMedia} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Saving..." : editLessonId ? "Save Changes" : "Add Lesson"}</Button>
             </form>
           </Card>
         </div>
