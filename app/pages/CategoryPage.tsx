@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link } from "react-router";
 import { ArrowLeft, BookOpen, Video, FileText, Users, Clock } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";

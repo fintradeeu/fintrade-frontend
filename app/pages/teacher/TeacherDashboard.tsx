@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Users, Video, MessageCircle, FileQuestion, Clock, AlertCircle, TrendingUp, BookOpen } from "lucide-react";
 import api from "../../services/api";
 

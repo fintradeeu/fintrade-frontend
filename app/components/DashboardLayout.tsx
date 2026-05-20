@@ -1,5 +1,5 @@
 import { ReactNode, useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router";
 import { Menu, X, LogOut, Home, Users, BookOpen, Video, FileQuestion, IndianRupee, Bot, TrendingUp, BarChart3, Settings, Award, GraduationCap, MessageCircle, LineChart, Target, Briefcase, Shield, Newspaper, FileText, Trophy, LayoutTemplate } from "lucide-react";
 import { Button } from "./ui/button";
 import logo from "../../imports/fintrade_logo.png";
