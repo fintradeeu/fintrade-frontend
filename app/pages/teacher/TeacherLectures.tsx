@@ -62,7 +62,7 @@ export default function TeacherLectures() {
       const formData = new FormData();
       formData.append("file", file);
       const uploadRes = await api.post("/admin/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: { "Content-Type": undefined }
       });
       const url = uploadRes.data.url;
 
@@ -94,7 +94,7 @@ export default function TeacherLectures() {
       const formData = new FormData();
       formData.append("file", file);
       const uploadRes = await api.post("/admin/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: { "Content-Type": undefined }
       });
       const url = uploadRes.data.url;
 

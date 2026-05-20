@@ -62,7 +62,7 @@ export default function TeacherCourses() {
       const formData = new FormData();
       formData.append("file", file);
       const res = await api.post("/admin/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: { "Content-Type": undefined }
       });
       setNewLesson({ ...newLesson, video_url: res.data.url });
     } catch (err: any) {
@@ -477,8 +477,8 @@ export default function TeacherCourses() {
                   <label className="text-sm font-medium text-[#0B2A5B]">Upload Media OR enter URL</label>
                   <div className="flex gap-2">
                     <Input 
-                      type="url" 
-                      placeholder="https://..." 
+                      type="text" 
+                      placeholder="https://... or /uploads/..." 
                       value={newLesson.video_url} 
                       onChange={(e) => setNewLesson({ ...newLesson, video_url: e.target.value })} 
                       className="bg-[#F4F1EA] flex-1" 

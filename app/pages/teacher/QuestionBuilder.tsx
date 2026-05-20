@@ -97,7 +97,7 @@ export default function QuestionBuilder() {
       const formData = new FormData();
       formData.append("file", uploadedFile);
       const res = await api.post("/admin/exams/preview-upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: { "Content-Type": undefined }
       });
       setPreviewQuestions(res.data.questions);
       toast.success(`Parsed ${res.data.count} questions from file`);
@@ -118,7 +118,7 @@ export default function QuestionBuilder() {
       const res = await api.post(
         `/admin/exams/upload-questions?exam_id=${examId}&is_course_exam=${isCourse}`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { headers: { "Content-Type": undefined } }
       );
       toast.success(res.data.message);
       navigate("/teacher/exams");

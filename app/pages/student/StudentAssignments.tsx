@@ -60,7 +60,7 @@ export default function StudentAssignments() {
       
       // Upload file to get URL
       const uploadRes = await api.post("/admin/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: { "Content-Type": undefined }
       });
       
       const fileUrl = uploadRes.data.url;
