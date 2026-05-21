@@ -148,6 +148,15 @@ export default function TeacherCourses() {
     } catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
   };
 
+  // ── Delete Course ──
+  const handleDeleteCourse = async (courseId: number, courseTitle: string) => {
+    if (!confirm(`Delete course "${courseTitle}" and all its modules and lessons? This cannot be undone.`)) return;
+    try {
+      await api.delete(`/admin/courses/${courseId}`);
+      fetchCourses();
+    } catch (err: any) { alert("Error deleting course: " + (err.response?.data?.detail || err.message)); }
+  };
+
   // ── Edit Module (reuses create modal) ──
   const openEditModule = (mod: any, courseId: number) => {
     setEditModuleId(mod.id);
@@ -333,6 +342,9 @@ export default function TeacherCourses() {
                 </Button>
                 <Button size="sm" className="bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]" onClick={(e) => { e.stopPropagation(); navigate("/teacher/exams"); }}>
                   <FileQuestion size={14} className="mr-1" />Manage Exams
+                </Button>
+                <Button size="sm" variant="outline" className="border-red-400 text-red-500 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id, course.title); }}>
+                  <Trash2 size={14} className="mr-1" />Delete
                 </Button>
                 {expandedCourse === course.id ? <ChevronUp size={20} className="text-[#0B2A5B]/40" /> : <ChevronDown size={20} className="text-[#0B2A5B]/40" />}
               </div>
