@@ -224,14 +224,17 @@ export function DashboardLayout({
                 <p className="text-xs text-[#0B2A5B]/70 capitalize font-bold">{role}</p>
               </div>
             </div>
-            <Link to="/login" className="block mt-2">
-              <Button
+            <Button
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  localStorage.removeItem("user");
+                  window.location.href = "/login";
+                }}
                 className="w-full bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] shadow-lg shadow-[#C2A86A]/20 font-bold"
               >
                 <LogOut size={16} className="mr-2" />
                 Logout
               </Button>
-            </Link>
           </div>
         </aside>
 

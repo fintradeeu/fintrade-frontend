@@ -47,7 +47,7 @@ export default function TeacherReports() {
             </Card>
             <Card className="p-4 bg-white shadow-lg">
               <p className="text-sm text-[#0B2A5B]/60 mb-1">Assignment Completion</p>
-              <p className="text-2xl font-bold text-[#0B2A5B]">{reportData.assignment_completion || 82}%</p>
+              <p className="text-2xl font-bold text-[#0B2A5B]">{reportData.assignment_completion != null ? `${reportData.assignment_completion}%` : "—"}</p>
             </Card>
           </div>
 

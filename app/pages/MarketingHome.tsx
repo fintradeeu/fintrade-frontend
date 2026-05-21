@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
+import api from "../services/api";
 import { Play, TrendingUp, Award, Users, BookOpen, LineChart, Video, CheckCircle, Star, ArrowRight, BarChart3, Brain, Target, Trophy, X, FileText, Search, Phone, Download, Instagram, Youtube, Linkedin, Twitter, Facebook, ChevronRight, ChevronDown } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -305,6 +306,7 @@ const courseDetails: Record<string, { description: string; highlights: string[];
 
 // Course Card Component to handle local state for Read More and Program Details Dialog
 function CourseCard({ course }: { course: any }) {
+  const isAuthenticated = !!localStorage.getItem("token");
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [showFullTitle, setShowFullTitle] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -441,7 +443,7 @@ function CourseCard({ course }: { course: any }) {
               >
                 Close Details
               </Button>
-              <Link to="/student/courses" className="w-full sm:w-auto">
+              <Link to={isAuthenticated ? "/student/courses" : "/register"} className="w-full sm:w-auto">
                 <Button
                   className="w-full h-12 text-sm font-semibold rounded-xl px-8 shadow-lg hover:shadow-xl bg-gradient-to-r from-[#D50032] to-[#FF0000] text-white hover:from-[#D50032] hover:to-[#D50032] transition-all duration-300"
                 >
@@ -461,6 +463,16 @@ export default function MarketingHome() {
   const [videoOpen, setVideoOpen] = useState(false);
   const [activeVideoIdx, setActiveVideoIdx] = useState<number | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const isAuthenticated = !!localStorage.getItem("token");
+  const [apiCourses, setApiCourses] = useState<any[]>([]);
+
+  useEffect(() => {
+    api.get("/courses?is_featured=true").then((res) => {
+      if (res.data && res.data.length > 0) {
+        setApiCourses(res.data);
+      }
+    }).catch(() => {});
+  }, []);
 
   // Brochure Download Flow State
   const [brochureOpen, setBrochureOpen] = useState(false);
@@ -630,8 +642,8 @@ export default function MarketingHome() {
               <button onClick={() => setSearchOpen(true)} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-gray-600 hover:text-[#D50032] hover:bg-[#D50032]/10 transition-all" title="Search">
                 <Search className="h-4 w-4 md:h-5 md:w-5" />
               </button>
-              <Link to="/login">
-                <Button variant="ghost" className="text-gray-700 hover:text-[#D50032] hover:bg-[#D50032]/10" size="lg">Login</Button>
+              <Link to={isAuthenticated ? "/student/dashboard" : "/login"}>
+                <Button variant="ghost" className="text-gray-700 hover:text-[#D50032] hover:bg-[#D50032]/10" size="lg">{isAuthenticated ? "Dashboard" : "Login"}</Button>
               </Link>
             </div>
           </div>
@@ -664,7 +676,7 @@ export default function MarketingHome() {
                   We are not building another trading course company. We are building <span className="text-[#D50032]">India's first Trader-to-Funded Professional Pipeline</span> — where every student has a pathway to professional capital.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 w-full">
-                  <Link to="/student/contract-kyc" className="block w-full sm:w-auto">
+                  <Link to={isAuthenticated ? "/student/courses" : "/register"} className="block w-full sm:w-auto">
                     <Button
                       size="lg"
                       className="w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all hover:scale-105 text-lg px-8 py-6 bg-gradient-to-r from-[#D50032] to-[#FF0000] text-white hover:from-[#D50032] hover:to-[#D50032]"
@@ -760,7 +772,16 @@ export default function MarketingHome() {
               className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible pb-8 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-              {[
+              {(apiCourses.length > 0 ? apiCourses.map((c: any) => ({
+                name: c.title,
+                level: c.difficulty_level === "beginner" ? "Foundation" : c.difficulty_level === "intermediate" ? "Intermediate" : "Professional",
+                duration: c.duration_hours ? `${c.duration_hours} Hours` : "—",
+                originalPrice: c.original_price ? `₹${c.original_price.toLocaleString("en-IN")}` : "—",
+                price: `₹${c.price.toLocaleString("en-IN")}`,
+                savings: c.original_price ? `₹${(c.original_price - c.price).toLocaleString("en-IN")}` : "—",
+                description: c.short_description || c.description || "Professional trading course",
+                icon: c.difficulty_level === "beginner" ? BookOpen : c.difficulty_level === "intermediate" ? LineChart : Trophy,
+              })) : [
                 {
                   name: "Financial Market Foundation (FMF)",
                   level: "Foundation",
@@ -791,7 +812,7 @@ export default function MarketingHome() {
                   description: "Professional grade trading strategies, advanced risk management, and portfolio construction.",
                   icon: Trophy,
                 },
-              ].map((course, i) => (
+              ]).map((course, i) => (
                 <div key={i} className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex">
                   <CourseCard course={course} />
                 </div>
@@ -870,7 +891,7 @@ export default function MarketingHome() {
                       <div className="flex-1" />
 
                       {/* CTA — always at bottom */}
-                      <Link to="/login" className="block">
+                      <Link to={isAuthenticated ? "/student/lectures" : "/login"} className="block">
                         <Button
                           className={`w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 ${lecture.status === "live"
                             ? "!bg-gradient-to-r !from-[#D50032] !to-[#FF0000] !text-white hover:!from-[#FF0000] hover:!to-[#FF0000]"
@@ -1114,7 +1135,7 @@ export default function MarketingHome() {
               <div>ARE YOU?</div>
             </h2>
             <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
-              <Link to="/login" className="block w-full sm:w-auto">
+              <Link to={isAuthenticated ? "/student/courses" : "/register"} className="block w-full sm:w-auto">
                 <Button
                   size="lg"
                   className="w-full sm:w-auto rounded-full text-lg font-bold px-10 py-7 !bg-white hover:!bg-white !text-[#D50032] hover:!text-[#D50032] shadow-[0_4px_25px_rgba(255,255,255,0.15)] transition-all duration-300 transform hover:scale-105 border-none"
@@ -1151,18 +1172,18 @@ export default function MarketingHome() {
               <div>
                 <h4 className="font-bold mb-4">Courses</h4>
                 <ul className="space-y-2 text-gray-400">
-                  <li><Link to="/student/courses" className="hover:text-[#D50032] transition-colors">Basic Trading</Link></li>
-                  <li><Link to="/student/courses" className="hover:text-[#D50032] transition-colors">Intermediate Trading</Link></li>
-                  <li><Link to="/student/courses" className="hover:text-[#D50032] transition-colors">Advanced Trading</Link></li>
-                  <li><Link to="/student/courses" className="hover:text-[#D50032] transition-colors">Master Trading</Link></li>
+                  <li><Link to={isAuthenticated ? "/student/courses" : "/register"} className="hover:text-[#D50032] transition-colors">Basic Trading</Link></li>
+                  <li><Link to={isAuthenticated ? "/student/courses" : "/register"} className="hover:text-[#D50032] transition-colors">Intermediate Trading</Link></li>
+                  <li><Link to={isAuthenticated ? "/student/courses" : "/register"} className="hover:text-[#D50032] transition-colors">Advanced Trading</Link></li>
+                  <li><Link to={isAuthenticated ? "/student/courses" : "/register"} className="hover:text-[#D50032] transition-colors">Master Trading</Link></li>
                 </ul>
               </div>
               <div>
                 <h4 className="font-bold mb-4">Resources</h4>
                 <ul className="space-y-2 text-gray-400">
                   <li><a href="#market-updates" className="hover:text-[#D50032] transition-colors">Market Updates</a></li>
-                  <li><Link to="/student/lectures" className="hover:text-[#D50032] transition-colors">Live Classes</Link></li>
-                  <li><Link to="/student/ai-tutor" className="hover:text-[#D50032] transition-colors">AI Tutor</Link></li>
+                  <li><Link to={isAuthenticated ? "/student/lectures" : "/login"} className="hover:text-[#D50032] transition-colors">Live Classes</Link></li>
+                  <li><Link to={isAuthenticated ? "/student/ai-tutor" : "/login"} className="hover:text-[#D50032] transition-colors">AI Tutor</Link></li>
                   <li><a href="#" className="hover:text-[#D50032] transition-colors">Help Center</a></li>
                 </ul>
               </div>

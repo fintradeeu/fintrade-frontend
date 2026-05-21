@@ -27,6 +27,8 @@ export default function TeacherExams() {
     duration_minutes: 60,
     passing_score: 60,
     questions_per_attempt: "",
+    marks_per_question: 1,
+    negative_marks: 0,
   });
 
   // Preview state
@@ -87,6 +89,8 @@ export default function TeacherExams() {
         course_id: parseInt(formData.course_id),
         duration_minutes: formData.duration_minutes,
         passing_score: formData.passing_score,
+        marks_per_question: formData.marks_per_question,
+        negative_marks: formData.negative_marks,
       };
 
       if (formData.questions_per_attempt) {
@@ -104,7 +108,7 @@ export default function TeacherExams() {
       
       toast.success("Exam created successfully!");
       setIsModalOpen(false);
-      setFormData({ title: "", type: "entrance", course_id: "", duration_minutes: 60, passing_score: 60, questions_per_attempt: "" });
+      setFormData({ title: "", type: "entrance", course_id: "", duration_minutes: 60, passing_score: 60, questions_per_attempt: "", marks_per_question: 1, negative_marks: 0 });
       setLoading(true);
       fetchExams();
     } catch (err: any) {
@@ -287,6 +291,47 @@ export default function TeacherExams() {
               <p className="text-xs text-gray-500">
                 If set, each student gets a random selection of N questions from the full pool.
               </p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Marks per Question</Label>
+                <Input
+                  type="number"
+                  min="0.5"
+                  step="0.5"
+                  value={formData.marks_per_question}
+                  onChange={(e) => setFormData({ ...formData, marks_per_question: parseFloat(e.target.value) || 1 })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label className="flex items-center gap-1">
+                  Negative Marking
+                  <span className="text-xs text-gray-400 font-normal">(per wrong)</span>
+                </Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.25"
+                  value={formData.negative_marks}
+                  onChange={(e) => setFormData({ ...formData, negative_marks: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+            </div>
+            {/* Marking Scheme Preview */}
+            <div className="bg-[#0B2A5B]/5 p-3 rounded-lg text-sm space-y-1">
+              <p className="font-semibold text-[#0B2A5B] text-xs uppercase tracking-wider mb-2">Marking Scheme Preview</p>
+              <div className="flex items-center gap-2">
+                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded font-semibold text-xs">✓ Correct</span>
+                <span className="text-[#0B2A5B]">+{formData.marks_per_question} mark{formData.marks_per_question !== 1 ? 's' : ''}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded font-semibold text-xs">✗ Wrong</span>
+                <span className="text-[#0B2A5B]">{formData.negative_marks > 0 ? `−${formData.negative_marks} mark${formData.negative_marks !== 1 ? 's' : ''} deducted` : 'No penalty'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-semibold text-xs">○ Skipped</span>
+                <span className="text-[#0B2A5B]">0 marks</span>
+              </div>
             </div>
           </div>
           <DialogFooter>

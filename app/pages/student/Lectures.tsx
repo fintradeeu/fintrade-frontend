@@ -150,7 +150,20 @@ export default function Lectures() {
                   </div>
                 </div>
 
-                <Button className="w-full bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a]">
+                <Button
+                  className="w-full bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a]"
+                  onClick={() => {
+                    const start = new Date(lecture.scheduled_at);
+                    const end = new Date(start.getTime() + (lecture.duration_minutes || 60) * 60000);
+                    const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+                    const ics = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART:${fmt(start)}\nDTEND:${fmt(end)}\nSUMMARY:${lecture.title}\nDESCRIPTION:${lecture.description || ""}\nEND:VEVENT\nEND:VCALENDAR`;
+                    const blob = new Blob([ics], { type: "text/calendar" });
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(blob);
+                    a.download = `${lecture.title.replace(/\s+/g, "_")}.ics`;
+                    a.click();
+                  }}
+                >
                   Add to Calendar
                 </Button>
               </Card>

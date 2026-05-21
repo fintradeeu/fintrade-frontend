@@ -52,7 +52,7 @@ export default function TeacherStudents() {
             </Card>
             <Card className="p-4 bg-white shadow-lg">
               <p className="text-sm text-[#0B2A5B]/60 mb-1">At Risk</p>
-              <p className="text-2xl font-bold text-orange-600">0</p>
+              <p className="text-2xl font-bold text-orange-600">{students.filter(s => (s.progress_percent || 0) < 20 && (s.progress_percent || 0) > 0).length}</p>
             </Card>
             <Card className="p-4 bg-white shadow-lg">
               <p className="text-sm text-[#0B2A5B]/60 mb-1">Avg Attendance</p>
@@ -72,7 +72,20 @@ export default function TeacherStudents() {
                   className="pl-10 bg-[#F4F1EA] border-[#0B2A5B]/20"
                 />
               </div>
-              <Button className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a]">
+              <Button
+                className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a]"
+                onClick={() => {
+                  const header = "Name,Email,Course,Enrolled Date\n";
+                  const rows = students.map(s =>
+                    `"${s.student_name}","${s.student_email}","${s.course_title}","${new Date(s.enrolled_at).toLocaleDateString()}"`
+                  ).join("\n");
+                  const blob = new Blob([header + rows], { type: "text/csv" });
+                  const a = document.createElement("a");
+                  a.href = URL.createObjectURL(blob);
+                  a.download = "students_export.csv";
+                  a.click();
+                }}
+              >
                 <Download size={16} className="mr-2" />
                 Export Data
               </Button>

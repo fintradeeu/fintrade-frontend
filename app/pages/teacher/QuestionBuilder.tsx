@@ -33,7 +33,7 @@ export default function QuestionBuilder() {
 
   const [examType] = useState<"entrance" | "course">(initialType);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"upload" | "manual">("upload");
+  const [activeTab, setActiveTab] = useState<"existing" | "upload" | "manual">("existing");
 
   // --- File upload state ---
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -44,6 +44,8 @@ export default function QuestionBuilder() {
   // --- Existing questions state ---
   const [existingQuestions, setExistingQuestions] = useState<any[]>([]);
   const [loadingExisting, setLoadingExisting] = useState(true);
+  const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null);
+  const [editFormData, setEditFormData] = useState<any>(null);
 
   // --- Manual questions state ---
   const [manualExpanded, setManualExpanded] = useState<number | null>(null);
@@ -66,8 +68,8 @@ export default function QuestionBuilder() {
   const [isManualPreviewOpen, setIsManualPreviewOpen] = useState(false);
 
   // --- Load existing questions on mount ---
-  useEffect(() => {
-    if (!examId) return;
+  const fetchExisting = () => {
+    setLoadingExisting(true);
     const isCourse = examType !== "entrance";
     api.get(`/admin/exams/questions-list?exam_id=${examId}&is_course=${isCourse}`)
       .then(res => {
@@ -75,7 +77,40 @@ export default function QuestionBuilder() {
       })
       .catch(() => setExistingQuestions([]))
       .finally(() => setLoadingExisting(false));
+  };
+
+  useEffect(() => {
+    if (examId) fetchExisting();
   }, [examId, examType]);
+
+  const handleDeleteExisting = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this question?")) return;
+    try {
+      const isCourse = examType !== "entrance";
+      await api.delete(`/admin/exams/questions/${id}?is_course=${isCourse}`);
+      toast.success("Question deleted");
+      fetchExisting();
+    } catch (err) {
+      toast.error("Failed to delete question");
+    }
+  };
+
+  const handleUpdateExisting = async () => {
+    try {
+      const isCourse = examType !== "entrance";
+      await api.put(`/admin/exams/questions/${editingQuestionId}?is_course=${isCourse}`, editFormData);
+      toast.success("Question updated");
+      setEditingQuestionId(null);
+      fetchExisting();
+    } catch (err) {
+      toast.error("Failed to update question");
+    }
+  };
+
+  const startEditing = (q: any) => {
+    setEditingQuestionId(q.id);
+    setEditFormData(JSON.parse(JSON.stringify(q))); // deep copy
+  };
 
   // ─── File upload handlers ─────────────────────────────────────────
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -266,9 +301,20 @@ export default function QuestionBuilder() {
         )}
 
         {/* Tab Switcher */}
-        <div className="flex rounded-xl bg-white border border-gray-200 p-1 shadow-sm">
+        <div className="flex rounded-xl bg-white border border-gray-200 p-1 shadow-sm overflow-x-auto">
           <button
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-semibold transition-all ${
+            className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-semibold transition-all ${
+              activeTab === "existing"
+                ? "bg-[#0B2A5B] text-white shadow-md"
+                : "text-[#0B2A5B]/70 hover:bg-gray-50"
+            }`}
+            onClick={() => setActiveTab("existing")}
+          >
+            <FileText size={18} />
+            Existing Questions
+          </button>
+          <button
+            className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-semibold transition-all ${
               activeTab === "upload"
                 ? "bg-[#0B2A5B] text-white shadow-md"
                 : "text-[#0B2A5B]/70 hover:bg-gray-50"
@@ -279,7 +325,7 @@ export default function QuestionBuilder() {
             Upload CSV / Excel
           </button>
           <button
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-semibold transition-all ${
+            className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-semibold transition-all ${
               activeTab === "manual"
                 ? "bg-[#0B2A5B] text-white shadow-md"
                 : "text-[#0B2A5B]/70 hover:bg-gray-50"
@@ -290,6 +336,140 @@ export default function QuestionBuilder() {
             Add Manually
           </button>
         </div>
+
+        {/* ─── EXISTING TAB ──────────────────────────────────────────── */}
+        {activeTab === "existing" && (
+          <div className="space-y-4">
+            {loadingExisting ? (
+              <div className="flex justify-center py-12"><Loader2 className="animate-spin text-[#0B2A5B]" size={32} /></div>
+            ) : existingQuestions.length === 0 ? (
+              <Card className="p-12 text-center text-[#0B2A5B]/60">
+                No questions exist yet. Use Upload or Manual tab to add some.
+              </Card>
+            ) : (
+              existingQuestions.map((q, idx) => {
+                const isEditing = editingQuestionId === q.id;
+                const data = isEditing ? editFormData : q;
+
+                return (
+                  <Card key={q.id} className="overflow-hidden shadow-sm">
+                    {/* Header */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-gray-50 border-b gap-3">
+                      <div className="flex items-center gap-3">
+                        <Badge className="bg-[#0B2A5B]">Q{idx + 1}</Badge>
+                        {!isEditing && (
+                          <div className="flex gap-2">
+                            <Badge className="bg-gray-200 text-gray-700">{q.question_type}</Badge>
+                            <span className="text-sm font-medium text-[#0B2A5B]">{q.marks} mark{q.marks !== 1 ? 's' : ''}</span>
+                            {q.negative_marks > 0 && <span className="text-sm text-red-500">(-{q.negative_marks})</span>}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        {isEditing ? (
+                          <>
+                            <Button size="sm" variant="outline" onClick={() => setEditingQuestionId(null)}>Cancel</Button>
+                            <Button size="sm" className="bg-[#C2A86A] text-[#0B2A5B]" onClick={handleUpdateExisting}>Save Changes</Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button size="sm" variant="outline" className="text-[#0B2A5B]" onClick={() => startEditing(q)}>Edit</Button>
+                            <Button size="sm" variant="destructive" onClick={() => handleDeleteExisting(q.id)}>Delete</Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-5">
+                      {isEditing ? (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Question Text</Label>
+                            <Textarea value={data.question_text} onChange={e => setEditFormData({...data, question_text: e.target.value})} />
+                          </div>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="space-y-2">
+                              <Label>Type</Label>
+                              <Select value={data.question_type} onValueChange={v => setEditFormData({...data, question_type: v})}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="mcq">MCQ</SelectItem>
+                                  <SelectItem value="true_false">True/False</SelectItem>
+                                  <SelectItem value="descriptive">Descriptive</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Category</Label>
+                              <Input value={data.category || ''} onChange={e => setEditFormData({...data, category: e.target.value})} />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Marks</Label>
+                              <Input type="number" step="0.5" value={data.marks} onChange={e => setEditFormData({...data, marks: parseFloat(e.target.value)})} />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Negative</Label>
+                              <Input type="number" step="0.25" value={data.negative_marks} onChange={e => setEditFormData({...data, negative_marks: parseFloat(e.target.value)})} />
+                            </div>
+                          </div>
+
+                          {data.question_type !== 'descriptive' && (
+                            <div className="space-y-2 mt-4">
+                              <Label>Options</Label>
+                              {data.options.map((opt: any, optIdx: number) => (
+                                <div key={optIdx} className="flex gap-2">
+                                  <div className="flex items-center">
+                                    <input type="radio" name={`edit-correct-${q.id}`} checked={opt.is_correct} 
+                                      onChange={() => {
+                                        const newOpts = [...data.options];
+                                        newOpts.forEach(o => o.is_correct = false);
+                                        newOpts[optIdx].is_correct = true;
+                                        setEditFormData({...data, options: newOpts});
+                                      }}
+                                    />
+                                  </div>
+                                  <Input value={opt.option_text} onChange={e => {
+                                    const newOpts = [...data.options];
+                                    newOpts[optIdx].option_text = e.target.value;
+                                    setEditFormData({...data, options: newOpts});
+                                  }} />
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="space-y-2">
+                            <Label>Explanation</Label>
+                            <Textarea value={data.explanation || ''} onChange={e => setEditFormData({...data, explanation: e.target.value})} />
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-lg text-[#0B2A5B] font-medium mb-4">{q.question_text}</p>
+                          {q.question_type !== 'descriptive' && q.options && (
+                            <div className="space-y-2 ml-4">
+                              {q.options.map((opt: any, j: number) => (
+                                <div key={j} className={`flex items-center gap-2 p-2 rounded text-sm ${opt.is_correct ? 'bg-green-50 border border-green-200' : 'border border-gray-100'}`}>
+                                  {opt.is_correct ? <CheckCircle size={14} className="text-green-600" /> : <XCircle size={14} className="text-gray-300" />}
+                                  <span className={opt.is_correct ? 'text-green-800 font-medium' : 'text-gray-600'}>{opt.option_text}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {q.explanation && (
+                            <p className="mt-4 p-3 bg-blue-50 text-blue-800 text-sm rounded">💡 {q.explanation}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                )
+              })
+            )}
+          </div>
+        )}
 
         {/* ─── UPLOAD TAB ──────────────────────────────────────────── */}
         {activeTab === "upload" && (

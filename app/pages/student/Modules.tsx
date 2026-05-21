@@ -173,18 +173,33 @@ export default function Modules() {
         course_id: selectedCourse.id,
         lesson_id: lessonId,
       });
-      setCompletedLessonIds(prev => new Set(prev).add(lessonId));
+      const newCompletedSet = new Set(completedLessonIds);
+      newCompletedSet.add(lessonId);
+      setCompletedLessonIds(newCompletedSet);
       
-      // Update progress percent visually
+      // Update progress percent visually (mirrors backend real percentage logic)
       setCourses(courses.map(c => {
         if (c.id === selectedCourse.id) {
           const totalLessons = c.modules?.reduce((acc: number, m: any) => acc + (m.lessons?.length || 0), 0) || 1;
-          const currentProgress = c.progress_percent;
-          const newProgress = Math.min(100, currentProgress + (100 / totalLessons));
+          const completedInCourse = c.modules?.reduce((acc: number, m: any) =>
+            acc + (m.lessons?.filter((l: any) => newCompletedSet.has(l.id))?.length || 0), 0
+          ) || 0;
+          const newProgress = Math.min(100, Math.round((completedInCourse / totalLessons) * 100 * 100) / 100);
           return { ...c, progress_percent: newProgress };
         }
         return c;
       }));
+
+      // Auto-navigate to next lesson
+      const currentIndex = orderedLessons.findIndex(l => l.id === lessonId);
+      if (currentIndex >= 0 && currentIndex < orderedLessons.length - 1) {
+        const nextLesson = orderedLessons[currentIndex + 1];
+        // Small delay so user sees the "Lesson Completed" state
+        setTimeout(() => setActiveLesson(nextLesson), 800);
+      } else {
+        // Was the last lesson — go back to module list
+        setTimeout(() => setActiveLesson(null), 800);
+      }
     } catch (err) {
       console.error("Failed to mark lesson complete", err);
     }
@@ -335,6 +350,26 @@ export default function Modules() {
                           <FileAudio size={64} className="text-[#0B2A5B] mb-6" />
                           <audio src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || ''}${activeLesson.video_url}`} controls className="w-full max-w-md" onEnded={() => markCompleted(activeLesson.id)}></audio>
                         </div>
+                      ) : activeLesson.content_type === "pdf" && activeLesson.video_url ? (
+                        <div className="w-full rounded-lg overflow-hidden bg-white" style={{ minHeight: 500 }}>
+                          <iframe
+                            src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || 'http://localhost:8000'}${activeLesson.video_url}`}
+                            className="w-full border-0"
+                            style={{ height: 600 }}
+                            title={activeLesson.title}
+                          />
+                          <div className="flex justify-center mt-4">
+                            <a
+                              href={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || 'http://localhost:8000'}${activeLesson.video_url}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Button variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B]">
+                                <Download size={16} className="mr-2" /> Open in New Tab
+                              </Button>
+                            </a>
+                          </div>
+                        </div>
                       ) : activeLesson.content_type === "text" ? (
                         <div className="space-y-6">
                           {activeLesson.video_url ? (
@@ -357,7 +392,7 @@ export default function Modules() {
                           )}
                         </div>
                       ) : activeLesson.content_type === "quiz" ? (
-                        <QuizRenderer content={activeLesson.content} onComplete={() => markCompleted(activeLesson.id)} />
+                        <QuizRenderer key={activeLesson.id} content={activeLesson.content} onComplete={() => markCompleted(activeLesson.id)} />
                       ) : activeLesson.content ? (
                         <div className="prose max-w-none text-[#0B2A5B]">
                           <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
@@ -372,12 +407,36 @@ export default function Modules() {
                       {!completedLessonIds.has(activeLesson.id) ? (
                         <div className="mt-8 flex justify-center">
                           <Button onClick={() => markCompleted(activeLesson.id)} className="bg-green-600 text-white hover:bg-green-700">
-                            <CheckCircle2 size={16} className="mr-2" /> Mark as Complete
+                            <CheckCircle2 size={16} className="mr-2" /> Mark as Complete & Continue
                           </Button>
                         </div>
                       ) : (
-                        <div className="mt-8 flex justify-center items-center gap-2 text-green-600 font-bold">
-                          <CheckCircle2 size={20} /> Lesson Completed
+                        <div className="mt-8 space-y-3">
+                          <div className="flex justify-center items-center gap-2 text-green-600 font-bold">
+                            <CheckCircle2 size={20} /> Lesson Completed
+                          </div>
+                          {(() => {
+                            const currentIndex = orderedLessons.findIndex(l => l.id === activeLesson.id);
+                            if (currentIndex >= 0 && currentIndex < orderedLessons.length - 1) {
+                              const nextLesson = orderedLessons[currentIndex + 1];
+                              const isNextUnlocked = completedLessonIds.has(activeLesson.id);
+                              return isNextUnlocked ? (
+                                <div className="flex justify-center">
+                                  <Button onClick={() => setActiveLesson(nextLesson)} className="bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">
+                                    <Play size={16} className="mr-2" /> Next: {nextLesson.title}
+                                  </Button>
+                                </div>
+                              ) : null;
+                            } else {
+                              return (
+                                <div className="flex justify-center">
+                                  <Button onClick={() => setActiveLesson(null)} variant="outline" className="border-[#C2A86A] text-[#C2A86A]">
+                                    🎉 All Lessons Complete — Back to Overview
+                                  </Button>
+                                </div>
+                              );
+                            }
+                          })()}
                         </div>
                       )}
                     </div>
@@ -445,15 +504,44 @@ export default function Modules() {
 
                       <TabsContent value="resources">
                     <div className="space-y-3">
-                      <Card className="p-4 bg-[#F4F1EA]">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <FileText className="text-[#C2A86A]" size={20} />
-                            <div><p className="font-semibold text-[#0B2A5B]">Course Summary</p><p className="text-xs text-[#0B2A5B]/60">PDF resource</p></div>
-                          </div>
-                          <Button size="sm" variant="outline" className="border-[#0B2A5B]/20"><Download size={16} className="mr-2" />Download</Button>
-                        </div>
-                      </Card>
+                      {(() => {
+                        // Collect real downloadable resources from lessons (PDFs, files)
+                        const resources: any[] = [];
+                        (selectedCourse.modules || []).forEach((mod: any) => {
+                          (mod.lessons || []).forEach((lesson: any) => {
+                            if (lesson.content_type === "pdf" && lesson.video_url) {
+                              resources.push({ title: lesson.title, type: "PDF", url: lesson.video_url });
+                            }
+                            if (lesson.content_type === "video" && lesson.video_url) {
+                              resources.push({ title: lesson.title, type: "Video", url: lesson.video_url });
+                            }
+                            if (lesson.content_type === "audio" && lesson.video_url) {
+                              resources.push({ title: lesson.title, type: "Audio", url: lesson.video_url });
+                            }
+                          });
+                        });
+
+                        if (resources.length === 0) {
+                          return <p className="text-[#0B2A5B]/60 text-center py-8">No downloadable resources available for this course yet.</p>;
+                        }
+
+                        return resources.map((res, i) => (
+                          <Card key={i} className="p-4 bg-[#F4F1EA]">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <FileText className="text-[#C2A86A]" size={20} />
+                                <div>
+                                  <p className="font-semibold text-[#0B2A5B]">{res.title}</p>
+                                  <p className="text-xs text-[#0B2A5B]/60">{res.type} resource</p>
+                                </div>
+                              </div>
+                              <a href={res.url.startsWith('http') ? res.url : `${api.defaults.baseURL}${res.url}`} target="_blank" rel="noreferrer">
+                                <Button size="sm" variant="outline" className="border-[#0B2A5B]/20"><Download size={16} className="mr-2" />Download</Button>
+                              </a>
+                            </div>
+                          </Card>
+                        ));
+                      })()}
                     </div>
                   </TabsContent>
                 </Tabs>

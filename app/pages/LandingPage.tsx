@@ -78,6 +78,8 @@ const features = [
 ];
 
 export default function LandingPage() {
+  const isAuthenticated = !!localStorage.getItem("token");
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F4F1EA] to-[#e8e4d9]">
       {/* Header */}
@@ -89,9 +91,9 @@ export default function LandingPage() {
             </div>
             <h1 className="text-2xl font-bold">FinTrade</h1>
           </div>
-          <Link to="/login">
+          <Link to={isAuthenticated ? "/student/dashboard" : "/login"}>
             <Button className="bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] shadow-lg shadow-[#C2A86A]/20">
-              Login
+              {isAuthenticated ? "Dashboard" : "Login"}
             </Button>
           </Link>
         </div>
@@ -114,7 +116,7 @@ export default function LandingPage() {
               placement, we guide you every step of the way.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/student/entrance-exam">
+              <Link to={isAuthenticated ? "/student/entrance-exam" : "/register"}>
                 <Button
                   size="lg"
                   className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] shadow-xl shadow-[#0B2A5B]/20 w-full sm:w-auto"
@@ -123,7 +125,7 @@ export default function LandingPage() {
                   <ArrowRight className="ml-2" size={20} />
                 </Button>
               </Link>
-              <Link to="/student/courses">
+              <Link to={isAuthenticated ? "/student/courses" : "/register"}>
                 <Button
                   size="lg"
                   variant="outline"
@@ -265,7 +267,7 @@ export default function LandingPage() {
               Join thousands of successful traders who started with FinTrade
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/student/entrance-exam">
+              <Link to={isAuthenticated ? "/student/entrance-exam" : "/register"}>
                 <Button
                   size="lg"
                   className="bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] shadow-lg shadow-[#C2A86A]/30 w-full sm:w-auto"

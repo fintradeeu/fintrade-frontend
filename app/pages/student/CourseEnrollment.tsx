@@ -53,16 +53,43 @@ export default function CourseEnrollment() {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
+        // Fetch enrolled course IDs to filter them out
+        let enrolledIds: number[] = [];
+        try {
+          const enrolledRes = await api.get("/courses/enrolled");
+          enrolledIds = enrolledRes.data.map((e: any) => e.course_id);
+        } catch { /* not logged in — show all */ }
+
         const res = await api.get("/courses");
-        setCourses(res.data.map((c: any) => ({
-          ...c,
-          level: c.difficulty_level || "Beginner",
-          duration: c.duration_hours ? `${c.duration_hours} hours` : "8 weeks",
-          modules: 5,
-          students: 1200,
-          rating: 4.8,
-          features: ["Live Sessions", "Mentorship", "Risk Management"],
-        })));
+        const availableCourses = res.data.filter(
+          (c: any) => !enrolledIds.includes(c.id)
+        );
+
+        // Fetch detail for each to get real module count
+        const detailed = await Promise.all(
+          availableCourses.map(async (c: any) => {
+            try {
+              const detail = await api.get(`/courses/${c.id}`);
+              const moduleCount = detail.data.modules?.length || 0;
+              return {
+                ...c,
+                level: c.difficulty_level || "Beginner",
+                duration: c.duration_hours ? `${c.duration_hours} hours` : "—",
+                modules: moduleCount,
+                features: c.marketing_highlights || [],
+              };
+            } catch {
+              return {
+                ...c,
+                level: c.difficulty_level || "Beginner",
+                duration: c.duration_hours ? `${c.duration_hours} hours` : "—",
+                modules: 0,
+                features: c.marketing_highlights || [],
+              };
+            }
+          })
+        );
+        setCourses(detailed);
       } catch (err) {
         console.error("Failed to load courses", err);
       }
@@ -160,10 +187,7 @@ export default function CourseEnrollment() {
                   </Badge>
                   <h3 className="text-xl font-semibold text-[#0B2A5B] mb-2">{course.title}</h3>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Star className="text-yellow-500 fill-yellow-500" size={16} />
-                  <span className="text-sm font-semibold text-[#0B2A5B]">{course.rating}</span>
-                </div>
+                <div></div>
               </div>
 
               <p className="text-[#0B2A5B]/70 mb-4">{course.description}</p>
@@ -181,8 +205,8 @@ export default function CourseEnrollment() {
                 </div>
                 <div className="text-center">
                   <Users className="text-[#C2A86A] mx-auto mb-1" size={20} />
-                  <p className="text-xs text-[#0B2A5B]/60">Students</p>
-                  <p className="text-sm font-semibold text-[#0B2A5B]">{course.students}</p>
+                  <p className="text-xs text-[#0B2A5B]/60">Level</p>
+                  <p className="text-sm font-semibold text-[#0B2A5B] capitalize">{course.difficulty_level}</p>
                 </div>
               </div>
 

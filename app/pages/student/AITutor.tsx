@@ -37,6 +37,7 @@ export default function AITutor() {
   const [cannotSolve, setCannotSolve] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState<number | null>(null);
+  const [chatStats, setChatStats] = useState({ asked: 0, sessions: 0 });
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -45,6 +46,14 @@ export default function AITutor() {
       setUserName(name);
       setMessages(getInitialMessage(name));
     }
+    // Fetch chat history for stats
+    api.get("/ai/chat-history").then((res) => {
+      const sessions = res.data || [];
+      const totalMessages = sessions.reduce(
+        (acc: number, s: any) => acc + (s.messages?.filter((m: any) => m.role === "user")?.length || 0), 0
+      );
+      setChatStats({ asked: totalMessages, sessions: sessions.length });
+    }).catch(() => {});
   }, []);
 
   const handleSendMessage = async () => {
@@ -236,18 +245,14 @@ export default function AITutor() {
         <div className="space-y-6">
           <Card className="p-4 bg-white shadow-lg">
             <h3 className="font-semibold text-[#0B2A5B] mb-3 text-sm">Quick Stats</h3>
-            <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="grid grid-cols-2 gap-2 text-center">
               <div>
                 <p className="text-[10px] text-[#0B2A5B]/60 uppercase tracking-wider">Asked</p>
-                <p className="text-lg font-bold text-[#0B2A5B]">47</p>
+                <p className="text-lg font-bold text-[#0B2A5B]">{chatStats.asked}</p>
               </div>
               <div>
-                <p className="text-[10px] text-[#0B2A5B]/60 uppercase tracking-wider">Resolution</p>
-                <p className="text-lg font-bold text-[#C2A86A]">92%</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-[#0B2A5B]/60 uppercase tracking-wider">Expert</p>
-                <p className="text-lg font-bold text-[#0B2A5B]">3</p>
+                <p className="text-[10px] text-[#0B2A5B]/60 uppercase tracking-wider">Sessions</p>
+                <p className="text-lg font-bold text-[#C2A86A]">{chatStats.sessions}</p>
               </div>
             </div>
           </Card>
