@@ -319,7 +319,7 @@ export default function TradingSimulator() {
                   <div key={pos.id} className="flex items-center justify-between p-3 bg-[#F4F1EA] rounded-lg">
                     <div>
                       <p className="font-semibold text-[#0B2A5B] text-sm">{pos.symbol}</p>
-                      <p className="text-xs text-[#0B2A5B]/60">{pos.side.toUpperCase()} {pos.quantity} @ ₹{pos.entry_price.toLocaleString("en-IN")}</p>
+                      <p className="text-xs text-[#0B2A5B]/60">{(pos.side || '').toUpperCase()} {pos.quantity} @ ₹{pos.entry_price.toLocaleString("en-IN")}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className={`text-sm font-semibold ${pos.unrealized_pnl >= 0 ? "text-green-600" : "text-red-600"}`}>
@@ -358,7 +358,7 @@ export default function TradingSimulator() {
                     <div key={trade.id} className="flex items-center justify-between p-3 bg-[#F4F1EA] rounded-lg">
                       <div>
                         <p className="font-semibold text-[#0B2A5B] text-sm">{trade.symbol}</p>
-                        <p className="text-xs text-[#0B2A5B]/60">{trade.side.toUpperCase()} {trade.quantity} @ ₹{trade.entry_price}</p>
+                        <p className="text-xs text-[#0B2A5B]/60">{(trade.side || '').toUpperCase()} {trade.quantity} @ ₹{trade.entry_price}</p>
                       </div>
                       <div className="text-right">
                         {trade.status === "closed" ? (

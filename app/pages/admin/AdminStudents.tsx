@@ -59,7 +59,7 @@ export default function AdminStudents() {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         {ROLE_FILTERS.map((role) => (
           <Card key={role} className={`p-4 cursor-pointer transition-all shadow-lg hover:shadow-xl ${roleFilter === role ? "bg-[#0B2A5B] text-[#F4F1EA] ring-2 ring-[#C2A86A]" : "bg-white"}`} onClick={() => setRoleFilter(role)}>
-            <p className={`text-xs uppercase tracking-wider mb-1 ${roleFilter === role ? "text-[#F4F1EA]/70" : "text-[#0B2A5B]/60"}`}>{role === "all" ? "All Users" : role.charAt(0).toUpperCase() + role.slice(1) + "s"}</p>
+            <p className={`text-xs uppercase tracking-wider mb-1 ${roleFilter === role ? "text-[#F4F1EA]/70" : "text-[#0B2A5B]/60"}`}>{role === "all" ? "All Users" : (role || '').charAt(0).toUpperCase() + (role || '').slice(1) + "s"}</p>
             <p className={`text-2xl font-bold ${roleFilter === role ? "text-[#C2A86A]" : "text-[#0B2A5B]"}`}>{countRole(role)}</p>
           </Card>
         ))}
@@ -136,7 +136,7 @@ export default function AdminStudents() {
                 </p>
               </div>
               <Button type="submit" disabled={creating} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a] shadow-lg">
-                {creating ? "Creating..." : `Create ${newUser.role.charAt(0).toUpperCase() + newUser.role.slice(1)}`}
+                {creating ? "Creating..." : `Create ${(newUser.role || 'student').charAt(0).toUpperCase() + (newUser.role || 'student').slice(1)}`}
               </Button>
             </form>
           </Card>

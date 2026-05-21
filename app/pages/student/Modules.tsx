@@ -70,7 +70,7 @@ function QuizRenderer({ content, onComplete }: { content: string, onComplete?: (
                   submitted && opt.key === quiz.correct_answer ? "border-green-500 bg-green-500 text-white" :
                   selected === opt.key ? "border-[#C2A86A] bg-[#C2A86A] text-white" :
                   "border-gray-300 text-gray-500"
-                }`}>{opt.key.toUpperCase()}</div>
+                }`}>{(opt.key || '').toUpperCase()}</div>
                 <span className="text-lg text-[#0B2A5B]">{opt.text}</span>
               </div>
             </div>
