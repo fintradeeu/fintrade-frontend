@@ -225,10 +225,18 @@ export default function CourseEnrollment() {
               <div className="flex items-center justify-between pt-4 border-t border-[#0B2A5B]/10">
                 <div>
                   <p className="text-sm text-[#0B2A5B]/60">Course Fee</p>
-                  <p className="text-2xl font-bold text-[#0B2A5B] flex items-center gap-1">
-                    <IndianRupee size={20} />
-                    {course.price.toLocaleString("en-IN")}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    {course.original_price > 0 && (
+                      <p className="text-lg font-bold text-gray-400 line-through flex items-center">
+                        <IndianRupee size={16} />
+                        {course.original_price.toLocaleString("en-IN")}
+                      </p>
+                    )}
+                    <p className="text-2xl font-bold text-[#0B2A5B] flex items-center">
+                      <IndianRupee size={20} />
+                      {course.price.toLocaleString("en-IN")}
+                    </p>
+                  </div>
                 </div>
                 <Button
                   onClick={() => handleEnroll(course.id)}

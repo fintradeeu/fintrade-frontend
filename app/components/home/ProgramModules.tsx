@@ -121,16 +121,30 @@ const programSections: ProgramSection[] = [
   }
 ];
 
-export default function ProgramModules() {
+export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | null }) {
   const [activeSectionIdx, setActiveSectionIdx] = useState(0);
   const [expandedModuleKey, setExpandedModuleKey] = useState<string>("0-1");
+
+  const sectionsToUse: ProgramSection[] = apiCourses && apiCourses.length > 0 
+    ? apiCourses.map((c: any) => ({
+        title: c.title,
+        duration: c.duration_hours ? `${c.duration_hours} Hours` : "TBD",
+        modules: c.modules?.length > 0 ? c.modules.map((m: any, i: number) => ({
+          num: i + 1,
+          title: m.title,
+          overview: m.description || "No description provided."
+        })) : [
+          { num: 1, title: "Curriculum Pending", overview: "The syllabus for this course is currently being prepared." }
+        ]
+      }))
+    : programSections;
 
   const toggleModule = (sectionIdx: number, moduleNum: number) => {
     const key = `${sectionIdx}-${moduleNum}`;
     setExpandedModuleKey((prev) => (prev === key ? "" : key));
   };
 
-  const currentSection = programSections[activeSectionIdx];
+  const currentSection = sectionsToUse[activeSectionIdx] || sectionsToUse[0];
 
   return (
     <section className="py-16 relative z-10" style={{ background: "linear-gradient(to bottom, transparent, rgba(213,0,50,0.01), transparent)" }}>
@@ -141,10 +155,10 @@ export default function ProgramModules() {
             <span className="text-[#D50032] font-semibold text-sm">📚 Program Curriculum</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>
-            Certified Professional Trading Program
+            {apiCourses && apiCourses.length > 0 ? "Explore Our Course Syllabus" : "Certified Professional Trading Program"}
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            A comprehensive, rigorous 5-stage institutional curriculum designed to take you from a beginner to an expert funded trader.
+            {apiCourses && apiCourses.length > 0 ? "A comprehensive look at the modules and topics covered across our expert-led programs." : "A comprehensive, rigorous 5-stage institutional curriculum designed to take you from a beginner to an expert funded trader."}
           </p>
         </div>
 
@@ -153,7 +167,7 @@ export default function ProgramModules() {
           
           {/* Left Column: Navigation Phases (Desktop) */}
           <div className="hidden lg:flex lg:col-span-5 flex-col gap-3.5">
-            {programSections.map((sec, idx) => {
+            {sectionsToUse.map((sec, idx) => {
               const isActive = activeSectionIdx === idx;
               return (
                 <button
@@ -175,7 +189,7 @@ export default function ProgramModules() {
 
                   <div className="flex justify-between items-start mb-2 pl-2">
                     <span className={`text-xs font-bold uppercase tracking-wider ${isActive ? "text-[#D50032]" : "text-gray-400"}`}>
-                      Stage 0{idx + 1}
+                      Course 0{idx + 1}
                     </span>
                     <span
                       className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border ${
@@ -203,7 +217,7 @@ export default function ProgramModules() {
 
           {/* Horizontal Scroller: Navigation Phases (Mobile/Tablet) */}
           <div className="lg:hidden w-full overflow-x-auto pb-4 -mx-4 px-4 flex gap-3 scrollbar-hide snap-x">
-            {programSections.map((sec, idx) => {
+            {sectionsToUse.map((sec, idx) => {
               const isActive = activeSectionIdx === idx;
               return (
                 <button
@@ -223,7 +237,7 @@ export default function ProgramModules() {
                   )}
                   <div className="flex justify-between items-center mb-1.5 pl-1.5">
                     <span className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? "text-[#D50032]" : "text-gray-400"}`}>
-                      Stage 0{idx + 1}
+                      Course 0{idx + 1}
                     </span>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200 flex items-center gap-1">
                       <Clock className="w-2.5 h-2.5" />
@@ -246,7 +260,7 @@ export default function ProgramModules() {
                 <Layers className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Selected Stage</span>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Selected Course</span>
                 <h4 className="text-xs font-extrabold uppercase text-gray-800 leading-tight">
                   {currentSection.title} ({currentSection.duration})
                 </h4>

@@ -5,6 +5,10 @@ import RegisterPage from "./pages/RegisterPage";
 import ContractKYC from "./pages/student/ContractKYC";
 import AdminContracts from "./pages/admin/AdminContracts";
 import CategoryPage from "./pages/CategoryPage";
+import CoursesPage from "./pages/CoursesPage";
+import MarketsPage from "./pages/MarketsPage";
+import MarketUpdatesPage from "./pages/MarketUpdatesPage";
+import MarketingLayout from "./components/MarketingLayout";
 
 // Student Pages
 import StudentDashboard from "./pages/student/StudentDashboard";
@@ -55,8 +59,29 @@ import DistributorDashboard from "./pages/distributor/DistributorDashboard";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
-    Component: MarketingHome,
+    element: <MarketingLayout />,
+    children: [
+      {
+        path: "/",
+        Component: MarketingHome,
+      },
+      {
+        path: "/category/:slug",
+        Component: CategoryPage,
+      },
+      {
+        path: "/courses",
+        Component: CoursesPage,
+      },
+      {
+        path: "/markets",
+        Component: MarketsPage,
+      },
+      {
+        path: "/updates",
+        Component: MarketUpdatesPage,
+      },
+    ]
   },
   {
     path: "/login",
@@ -65,10 +90,6 @@ export const router = createBrowserRouter([
   {
     path: "/register",
     Component: RegisterPage,
-  },
-  {
-    path: "/category/:slug",
-    Component: CategoryPage,
   },
   // Student Routes
   {
@@ -161,7 +182,7 @@ export const router = createBrowserRouter([
     Component: TeacherExams,
   },
   {
-    path: "/teacher/exams/:examId/questions",
+    path: "/teacher/exams/:examId/questions", Component: QuestionBuilder, }, { path: "/admin/exams/:examId/questions",
     Component: QuestionBuilder,
   },
   {
@@ -239,3 +260,4 @@ export const router = createBrowserRouter([
     Component: DistributorDashboard,
   },
 ]);
+

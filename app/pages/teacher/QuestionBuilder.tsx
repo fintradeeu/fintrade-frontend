@@ -269,7 +269,7 @@ export default function QuestionBuilder() {
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/teacher/exams")}>
+            <Button variant="ghost" size="icon" onClick={() => navigate(location.pathname.startsWith('/admin') ? "/admin/exams" : "/teacher/exams")}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>

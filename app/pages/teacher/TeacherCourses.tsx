@@ -16,7 +16,7 @@ export default function TeacherCourses() {
 
   // Course modal
   const [showCourseModal, setShowCourseModal] = useState(false);
-  const [newCourse, setNewCourse] = useState({ title: "", description: "", short_description: "", difficulty_level: "beginner", duration_days: 0, is_published: false });
+  const [newCourse, setNewCourse] = useState({ title: "", description: "", short_description: "", original_price: 0, price: 0, difficulty_level: "beginner", duration_days: 0, is_published: false });
 
   // Module modal
   const [showModuleModal, setShowModuleModal] = useState(false);
@@ -81,7 +81,7 @@ export default function TeacherCourses() {
     try {
       await api.post("/admin/courses", newCourse);
       setShowCourseModal(false);
-      setNewCourse({ title: "", description: "", short_description: "", difficulty_level: "beginner", duration_days: 0, is_published: false });
+      setNewCourse({ title: "", description: "", short_description: "", original_price: 0, price: 0, difficulty_level: "beginner", duration_days: 0, is_published: false });
       fetchCourses();
     } catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
     finally { setSaving(false); }
@@ -146,15 +146,6 @@ export default function TeacherCourses() {
       await api.put(`/admin/courses/${courseId}`, { is_published: !currentState });
       fetchCourses();
     } catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
-  };
-
-  // ── Delete Course ──
-  const handleDeleteCourse = async (courseId: number, courseTitle: string) => {
-    if (!confirm(`Delete course "${courseTitle}" and all its modules and lessons? This cannot be undone.`)) return;
-    try {
-      await api.delete(`/admin/courses/${courseId}`);
-      fetchCourses();
-    } catch (err: any) { alert("Error deleting course: " + (err.response?.data?.detail || err.message)); }
   };
 
   // ── Edit Module (reuses create modal) ──
@@ -330,6 +321,12 @@ export default function TeacherCourses() {
                   <div className="flex items-center gap-4 mt-2 text-xs text-[#0B2A5B]/50">
                     {course.duration_days && <span>{course.duration_days} Days</span>}
                     {course.modules && <span>{course.modules.length} modules</span>}
+                    <div className="flex items-center gap-1 font-semibold">
+                      {course.original_price > 0 && <span className="line-through text-gray-400">₹{course.original_price.toLocaleString()}</span>}
+                      <span className={course.price > 0 ? "text-green-600" : "text-[#C2A86A]"}>
+                        {course.price > 0 ? `₹${course.price.toLocaleString()}` : "Free"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -342,9 +339,6 @@ export default function TeacherCourses() {
                 </Button>
                 <Button size="sm" className="bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]" onClick={(e) => { e.stopPropagation(); navigate("/teacher/exams"); }}>
                   <FileQuestion size={14} className="mr-1" />Manage Exams
-                </Button>
-                <Button size="sm" variant="outline" className="border-red-400 text-red-500 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id, course.title); }}>
-                  <Trash2 size={14} className="mr-1" />Delete
                 </Button>
                 {expandedCourse === course.id ? <ChevronUp size={20} className="text-[#0B2A5B]/40" /> : <ChevronDown size={20} className="text-[#0B2A5B]/40" />}
               </div>
@@ -444,6 +438,10 @@ export default function TeacherCourses() {
               <div className="grid grid-cols-2 gap-4">
                 <div><label className="text-sm font-medium text-[#0B2A5B]">Difficulty *</label><select className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" value={newCourse.difficulty_level} onChange={(e) => setNewCourse({ ...newCourse, difficulty_level: e.target.value })}><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select></div>
                 <div><label className="text-sm font-medium text-[#0B2A5B]">Duration (days) *</label><Input type="number" min="0" value={newCourse.duration_days} onChange={(e) => setNewCourse({ ...newCourse, duration_days: parseInt(e.target.value) || 0 })} className="bg-[#F4F1EA]" /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className="text-sm font-medium text-[#0B2A5B]">Actual Price (₹) <span className="text-gray-400 font-normal">(Strikethrough)</span></label><Input type="number" min="0" value={newCourse.original_price} onChange={(e) => setNewCourse({ ...newCourse, original_price: parseFloat(e.target.value) || 0 })} className="bg-[#F4F1EA]" /></div>
+                <div><label className="text-sm font-medium text-[#0B2A5B]">Discounted Price (₹) *</label><Input type="number" min="0" value={newCourse.price} onChange={(e) => setNewCourse({ ...newCourse, price: parseFloat(e.target.value) || 0 })} className="bg-[#F4F1EA]" /></div>
               </div>
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium text-[#0B2A5B]">Status</label>

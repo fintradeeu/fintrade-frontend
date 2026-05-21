@@ -1,8 +1,9 @@
 import { ReactNode, useState, useEffect } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { Menu, X, LogOut, Home, Users, BookOpen, Video, FileQuestion, IndianRupee, Bot, TrendingUp, BarChart3, Settings, Award, GraduationCap, MessageCircle, LineChart, Target, Briefcase, Shield, Newspaper, FileText, Trophy, LayoutTemplate } from "lucide-react";
 import { Button } from "./ui/button";
 import logo from "../../imports/fintrade_logo.png";
+import api from "../services/api";
 
 interface NavItem {
   label: string;
@@ -93,6 +94,7 @@ export function DashboardLayout({
 }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Resolve role: prefer `role` prop, fall back to `userRole` alias
   const role = roleProp || userRole || "student";
@@ -112,6 +114,24 @@ export function DashboardLayout({
       } catch { /* ignore */ }
     }
   }, [userNameProp, role]);
+
+  // Restrict access for un-enrolled students
+  useEffect(() => {
+    if (role === "student") {
+      api.get("/courses/enrolled")
+        .then((res) => {
+          // Exclude the /student/courses and /student/contract-kyc routes from this strict block just in case, but generally block them from other pages if no enrollments
+          const allowedUnenrolledRoutes = ["/student/courses", "/student/contract-kyc"];
+          if (res.data.length === 0 && !allowedUnenrolledRoutes.includes(location.pathname)) {
+            navigate("/courses");
+          }
+        })
+        .catch(() => {
+          // If unauthenticated or error, let them go to login
+          navigate("/login");
+        });
+    }
+  }, [role, navigate, location.pathname]);
 
   const displayName = userNameProp || autoName || getUserNameByRole(role);
 
@@ -225,10 +245,15 @@ export function DashboardLayout({
               </div>
             </div>
             <Button
-                onClick={() => {
+                onClick={async () => {
+                  try {
+                    await api.post("/auth/logout");
+                  } catch (e) {
+                    console.error("Logout API failed", e);
+                  }
                   localStorage.removeItem("token");
                   localStorage.removeItem("user");
-                  window.location.href = "/login";
+                  navigate("/login");
                 }}
                 className="w-full bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] shadow-lg shadow-[#C2A86A]/20 font-bold"
               >
