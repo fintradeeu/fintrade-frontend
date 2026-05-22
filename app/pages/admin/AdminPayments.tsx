@@ -28,6 +28,92 @@ interface Offer {
   created_at: string;
 }
 
+  const CouponForm = ({ onSubmit, submitLabel, formData, setFormData }: { onSubmit: () => void; submitLabel: string; formData: any; setFormData: any }) => (
+    <div className="space-y-4">
+      <div>
+        <Label>Coupon Title *</Label>
+        <Input
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          placeholder="New Year Sale 2026"
+          className="mt-2"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>Coupon Code *</Label>
+          <Input
+            value={formData.code}
+            onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+            placeholder="SAVE30"
+            className="mt-2 uppercase"
+          />
+        </div>
+
+        <div>
+          <Label>Discount Percentage (%) *</Label>
+          <Input
+            type="number"
+            value={formData.discount_value || ""}
+            onChange={(e) => setFormData({ ...formData, discount_value: Number(e.target.value) })}
+            placeholder="30"
+            className="mt-2"
+            min="0"
+            max="100"
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label>Description</Label>
+        <Input
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          placeholder="New Year Sale"
+          className="mt-2"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>Expiry Date *</Label>
+          <Input
+            type="date"
+            value={formData.valid_until}
+            onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
+            className="mt-2"
+          />
+        </div>
+
+        <div>
+          <Label>Status *</Label>
+          <Select 
+            value={formData.is_active ? "Active" : "Disabled"} 
+            onValueChange={(value) => setFormData({ ...formData, is_active: value === "Active" })}
+          >
+            <SelectTrigger className="mt-2">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Active">Active</SelectItem>
+              <SelectItem value="Disabled">Disabled</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="flex gap-2 pt-4">
+        <Button 
+          onClick={onSubmit} 
+          className="flex-1"
+          style={{ background: '#D50032', color: 'white' }}
+        >
+          {submitLabel}
+        </Button>
+      </div>
+    </div>
+  );
+
 export default function AdminPayments() {
   const [coupons, setCoupons] = useState<Offer[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -128,91 +214,6 @@ export default function AdminPayments() {
     });
   };
 
-  const CouponForm = ({ onSubmit, submitLabel }: { onSubmit: () => void; submitLabel: string }) => (
-    <div className="space-y-4">
-      <div>
-        <Label>Coupon Title *</Label>
-        <Input
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          placeholder="New Year Sale 2026"
-          className="mt-2"
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label>Coupon Code *</Label>
-          <Input
-            value={formData.code}
-            onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-            placeholder="SAVE30"
-            className="mt-2 uppercase"
-          />
-        </div>
-
-        <div>
-          <Label>Discount Percentage (%) *</Label>
-          <Input
-            type="number"
-            value={formData.discount_value || ""}
-            onChange={(e) => setFormData({ ...formData, discount_value: Number(e.target.value) })}
-            placeholder="30"
-            className="mt-2"
-            min="0"
-            max="100"
-          />
-        </div>
-      </div>
-
-      <div>
-        <Label>Description</Label>
-        <Input
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          placeholder="New Year Sale"
-          className="mt-2"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label>Expiry Date *</Label>
-          <Input
-            type="date"
-            value={formData.valid_until}
-            onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
-            className="mt-2"
-          />
-        </div>
-
-        <div>
-          <Label>Status *</Label>
-          <Select 
-            value={formData.is_active ? "Active" : "Disabled"} 
-            onValueChange={(value) => setFormData({ ...formData, is_active: value === "Active" })}
-          >
-            <SelectTrigger className="mt-2">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Disabled">Disabled</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="flex gap-2 pt-4">
-        <Button 
-          onClick={onSubmit} 
-          className="flex-1"
-          style={{ background: '#D50032', color: 'white' }}
-        >
-          {submitLabel}
-        </Button>
-      </div>
-    </div>
-  );
 
   const totalRevenue = "₹2.45Cr";
   const monthlyRevenue = "₹24.5L";
@@ -240,7 +241,7 @@ export default function AdminPayments() {
               <DialogHeader>
                 <DialogTitle>Create New Coupon</DialogTitle>
               </DialogHeader>
-              <CouponForm onSubmit={handleAddCoupon} submitLabel="Create Coupon" />
+              <CouponForm onSubmit={handleAddCoupon} submitLabel="Create Coupon" formData={formData} setFormData={setFormData} />
             </DialogContent>
           </Dialog>
         </div>
@@ -392,7 +393,7 @@ export default function AdminPayments() {
             <DialogHeader>
               <DialogTitle>Edit Coupon</DialogTitle>
             </DialogHeader>
-            <CouponForm onSubmit={handleEditCoupon} submitLabel="Update Coupon" />
+            <CouponForm onSubmit={handleEditCoupon} submitLabel="Update Coupon" formData={formData} setFormData={setFormData} />
           </DialogContent>
         </Dialog>
       </div>

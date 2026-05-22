@@ -29,6 +29,216 @@ interface AdminUser {
   lastActive: string;
 }
 
+  const AdminForm = ({ onSubmit, submitLabel, formData, setFormData, handleRoleChange }: { onSubmit: () => void; submitLabel: string; formData: any; setFormData: any; handleRoleChange: any }) => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>Full Name *</Label>
+          <Input
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder="Enter admin name"
+            className="mt-2"
+          />
+        </div>
+
+        <div>
+          <Label>Email Address *</Label>
+          <Input
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            placeholder="admin@fintrade.in"
+            className="mt-2"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>Role *</Label>
+          <Select 
+            value={formData.role} 
+            onValueChange={handleRoleChange}
+          >
+            <SelectTrigger className="mt-2">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Super Admin">Super Admin</SelectItem>
+              <SelectItem value="Content Admin">Content Admin</SelectItem>
+              <SelectItem value="Finance Admin">Finance Admin</SelectItem>
+              <SelectItem value="Support Admin">Support Admin</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label>Status *</Label>
+          <Select 
+            value={formData.status} 
+            onValueChange={(value: "Active" | "Inactive") => setFormData({ ...formData, status: value })}
+          >
+            <SelectTrigger className="mt-2">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Active">Active</SelectItem>
+              <SelectItem value="Inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div>
+        <Label className="mb-4 block">Permissions</Label>
+        <Card className="p-4 border-2 border-gray-100">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Manage Courses</Label>
+                <div className="text-sm text-gray-500">Create, edit, and delete courses</div>
+              </div>
+              <Switch
+                checked={formData.permissions.manageCourses}
+                onCheckedChange={(checked) => 
+                  setFormData({ 
+                    ...formData, 
+                    permissions: { ...formData.permissions, manageCourses: checked } 
+                  })
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Manage Students</Label>
+                <div className="text-sm text-gray-500">View and manage student accounts</div>
+              </div>
+              <Switch
+                checked={formData.permissions.manageStudents}
+                onCheckedChange={(checked) => 
+                  setFormData({ 
+                    ...formData, 
+                    permissions: { ...formData.permissions, manageStudents: checked } 
+                  })
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Manage Payments</Label>
+                <div className="text-sm text-gray-500">Handle payments and coupons</div>
+              </div>
+              <Switch
+                checked={formData.permissions.managePayments}
+                onCheckedChange={(checked) => 
+                  setFormData({ 
+                    ...formData, 
+                    permissions: { ...formData.permissions, managePayments: checked } 
+                  })
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Manage Content</Label>
+                <div className="text-sm text-gray-500">Manage news and educational content</div>
+              </div>
+              <Switch
+                checked={formData.permissions.manageContent}
+                onCheckedChange={(checked) => 
+                  setFormData({ 
+                    ...formData, 
+                    permissions: { ...formData.permissions, manageContent: checked } 
+                  })
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Manage Exams</Label>
+                <div className="text-sm text-gray-500">Create and manage exams</div>
+              </div>
+              <Switch
+                checked={formData.permissions.manageExams}
+                onCheckedChange={(checked) => 
+                  setFormData({ 
+                    ...formData, 
+                    permissions: { ...formData.permissions, manageExams: checked } 
+                  })
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Manage Admins</Label>
+                <div className="text-sm text-gray-500">Add and remove admin users</div>
+              </div>
+              <Switch
+                checked={formData.permissions.manageAdmins}
+                onCheckedChange={(checked) => 
+                  setFormData({ 
+                    ...formData, 
+                    permissions: { ...formData.permissions, manageAdmins: checked } 
+                  })
+                }
+              />
+            </div>
+
+            {/* Revenue Access - Super Admin only */}
+            <div
+              className="flex items-center justify-between p-3 rounded-lg border-2"
+              style={{
+                borderColor: formData.role === "Super Admin" ? "rgba(213,0,50,0.3)" : "#e5e7eb",
+                background: formData.role === "Super Admin" ? "rgba(213,0,50,0.04)" : "#f9fafb",
+              }}
+            >
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <Label>View Revenue Data</Label>
+                  {formData.role !== "Super Admin" && formData.permissions.canViewRevenue === false && (
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "rgba(213,0,50,0.1)", color: "#D50032" }}>Super Admin Only</span>
+                  )}
+                </div>
+                <div className="text-sm text-gray-500">Access total revenue and monthly earnings</div>
+                {formData.role !== "Super Admin" && !formData.permissions.canViewRevenue && (
+                  <div className="flex items-center gap-1 text-xs text-orange-500 mt-1">
+                    <Lock className="h-3 w-3" /> Must be granted by Super Admin
+                  </div>
+                )}
+              </div>
+              <Switch
+                checked={formData.permissions.canViewRevenue}
+                onCheckedChange={(checked) =>
+                  setFormData({
+                    ...formData,
+                    permissions: { ...formData.permissions, canViewRevenue: checked },
+                  })
+                }
+                disabled={formData.role !== "Super Admin" && formData.role !== "Finance Admin"}
+              />
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div className="flex gap-2 pt-4">
+        <Button 
+          onClick={onSubmit} 
+          className="flex-1"
+          style={{ background: '#D50032', color: 'white' }}
+        >
+          {submitLabel}
+        </Button>
+      </div>
+    </div>
+  );
+
 export default function AdminRoles() {
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([
     {
@@ -249,215 +459,6 @@ export default function AdminRoles() {
     }
   };
 
-  const AdminForm = ({ onSubmit, submitLabel }: { onSubmit: () => void; submitLabel: string }) => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label>Full Name *</Label>
-          <Input
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="Enter admin name"
-            className="mt-2"
-          />
-        </div>
-
-        <div>
-          <Label>Email Address *</Label>
-          <Input
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            placeholder="admin@fintrade.in"
-            className="mt-2"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label>Role *</Label>
-          <Select 
-            value={formData.role} 
-            onValueChange={handleRoleChange}
-          >
-            <SelectTrigger className="mt-2">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Super Admin">Super Admin</SelectItem>
-              <SelectItem value="Content Admin">Content Admin</SelectItem>
-              <SelectItem value="Finance Admin">Finance Admin</SelectItem>
-              <SelectItem value="Support Admin">Support Admin</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label>Status *</Label>
-          <Select 
-            value={formData.status} 
-            onValueChange={(value: "Active" | "Inactive") => setFormData({ ...formData, status: value })}
-          >
-            <SelectTrigger className="mt-2">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div>
-        <Label className="mb-4 block">Permissions</Label>
-        <Card className="p-4 border-2 border-gray-100">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Manage Courses</Label>
-                <div className="text-sm text-gray-500">Create, edit, and delete courses</div>
-              </div>
-              <Switch
-                checked={formData.permissions.manageCourses}
-                onCheckedChange={(checked) => 
-                  setFormData({ 
-                    ...formData, 
-                    permissions: { ...formData.permissions, manageCourses: checked } 
-                  })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Manage Students</Label>
-                <div className="text-sm text-gray-500">View and manage student accounts</div>
-              </div>
-              <Switch
-                checked={formData.permissions.manageStudents}
-                onCheckedChange={(checked) => 
-                  setFormData({ 
-                    ...formData, 
-                    permissions: { ...formData.permissions, manageStudents: checked } 
-                  })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Manage Payments</Label>
-                <div className="text-sm text-gray-500">Handle payments and coupons</div>
-              </div>
-              <Switch
-                checked={formData.permissions.managePayments}
-                onCheckedChange={(checked) => 
-                  setFormData({ 
-                    ...formData, 
-                    permissions: { ...formData.permissions, managePayments: checked } 
-                  })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Manage Content</Label>
-                <div className="text-sm text-gray-500">Manage news and educational content</div>
-              </div>
-              <Switch
-                checked={formData.permissions.manageContent}
-                onCheckedChange={(checked) => 
-                  setFormData({ 
-                    ...formData, 
-                    permissions: { ...formData.permissions, manageContent: checked } 
-                  })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Manage Exams</Label>
-                <div className="text-sm text-gray-500">Create and manage exams</div>
-              </div>
-              <Switch
-                checked={formData.permissions.manageExams}
-                onCheckedChange={(checked) => 
-                  setFormData({ 
-                    ...formData, 
-                    permissions: { ...formData.permissions, manageExams: checked } 
-                  })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Manage Admins</Label>
-                <div className="text-sm text-gray-500">Add and remove admin users</div>
-              </div>
-              <Switch
-                checked={formData.permissions.manageAdmins}
-                onCheckedChange={(checked) => 
-                  setFormData({ 
-                    ...formData, 
-                    permissions: { ...formData.permissions, manageAdmins: checked } 
-                  })
-                }
-              />
-            </div>
-
-            {/* Revenue Access - Super Admin only */}
-            <div
-              className="flex items-center justify-between p-3 rounded-lg border-2"
-              style={{
-                borderColor: formData.role === "Super Admin" ? "rgba(213,0,50,0.3)" : "#e5e7eb",
-                background: formData.role === "Super Admin" ? "rgba(213,0,50,0.04)" : "#f9fafb",
-              }}
-            >
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <Label>View Revenue Data</Label>
-                  {formData.role !== "Super Admin" && formData.permissions.canViewRevenue === false && (
-                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "rgba(213,0,50,0.1)", color: "#D50032" }}>Super Admin Only</span>
-                  )}
-                </div>
-                <div className="text-sm text-gray-500">Access total revenue and monthly earnings</div>
-                {formData.role !== "Super Admin" && !formData.permissions.canViewRevenue && (
-                  <div className="flex items-center gap-1 text-xs text-orange-500 mt-1">
-                    <Lock className="h-3 w-3" /> Must be granted by Super Admin
-                  </div>
-                )}
-              </div>
-              <Switch
-                checked={formData.permissions.canViewRevenue}
-                onCheckedChange={(checked) =>
-                  setFormData({
-                    ...formData,
-                    permissions: { ...formData.permissions, canViewRevenue: checked },
-                  })
-                }
-                disabled={formData.role !== "Super Admin" && formData.role !== "Finance Admin"}
-              />
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      <div className="flex gap-2 pt-4">
-        <Button 
-          onClick={onSubmit} 
-          className="flex-1"
-          style={{ background: '#D50032', color: 'white' }}
-        >
-          {submitLabel}
-        </Button>
-      </div>
-    </div>
-  );
 
   return (
     <DashboardLayout role="admin">
@@ -482,7 +483,7 @@ export default function AdminRoles() {
               <DialogHeader>
                 <DialogTitle>Add New Admin</DialogTitle>
               </DialogHeader>
-              <AdminForm onSubmit={handleAddAdmin} submitLabel="Add Admin" />
+              <AdminForm onSubmit={handleAddAdmin} submitLabel="Add Admin" formData={formData} setFormData={setFormData} handleRoleChange={handleRoleChange} />
             </DialogContent>
           </Dialog>
         </div>
