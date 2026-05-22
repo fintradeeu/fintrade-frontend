@@ -50,20 +50,30 @@ export default function StudentDashboard() {
       setUserName(JSON.parse(storedUser).full_name || "Student");
     }
 
-    api.get("/lectures").then(res => {
-      const now = new Date();
-      const upcoming = res.data.filter((l: any) => new Date(l.scheduled_at || l.start_time) > now || l.status === 'scheduled');
-      setUpcoming(upcoming.slice(0, 3));
-    }).catch(err => console.error(err));
+    const fetchDashboardData = async () => {
+      try {
+        const enrolledRes = await api.get("/courses/enrolled");
+        const enrolled = enrolledRes.data;
+        const enrolledIds = enrolled.map((e: any) => e.course_id);
+        
+        setEnrolledCount(enrolled.length);
+        if (enrolled.length > 0) {
+          const avg = Math.round(enrolled.reduce((s: number, e: any) => s + (e.progress_percent || 0), 0) / enrolled.length);
+          setCourseProgress(avg);
+        }
 
-    api.get("/courses/enrolled").then(res => {
-      const enrolled = res.data;
-      setEnrolledCount(enrolled.length);
-      if (enrolled.length > 0) {
-        const avg = Math.round(enrolled.reduce((s: number, e: any) => s + (e.progress_percent || 0), 0) / enrolled.length);
-        setCourseProgress(avg);
+        const lecRes = await api.get("/lectures");
+        const now = new Date();
+        const upcoming = lecRes.data.filter((l: any) => 
+          enrolledIds.includes(l.course_id) && 
+          (new Date(l.scheduled_at || l.start_time) > now || l.status === 'scheduled')
+        );
+        setUpcoming(upcoming.slice(0, 3));
+      } catch (err) {
+        console.error(err);
       }
-    }).catch(err => console.error(err));
+    };
+    fetchDashboardData();
   }, []);
 
   return (
@@ -116,7 +126,7 @@ export default function StudentDashboard() {
                 <div className="flex items-center gap-4 text-xs text-[#0B2A5B]/70">
                   <span className="flex items-center gap-1">
                     <Clock size={12} />
-                    {new Date(lecture.start_time).toLocaleDateString()} at {new Date(lecture.start_time).toLocaleTimeString()}
+                    {new Date(lecture.scheduled_at || lecture.start_time).toLocaleDateString()} at {new Date(lecture.scheduled_at || lecture.start_time).toLocaleTimeString()}
                   </span>
                   <span>{lecture.status}</span>
                 </div>

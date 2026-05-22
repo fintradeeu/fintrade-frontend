@@ -141,7 +141,7 @@ export default function TeacherLectures() {
         <Card className="p-6 bg-gradient-to-r from-[#0B2A5B] to-[#1a3d7a] text-[#F4F1EA] shadow-xl">
           <h3 className="text-xl font-semibold mb-4">Start Live Lecture</h3>
           <p className="text-[#F4F1EA]/80 mb-6">Begin a live lecture session for your students</p>
-          <Button className="bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] shadow-lg" size="lg"><Play size={20} className="mr-2" />Start Live Session</Button>
+          <Button className="bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] shadow-lg" size="lg" onClick={() => window.open('https://meet.google.com/new', '_blank')}><Play size={20} className="mr-2" />Start Live Session</Button>
         </Card>
         <Card className="p-6 bg-white shadow-lg">
           <h3 className="text-xl font-semibold text-[#0B2A5B] mb-4">Upload Notes</h3>

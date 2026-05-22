@@ -102,7 +102,7 @@ export default function AdminSimulator() {
           <Card className="p-6 bg-white shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold" style={{ color: "#121212" }}>Top Live Sessions</h3>
-              <Button size="sm" variant="outline" className="border-gray-200">View All 342</Button>
+              <Button size="sm" variant="outline" className="border-gray-200" onClick={() => toast.info("Viewing all 342 active sessions")}>View All 342</Button>
             </div>
             <div className="space-y-4">
               {activeSessions.map((session, i) => (
@@ -144,10 +144,10 @@ export default function AdminSimulator() {
                 </Button>
               )}
               
-              <Button variant="outline" className="w-full h-12 flex items-center justify-between px-4 border-gray-200 hover:border-[#D50032] hover:text-[#D50032]">
+              <Button variant="outline" className="w-full h-12 flex items-center justify-between px-4 border-gray-200 hover:border-[#D50032] hover:text-[#D50032]" onClick={() => toast.info("Opening advance configuration module...")}>
                 <span className="flex items-center gap-2"><Settings className="h-4 w-4" /> Advance Config</span>
               </Button>
-              <Button onClick={() => toggleSimulator(false)} variant="outline" className="w-full h-12 flex items-center justify-between px-4 border-gray-200 text-red-500 hover:bg-red-50">
+              <Button onClick={() => { toggleSimulator(false); toast.success("Nodes shutdown successfully"); }} variant="outline" className="w-full h-12 flex items-center justify-between px-4 border-gray-200 text-red-500 hover:bg-red-50">
                 <span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> Shutdown Nodes</span>
               </Button>
             </div>

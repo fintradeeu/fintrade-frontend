@@ -52,7 +52,7 @@ export default function DistributorDashboard() {
             </div>
             <div>
               <p className="text-sm text-[#0B2A5B]/60">Total Referrals</p>
-              <p className="text-2xl font-bold text-[#0B2A5B]">{stats?.total_referrals || 0}</p>
+              <p className="text-2xl font-bold text-[#0B2A5B]">{stats?.total_students_referred || 0}</p>
             </div>
           </div>
         </Card>
@@ -64,7 +64,7 @@ export default function DistributorDashboard() {
             </div>
             <div>
               <p className="text-sm text-[#0B2A5B]/60">Total Enrollments</p>
-              <p className="text-2xl font-bold text-[#0B2A5B]">{stats?.total_enrollments || 0}</p>
+              <p className="text-2xl font-bold text-[#0B2A5B]">{stats?.total_courses_purchased || 0}</p>
             </div>
           </div>
         </Card>
@@ -75,8 +75,8 @@ export default function DistributorDashboard() {
               <Tag className="text-purple-600" size={20} />
             </div>
             <div>
-              <p className="text-sm text-[#0B2A5B]/60">Conversion Rate</p>
-              <p className="text-2xl font-bold text-[#0B2A5B]">{stats?.conversion_rate ? `${stats.conversion_rate.toFixed(1)}%` : "0%"}</p>
+              <p className="text-sm text-[#0B2A5B]/60">Revenue Generated</p>
+              <p className="text-2xl font-bold text-[#0B2A5B]">₹{stats?.total_revenue_generated?.toLocaleString() || 0}</p>
             </div>
           </div>
         </Card>

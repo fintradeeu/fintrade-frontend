@@ -490,7 +490,6 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
 export default function MarketingHome() {
   const [videoOpen, setVideoOpen] = useState(false);
   const [activeVideoIdx, setActiveVideoIdx] = useState<number | null>(null);
-  const [selectedCourseForCheckout, setSelectedCourseForCheckout] = useState<any>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const isAuthenticated = !!localStorage.getItem("token");
 
@@ -1111,6 +1110,7 @@ export default function MarketingHome() {
                 ))}
               </div>
             </div>
+          </div>
         </section>
 
 
@@ -1261,7 +1261,6 @@ export default function MarketingHome() {
             </div>
           </div>
         </footer>
-      </div>
       {/* Brochure Modal */}
       <Dialog open={brochureOpen} onOpenChange={setBrochureOpen}>
         <DialogContent className="sm:max-w-[425px]">
@@ -1322,18 +1321,7 @@ export default function MarketingHome() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {selectedCourseForCheckout && (
-        <CourseCheckoutModal
-          course={selectedCourseForCheckout}
-          onClose={() => setSelectedCourseForCheckout(null)}
-          onSuccess={() => {
-            setSelectedCourseForCheckout(null);
-            alert('Enrollment successful! You can now access your dashboard.');
-            window.location.href = '/student/dashboard';
-          }}
-        />
-      )}
+    </div>
     </div>
   );
 }

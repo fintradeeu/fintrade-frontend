@@ -27,18 +27,14 @@ import {
 import api from "../../services/api";
 
 // Static instrument list — prices sent by user at order time (mock market)
-const defaultInstruments = [
-  { symbol: "NIFTY 50", price: 58720, change: 2.4, volume: "245M" },
-  { symbol: "BANK NIFTY", price: 42580, change: 1.8, volume: "187M" },
-  { symbol: "RELIANCE", price: 2456, change: -0.5, volume: "45M" },
-  { symbol: "TCS", price: 3842, change: 1.2, volume: "32M" },
-  { symbol: "INFY", price: 1567, change: 0.8, volume: "28M" },
-  { symbol: "HDFC BANK", price: 1645, change: -0.3, volume: "52M" },
-];
+
 
 export default function TradingSimulator() {
-  const [selectedInstrument, setSelectedInstrument] = useState(defaultInstruments[0]);
+  
+  const [marketData, setMarketData] = useState<any[]>([]);
+  const [selectedInstrument, setSelectedInstrument] = useState<any>(null);
   const [orderType, setOrderType] = useState<"buy" | "sell">("buy");
+
   const [quantity, setQuantity] = useState("50");
 
   // API state
@@ -115,7 +111,7 @@ export default function TradingSimulator() {
     try {
       // Use the instrument price for exit
       const pos = positions.find((p) => p.id === positionId);
-      const instrument = defaultInstruments.find((i) => i.symbol === pos?.symbol);
+      const instrument = marketData.find((i) => i.symbol === pos?.symbol);
       await api.post("/simulator/close", {
         position_id: positionId,
         exit_price: instrument?.price || pos?.entry_price || 0,
@@ -216,7 +212,7 @@ export default function TradingSimulator() {
         <Card className="lg:col-span-1 p-4 bg-white shadow-lg h-fit">
           <h3 className="font-semibold text-[#0B2A5B] mb-4">Instruments</h3>
           <div className="space-y-2">
-            {defaultInstruments.map((instrument) => (
+            {marketData.map((instrument) => (
               <button
                 key={instrument.symbol}
                 onClick={() => setSelectedInstrument(instrument)}

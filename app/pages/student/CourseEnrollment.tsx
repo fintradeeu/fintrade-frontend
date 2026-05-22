@@ -45,7 +45,11 @@ export default function CourseEnrollment() {
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [finalPrice, setFinalPrice] = useState(0);
+
   const [showPayment, setShowPayment] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"UPI" | "Card" | "NetBanking">("UPI");
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [couponMsg, setCouponMsg] = useState("");
@@ -332,15 +336,15 @@ export default function CourseEnrollment() {
           <div className="space-y-4">
             <h3 className="font-semibold text-[#0B2A5B]">Payment Method</h3>
             <div className="grid grid-cols-3 gap-3">
-              <button className="p-4 border-2 border-[#C2A86A] bg-[#C2A86A]/10 rounded-lg font-semibold text-[#0B2A5B] hover:bg-[#C2A86A]/20 transition-colors">
-                UPI
-              </button>
-              <button className="p-4 border-2 border-[#0B2A5B]/20 rounded-lg font-semibold text-[#0B2A5B] hover:bg-[#F4F1EA] transition-colors">
-                Card
-              </button>
-              <button className="p-4 border-2 border-[#0B2A5B]/20 rounded-lg font-semibold text-[#0B2A5B] hover:bg-[#F4F1EA] transition-colors">
-                NetBanking
-              </button>
+              {["UPI", "Card", "NetBanking"].map((method) => (
+                <button
+                  key={method}
+                  onClick={() => setPaymentMethod(method as any)}
+                  className={`p-4 border-2 rounded-lg font-semibold transition-colors ${paymentMethod === method ? "border-[#C2A86A] bg-[#C2A86A]/10 text-[#0B2A5B]" : "border-[#0B2A5B]/20 text-[#0B2A5B] hover:bg-[#F4F1EA]"}`}
+                >
+                  {method}
+                </button>
+              ))}
             </div>
           </div>
 

@@ -124,12 +124,12 @@ export default function TeacherStudents() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline" className="border-[#0B2A5B]/20">
-                              <Eye size={14} />
-                            </Button>
-                            <Button size="sm" variant="outline" className="border-[#0B2A5B]/20">
-                              <Mail size={14} />
-                            </Button>
+                              <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 hover:bg-[#0B2A5B] hover:text-white" onClick={() => alert(`Student Details:\nName: ${student.student_name}\nEmail: ${student.student_email}\nCourse: ${student.course_title}`)}>
+                                <Eye size={14} />
+                              </Button>
+                              <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 hover:bg-[#D50032] hover:text-white" onClick={() => window.location.href = `mailto:${student.student_email}`}>
+                                <Mail size={14} />
+                              </Button>
                           </div>
                         </TableCell>
                       </TableRow>

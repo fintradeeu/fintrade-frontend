@@ -3,6 +3,7 @@ import api from "../../services/api";
 import DashboardLayout from "../../components/DashboardLayout";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
+import { toast } from "sonner";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import {
@@ -111,9 +112,12 @@ export default function AITutor() {
     setInputMessage(topic);
   };
 
-  const scheduleDoubtSession = () => {
-    alert("Doubt session scheduled! You'll receive a confirmation email with the details.");
-    setCannotSolve(false);
+  const scheduleDoubtSession = async () => {
+    toast.info("Scheduling session with faculty...");
+    setTimeout(() => {
+        toast.success("Doubt session scheduled! You'll receive a confirmation email with the details.");
+        setCannotSolve(false);
+    }, 1500);
   };
 
   return (

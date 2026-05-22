@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import api from "../../services/api";
+import { toast } from "sonner";
 import { DashboardLayout } from "../../components/DashboardLayout";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
@@ -240,76 +242,21 @@ interface AdminUser {
   );
 
 export default function AdminRoles() {
-  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([
-    {
-      id: 1,
-      name: "Rajesh Mehta",
-      email: "rajesh.mehta@fintrade.in",
-      role: "Super Admin",
-      status: "Active",
-      permissions: {
-        manageCourses: true,
-        manageStudents: true,
-        managePayments: true,
-        manageContent: true,
-        manageExams: true,
-        manageAdmins: true,
-        canViewRevenue: true,
-      },
-      lastActive: "2026-04-16"
-    },
-    {
-      id: 2,
-      name: "Priya Desai",
-      email: "priya.desai@fintrade.in",
-      role: "Content Admin",
-      status: "Active",
-      permissions: {
-        manageCourses: true,
-        manageStudents: false,
-        managePayments: false,
-        manageContent: true,
-        manageExams: true,
-        manageAdmins: false,
-        canViewRevenue: false,
-      },
-      lastActive: "2026-04-16"
-    },
-    {
-      id: 3,
-      name: "Amit Sharma",
-      email: "amit.sharma@fintrade.in",
-      role: "Finance Admin",
-      status: "Active",
-      permissions: {
-        manageCourses: false,
-        manageStudents: true,
-        managePayments: true,
-        manageContent: false,
-        manageExams: false,
-        manageAdmins: false,
-        canViewRevenue: true,
-      },
-      lastActive: "2026-04-15"
-    },
-    {
-      id: 4,
-      name: "Neha Patel",
-      email: "neha.patel@fintrade.in",
-      role: "Support Admin",
-      status: "Active",
-      permissions: {
-        manageCourses: false,
-        manageStudents: true,
-        managePayments: false,
-        manageContent: false,
-        manageExams: false,
-        manageAdmins: false,
-        canViewRevenue: false,
-      },
-      lastActive: "2026-04-14"
+  
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+
+  useEffect(() => {
+    fetchAdmins();
+  }, []);
+
+  const fetchAdmins = async () => {
+    try {
+      const res = await api.get("/admin/roles");
+      setAdminUsers(res.data);
+    } catch (err) {
+      console.error(err);
     }
-  ]);
+  };
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -330,33 +277,43 @@ export default function AdminRoles() {
     }
   });
 
-  const handleAddAdmin = () => {
-    const newAdmin: AdminUser = {
-      id: adminUsers.length + 1,
-      ...formData,
-      lastActive: new Date().toISOString().split('T')[0]
-    };
-    setAdminUsers([...adminUsers, newAdmin]);
-    setIsAddDialogOpen(false);
-    resetForm();
-  };
-
-  const handleEditAdmin = () => {
-    if (selectedAdmin) {
-      setAdminUsers(adminUsers.map(admin => 
-        admin.id === selectedAdmin.id 
-          ? { ...admin, ...formData }
-          : admin
-      ));
-      setIsEditDialogOpen(false);
-      setSelectedAdmin(null);
-      resetForm();
+    const handleAddAdmin = async () => {
+    try {
+        const newAdmin = { ...formData, lastActive: new Date().toISOString() };
+        await api.post("/admin/roles", newAdmin);
+        toast.success("Admin created");
+        fetchAdmins();
+        setIsAddDialogOpen(false);
+        resetForm();
+    } catch (err) {
+        toast.error("Failed to add admin");
     }
   };
 
-  const handleDeleteAdmin = (id: number) => {
+    const handleEditAdmin = async () => {
+    if (selectedAdmin) {
+      try {
+        await api.put(`/admin/roles/${selectedAdmin.id}`, formData);
+        toast.success("Admin updated");
+        fetchAdmins();
+        setIsEditDialogOpen(false);
+        setSelectedAdmin(null);
+        resetForm();
+      } catch (err) {
+        toast.error("Failed to update admin");
+      }
+    }
+  };
+
+    const handleDeleteAdmin = async (id: number) => {
     if (confirm("Are you sure you want to remove this admin?")) {
-      setAdminUsers(adminUsers.filter(admin => admin.id !== id));
+      try {
+        await api.delete(`/admin/roles/${id}`);
+        toast.success("Admin removed");
+        fetchAdmins();
+      } catch (err) {
+        toast.error("Failed to remove admin");
+      }
     }
   };
 

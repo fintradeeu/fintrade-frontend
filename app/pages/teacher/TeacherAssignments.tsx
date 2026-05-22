@@ -29,6 +29,8 @@ export default function TeacherAssignments() {
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [maxScore, setMaxScore] = useState("100");
+  const [resourceFiles, setResourceFiles] = useState<File[]>([]);
+  const [isUploadingResources, setIsUploadingResources] = useState(false);
 
   useEffect(() => {
     fetchInitialData();
@@ -55,18 +57,38 @@ export default function TeacherAssignments() {
   };
 
   const handleCreateAssignment = async () => {
+    setIsUploadingResources(true);
     try {
+      const uploadedResources = [];
+      for (const file of resourceFiles) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const uploadRes = await api.post("/courses/assignments/upload", formData, {
+          headers: { "Content-Type": undefined }
+        });
+        uploadedResources.push({
+          name: uploadRes.data.original_name,
+          url: uploadRes.data.url,
+          type: uploadRes.data.content_type
+        });
+      }
+
       await api.post("/admin/assignments", {
         course_id: parseInt(courseId),
         title,
         description,
-        due_date: new Date(dueDate).toISOString()
+        due_date: new Date(dueDate).toISOString(),
+        max_score: parseFloat(maxScore),
+        resources: uploadedResources
       });
       toast.success("Assignment created successfully");
       setIsCreating(false);
+      setResourceFiles([]);
       fetchInitialData();
     } catch (err: any) {
       toast.error("Failed to create assignment: " + (err.response?.data?.detail || err.message));
+    } finally {
+      setIsUploadingResources(false);
     }
   };
 
@@ -156,10 +178,19 @@ export default function TeacherAssignments() {
               className="h-32"
             />
           </div>
+          <div className="space-y-2 mb-6">
+            <label className="text-sm font-medium text-gray-700">Resources (Optional)</label>
+            <Input 
+              type="file" 
+              multiple 
+              onChange={(e) => setResourceFiles(Array.from(e.target.files || []))} 
+            />
+            <p className="text-xs text-gray-500">Upload multiple files if needed.</p>
+          </div>
           <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setIsCreating(false)}>Cancel</Button>
-            <Button className="bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]" onClick={handleCreateAssignment}>
-              Create Assignment
+            <Button variant="outline" onClick={() => setIsCreating(false)} disabled={isUploadingResources}>Cancel</Button>
+            <Button className="bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]" onClick={handleCreateAssignment} disabled={isUploadingResources}>
+              {isUploadingResources ? "Uploading..." : "Create Assignment"}
             </Button>
           </div>
         </Card>
@@ -225,7 +256,12 @@ export default function TeacherAssignments() {
                     <div key={sub.id} className="border p-4 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                       <div>
                         <p className="font-semibold text-[#0B2A5B]">Student ID: {sub.user_id}</p>
-                        <p className="text-sm text-gray-500">Submitted: {new Date(sub.submitted_at).toLocaleString()}</p>
+                        <p className="text-sm text-gray-500">
+                          Submitted: {new Date(sub.submitted_at).toLocaleString()}
+                          <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${new Date(sub.submitted_at) > new Date(selectedAssignment.due_date) ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                            {new Date(sub.submitted_at) > new Date(selectedAssignment.due_date) ? 'Late' : 'On Time'}
+                          </span>
+                        </p>
                         <div className="mt-2">
                           <a href={sub.file_url} target="_blank" rel="noopener noreferrer" className="text-[#C2A86A] text-sm hover:underline font-medium flex items-center gap-1">
                             <FileText size={14} /> View Document
