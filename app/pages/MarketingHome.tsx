@@ -493,7 +493,12 @@ export default function MarketingHome() {
   const [selectedCourseForCheckout, setSelectedCourseForCheckout] = useState<any>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const isAuthenticated = !!localStorage.getItem("token");
+
   const [apiCourses, setApiCourses] = useState<any[]>([]);
+  const [cmsSettings, setCmsSettings] = useState<any>({});
+  const [blogStories, setBlogStories] = useState<any[]>([]);
+  const [marketUpdates, setMarketUpdates] = useState<any[]>([]);
+
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -515,6 +520,22 @@ export default function MarketingHome() {
       } catch (err) {}
     };
     fetchFeatured();
+
+    const fetchCMSAndNews = async () => {
+      try {
+        const res = await api.get("/settings/public");
+        const settingsObj = res.data.reduce((acc: any, s: any) => ({ ...acc, [s.key]: s.value }), {});
+        setCmsSettings(settingsObj);
+      } catch (err) { console.error("CMS fetch failed", err); }
+      
+      try {
+        const res = await api.get("/news");
+        setBlogStories(res.data.filter((n: any) => n.type === "Blog Story").slice(0, 4));
+        setMarketUpdates(res.data.filter((n: any) => n.type === "Market Update").slice(0, 1));
+      } catch (err) { console.error("News fetch failed", err); }
+    };
+    fetchCMSAndNews();
+
   }, []);
 
   // Brochure Download Flow State
@@ -970,24 +991,47 @@ export default function MarketingHome() {
             <div className="grid lg:grid-cols-12 gap-8 items-stretch">
               {/* Featured Video (Left Side) */}
               <div className="lg:col-span-5">
-                <Card className="overflow-hidden border-0 shadow-2xl relative group h-full flex flex-col">
-                  <div className="relative flex-1 min-h-[300px]">
-                    <img
-                      src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80"
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                      alt="Featured Video"
-                    />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <div className="w-20 h-20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl" style={{ background: "#D50032", boxShadow: "0 0 30px rgba(213,0,50,0.5)" }}>
-                        <Play className="h-8 w-8 text-white ml-1" />
+                {marketUpdates.length > 0 ? (
+                  <Card className="overflow-hidden border-0 shadow-2xl relative group h-full flex flex-col">
+                    <div className="relative flex-1 min-h-[300px]">
+                      <img
+                        src={marketUpdates[0].thumbnail_url || "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80"}
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        alt={marketUpdates[0].title}
+                      />
+                      {marketUpdates[0].video_url && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <a href={marketUpdates[0].video_url} target="_blank" rel="noreferrer" className="w-20 h-20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl hover:bg-red-700" style={{ background: "#D50032", boxShadow: "0 0 30px rgba(213,0,50,0.5)" }}>
+                            <Play className="h-8 w-8 text-white ml-1" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-6 bg-white">
+                      <h3 className="text-2xl font-bold mb-2" style={{ color: "#121212" }}>{marketUpdates[0].title}</h3>
+                      <p className="text-gray-600 line-clamp-3">{marketUpdates[0].content}</p>
+                    </div>
+                  </Card>
+                ) : (
+                  <Card className="overflow-hidden border-0 shadow-2xl relative group h-full flex flex-col">
+                    <div className="relative flex-1 min-h-[300px]">
+                      <img
+                        src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80"
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        alt="Featured Video"
+                      />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <div className="w-20 h-20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl" style={{ background: "#D50032", boxShadow: "0 0 30px rgba(213,0,50,0.5)" }}>
+                          <Play className="h-8 w-8 text-white ml-1" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="p-6 bg-white">
-                    <h3 className="text-2xl font-bold mb-2" style={{ color: "#121212" }}>FinTrade: Master the Market Dynamics</h3>
-                    <p className="text-gray-600">Watch our exclusive masterclass on market analysis and risk management techniques for 2026.</p>
-                  </div>
-                </Card>
+                    <div className="p-6 bg-white">
+                      <h3 className="text-2xl font-bold mb-2" style={{ color: "#121212" }}>FinTrade: Master the Market Dynamics</h3>
+                      <p className="text-gray-600">Watch our exclusive masterclass on market analysis and risk management techniques for 2026.</p>
+                    </div>
+                  </Card>
+                )}
               </div>
 
               {/* Blog Stories (4 Cards) */}
@@ -995,7 +1039,27 @@ export default function MarketingHome() {
                 className="lg:col-span-7 flex md:grid md:grid-cols-2 gap-6 overflow-x-auto lg:overflow-x-visible pb-6 lg:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 lg:px-0 lg:mx-0 items-stretch"
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
               >
-                {[
+                {blogStories.length > 0 ? blogStories.map((story, i) => (
+                  <Card key={i} className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 flex flex-col border-0 shadow-lg group hover:-translate-y-1 transition-all duration-300 snap-center">
+                    <div className="h-48 overflow-hidden relative">
+                      <img src={story.thumbnail_url || "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80"} alt={story.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-[#D50032]">
+                        Blog
+                      </div>
+                    </div>
+                    <div className="p-6 flex flex-col flex-1">
+                      <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                        <span className="flex items-center gap-1"><FileText size={14} />Read</span>
+                        <span>5 min read</span>
+                      </div>
+                      <h3 className="font-bold text-lg mb-2 line-clamp-2 hover:text-[#D50032] transition-colors cursor-pointer" style={{ color: "#121212" }}>{story.title}</h3>
+                      <p className="text-sm text-gray-600 mb-4 line-clamp-2 flex-1">{story.content}</p>
+                      <Link to="/blog" className="text-[#D50032] font-semibold text-sm flex items-center group-hover:gap-2 transition-all">
+                        Read Story <ChevronRight size={16} />
+                      </Link>
+                    </div>
+                  </Card>
+                )) : [
                   {
                     title: "How to Start Option Trading in India",
                     category: "Options",
@@ -1004,46 +1068,49 @@ export default function MarketingHome() {
                     desc: "A comprehensive guide for beginners looking to enter the derivative markets safely."
                   },
                   {
-                    title: "Mastering Risk Management in 2026",
-                    category: "Strategies",
-                    readTime: "12 min read",
-                    img: "https://images.unsplash.com/photo-1612178991541-b48cc8e92a4d?auto=format&fit=crop&w=800&q=80",
-                    desc: "Why protecting your capital is more important than chasing profits."
-                  },
-                  {
-                    title: "Top 5 Chart Patterns for NIFTY 50",
-                    category: "Technical",
-                    readTime: "6 min read",
-                    img: "https://images.unsplash.com/photo-1642390192305-67c805260177?auto=format&fit=crop&w=800&q=80",
-                    desc: "Learn the most reliable candlestick formations used by professional traders."
-                  },
-                  {
-                    title: "Psychology of a Consistent Trader",
-                    category: "Mindset",
-                    readTime: "10 min read",
+                    title: "Top 5 Mistakes Day Traders Make",
+                    category: "Psychology",
+                    readTime: "5 min read",
                     img: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=800&q=80",
-                    desc: "Overcoming emotional biases and building a disciplined trading routine."
+                    desc: "Avoid these common psychological traps that destroy trading accounts."
+                  },
+                  {
+                    title: "Understanding Institutional Order Flow",
+                    category: "Advanced",
+                    readTime: "12 min read",
+                    img: "https://images.unsplash.com/photo-1535320903710-d993d3d77d29?auto=format&fit=crop&w=800&q=80",
+                    desc: "Learn to read the market like smart money and trade alongside the institutions."
+                  },
+                  {
+                    title: "Building a Winning Trading System",
+                    category: "Strategy",
+                    readTime: "10 min read",
+                    img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+                    desc: "Step-by-step process to backtest and deploy your own profitable strategy."
                   }
-                ].map((blog, i) => (
-                  <div key={i} className="flex-shrink-0 w-[260px] sm:w-[320px] md:w-full md:flex-shrink snap-center flex">
-                    <Card className="group overflow-hidden border-0 bg-white hover:shadow-xl transition-all duration-300 cursor-pointer w-full flex flex-col">
-                      <div className="relative h-32 overflow-hidden">
-                        <img src={blog.img} alt={blog.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                ].map((post, i) => (
+                  <Card key={i} className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 flex flex-col border-0 shadow-lg group hover:-translate-y-1 transition-all duration-300 snap-center">
+                    <div className="h-48 overflow-hidden relative">
+                      <img src={post.img} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-[#D50032]">
+                        {post.category}
                       </div>
-                      <div className="p-4 flex-1 flex flex-col">
-                        <div className="flex items-center justify-between text-[10px] text-gray-500 mb-2 uppercase font-bold tracking-widest">
-                          <span className="text-[#D50032]">{blog.category}</span>
-                          <span>{blog.readTime}</span>
-                        </div>
-                        <h3 className="text-sm font-bold mb-2 group-hover:text-[#D50032] transition-colors line-clamp-2" style={{ color: "#121212" }}>{blog.title}</h3>
-                        <p className="text-xs text-gray-500 line-clamp-2 flex-1">{blog.desc}</p>
+                    </div>
+                    <div className="p-6 flex flex-col flex-1">
+                      <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                        <span className="flex items-center gap-1"><FileText size={14} /> Article</span>
+                        <span>{post.readTime}</span>
                       </div>
-                    </Card>
-                  </div>
+                      <h3 className="font-bold text-lg mb-2 line-clamp-2 hover:text-[#D50032] transition-colors cursor-pointer" style={{ color: "#121212" }}>{post.title}</h3>
+                      <p className="text-sm text-gray-600 mb-4 line-clamp-2 flex-1">{post.desc}</p>
+                      <button className="text-[#D50032] font-semibold text-sm flex items-center group-hover:gap-2 transition-all mt-auto self-start">
+                        Read Full Article <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  </Card>
                 ))}
               </div>
             </div>
-          </div>
         </section>
 
 
@@ -1171,9 +1238,9 @@ export default function MarketingHome() {
               <div>
                 <h4 className="font-bold mb-4">Contact</h4>
                 <ul className="space-y-2 text-gray-400">
-                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4" style={{ color: "#D50032" }} />contact@fintrade.in</li>
-                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4" style={{ color: "#D50032" }} />+91 98765 43210</li>
-                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4" style={{ color: "#D50032" }} />Mumbai, India</li>
+                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4" style={{ color: "#D50032" }} />{cmsSettings.contact_email || "contact@fintrade.in"}</li>
+                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4" style={{ color: "#D50032" }} />{cmsSettings.contact_phone || "+91 98765 43210"}</li>
+                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4" style={{ color: "#D50032" }} />{cmsSettings.address || "Mumbai, India"}</li>
                 </ul>
                 <div className="flex gap-3 mt-4">
                   {[
