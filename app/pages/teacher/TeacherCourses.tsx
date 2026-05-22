@@ -141,13 +141,6 @@ export default function TeacherCourses() {
     finally { setSaving(false); }
   };
 
-  const togglePublish = async (courseId: number, currentState: boolean) => {
-    try {
-      await api.put(`/admin/courses/${courseId}`, { is_published: !currentState });
-      fetchCourses();
-    } catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
-  };
-
   // ── Edit Module (reuses create modal) ──
   const openEditModule = (mod: any, courseId: number) => {
     setEditModuleId(mod.id);
@@ -331,9 +324,6 @@ export default function TeacherCourses() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button size="sm" variant="outline" className={course.is_published ? "border-orange-400 text-orange-500" : "border-green-500 text-green-600"} onClick={(e) => { e.stopPropagation(); togglePublish(course.id, course.is_published); }}>
-                  {course.is_published ? "Unpublish" : "Publish"}
-                </Button>
                 <Button size="sm" variant="outline" className="border-[#C2A86A] text-[#C2A86A] hover:bg-[#C2A86A]/10" onClick={(e) => { e.stopPropagation(); setModuleForCourse(course.id); setShowModuleModal(true); }}>
                   <Layers size={14} className="mr-1" />Add Module
                 </Button>
@@ -443,17 +433,6 @@ export default function TeacherCourses() {
                 <div><label className="text-sm font-medium text-[#0B2A5B]">Actual Price (₹) <span className="text-gray-400 font-normal">(Strikethrough)</span></label><Input type="number" min="0" value={newCourse.original_price} onChange={(e) => setNewCourse({ ...newCourse, original_price: parseFloat(e.target.value) || 0 })} className="bg-[#F4F1EA]" /></div>
                 <div><label className="text-sm font-medium text-[#0B2A5B]">Discounted Price (₹) *</label><Input type="number" min="0" value={newCourse.price} onChange={(e) => setNewCourse({ ...newCourse, price: parseFloat(e.target.value) || 0 })} className="bg-[#F4F1EA]" /></div>
               </div>
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-[#0B2A5B]">Status</label>
-                <Button
-                  type="button"
-                  variant={newCourse.is_published ? "default" : "outline"}
-                  onClick={() => setNewCourse({ ...newCourse, is_published: !newCourse.is_published })}
-                  className={newCourse.is_published ? "bg-green-600 hover:bg-green-700 text-white" : "text-gray-500"}
-                >
-                  {newCourse.is_published ? "Published" : "Draft"}
-                </Button>
-              </div>
               <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Creating..." : "Create Course"}</Button>
             </form>
           </Card>
@@ -469,18 +448,7 @@ export default function TeacherCourses() {
             <form onSubmit={handleCreateModule} className="space-y-4">
               <div><label className="text-sm font-medium text-[#0B2A5B]">Title *</label><Input required value={newModule.title} onChange={(e) => setNewModule({ ...newModule, title: e.target.value })} className="bg-[#F4F1EA]" /></div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Description</label><textarea className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" rows={2} value={newModule.description} onChange={(e) => setNewModule({ ...newModule, description: e.target.value })} /></div>
-              <div className="flex items-center justify-between mt-4">
-                <label className="text-sm font-medium text-[#0B2A5B]">Status</label>
-                <Button
-                  type="button"
-                  variant={newModule.is_published ? "default" : "outline"}
-                  onClick={() => setNewModule({ ...newModule, is_published: !newModule.is_published })}
-                  className={newModule.is_published ? "bg-green-600 hover:bg-green-700 text-white" : "text-gray-500"}
-                >
-                  {newModule.is_published ? "Published" : "Draft"}
-                </Button>
-              </div>
-              <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Saving..." : editModuleId ? "Save Changes" : "Add Module"}</Button>
+              <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a] mt-4">{saving ? "Saving..." : editModuleId ? "Save Changes" : "Add Module"}</Button>
             </form>
           </Card>
         </div>
@@ -607,17 +575,6 @@ export default function TeacherCourses() {
 
               <div className="grid grid-cols-1 gap-4">
                 <div><label className="text-sm font-medium text-[#0B2A5B]">Duration (min)</label><Input type="number" min="1" value={newLesson.duration_minutes} onChange={(e) => setNewLesson({ ...newLesson, duration_minutes: parseInt(e.target.value) })} className="bg-[#F4F1EA]" /></div>
-              </div>
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-[#0B2A5B]">Status</label>
-                <Button
-                  type="button"
-                  variant={newLesson.is_published ? "default" : "outline"}
-                  onClick={() => setNewLesson({ ...newLesson, is_published: !newLesson.is_published })}
-                  className={newLesson.is_published ? "bg-green-600 hover:bg-green-700 text-white" : "text-gray-500"}
-                >
-                  {newLesson.is_published ? "Published" : "Draft"}
-                </Button>
               </div>
               <Button type="submit" disabled={saving || uploadingMedia} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Saving..." : editLessonId ? "Save Changes" : "Add Lesson"}</Button>
             </form>
