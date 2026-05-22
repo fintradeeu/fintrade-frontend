@@ -8,6 +8,7 @@ import CategoryPage from "./pages/CategoryPage";
 import CoursesPage from "./pages/CoursesPage";
 import MarketsPage from "./pages/MarketsPage";
 import MarketUpdatesPage from "./pages/MarketUpdatesPage";
+import BlogPage from "./pages/BlogPage";
 import MarketingLayout from "./components/MarketingLayout";
 
 // Student Pages
@@ -80,6 +81,10 @@ export const router = createBrowserRouter([
       {
         path: "/updates",
         Component: MarketUpdatesPage,
+      },
+      {
+        path: "/blog",
+        Component: BlogPage,
       },
     ]
   },

@@ -325,8 +325,10 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
         className="w-full flex flex-col group transition-all duration-500 overflow-hidden rounded-2xl border border-gray-200 hover:border-[#D50032]/50 hover:shadow-2xl"
       >
         {/* Gradient Header */}
-        <div className="relative px-6 pt-6 pb-4 min-h-[210px] flex flex-col justify-between" style={{ background: "#D50032" }}>
-          <div>
+        <div className="relative px-6 pt-6 pb-4 min-h-[210px] flex flex-col justify-between overflow-hidden bg-gradient-to-br from-[#D50032] via-[#E60036] to-[#FF3366]">
+          {/* Ambient subtle pattern/glow in header */}
+          <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+          <div className="relative z-10">
             <div className="flex items-start justify-between mb-3">
               <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)" }}>
                 <course.icon className="h-7 w-7 text-white" />
@@ -338,7 +340,7 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
             <h3 className="text-lg font-bold text-white mb-1 leading-snug">
               {showFullTitle || course.name.length <= MAX_TITLE_LENGTH ? course.name : `${course.name.substring(0, MAX_TITLE_LENGTH)}...`}
               {course.name.length > MAX_TITLE_LENGTH && (
-                <button onClick={(e) => { e.preventDefault(); setShowFullTitle(!showFullTitle); }} className="text-[#D50032] text-[10px] ml-1 hover:underline">
+                <button onClick={(e) => { e.preventDefault(); setShowFullTitle(!showFullTitle); }} className="text-white/80 text-[10px] ml-1 hover:underline">
                   {showFullTitle ? "Read Less" : "Read More"}
                 </button>
               )}
@@ -373,8 +375,9 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
                 </div>
               </div>
               {course.savings && (
-                <div className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "rgba(76₹75,80,0.1)", color: "#2e7d32" }}>
-                  Save {course.savings}
+                <div className="px-3 py-1.5 rounded-lg bg-green-50/80 border border-green-200 text-green-700 flex flex-col items-end shadow-sm">
+                  <span className="text-[10px] font-bold text-green-600 uppercase tracking-widest leading-none mb-1">You Save</span>
+                  <span className="text-sm font-extrabold leading-none">{course.savings}</span>
                 </div>
               )}
             </div>
@@ -394,17 +397,20 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <DialogContent className="sm:max-w-2xl bg-white text-[#121212] rounded-3xl overflow-hidden border border-gray-100 shadow-2xl p-0 z-[10000] max-h-[90vh] flex flex-col">
           {/* Header Gradient (Fixed) */}
-          <div className="relative px-8 py-8 text-white flex-shrink-0" style={{ background: "#D50032" }}>
-            <div className="flex items-center gap-3 mb-3">
-              <span className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/20 bg-white/10">
-                {course.level} Program
-              </span>
-              <span className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/20 bg-white/10">
-                {course.duration}
-              </span>
+          <div className="relative px-8 py-8 text-white flex-shrink-0 overflow-hidden bg-gradient-to-br from-[#D50032] via-[#E60036] to-[#FF3366]">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/20 bg-white/10 shadow-sm backdrop-blur-md">
+                  {course.level} Program
+                </span>
+                <span className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/20 bg-white/10 shadow-sm backdrop-blur-md">
+                  {course.duration}
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight">{course.name}</h2>
+              <p className="text-white/80 text-sm mt-2 font-medium tracking-wide">Complete Program Overview & Course Curriculum</p>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight">{course.name}</h2>
-            <p className="text-white/60 text-sm mt-1.5 font-medium">Complete Program Overview & Course Curriculum</p>
           </div>
 
           {/* Body & Actions (Scrollable if content is taller than viewport) */}
@@ -436,8 +442,9 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
                   </div>
                 </div>
                 {course.savings && (
-                  <div className="text-xs text-green-700 font-bold bg-green-50 border border-green-100 px-4 py-2 rounded-full shadow-sm">
-                    Save {course.savings} instantly
+                  <div className="px-4 py-2 rounded-xl bg-green-50 border border-green-200 text-green-700 flex flex-col items-end shadow-sm">
+                    <span className="text-[10px] font-bold text-green-600 uppercase tracking-widest leading-none mb-1">You Save</span>
+                    <span className="text-base font-extrabold leading-none">{course.savings} instantly</span>
                   </div>
                 )}
               </div>
@@ -454,7 +461,10 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
               </Button>
               {isAuthenticated ? (
                 <Button
-                  onClick={onEnroll}
+                  onClick={() => {
+                    setIsDetailsOpen(false);
+                    onEnroll();
+                  }}
                   className="w-full sm:w-auto h-12 text-sm font-semibold rounded-xl px-8 shadow-lg hover:shadow-xl bg-gradient-to-r from-[#D50032] to-[#FF0000] text-white hover:from-[#D50032] hover:to-[#D50032] transition-all duration-300"
                 >
                   Enroll Now
@@ -727,6 +737,7 @@ export default function MarketingHome() {
               {(apiCourses.length > 0 ? apiCourses.map((c: any) => {
                 const diff = c.difficulty_level || "beginner";
                 return {
+                  ...c,
                   name: c.title,
                   level: diff.charAt(0).toUpperCase() + diff.slice(1),
                   duration: c.duration_hours ? `${c.duration_hours} Days` : "Self-paced",

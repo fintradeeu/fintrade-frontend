@@ -14,7 +14,9 @@ interface CourseCheckoutModalProps {
 export default function CourseCheckoutModal({ course, onClose, onSuccess }: CourseCheckoutModalProps) {
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
-  const [finalPrice, setFinalPrice] = useState(course.price || 0);
+  const parsePrice = (p: any) => parseFloat(String(p).replace(/[^0-9.]/g, '')) || 0;
+  const initialPrice = parsePrice(course.price);
+  const [finalPrice, setFinalPrice] = useState(initialPrice);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [couponMsg, setCouponMsg] = useState("");
@@ -26,8 +28,13 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
       setFinalPrice(res.data.discounted_price);
       setCouponMsg(res.data.message || "Coupon applied successfully!");
       setErrorMsg("");
-    } catch (err: any) {
-      setErrorMsg(err.response?.data?.detail || "Invalid coupon code");
+      } catch (err: any) {
+      const detail = err.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        setErrorMsg(detail.map((d: any) => d.msg).join(", "));
+      } else {
+        setErrorMsg(detail || "Invalid coupon code");
+      }
       setCouponMsg("");
     }
   };
@@ -35,10 +42,18 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
   const completePayment = async () => {
     setLoading(true);
     try {
-      await api.post(`/courses/${course.id}/enroll`, { distributor_code: couponCode });
+      const payload = couponCode.trim() ? { distributor_code: couponCode.trim() } : {};
+      await api.post(`/courses/${course.id}/enroll`, payload);
       onSuccess();
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Enrollment failed.");
+      const detail = err.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        alert(detail.map((d: any) => d.msg).join(", "));
+      } else if (typeof detail === 'object' && detail !== null) {
+        alert(JSON.stringify(detail));
+      } else {
+        alert(detail || "Enrollment failed.");
+      }
     } finally {
       setLoading(false);
     }
@@ -60,7 +75,7 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
             </div>
             <div className="text-right">
               <span className="text-2xl font-bold text-[#0B2A5B]">
-                ₹{course.price?.toLocaleString("en-IN")}
+                ₹{initialPrice.toLocaleString("en-IN")}
               </span>
             </div>
           </div>
@@ -94,7 +109,7 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
           <div className="space-y-3 mb-4">
             <div className="flex justify-between text-[#0B2A5B]/70">
               <span>Course Fee</span>
-              <span>₹{course.price?.toLocaleString("en-IN")}</span>
+              <span>₹{initialPrice.toLocaleString("en-IN")}</span>
             </div>
             {discount > 0 && (
               <div className="flex justify-between text-green-600">
@@ -105,7 +120,7 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
             <div className="border-t border-[#0B2A5B]/10 pt-3 flex justify-between text-[#0B2A5B]">
               <span className="text-lg font-semibold">Total Amount</span>
               <span className="text-2xl font-bold text-[#C2A86A]">
-                ₹{finalPrice.toLocaleString("en-IN")}
+                ₹{Number(finalPrice).toLocaleString("en-IN")}
               </span>
             </div>
           </div>
@@ -133,7 +148,7 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
             className="flex-1 bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] shadow-lg shadow-[#0B2A5B]/20"
             size="lg"
           >
-            {loading ? "Processing..." : `Pay ₹${finalPrice.toLocaleString("en-IN")}`}
+            {loading ? "Processing..." : `Pay ₹${Number(finalPrice).toLocaleString("en-IN")}`}
           </Button>
           <Button
             onClick={onClose}

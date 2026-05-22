@@ -59,7 +59,7 @@ export default function StudentAssignments() {
       formData.append("file", selectedFile);
       
       // Upload file to get URL
-      const uploadRes = await api.post("/admin/upload", formData, {
+      const uploadRes = await api.post("/courses/assignments/upload", formData, {
         headers: { "Content-Type": undefined }
       });
       

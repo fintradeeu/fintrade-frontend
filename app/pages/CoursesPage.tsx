@@ -33,12 +33,30 @@ export default function CoursesPage() {
   }, []);
 
   return (
-    <div className="flex-1 bg-[#F5F5F5] font-sans py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h1 className="text-4xl md:text-5xl font-black text-[#0B2A5B] mb-6 tracking-tight">All Courses</h1>
-          <p className="text-lg text-gray-600">Master the markets with our comprehensive trading programs.</p>
-        </div>
+    <div className="flex-1 bg-white font-sans relative overflow-hidden">
+      {/* Premium Background Effects */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] pointer-events-none z-0">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#D50032]/10 via-white to-white" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#D50032]/5 rounded-full blur-[100px]" />
+      </div>
+
+      <div className="relative z-10 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#D50032]/5 border border-[#D50032]/10 mb-4">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#D50032] animate-pulse" />
+              <span className="text-xs font-bold text-[#D50032] tracking-wide uppercase">Elite Trading Education</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-[#121212] mb-4 tracking-tight leading-tight">
+              Master the Markets with <br className="hidden md:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D50032] to-[#FF0000]">
+                Professional Programs
+              </span>
+            </h1>
+            <p className="text-base text-gray-600 font-medium leading-relaxed max-w-xl mx-auto">
+              Choose from our expertly crafted courses designed to take you from a beginner to an institutional-level trader. Real markets, real capital, real results.
+            </p>
+          </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {apiCourses.map((c: any, i: number) => {
@@ -63,6 +81,7 @@ export default function CoursesPage() {
             );
           })}
         </div>
+      </div>
       </div>
 
       {selectedCourseForCheckout && (
