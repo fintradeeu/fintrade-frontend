@@ -370,7 +370,10 @@ export default function AdminCourses() {
                 </div>
               </div>
               <div className="flex gap-2 shrink-0 ml-4">
-                <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B]" onClick={(e) => { e.stopPropagation(); setModuleForCourse(course.id); setShowModuleModal(true); setEditModuleId(null); setNewModule({ title: "", description: "", order: 0, is_published: false }); }}>
+                <Button size="sm" variant="outline" className={course.is_published ? "border-orange-400 text-orange-500" : "border-green-500 text-green-600"} onClick={(e) => { e.stopPropagation(); togglePublish(course.id, course.is_published); }}>
+                    {course.is_published ? "Unpublish" : "Publish"}
+                  </Button>
+                  <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B]" onClick={(e) => { e.stopPropagation(); setModuleForCourse(course.id); setShowModuleModal(true); setEditModuleId(null); setNewModule({ title: "", description: "", order: 0, is_published: false }); }}>
                   <Layers size={14} className="mr-1" />Add Module
                 </Button>
                 <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B]" onClick={(e) => { e.stopPropagation(); openEditCourse(course); }}>

@@ -38,7 +38,15 @@ export default function RegisterPage() {
       // Navigate to student dashboard since new registrations are students by default
       navigate("/student/dashboard");
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.detail || "Registration failed. Email might already exist.");
+      let errorMessage = "Registration failed. Email might already exist.";
+      if (err.response?.data?.detail) {
+        if (Array.isArray(err.response.data.detail)) {
+          errorMessage = err.response.data.detail.map((e: any) => e.msg).join(", ");
+        } else if (typeof err.response.data.detail === 'string') {
+          errorMessage = err.response.data.detail;
+        }
+      }
+      setErrorMsg(errorMessage);
     } finally {
       setLoading(false);
     }
