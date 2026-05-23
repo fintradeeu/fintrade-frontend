@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 export default function AdminLectures() {
   const [lectures, setLectures] = useState<any[]>([]);
+  const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Modal state
@@ -23,13 +24,18 @@ export default function AdminLectures() {
     instructor_name: "",
     start_time: "",
     end_time: "",
-    meeting_url: ""
+    meeting_url: "",
+    course_id: "" as number | string
   });
 
-  const fetchLectures = async () => {
+  const fetchLecturesAndCourses = async () => {
     try {
-      const res = await api.get("/lectures");
-      setLectures(res.data);
+      const [lecturesRes, coursesRes] = await Promise.all([
+        api.get("/lectures"),
+        api.get("/courses")
+      ]);
+      setLectures(lecturesRes.data);
+      setCourses(coursesRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -38,7 +44,7 @@ export default function AdminLectures() {
   };
 
   useEffect(() => {
-    fetchLectures();
+    fetchLecturesAndCourses();
   }, []);
 
   const openModal = (lecture?: any) => {
@@ -51,12 +57,13 @@ export default function AdminLectures() {
         instructor_name: lecture.instructor_name || "",
         start_time: lecture.start_time ? new Date(lecture.start_time).toISOString().slice(0, 16) : "",
         end_time: lecture.end_time ? new Date(lecture.end_time).toISOString().slice(0, 16) : "",
-        meeting_url: lecture.meeting_url || ""
+        meeting_url: lecture.meeting_url || "",
+        course_id: lecture.course_id || ""
       });
     } else {
       setIsEditing(false);
       setCurrentLectureId(null);
-      setNewLecture({ title: "", description: "", instructor_name: "", start_time: "", end_time: "", meeting_url: "" });
+      setNewLecture({ title: "", description: "", instructor_name: "", start_time: "", end_time: "", meeting_url: "", course_id: "" });
     }
     setShowAddModal(true);
   };
@@ -64,9 +71,13 @@ export default function AdminLectures() {
   const handleAddOrEditLecture = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      if (!newLecture.course_id) {
+        toast.error("Please select a course for this lecture.");
+        return;
+      }
       const payload = {
         ...newLecture,
-        course_id: 1, // Default course ID since it's required by backend schema usually, wait backend schema requires course_id? Let's check. Actually, let's pass 1 for now if not specified.
+        course_id: Number(newLecture.course_id),
         scheduled_at: new Date(newLecture.start_time).toISOString(),
         meeting_link: newLecture.meeting_url,
       };
@@ -79,7 +90,7 @@ export default function AdminLectures() {
         toast.success("Lecture created successfully");
       }
       setShowAddModal(false);
-      fetchLectures();
+      fetchLecturesAndCourses();
     } catch (err: any) {
       toast.error("Error saving lecture: " + (err.response?.data?.detail || err.message));
     }
@@ -90,7 +101,7 @@ export default function AdminLectures() {
     try {
       await api.delete(`/admin/lectures/${id}`);
       toast.success("Lecture deleted successfully");
-      fetchLectures();
+      fetchLecturesAndCourses();
     } catch (err: any) {
       toast.error("Failed to delete lecture: " + (err.response?.data?.detail || err.message));
     }
@@ -162,6 +173,20 @@ export default function AdminLectures() {
             </button>
             <h2 className="text-2xl font-bold mb-6 text-[#0B2A5B]">{isEditing ? "Edit Lecture" : "Schedule New Lecture"}</h2>
             <form onSubmit={handleAddOrEditLecture} className="space-y-4">
+              <div>
+                <label className="text-sm font-semibold text-[#0B2A5B] mb-1 block">Course <span className="text-red-500">*</span></label>
+                <select 
+                  required
+                  className="w-full p-2 border border-[#0B2A5B]/20 rounded-md bg-white text-sm"
+                  value={newLecture.course_id}
+                  onChange={(e) => setNewLecture({...newLecture, course_id: e.target.value})}
+                >
+                  <option value="" disabled>Select a course</option>
+                  {courses.map(course => (
+                    <option key={course.id} value={course.id}>{course.title}</option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <label className="text-sm font-semibold text-[#0B2A5B] mb-1 block">Lecture Title <span className="text-red-500">*</span></label>
                 <Input required placeholder="e.g. Technical Analysis Basics" value={newLecture.title} onChange={(e) => setNewLecture({...newLecture, title: e.target.value})} className="border-[#0B2A5B]/20" />

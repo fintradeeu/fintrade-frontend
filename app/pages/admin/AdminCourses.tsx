@@ -69,7 +69,7 @@ export default function AdminCourses() {
       const res = await api.post("/admin/upload", formData, {
         headers: { "Content-Type": undefined }
       });
-      setNewLesson({ ...newLesson, video_url: res.data.url });
+      setNewLesson(prev => ({ ...prev, video_url: res.data.url }));
     } catch (err: any) {
       alert("Upload failed: " + (err.response?.data?.detail || err.message));
     } finally {
