@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
 import api from "../../services/api";
 import DashboardLayout from "../../components/DashboardLayout";
 import { Card } from "../../components/ui/card";
@@ -22,6 +23,7 @@ import {
   Star,
   IndianRupee,
   Tag,
+  LogOut,
 } from "lucide-react";
 
 
@@ -56,6 +58,7 @@ export default function CourseEnrollment() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [couponMsg, setCouponMsg] = useState("");
+  const [isEnrolled, setIsEnrolled] = useState(true);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -65,7 +68,11 @@ export default function CourseEnrollment() {
         try {
           const enrolledRes = await api.get("/courses/enrolled");
           enrolledIds = enrolledRes.data.map((e: any) => e.course_id);
-        } catch { /* not logged in — show all */ }
+          setIsEnrolled(enrolledIds.length > 0);
+        } catch { 
+          /* not logged in — show all */ 
+          setIsEnrolled(false);
+        }
 
         const res = await api.get("/courses");
         const availableCourses = res.data.filter(
@@ -144,8 +151,10 @@ export default function CourseEnrollment() {
       } else {
         // Free course or 100% discount
         await api.post(`/courses/${selectedCourse}/enroll`, { distributor_code: couponCode });
-        alert("Enrollment successful! Welcome to the course.");
-        window.location.href = "/student/modules";
+        toast.success("Enrollment successful! Welcome to the course.");
+        setTimeout(() => {
+          window.location.href = "/student/modules";
+        }, 1500);
       }
     } catch (err: any) {
       const errMsg = err.response?.data?.detail || "Payment initiation failed.";
@@ -153,7 +162,7 @@ export default function CourseEnrollment() {
         setShowPayment(false);
         setShowEntranceModal(true);
       } else {
-        alert(errMsg);
+        toast.error(errMsg);
       }
     } finally {
       setLoading(false);
@@ -169,8 +178,21 @@ export default function CourseEnrollment() {
             <p className="text-[#0B2A5B]/70">Choose your learning path and start your trading journey</p>
           </div>
           <div className="flex gap-3 flex-shrink-0">
+            {!isEnrolled && (
+              <Button
+                className="bg-white text-[#D50032] hover:bg-[#D50032]/10 border-2 border-[#D50032] shadow-lg"
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  localStorage.removeItem("user");
+                  window.location.href = "/login";
+                }}
+              >
+                <LogOut size={16} className="mr-2" />
+                Log Out
+              </Button>
+            )}
             <Button
-              className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] shadow-lg shadow-[#0B2A5B]/20"
+              className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] shadow-lg shadow-[#0B2A5B]/20 hidden sm:flex"
               onClick={() => { window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }); }}
             >
               <GraduationCap size={16} className="mr-2" />
@@ -179,7 +201,7 @@ export default function CourseEnrollment() {
             <Button
               variant="outline"
               className="border-2 border-[#0B2A5B]/20 text-[#0B2A5B] hover:bg-[#F4F1EA]"
-              onClick={() => { alert("Brochure download will be available soon!"); }}
+              onClick={() => { toast("Brochure download will be available soon!"); }}
             >
               <FileText size={16} className="mr-2" />
               Download Brochure
