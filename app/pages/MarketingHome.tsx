@@ -459,25 +459,14 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
               >
                 Close Details
               </Button>
-              {isAuthenticated ? (
+              <Link to={isAuthenticated ? "/student/courses" : "/register"} className="w-full sm:w-auto">
                 <Button
-                  onClick={() => {
-                    setIsDetailsOpen(false);
-                    onEnroll();
-                  }}
-                  className="w-full sm:w-auto h-12 text-sm font-semibold rounded-xl px-8 shadow-lg hover:shadow-xl bg-gradient-to-r from-[#D50032] to-[#FF0000] text-white hover:from-[#D50032] hover:to-[#D50032] transition-all duration-300"
+                  onClick={() => setIsDetailsOpen(false)}
+                  className="w-full h-12 text-sm font-semibold rounded-xl px-8 shadow-lg hover:shadow-xl bg-gradient-to-r from-[#D50032] to-[#FF0000] text-white hover:from-[#D50032] hover:to-[#D50032] transition-all duration-300"
                 >
                   Enroll Now
                 </Button>
-              ) : (
-                <Link to="/register" className="w-full sm:w-auto">
-                  <Button
-                    className="w-full h-12 text-sm font-semibold rounded-xl px-8 shadow-lg hover:shadow-xl bg-gradient-to-r from-[#D50032] to-[#FF0000] text-white hover:from-[#D50032] hover:to-[#D50032] transition-all duration-300"
-                  >
-                    Enroll Now
-                  </Button>
-                </Link>
-              )}
+              </Link>
             </div>
           </div>
         </DialogContent>

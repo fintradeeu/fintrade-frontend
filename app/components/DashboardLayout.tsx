@@ -2,6 +2,7 @@ import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { Menu, X, LogOut, Home, Users, BookOpen, Video, FileQuestion, IndianRupee, Bot, TrendingUp, BarChart3, Settings, Award, GraduationCap, MessageCircle, LineChart, Target, Briefcase, Shield, Newspaper, FileText, Trophy, LayoutTemplate } from "lucide-react";
 import { Button } from "./ui/button";
+import { Dialog, DialogContent } from "./ui/dialog";
 import logo from "../../imports/fintrade_logo.png";
 import api from "../services/api";
 
@@ -101,6 +102,9 @@ export function DashboardLayout({
 
   const navItems = customNavItems || getNavItemsByRole(role);
 
+  const [showLockedModal, setShowLockedModal] = useState(false);
+  const [enrolledCount, setEnrolledCount] = useState<number | null>(null);
+
   // Auto-read userName from localStorage if not provided
   const [autoName, setAutoName] = useState("User");
   useEffect(() => {
@@ -120,10 +124,11 @@ export function DashboardLayout({
     if (role === "student") {
       api.get("/courses/enrolled")
         .then((res) => {
+          setEnrolledCount(res.data.length);
           // Exclude the /student/courses and /student/contract-kyc routes from this strict block just in case, but generally block them from other pages if no enrollments
-          const allowedUnenrolledRoutes = ["/student/courses", "/student/contract-kyc"];
+          const allowedUnenrolledRoutes = ["/student/courses", "/student/contract-kyc", "/student/exams", "/student/entrance-exam"];
           if (res.data.length === 0 && !allowedUnenrolledRoutes.includes(location.pathname)) {
-            navigate("/courses");
+            navigate("/student/courses");
           }
         })
         .catch(() => {
@@ -205,11 +210,21 @@ export function DashboardLayout({
             <div className="space-y-1">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.path;
+                const allowedUnenrolledRoutes = ["/student/courses", "/student/contract-kyc", "/student/exams", "/student/entrance-exam"];
+                const isLocked = role === "student" && enrolledCount === 0 && !allowedUnenrolledRoutes.includes(item.path);
+
                 return (
                   <Link
                     key={item.path}
-                    to={item.path}
-                    onClick={handleNavClick}
+                    to={isLocked ? "#" : item.path}
+                    onClick={(e) => {
+                      if (isLocked) {
+                        e.preventDefault();
+                        setShowLockedModal(true);
+                      } else {
+                        handleNavClick();
+                      }
+                    }}
                     className={`
                       flex items-center gap-3 px-4 py-3 rounded-lg transition-all
                       ${
@@ -276,6 +291,24 @@ export function DashboardLayout({
           <div className="p-4 md:p-6 lg:p-8">{children}</div>
         </main>
       </div>
+      {/* Locked Modal */}
+      <Dialog open={showLockedModal} onOpenChange={setShowLockedModal}>
+        <DialogContent className="sm:max-w-md bg-white rounded-2xl p-6 text-center shadow-2xl z-[9999]">
+          <div className="w-16 h-16 mx-auto mb-4 bg-red-50 rounded-full flex items-center justify-center">
+            <BookOpen className="h-8 w-8 text-[#D50032]" />
+          </div>
+          <h2 className="text-2xl font-bold text-[#121212] mb-2">Feature Locked</h2>
+          <p className="text-gray-600 mb-6">
+            You must enroll in a course to access this area of the student portal. Visit the Courses tab to get started!
+          </p>
+          <Button 
+            onClick={() => setShowLockedModal(false)}
+            className="w-full bg-[#D50032] hover:bg-[#b00029] text-white rounded-xl"
+          >
+            Got it
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

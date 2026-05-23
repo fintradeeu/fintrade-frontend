@@ -67,10 +67,21 @@ export default function EntranceExam() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check URL for specific exam ID
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlExamId = searchParams.get("exam_id");
+    
     // Fetch available entrance exams on load
     api.get("/exams/entrance").then(res => {
       if (res.data && res.data.length > 0) {
-        setExamId(res.data[0].id);
+        if (urlExamId) {
+          // Verify it exists in the active list
+          const found = res.data.find((e: any) => e.id.toString() === urlExamId);
+          if (found) setExamId(found.id);
+          else setExamId(res.data[0].id);
+        } else {
+          setExamId(res.data[0].id);
+        }
       }
     }).catch(err => console.error("Failed to load exams", err));
   }, []);

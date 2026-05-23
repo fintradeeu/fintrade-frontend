@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import api from "../../services/api";
 import DashboardLayout from "../../components/DashboardLayout";
 import { Card } from "../../components/ui/card";
@@ -40,8 +41,10 @@ type CourseType = {
 };
 
 export default function CourseEnrollment() {
-  const [courses, setCourses] = useState<CourseType[]>([]);
+  const navigate = useNavigate();
+  const [courses, setCourses] = useState<any[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<number | null>(null);
+  const [showEntranceModal, setShowEntranceModal] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [finalPrice, setFinalPrice] = useState(0);
@@ -132,11 +135,26 @@ export default function CourseEnrollment() {
     if (!selectedCourse) return;
     setLoading(true);
     try {
-      await api.post(`/courses/${selectedCourse}/enroll`, { distributor_code: couponCode });
-      alert("Payment successful! Welcome to the course.");
-      window.location.href = "/student/modules";
+      if (finalPrice > 0) {
+        // Initiate Easebuzz Payment
+        const res = await api.post("/payments/create", { course_id: selectedCourse });
+        if (res.data && res.data.redirect_url) {
+          window.location.href = res.data.redirect_url;
+        }
+      } else {
+        // Free course or 100% discount
+        await api.post(`/courses/${selectedCourse}/enroll`, { distributor_code: couponCode });
+        alert("Enrollment successful! Welcome to the course.");
+        window.location.href = "/student/modules";
+      }
     } catch (err: any) {
-      alert(err.response?.data?.detail || "Enrollment failed.");
+      const errMsg = err.response?.data?.detail || "Payment initiation failed.";
+      if (errMsg.toLowerCase().includes("entrance exam")) {
+        setShowPayment(false);
+        setShowEntranceModal(true);
+      } else {
+        alert(errMsg);
+      }
     } finally {
       setLoading(false);
     }
@@ -259,6 +277,33 @@ export default function CourseEnrollment() {
             </div>
           )}
         </div>
+      ) : showEntranceModal ? (
+        <Card className="max-w-xl mx-auto p-8 bg-white shadow-2xl text-center border-t-4 border-[#D50032]">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <FileText className="text-[#D50032]" size={32} />
+          </div>
+          <h2 className="text-2xl font-bold text-[#0B2A5B] mb-4">Entrance Exam Required</h2>
+          <p className="text-[#0B2A5B]/70 mb-8 text-lg">
+            You must pass the entrance exam for <strong className="text-[#0B2A5B]">{selectedCourseData?.title}</strong> before you can enroll.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Button
+              onClick={() => setShowEntranceModal(false)}
+              variant="outline"
+              className="border-2 border-[#0B2A5B]/20 text-[#0B2A5B] hover:bg-[#F4F1EA]"
+              size="lg"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => navigate("/student/exams")}
+              className="bg-[#D50032] text-white hover:bg-[#b00029] shadow-lg shadow-[#D50032]/20 px-8"
+              size="lg"
+            >
+              Take Entrance Exam Now
+            </Button>
+          </div>
+        </Card>
       ) : (
         <Card className="max-w-2xl mx-auto p-8 bg-white shadow-xl">
           <h2 className="text-2xl font-bold text-[#0B2A5B] mb-6">Complete Your Enrollment</h2>

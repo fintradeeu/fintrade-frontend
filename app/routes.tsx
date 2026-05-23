@@ -4,6 +4,9 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ContractKYC from "./pages/student/ContractKYC";
 import AdminContracts from "./pages/admin/AdminContracts";
+import CheckoutPage from "./pages/CheckoutPage";
+import PaymentSuccess from "./pages/payment/PaymentSuccess";
+import PaymentFailure from "./pages/payment/PaymentFailure";
 import CategoryPage from "./pages/CategoryPage";
 import CoursesPage from "./pages/CoursesPage";
 import MarketsPage from "./pages/MarketsPage";
@@ -95,6 +98,15 @@ export const router = createBrowserRouter([
   {
     path: "/register",
     Component: RegisterPage,
+  },
+  // Payment Routes
+  {
+    path: "/payment/success",
+    Component: PaymentSuccess,
+  },
+  {
+    path: "/payment/failure",
+    Component: PaymentFailure,
   },
   // Student Routes
   {
