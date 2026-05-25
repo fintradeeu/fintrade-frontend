@@ -313,11 +313,51 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [showFullTitle, setShowFullTitle] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [enrollLoading, setEnrollLoading] = useState(false);
   const MAX_DESC_LENGTH = 100;
   const MAX_TITLE_LENGTH = 45;
 
   const courseKey = course.name.includes("FMF") ? "FMF" : course.name.includes("CARP") ? "CARP" : "CPTP";
   const details = courseDetails[courseKey];
+
+  const handleEnrollClick = async () => {
+    if (!isAuthenticated) {
+      window.location.href = "/register";
+      return;
+    }
+
+    setEnrollLoading(true);
+    try {
+      const res = await api.get("/exams/entrance");
+      const matchingExam = (res.data || []).find(
+        (exam: any) => Number(exam.course_id) === Number(course.id) && exam.is_active
+      );
+
+      setIsDetailsOpen(false);
+      if (matchingExam) {
+        try {
+          const allRes = await api.get("/exams/all");
+          const attemptedExam = (allRes.data?.entrance_exams || []).find(
+            (exam: any) => Number(exam.id) === Number(matchingExam.id)
+          );
+          const alreadyPassed = attemptedExam?.attempts?.some((attempt: any) => attempt.passed);
+          if (alreadyPassed) {
+            onEnroll?.();
+            return;
+          }
+        } catch {
+          // If attempt history cannot be loaded, continue to the specific exam page.
+        }
+        window.location.href = `/student/entrance-exam?exam_id=${matchingExam.id}&course_id=${course.id}`;
+      } else {
+        window.location.href = `/student/entrance-exam?course_id=${course.id}`;
+      }
+    } catch {
+      window.location.href = `/student/entrance-exam?course_id=${course.id}`;
+    } finally {
+      setEnrollLoading(false);
+    }
+  };
 
   return (
     <>
@@ -459,14 +499,13 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
               >
                 Close Details
               </Button>
-              <Link to={isAuthenticated ? "/student/courses" : "/register"} className="w-full sm:w-auto">
-                <Button
-                  onClick={() => setIsDetailsOpen(false)}
-                  className="w-full h-12 text-sm font-semibold rounded-xl px-8 shadow-lg hover:shadow-xl bg-gradient-to-r from-[#D50032] to-[#FF0000] text-white hover:from-[#D50032] hover:to-[#D50032] transition-all duration-300"
-                >
-                  Enroll Now
-                </Button>
-              </Link>
+              <Button
+                onClick={handleEnrollClick}
+                disabled={enrollLoading}
+                className="w-full sm:w-auto h-12 text-sm font-semibold rounded-xl px-8 shadow-lg hover:shadow-xl bg-gradient-to-r from-[#D50032] to-[#FF0000] text-white hover:from-[#D50032] hover:to-[#D50032] transition-all duration-300"
+              >
+                {enrollLoading ? "Opening Exam..." : "Enroll Now"}
+              </Button>
             </div>
           </div>
         </DialogContent>
@@ -486,6 +525,7 @@ export default function MarketingHome() {
   const [cmsSettings, setCmsSettings] = useState<any>({});
   const [blogStories, setBlogStories] = useState<any[]>([]);
   const [marketUpdates, setMarketUpdates] = useState<any[]>([]);
+  const [selectedCourseForCheckout, setSelectedCourseForCheckout] = useState<any | null>(null);
 
 
   useEffect(() => {
@@ -1310,6 +1350,16 @@ export default function MarketingHome() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {selectedCourseForCheckout && (
+        <CourseCheckoutModal
+          course={selectedCourseForCheckout}
+          onClose={() => setSelectedCourseForCheckout(null)}
+          onSuccess={() => {
+            setSelectedCourseForCheckout(null);
+            window.location.href = "/student/modules";
+          }}
+        />
+      )}
     </div>
     </div>
   );

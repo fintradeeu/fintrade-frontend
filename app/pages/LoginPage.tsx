@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
+import { GoogleLogin } from "@react-oauth/google";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -16,14 +17,34 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const handleStudentRedirect = async () => {
+    try {
+      const res = await api.get("/courses/enrolled");
+      if (res.data && res.data.length > 0) {
+        navigate("/student/dashboard");
+      } else {
+        navigate("/");
+      }
+    } catch {
+      navigate("/");
+    }
+  };
+
   // OTP state
-  const [step, setStep] = useState<"credentials" | "otp">("credentials");
+  const [step, setStep] = useState<"credentials" | "otp" | "forgot_email" | "forgot_reset">("credentials");
   const [otpToken, setOtpToken] = useState("");
   const [otpCode, setOtpCode] = useState(["", "", "", "", "", ""]);
   const [channels, setChannels] = useState<string[]>([]);
   const [countdown, setCountdown] = useState(0);
   const [resending, setResending] = useState(false);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Password reset state
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
 
   // Countdown timer
   useEffect(() => {
@@ -36,6 +57,74 @@ export default function LoginPage() {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+    setSuccessMsg("");
+    setLoading(true);
+
+    try {
+      const response = await api.post("/auth/forgot-password", { email });
+      const { otp_token, expires_in_seconds, channels: ch } = response.data;
+
+      setOtpToken(otp_token);
+      setChannels(ch || ["email"]);
+      setCountdown(expires_in_seconds || 300);
+      setStep("forgot_reset");
+      setOtpCode(["", "", "", "", "", ""]);
+      setNewPassword("");
+      setConfirmPassword("");
+
+      // Focus first OTP input
+      setTimeout(() => otpRefs.current[0]?.focus(), 100);
+    } catch (err: any) {
+      setErrorMsg(err.response?.data?.detail || "Failed to send reset code. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    const code = otpCode.join("");
+    if (code.length !== 6) {
+      setErrorMsg("Please enter the 6-digit verification code.");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setErrorMsg("Password must be at least 8 characters long.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setErrorMsg("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await api.post("/auth/reset-password", {
+        otp_token: otpToken,
+        code,
+        new_password: newPassword,
+      });
+
+      setSuccessMsg(response.data.message || "Password reset successfully!");
+      setStep("credentials");
+      setPassword(""); // Clear old password input
+      setOtpCode(["", "", "", "", "", ""]);
+    } catch (err: any) {
+      setErrorMsg(err.response?.data?.detail || "Failed to reset password. Please verify your OTP code.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Step 1: Submit credentials
@@ -65,7 +154,7 @@ export default function LoginPage() {
         } else if (isDistributor) {
           navigate("/distributor/dashboard");
         } else {
-          navigate("/student/dashboard");
+          await handleStudentRedirect();
         }
         return;
       }
@@ -120,10 +209,43 @@ export default function LoginPage() {
       } else if (isDistributor) {
         navigate("/distributor/dashboard");
       } else {
-        navigate("/student/dashboard");
+        await handleStudentRedirect();
       }
     } catch (err: any) {
       setErrorMsg(err.response?.data?.detail || "Verification failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setErrorMsg("");
+    setLoading(true);
+    try {
+      const response = await api.post("/auth/google", {
+        token: credentialResponse.credential,
+      });
+      const { access_token, user } = response.data;
+      localStorage.setItem("token", access_token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      const roles = user.roles || [];
+      const isSuperAdmin = roles.some((r: any) => r.name === "super_admin");
+      const isAdmin = roles.some((r: any) => r.name === "admin");
+      const isFaculty = roles.some((r: any) => r.name === "faculty");
+      const isDistributor = roles.some((r: any) => r.name === "distributor");
+
+      if (isSuperAdmin || isAdmin) {
+        navigate("/admin/dashboard");
+      } else if (isFaculty) {
+        navigate("/teacher/dashboard");
+      } else if (isDistributor) {
+        navigate("/distributor/dashboard");
+      } else {
+        await handleStudentRedirect();
+      }
+    } catch (err: any) {
+      setErrorMsg(err.response?.data?.detail || "Google sign-in failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -270,18 +392,23 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {step === "credentials" ? (
+          {step === "credentials" && (
             /* ── STEP 1: Email + Password ─────────────────────────── */
             <>
               <h2 className="text-3xl font-bold mb-2" style={{ color: '#121212' }}>Login to Your Account</h2>
               <p className="text-gray-600 mb-8">Enter your credentials to access your dashboard</p>
+
+              {successMsg && (
+                <div className="mb-6 p-3 bg-green-50 border border-green-200 text-green-600 rounded-md text-sm text-center font-medium">
+                  {successMsg}
+                </div>
+              )}
 
               {errorMsg && (
                 <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
                   {errorMsg}
                 </div>
               )}
-
 
               <form onSubmit={handleLogin} className="space-y-6">
                 <div>
@@ -328,9 +455,18 @@ export default function LoginPage() {
                     <input type="checkbox" className="rounded border-gray-300" />
                     <span className="text-sm text-gray-600">Remember me</span>
                   </label>
-                  <a href="#" className="text-sm hover:underline" style={{ color: '#E53935' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep("forgot_email");
+                      setErrorMsg("");
+                      setSuccessMsg("");
+                    }}
+                    className="text-sm hover:underline font-medium cursor-pointer"
+                    style={{ color: '#E53935' }}
+                  >
                     Forgot Password?
-                  </a>
+                  </button>
                 </div>
 
                 <Button
@@ -339,13 +475,31 @@ export default function LoginPage() {
                   style={{ background: '#E53935', boxShadow: '0 0 20px rgba(229, 57, 53, 0.3)' }}
                   size="lg"
                   disabled={loading}
-
                 >
                   {loading ? "Verifying..." : "Login"}
                 </Button>
               </form>
 
-              <div className="mt-8 text-center">
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-white text-gray-500">Or continue with</span>
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setErrorMsg("Google sign-in failed. Please try again.")}
+                  size="large"
+                  width="100%"
+                  text="signin_with"
+                />
+              </div>
+
+              <div className="mt-6 text-center">
                 <p className="text-sm text-gray-600">
                   Don't have an account?{" "}
                   <Link to="/register" className="hover:underline font-semibold" style={{ color: '#E53935' }}>
@@ -354,7 +508,9 @@ export default function LoginPage() {
                 </p>
               </div>
             </>
-          ) : (
+          )}
+
+          {step === "otp" && (
             /* ── STEP 2: OTP Verification ─────────────────────────── */
             <>
               <div className="text-center mb-8">
@@ -387,7 +543,6 @@ export default function LoginPage() {
                 </div>
               )}
 
-              {/* OTP Input */}
               <div className="flex justify-center gap-3 mb-6" onPaste={handleOtpPaste}>
                 {otpCode.map((digit, i) => (
                   <input
@@ -411,7 +566,6 @@ export default function LoginPage() {
                 ))}
               </div>
 
-              {/* Timer */}
               <div className="text-center mb-6">
                 {countdown > 0 ? (
                   <p className="text-sm text-gray-500">
@@ -422,7 +576,6 @@ export default function LoginPage() {
                 )}
               </div>
 
-              {/* Verify Button */}
               <Button
                 onClick={() => handleVerifyOTP()}
                 className="w-full text-white shadow-lg mb-4"
@@ -433,15 +586,16 @@ export default function LoginPage() {
                 {loading ? "Verifying..." : "Verify & Login"}
               </Button>
 
-              {/* Resend / Back */}
               <div className="flex items-center justify-between">
                 <button
+                  type="button"
                   onClick={() => { setStep("credentials"); setErrorMsg(""); setOtpCode(["", "", "", "", "", ""]); }}
                   className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1 transition-colors"
                 >
                   <ArrowLeft size={14} /> Back
                 </button>
                 <button
+                  type="button"
                   onClick={handleResendOTP}
                   disabled={resending || countdown > 270}
                   className="text-sm font-medium hover:underline transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
@@ -450,7 +604,198 @@ export default function LoginPage() {
                   {resending ? "Sending..." : "Resend Code"}
                 </button>
               </div>
+            </>
+          )}
 
+          {step === "forgot_email" && (
+            /* ── STEP 3: Forgot Password Email Entry ──────────────── */
+            <>
+              <h2 className="text-3xl font-bold mb-2" style={{ color: '#121212' }}>Forgot Password</h2>
+              <p className="text-gray-600 mb-8">Enter your email address to receive a verification code</p>
+
+              {errorMsg && (
+                <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
+                  {errorMsg}
+                </div>
+              )}
+
+              <form onSubmit={handleForgotPasswordSubmit} className="space-y-6">
+                <div>
+                  <Label htmlFor="forgot-email">Email Address</Label>
+                  <Input
+                    id="forgot-email"
+                    type="email"
+                    placeholder="rahul.sharma@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="mt-2 bg-gray-50 border-gray-300 focus:border-[#E53935] focus:ring-[#E53935]"
+                    required
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full text-white shadow-lg"
+                  style={{ background: '#E53935', boxShadow: '0 0 20px rgba(229, 57, 53, 0.3)' }}
+                  size="lg"
+                  disabled={loading}
+                >
+                  {loading ? "Sending Code..." : "Send Verification Code"}
+                </Button>
+
+                <div className="text-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => { setStep("credentials"); setErrorMsg(""); setSuccessMsg(""); }}
+                    className="text-sm text-gray-600 hover:text-gray-900 inline-flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <ArrowLeft size={14} /> Back to Login
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
+
+          {step === "forgot_reset" && (
+            /* ── STEP 4: Enter OTP + New Password ─────────────────── */
+            <>
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ background: 'rgba(229, 57, 53, 0.1)' }}>
+                  <ShieldCheck className="h-8 w-8" style={{ color: '#E53935' }} />
+                </div>
+                <h2 className="text-2xl font-bold mb-2" style={{ color: '#121212' }}>Reset Password</h2>
+                <p className="text-gray-600 text-sm">
+                  We've sent a 6-digit verification code to:
+                </p>
+                <div className="mt-3">
+                  <div className="inline-flex items-center gap-2 text-sm text-gray-700 bg-gray-50 px-3 py-1.5 rounded-full">
+                    <Mail size={14} style={{ color: '#E53935' }} />
+                    <span>{email}</span>
+                  </div>
+                </div>
+              </div>
+
+              {errorMsg && (
+                <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm text-center font-medium">
+                  {errorMsg}
+                </div>
+              )}
+
+              <form onSubmit={handleResetPasswordSubmit} className="space-y-6">
+                {/* OTP digit inputs */}
+                <div>
+                  <Label className="text-center block mb-3 font-medium">6-Digit Verification Code</Label>
+                  <div className="flex justify-center gap-3" onPaste={handleOtpPaste}>
+                    {otpCode.map((digit, i) => (
+                      <input
+                        key={i}
+                        ref={(el) => { otpRefs.current[i] = el; }}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleOtpChange(i, e.target.value)}
+                        onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                        className="w-10 h-12 text-center text-xl font-bold border-2 rounded-xl transition-all duration-200 outline-none"
+                        style={{
+                          borderColor: digit ? '#E53935' : '#e5e7eb',
+                          background: digit ? 'rgba(229,57,53,0.04)' : '#f9fafb',
+                          color: '#121212',
+                        }}
+                        onFocus={(e) => { e.target.style.borderColor = '#E53935'; e.target.style.boxShadow = '0 0 0 3px rgba(229,57,53,0.1)'; }}
+                        onBlur={(e) => { if (!digit) { e.target.style.borderColor = '#e5e7eb'; } e.target.style.boxShadow = 'none'; }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Countdown Timer */}
+                <div className="text-center">
+                  {countdown > 0 ? (
+                    <p className="text-sm text-gray-500">
+                      Code expires in <span className="font-semibold" style={{ color: '#E53935' }}>{formatTime(countdown)}</span>
+                    </p>
+                  ) : (
+                    <p className="text-sm text-red-500 font-medium">Code expired. Please request a new one.</p>
+                  )}
+                </div>
+
+                {/* New Password Input */}
+                <div>
+                  <Label htmlFor="new-password">New Password</Label>
+                  <div className="relative mt-2">
+                    <Input
+                      id="new-password"
+                      type={showNewPassword ? "text" : "password"}
+                      placeholder="At least 8 characters"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="bg-gray-50 border-gray-300 focus:border-[#E53935] focus:ring-[#E53935] pr-12"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900"
+                    >
+                      {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password Input */}
+                <div>
+                  <Label htmlFor="confirm-password">Confirm Password</Label>
+                  <div className="relative mt-2">
+                    <Input
+                      id="confirm-password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm new password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="bg-gray-50 border-gray-300 focus:border-[#E53935] focus:ring-[#E53935] pr-12"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900"
+                    >
+                      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full text-white shadow-lg"
+                  style={{ background: '#E53935', boxShadow: '0 0 20px rgba(229, 57, 53, 0.3)' }}
+                  size="lg"
+                  disabled={loading}
+                >
+                  {loading ? "Resetting Password..." : "Reset Password"}
+                </Button>
+
+                {/* Back / Resend */}
+                <div className="flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => { setStep("forgot_email"); setErrorMsg(""); }}
+                    className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <ArrowLeft size={14} /> Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleForgotPasswordSubmit}
+                    disabled={countdown > 270}
+                    className="text-sm font-medium hover:underline transition-colors disabled:opacity-40 cursor-pointer"
+                    style={{ color: '#E53935' }}
+                  >
+                    Resend Code
+                  </button>
+                </div>
+              </form>
             </>
           )}
 

@@ -16,6 +16,7 @@ import MarketingLayout from "./components/MarketingLayout";
 
 // Student Pages
 import StudentDashboard from "./pages/student/StudentDashboard";
+import StudentProfile from "./pages/student/StudentProfile";
 import EntranceExam from "./pages/student/EntranceExam";
 import CourseEnrollment from "./pages/student/CourseEnrollment";
 import Modules from "./pages/student/Modules";
@@ -112,6 +113,10 @@ export const router = createBrowserRouter([
   {
     path: "/student/dashboard",
     Component: StudentDashboard,
+  },
+  {
+    path: "/student/profile",
+    Component: StudentProfile,
   },
   {
     path: "/student/entrance-exam",

@@ -1,12 +1,96 @@
-import { useState } from "react";
-import { Link, Outlet } from "react-router";
-import { Search, Phone, Instagram, Facebook, Youtube, Linkedin, X, Download } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Link, Outlet, useNavigate } from "react-router";
+import { Search, Phone, Instagram, Facebook, Youtube, Linkedin, X, Download, UserCircle, Save, Mail, Smartphone } from "lucide-react";
 import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import logo from "../../imports/fintrade_logo.png";
+import api from "../services/api";
 
 export default function MarketingLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch (e) {
+      console.error("Logout API failed", e);
+    }
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setProfileOpen(false);
+    navigate("/login");
+  };
+
+  const [profileForm, setProfileForm] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+  });
   const isAuthenticated = !!localStorage.getItem("token");
+  const initials = useMemo(() => {
+    return (profileForm.full_name || "User")
+      .split(" ")
+      .filter(Boolean)
+      .map((name) => name[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+  }, [profileForm.full_name]);
+
+  useEffect(() => {
+    if (!profileOpen || !isAuthenticated) return;
+
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setProfileForm({
+          full_name: user.full_name || "",
+          email: user.email || "",
+          phone: user.phone || "",
+        });
+      } catch {
+        // API data below will refresh the form.
+      }
+    }
+
+  }, [profileOpen, isAuthenticated]);
+
+  const handleProfileSave = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setProfileSaving(true);
+
+    try {
+      // Call backend API to update the profile in the database
+      const res = await api.put("/auth/my-profile", profileForm);
+      
+      // Update localStorage with the latest server data
+      localStorage.setItem("user", JSON.stringify(res.data));
+      setProfileOpen(false);
+    } catch (err) {
+      console.error("Profile update failed", err);
+      // Fallback local storage update
+      const storedUser = localStorage.getItem("user");
+      const currentUser = storedUser ? JSON.parse(storedUser) : {};
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          ...currentUser,
+          full_name: profileForm.full_name,
+          email: profileForm.email,
+          phone: profileForm.phone || null,
+        })
+      );
+      setProfileOpen(false);
+    } finally {
+      setProfileSaving(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col font-sans" style={{ background: "radial-gradient(circle at 50% 50%, #FFFFFF 0%, #F8F8F8 50%, #F4F4F4 100%)" }}>
@@ -96,9 +180,21 @@ export default function MarketingLayout() {
               <button onClick={() => setSearchOpen(true)} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-gray-600 hover:text-[#D50032] hover:bg-[#D50032]/10 transition-all" title="Search">
                 <Search className="h-4 w-4 md:h-5 md:w-5" />
               </button>
-              <Link to={isAuthenticated ? "/student/dashboard" : "/login"}>
-                <Button variant="ghost" className="text-gray-700 hover:text-[#D50032] hover:bg-[#D50032]/10" size="lg">{isAuthenticated ? "Dashboard" : "Login"}</Button>
-              </Link>
+              {isAuthenticated ? (
+                <button
+                  type="button"
+                  onClick={() => setProfileOpen(true)}
+                  className="w-11 h-11 rounded-full flex items-center justify-center text-gray-700 hover:text-[#D50032] hover:bg-[#D50032]/10 transition-all"
+                  title="Profile"
+                  aria-label="Profile"
+                >
+                  <UserCircle className="h-8 w-8" />
+                </button>
+              ) : (
+                <Link to="/login">
+                  <Button variant="ghost" className="text-gray-700 hover:text-[#D50032] hover:bg-[#D50032]/10" size="lg">Login</Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -107,6 +203,85 @@ export default function MarketingLayout() {
       <main className="flex-1 flex flex-col">
         <Outlet />
       </main>
+
+      <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
+        <DialogContent className="sm:max-w-[460px] bg-white p-0 overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100">
+            <DialogTitle className="text-[#121212] flex items-center gap-3">
+              <span className="w-11 h-11 rounded-full bg-[#D50032] text-white flex items-center justify-center text-sm font-bold">
+                {initials}
+              </span>
+              Profile
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleProfileSave} className="px-6 py-5 space-y-4">
+            <div>
+              <Label htmlFor="publicProfileName">Full Name</Label>
+              <div className="relative mt-2">
+                <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  id="publicProfileName"
+                  value={profileForm.full_name}
+                  onChange={(event) => setProfileForm((current) => ({ ...current, full_name: event.target.value }))}
+                  className="pl-10 bg-gray-50 border-gray-300 focus:border-[#D50032] focus:ring-[#D50032]"
+                  disabled={profileSaving}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="publicProfileEmail">Email Address</Label>
+              <div className="relative mt-2">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  id="publicProfileEmail"
+                  type="email"
+                  value={profileForm.email}
+                  onChange={(event) => setProfileForm((current) => ({ ...current, email: event.target.value }))}
+                  className="pl-10 bg-gray-50 border-gray-300 focus:border-[#D50032] focus:ring-[#D50032]"
+                  disabled={profileSaving}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="publicProfilePhone">Phone Number</Label>
+              <div className="relative mt-2">
+                <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  id="publicProfilePhone"
+                  type="tel"
+                  value={profileForm.phone}
+                  onChange={(event) => setProfileForm((current) => ({ ...current, phone: event.target.value }))}
+                  className="pl-10 bg-gray-50 border-gray-300 focus:border-[#D50032] focus:ring-[#D50032]"
+                  disabled={profileSaving}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-5">
+              <Button
+                type="submit"
+                className="flex-1 bg-[#D50032] hover:bg-[#b00029] text-white font-bold"
+                disabled={profileSaving}
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {profileSaving ? "Saving..." : "Save Changes"}
+              </Button>
+              <Button
+                type="button"
+                onClick={handleLogout}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold border border-gray-200"
+              >
+                Logout
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Footer */}
       <footer className="py-12 relative z-10" style={{ background: "#121212", color: "white" }}>

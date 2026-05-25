@@ -42,9 +42,17 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
   const completePayment = async () => {
     setLoading(true);
     try {
-      const payload = couponCode.trim() ? { distributor_code: couponCode.trim() } : {};
-      await api.post(`/courses/${course.id}/enroll`, payload);
-      onSuccess();
+      if (Number(finalPrice) > 0) {
+        const res = await api.post("/payments/create", { course_id: course.id });
+        if (res.data?.redirect_url) {
+          window.location.href = res.data.redirect_url;
+          return;
+        }
+      } else {
+        const payload = couponCode.trim() ? { distributor_code: couponCode.trim() } : {};
+        await api.post(`/courses/${course.id}/enroll`, payload);
+        onSuccess();
+      }
     } catch (err: any) {
       const detail = err.response?.data?.detail;
       if (Array.isArray(detail)) {

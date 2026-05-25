@@ -318,7 +318,7 @@ export default function CourseEnrollment() {
               Cancel
             </Button>
             <Button
-              onClick={() => navigate("/student/exams")}
+              onClick={() => navigate(`/student/entrance-exam?course_id=${selectedCourse}`)}
               className="bg-[#D50032] text-white hover:bg-[#b00029] shadow-lg shadow-[#D50032]/20 px-8"
               size="lg"
             >

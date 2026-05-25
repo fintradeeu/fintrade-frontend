@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import api from "../../services/api";
 import { useNavigate, Link } from "react-router";
 import { Button } from "../../components/ui/button";
@@ -59,17 +59,65 @@ export default function EntranceExam() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [timeRemaining, setTimeRemaining] = useState(1800); // 30 minutes
-  const [cameraActive, setCameraActive] = useState(true);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [examId, setExamId] = useState<number | null>(null);
   const [attemptId, setAttemptId] = useState<number | null>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [errorMsg, setErrorMsg] = useState("");
+  const [pastAttempts, setPastAttempts] = useState<any[]>([]);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const timerRef = useRef<number | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (videoRef.current && cameraStream) {
+      videoRef.current.srcObject = cameraStream;
+    }
+  }, [cameraStream, examStarted]);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        window.clearInterval(timerRef.current);
+      }
+      cameraStream?.getTracks().forEach((track) => track.stop());
+    };
+  }, [cameraStream]);
+
+  const enableCamera = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error("Camera access is not supported in this browser.");
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: false,
+    });
+
+    // Monitor camera track closure/disconnection
+    stream.getVideoTracks().forEach((track) => {
+      track.onended = () => {
+        handleAutoSubmit("Camera Turned Off");
+      };
+    });
+
+    setCameraStream(stream);
+    setCameraActive(true);
+    return stream;
+  };
+
+  const stopCamera = () => {
+    cameraStream?.getTracks().forEach((track) => track.stop());
+    setCameraStream(null);
+    setCameraActive(false);
+  };
 
   useEffect(() => {
     // Check URL for specific exam ID
     const searchParams = new URLSearchParams(window.location.search);
     const urlExamId = searchParams.get("exam_id");
+    const urlCourseId = searchParams.get("course_id");
     
     // Fetch available entrance exams on load
     api.get("/exams/entrance").then(res => {
@@ -78,7 +126,15 @@ export default function EntranceExam() {
           // Verify it exists in the active list
           const found = res.data.find((e: any) => e.id.toString() === urlExamId);
           if (found) setExamId(found.id);
-          else setExamId(res.data[0].id);
+          else {
+            const courseMatch = urlCourseId
+              ? res.data.find((e: any) => Number(e.course_id) === Number(urlCourseId))
+              : null;
+            setExamId(courseMatch?.id || res.data[0].id);
+          }
+        } else if (urlCourseId) {
+          const courseMatch = res.data.find((e: any) => Number(e.course_id) === Number(urlCourseId));
+          setExamId(courseMatch?.id || res.data[0].id);
         } else {
           setExamId(res.data[0].id);
         }
@@ -86,16 +142,144 @@ export default function EntranceExam() {
     }).catch(err => console.error("Failed to load exams", err));
   }, []);
 
+  useEffect(() => {
+    if (examId && !examStarted) {
+      api.get("/exams/all")
+        .then((res) => {
+          const matchingExam = res.data.entrance_exams?.find((e: any) => e.id === examId);
+          if (matchingExam) {
+            setPastAttempts(matchingExam.attempts || []);
+          }
+        })
+        .catch((err) => console.error("Failed to load past attempts", err));
+    }
+  }, [examId, examStarted]);
+
+  const attemptIdRef = useRef<number | null>(null);
+  const questionsRef = useRef<any[]>([]);
+  const answersRef = useRef<number[]>([]);
+
+  useEffect(() => {
+    attemptIdRef.current = attemptId;
+  }, [attemptId]);
+
+  useEffect(() => {
+    questionsRef.current = questions;
+  }, [questions]);
+
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+
+  const handleAutoSubmit = async (reason: string = "Tab Switched / Screen lost focus") => {
+    const currentAttemptId = attemptIdRef.current;
+    if (!currentAttemptId) return;
+
+    try {
+      const mappedAnswers = questionsRef.current.map((q, idx) => ({
+        question_id: q.id,
+        selected_option_id: answersRef.current[idx] !== -1 ? q.options[answersRef.current[idx]].id : null
+      })).filter(a => a.selected_option_id !== null);
+
+      // Save violation reason to localStorage
+      try {
+        const savedViolations = localStorage.getItem("entrance_violations");
+        const violations = savedViolations ? JSON.parse(savedViolations) : {};
+        violations[currentAttemptId] = reason;
+        localStorage.setItem("entrance_violations", JSON.stringify(violations));
+      } catch (storageErr) {
+        console.error("Failed to write to localStorage:", storageErr);
+      }
+
+      await api.post("/exams/submit", {
+        attempt_id: currentAttemptId,
+        answers: mappedAnswers
+      });
+      
+      stopCamera();
+      alert(`Exam Terminated: ${reason}. Your answers have been submitted, and the exam is canceled.`);
+      navigate("/");
+    } catch (err: any) {
+      console.error("Auto submit failed", err);
+      stopCamera();
+      navigate("/");
+    }
+  };
+
+  // 1. Detect tab switching & window blur
+  useEffect(() => {
+    if (!examStarted) return;
+
+    const handleViolation = () => {
+      handleAutoSubmit("Tab Switched / Screen lost focus");
+    };
+
+    document.addEventListener("visibilitychange", handleViolation);
+    window.addEventListener("blur", handleViolation);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleViolation);
+      window.removeEventListener("blur", handleViolation);
+    };
+  }, [examStarted]);
+
+  // 2. Prevent back navigation / popstate
+  useEffect(() => {
+    if (!examStarted) return;
+
+    // Push a fake state to the history stack to intercept back button
+    window.history.pushState(null, "", window.location.href);
+
+    const handlePopState = () => {
+      const confirmLeave = window.confirm("Warning: Pressing the Back/Exit button will cancel your exam and submit it immediately. Do you want to submit and exit?");
+      if (confirmLeave) {
+        handleAutoSubmit("Tab Switched / Screen lost focus");
+      } else {
+        // Push state again to keep them on the page
+        window.history.pushState(null, "", window.location.href);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [examStarted]);
+
+  // 3. Prevent page refresh & close (beforeunload)
+  useEffect(() => {
+    if (!examStarted) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "Leaving this page will cancel your exam and submit your current progress.";
+      return e.returnValue;
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [examStarted]);
+
   const handleStartExam = async () => {
     if (!examId) {
       setErrorMsg("No entrance exams available at the moment.");
       return;
     }
+    if (pastAttempts.length >= 3) {
+      setErrorMsg("Entrance Exam Locked: Maximum 3 attempts reached.");
+      return;
+    }
     setErrorMsg("");
+    let stream: MediaStream | null = null;
     try {
+      stream = await enableCamera();
+
       // 1. Start attempt
       const startRes = await api.post(`/exams/start?exam_id=${examId}`);
       setAttemptId(startRes.data.attempt_id);
+      setTimeRemaining((startRes.data.duration_minutes || 30) * 60);
 
       // 2. Fetch questions
       const qRes = await api.get(`/exams/questions?exam_id=${examId}`);
@@ -116,10 +300,15 @@ export default function EntranceExam() {
       
       setExamStarted(true);
       // Start timer
-      const timer = setInterval(() => {
+      if (timerRef.current) {
+        window.clearInterval(timerRef.current);
+      }
+      timerRef.current = window.setInterval(() => {
         setTimeRemaining((prev) => {
           if (prev <= 1) {
-            clearInterval(timer);
+            if (timerRef.current) {
+              window.clearInterval(timerRef.current);
+            }
             handleSubmitExam();
             return 0;
           }
@@ -127,7 +316,9 @@ export default function EntranceExam() {
         });
       }, 1000);
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.detail || "Failed to start exam. Note: Entrance exams have a 30-day retry cooldown.");
+      stream?.getTracks().forEach((track) => track.stop());
+      stopCamera();
+      setErrorMsg(err.response?.data?.detail || err.message || "Failed to start exam. Please allow camera access and try again.");
     }
   };
 
@@ -156,11 +347,13 @@ export default function EntranceExam() {
       const passed = res.data.passed;
 
       if (passed) {
+        stopCamera();
         alert(`Congratulations! You passed with a score of ${score}%.`);
         navigate("/student/courses");
       } else {
+        stopCamera();
         alert(`Score: ${score}%. You need 60% to pass. Please try again after 30 days.`);
-        navigate("/student/dashboard");
+        navigate("/");
       }
     } catch (err: any) {
       alert("Failed to submit exam: " + (err.response?.data?.detail || "Unknown error"));
@@ -267,6 +460,157 @@ export default function EntranceExam() {
               </div>
             </div>
 
+            {/* Attempts Progress Indicator & History Section */}
+            <div className="border border-[#0B2A5B]/10 rounded-lg p-6 mb-8 bg-[#F4F1EA]/30">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-[#0B2A5B] flex items-center gap-2">
+                  <Clock size={20} className="text-[#C2A86A]" />
+                  Your Attempt Status
+                </h3>
+                <span className="text-sm font-semibold text-[#0B2A5B]/70">
+                  {pastAttempts.length} / 3 Attempts Used
+                </span>
+              </div>
+
+              {/* Progress dots */}
+              <div className="flex gap-3 mb-6">
+                {[1, 2, 3].map((num) => {
+                  const attempt = pastAttempts[num - 1];
+                  const isTaken = !!attempt;
+                  const isPassed = attempt?.passed;
+                  let violationReason = "";
+                  if (attempt) {
+                    try {
+                      const stored = localStorage.getItem("entrance_violations");
+                      if (stored) {
+                        const parsed = JSON.parse(stored);
+                        violationReason = parsed[attempt.id] || "";
+                      }
+                    } catch (e) {
+                      console.error(e);
+                    }
+                  }
+
+                  return (
+                    <div
+                      key={num}
+                      className={`flex-1 h-3 rounded-full transition-all duration-300 ${
+                        isTaken
+                          ? violationReason
+                            ? "bg-amber-500"
+                            : isPassed
+                            ? "bg-green-600"
+                            : "bg-red-500"
+                          : "bg-gray-200"
+                      }`}
+                      title={
+                        isTaken
+                          ? violationReason
+                            ? `Attempt #${num}: Terminated due to ${violationReason}`
+                            : isPassed
+                            ? `Attempt #${num}: Passed (${attempt.percentage}%)`
+                            : `Attempt #${num}: Failed (${attempt.percentage}%)`
+                          : `Attempt #${num}: Remaining`
+                      }
+                    />
+                  );
+                })}
+              </div>
+
+              {pastAttempts.length > 0 ? (
+                <div className="space-y-3">
+                  {pastAttempts.map((attempt, index) => {
+                    const attemptNum = index + 1;
+                    let violationReason = "";
+                    try {
+                      const stored = localStorage.getItem("entrance_violations");
+                      if (stored) {
+                        const parsed = JSON.parse(stored);
+                        violationReason = parsed[attempt.id] || "";
+                      }
+                    } catch (e) {
+                      console.error(e);
+                    }
+
+                    return (
+                      <div
+                        key={attempt.id}
+                        className={`flex items-center justify-between p-4 rounded-lg border transition-all hover:shadow-sm ${
+                          violationReason
+                            ? "bg-amber-50/50 border-amber-200"
+                            : attempt.passed
+                            ? "bg-green-50/50 border-green-200"
+                            : "bg-red-50/50 border-red-200"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                            violationReason
+                              ? "bg-amber-100 text-amber-800"
+                              : attempt.passed
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}>
+                            #{attemptNum}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-[#0B2A5B]">
+                              {violationReason ? (
+                                <span className="text-amber-800 flex items-center gap-1.5">
+                                  <AlertTriangle size={14} />
+                                  Terminated: {violationReason}
+                                </span>
+                              ) : attempt.passed ? (
+                                <span className="text-green-800">Passed</span>
+                              ) : (
+                                <span className="text-red-800">Failed</span>
+                              )}
+                            </p>
+                            <p className="text-xs text-[#0B2A5B]/60 mt-0.5">
+                              Submitted: {attempt.submitted_at ? new Date(attempt.submitted_at).toLocaleString(undefined, {
+                                dateStyle: "medium",
+                                timeStyle: "short"
+                              }) : "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className={`font-bold text-lg ${
+                            violationReason
+                              ? "text-amber-700"
+                              : attempt.passed
+                              ? "text-green-700"
+                              : "text-red-700"
+                          }`}>
+                            {violationReason ? "—" : `${attempt.percentage}%`}
+                          </span>
+                          <p className="text-[10px] text-[#0B2A5B]/40 leading-none">Score</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-4 bg-white border border-dashed border-[#0B2A5B]/15 rounded-lg text-[#0B2A5B]/50 text-sm">
+                  No previous attempts found. Start the exam below!
+                </div>
+              )}
+            </div>
+
+            {pastAttempts.length >= 3 && (
+              <div className="bg-red-50 border-2 border-red-500 rounded-lg p-5 mb-8 shadow-md">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="text-red-600 flex-shrink-0" size={24} />
+                  <div>
+                    <h4 className="font-bold text-red-800 text-base">Entrance Exam Locked</h4>
+                    <p className="text-sm text-red-700 mt-1">
+                      You have used all 3 attempts. You are no longer permitted to take the entrance exam with this account. Please contact student support for further assistance.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {errorMsg && (
               <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-8">
                 <div className="flex items-start gap-3">
@@ -280,14 +624,24 @@ export default function EntranceExam() {
             )}
 
             <div className="flex gap-4">
-              <Button
-                onClick={handleStartExam}
-                disabled={!examId}
-                size="lg"
-                className="flex-1 bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] shadow-lg shadow-[#0B2A5B]/20"
-              >
-                Start Exam
-              </Button>
+              {pastAttempts.length >= 3 ? (
+                <Button
+                  disabled
+                  size="lg"
+                  className="flex-1 bg-red-800/20 text-red-800 border border-red-800/10 cursor-not-allowed shadow-none"
+                >
+                  Entrance Exam Locked (3/3 Attempts Used)
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleStartExam}
+                  disabled={!examId}
+                  size="lg"
+                  className="flex-1 bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] shadow-lg shadow-[#0B2A5B]/20"
+                >
+                  Start Exam
+                </Button>
+              )}
               <Link to="/" className="flex-1">
                 <Button
                   size="lg"
@@ -305,7 +659,6 @@ export default function EntranceExam() {
   }
 
   const question = questions[currentQuestion];
-
   return (
     <div className="min-h-screen bg-[#F4F1EA]">
       {/* Exam Header */}
@@ -418,6 +771,15 @@ export default function EntranceExam() {
 
           {/* Question Navigator */}
           <Card className="p-6 bg-white shadow-xl h-fit sticky top-24">
+            <div className="mb-6 overflow-hidden rounded-lg border border-[#0B2A5B]/10 bg-black aspect-video">
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                playsInline
+                className="h-full w-full object-cover"
+              />
+            </div>
             <h3 className="text-lg font-semibold text-[#0B2A5B] mb-4">Question Navigator</h3>
             <div className="grid grid-cols-5 gap-2">
               {questions.map((_, index) => (
