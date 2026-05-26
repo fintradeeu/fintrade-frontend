@@ -288,7 +288,7 @@ export default function LoginPage() {
 
     // Auto-submit when all 6 digits entered
     const fullCode = newCode.join("");
-    if (fullCode.length === 6) {
+    if (fullCode.length === 6 && step === "otp") {
       handleVerifyOTP(fullCode);
     }
   };
@@ -308,7 +308,7 @@ export default function LoginPage() {
       newCode[i] = pasted[i] || "";
     }
     setOtpCode(newCode);
-    if (pasted.length === 6) {
+    if (pasted.length === 6 && step === "otp") {
       handleVerifyOTP(pasted);
     } else {
       otpRefs.current[pasted.length]?.focus();
