@@ -69,6 +69,7 @@ export default function EntranceExam() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const timerRef = useRef<number | null>(null);
   const navigate = useNavigate();
+  const isExamFinishedRef = useRef(false);
 
   useEffect(() => {
     if (videoRef.current && cameraStream) {
@@ -191,16 +192,19 @@ export default function EntranceExam() {
         console.error("Failed to write to localStorage:", storageErr);
       }
 
+      // Set the flag for the warning popup on the marketing layout page
+      localStorage.setItem("entrance_violation_popup", "true");
+
       await api.post("/exams/submit", {
         attempt_id: currentAttemptId,
         answers: mappedAnswers
       });
       
       stopCamera();
-      alert(`Exam Terminated: ${reason}. Your answers have been submitted, and the exam is canceled.`);
       navigate("/");
     } catch (err: any) {
       console.error("Auto submit failed", err);
+      localStorage.setItem("entrance_violation_popup", "true");
       stopCamera();
       navigate("/");
     }
@@ -211,6 +215,7 @@ export default function EntranceExam() {
     if (!examStarted) return;
 
     const handleViolation = () => {
+      if (isExamFinishedRef.current) return;
       handleAutoSubmit("Tab Switched / Screen lost focus");
     };
 
@@ -275,6 +280,7 @@ export default function EntranceExam() {
     let stream: MediaStream | null = null;
     try {
       stream = await enableCamera();
+      isExamFinishedRef.current = false;
 
       // 1. Start attempt
       const startRes = await api.post(`/exams/start?exam_id=${examId}`);
@@ -330,6 +336,8 @@ export default function EntranceExam() {
 
   const handleSubmitExam = async () => {
     if (!attemptId) return;
+
+    isExamFinishedRef.current = true;
 
     try {
       // Map local indices back to option IDs
@@ -818,6 +826,7 @@ export default function EntranceExam() {
           </Card>
         </div>
       </div>
+
     </div>
   );
 }

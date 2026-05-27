@@ -17,6 +17,8 @@ export default function AdminExams() {
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState<any[]>([]);
   const [courseMap, setCourseMap] = useState<Record<number, string>>({});
+  const [moduleMap, setModuleMap] = useState<Record<number, string>>({});
+  const [modules, setModules] = useState<any[]>([]);
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,6 +26,7 @@ export default function AdminExams() {
     title: "",
     type: "entrance",
     course_id: "",
+    module_id: "",
     duration_minutes: 60,
     passing_score: 60,
     questions_per_attempt: "",
@@ -77,10 +80,31 @@ export default function AdminExams() {
       .catch(err => console.error("Error fetching courses:", err));
   }, []);
 
+  // Fetch modules when a course is selected and type is module_final
+  useEffect(() => {
+    if (formData.type === "module_final" && formData.course_id) {
+      api.get(`/courses/${formData.course_id}`)
+        .then(res => {
+          setModules(res.data.modules || []);
+          const mMap: Record<number, string> = {};
+          (res.data.modules || []).forEach((m: any) => { mMap[m.id] = m.title; });
+          setModuleMap(mMap);
+        })
+        .catch(err => console.error("Error fetching modules:", err));
+    } else {
+      setModules([]);
+      setModuleMap({});
+    }
+  }, [formData.course_id, formData.type]);
+
   const handleCreate = async () => {
     try {
       if (!formData.title || !formData.course_id) {
         toast.warning("Please fill in title and course");
+        return;
+      }
+      if (formData.type === "module_final" && !formData.module_id) {
+        toast.warning("Please select a module for Module Final exam");
         return;
       }
       
@@ -96,6 +120,9 @@ export default function AdminExams() {
       if (formData.questions_per_attempt) {
         payload.questions_per_attempt = parseInt(formData.questions_per_attempt);
       }
+      if (formData.type === "module_final" && formData.module_id) {
+        payload.module_id = parseInt(formData.module_id);
+      }
 
       if (formData.type === "entrance") {
         await api.post("/admin/exams/create", payload);
@@ -108,7 +135,7 @@ export default function AdminExams() {
       
       toast.success("Exam created successfully!");
       setIsModalOpen(false);
-      setFormData({ title: "", type: "entrance", course_id: "", duration_minutes: 60, passing_score: 60, questions_per_attempt: "", marks_per_question: 1, negative_marks: 0 });
+      setFormData({ title: "", type: "entrance", course_id: "", module_id: "", duration_minutes: 60, passing_score: 60, questions_per_attempt: "", marks_per_question: 1, negative_marks: 0 });
       setLoading(true);
       fetchExams();
     } catch (err: any) {
@@ -249,7 +276,7 @@ export default function AdminExams() {
               <select
                 className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={formData.course_id}
-                onChange={(e) => setFormData({ ...formData, course_id: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, course_id: e.target.value, module_id: "" })}
               >
                 <option value="">Select a Course</option>
                 {courses.map(c => (
@@ -257,6 +284,21 @@ export default function AdminExams() {
                 ))}
               </select>
             </div>
+            {formData.type === "module_final" && formData.course_id && modules.length > 0 && (
+              <div className="grid gap-2">
+                <Label>Module</Label>
+                <select
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={formData.module_id || ""}
+                  onChange={(e) => setFormData({ ...formData, module_id: e.target.value })}
+                >
+                  <option value="">Select a Module</option>
+                  {modules.map(m => (
+                    <option key={m.id} value={m.id}>{m.title}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label>Duration (min)</Label>

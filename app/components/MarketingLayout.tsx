@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router";
-import { Search, Phone, Instagram, Facebook, Youtube, Linkedin, X, Download, UserCircle, Save, Mail, Smartphone } from "lucide-react";
+import { Search, Phone, Instagram, Facebook, Youtube, Linkedin, X, Download, UserCircle, Save, Mail, Smartphone, AlertTriangle } from "lucide-react";
 import { Button } from "./ui/button";
+import { Card } from "./ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -12,7 +13,15 @@ export default function MarketingLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
+  const [showViolationModal, setShowViolationModal] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (localStorage.getItem("entrance_violation_popup") === "true") {
+      setShowViolationModal(true);
+      localStorage.removeItem("entrance_violation_popup");
+    }
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -330,6 +339,58 @@ export default function MarketingLayout() {
           </div>
         </div>
       </footer>
+      {/* Proctoring Violation Warning Modal */}
+      {showViolationModal && (
+        <div className="fixed inset-0 z-[99999] bg-[#121212]/95 backdrop-blur-md flex items-center justify-center p-4">
+          <Card className="max-w-xl w-full p-8 bg-white border-t-4 border-red-500 shadow-2xl relative">
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center animate-bounce">
+                <AlertTriangle size={36} className="text-red-500" />
+              </div>
+            </div>
+            
+            <h2 className="text-2xl font-bold text-center text-[#0B2A5B] mb-2">Proctored Exam Warning</h2>
+            <p className="text-center text-red-600 font-semibold mb-6">
+              System detected tab switching or application switching during your entrance exam!
+            </p>
+
+            <div className="bg-gray-50 rounded-xl p-5 border border-gray-100 mb-8 space-y-3">
+              <h3 className="font-bold text-[#0B2A5B] text-sm uppercase tracking-wider mb-2">Rules & Regulations:</h3>
+              <p className="text-xs text-gray-600 leading-relaxed flex items-start gap-2">
+                <span className="text-red-500 font-bold">•</span>
+                <span>Opening another tab, browser window, or minimizing the screen is strictly prohibited.</span>
+              </p>
+              <p className="text-xs text-gray-600 leading-relaxed flex items-start gap-2">
+                <span className="text-red-500 font-bold">•</span>
+                <span>Your exam attempt has been terminated, and all progress up to the point of violation has been auto-submitted.</span>
+              </p>
+              <p className="text-xs text-gray-600 leading-relaxed flex items-start gap-2">
+                <span className="text-red-500 font-bold">•</span>
+                <span>You can review your attempt status and start another attempt by clicking below.</span>
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={() => {
+                  setShowViolationModal(false);
+                  navigate("/student/entrance-exam");
+                }}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold h-12 text-md shadow-lg shadow-green-600/20"
+              >
+                Start Same Exam
+              </Button>
+              <Button
+                onClick={() => setShowViolationModal(false)}
+                variant="outline"
+                className="flex-1 border-2 border-red-200 text-red-600 hover:bg-red-50 font-bold h-12 text-md"
+              >
+                Close
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

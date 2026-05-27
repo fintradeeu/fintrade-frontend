@@ -131,6 +131,7 @@ export default function Modules() {
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [generatingAudio, setGeneratingAudio] = useState(false);
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<number>>(new Set());
+  const [videoPolicies, setVideoPolicies] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -139,6 +140,7 @@ export default function Modules() {
         const dashRes = await api.get("/learning/dashboard");
         const completedIds = new Set<number>(dashRes.data.completed_lessons.map((l: any) => l.lesson_id));
         setCompletedLessonIds(completedIds);
+        setVideoPolicies(dashRes.data.video_policies || []);
 
         // Fetch enrolled courses with progress
         const enrolledRes = await api.get("/courses/enrolled");
@@ -405,11 +407,24 @@ export default function Modules() {
                       
                       {/* Manual Complete Button (Fallback for embedded iframes or text) */}
                       {!completedLessonIds.has(activeLesson.id) ? (
-                        <div className="mt-8 flex justify-center">
-                          <Button onClick={() => markCompleted(activeLesson.id)} className="bg-green-600 text-white hover:bg-green-700">
-                            <CheckCircle2 size={16} className="mr-2" /> Mark as Complete & Continue
-                          </Button>
-                        </div>
+                        (() => {
+                          const activePolicy = videoPolicies.find(p => p.module_id === activeLesson.module_id);
+                          const isVideoWatchMandatory = activePolicy ? activePolicy.mandatory : true;
+                          if ((activeLesson.content_type === "video" || activeLesson.content_type === "audio") && isVideoWatchMandatory) {
+                            return (
+                              <div className="mt-8 p-4 bg-orange-50 border border-orange-200 rounded-xl text-orange-700 text-sm text-center font-semibold max-w-md mx-auto">
+                                ⚠️ You must watch/listen to this entire lesson to mark it as completed.
+                              </div>
+                            );
+                          }
+                          return (
+                            <div className="mt-8 flex justify-center">
+                              <Button onClick={() => markCompleted(activeLesson.id)} className="bg-green-600 text-white hover:bg-green-700">
+                                <CheckCircle2 size={16} className="mr-2" /> Mark as Complete & Continue
+                              </Button>
+                            </div>
+                          );
+                        })()
                       ) : (
                         <div className="mt-8 space-y-3">
                           <div className="flex justify-center items-center gap-2 text-green-600 font-bold">
@@ -446,7 +461,7 @@ export default function Modules() {
                     <Tabs defaultValue="lessons" className="w-full">
                       <TabsList className="grid w-full grid-cols-2 mb-6">
                         <TabsTrigger value="lessons">Modules & Lessons</TabsTrigger>
-                        <TabsTrigger value="resources">Resources</TabsTrigger>
+                        <TabsTrigger value="resources">Study Materials</TabsTrigger>
                       </TabsList>
 
                       <TabsContent value="lessons" className="space-y-4">
@@ -522,7 +537,7 @@ export default function Modules() {
                         });
 
                         if (resources.length === 0) {
-                          return <p className="text-[#0B2A5B]/60 text-center py-8">No downloadable resources available for this course yet.</p>;
+                          return <p className="text-[#0B2A5B]/60 text-center py-8">No downloadable study materials available for this course yet.</p>;
                         }
 
                         return resources.map((res, i) => (
@@ -532,7 +547,7 @@ export default function Modules() {
                                 <FileText className="text-[#C2A86A]" size={20} />
                                 <div>
                                   <p className="font-semibold text-[#0B2A5B]">{res.title}</p>
-                                  <p className="text-xs text-[#0B2A5B]/60">{res.type} resource</p>
+                                  <p className="text-xs text-[#0B2A5B]/60">{res.type} study material</p>
                                 </div>
                               </div>
                               <a href={res.url.startsWith('http') ? res.url : `${api.defaults.baseURL}${res.url}`} target="_blank" rel="noreferrer">

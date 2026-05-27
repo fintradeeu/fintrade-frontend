@@ -59,25 +59,34 @@ export default function CourseEnrollment() {
   const [errorMsg, setErrorMsg] = useState("");
   const [couponMsg, setCouponMsg] = useState("");
   const [isEnrolled, setIsEnrolled] = useState(true);
+  const [enrolledIds, setEnrolledIds] = useState<number[]>([]);
+  const [entranceExams, setEntranceExams] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        // Fetch enrolled course IDs to filter them out
-        let enrolledIds: number[] = [];
+        // Fetch enrolled course IDs
+        let localEnrolledIds: number[] = [];
         try {
           const enrolledRes = await api.get("/courses/enrolled");
-          enrolledIds = enrolledRes.data.map((e: any) => e.course_id);
-          setIsEnrolled(enrolledIds.length > 0);
+          localEnrolledIds = enrolledRes.data.map((e: any) => e.course_id);
+          setEnrolledIds(localEnrolledIds);
+          setIsEnrolled(localEnrolledIds.length > 0);
         } catch { 
           /* not logged in — show all */ 
           setIsEnrolled(false);
         }
 
+        // Fetch entrance exams
+        try {
+          const examsRes = await api.get("/exams/all");
+          setEntranceExams(examsRes.data.entrance_exams || []);
+        } catch (err) {
+          console.error("Failed to load exams", err);
+        }
+
         const res = await api.get("/courses");
-        const availableCourses = res.data.filter(
-          (c: any) => !enrolledIds.includes(c.id)
-        );
+        const availableCourses = res.data; // Show all courses
 
         // Fetch detail for each to get real module count
         const detailed = await Promise.all(
@@ -131,11 +140,22 @@ export default function CourseEnrollment() {
     setSelectedCourse(courseId);
     const course = courses.find(c => c.id === courseId);
     setFinalPrice(course ? course.price : 0);
-    setShowPayment(true);
     setDiscount(0);
     setCouponCode("");
     setCouponMsg("");
     setErrorMsg("");
+
+    // Check if there is an entrance exam for this course
+    const exam = entranceExams.find((e: any) => e.course_id === courseId);
+    if (exam && exam.is_active) {
+      const hasPassed = exam.attempts && exam.attempts.some((a: any) => a.passed);
+      if (!hasPassed) {
+        setShowEntranceModal(true);
+        return;
+      }
+    }
+
+    setShowPayment(true);
   };
 
   const completePayment = async () => {
@@ -210,7 +230,34 @@ export default function CourseEnrollment() {
         </div>
       </div>
 
-      {!showPayment ? (
+      {showEntranceModal ? (
+        <Card className="max-w-xl mx-auto p-8 bg-white shadow-2xl text-center border-t-4 border-[#D50032]">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <FileText className="text-[#D50032]" size={32} />
+          </div>
+          <h2 className="text-2xl font-bold text-[#0B2A5B] mb-4">Entrance Exam Required</h2>
+          <p className="text-[#0B2A5B]/70 mb-8 text-lg">
+            You must pass the entrance exam for <strong className="text-[#0B2A5B]">{selectedCourseData?.title}</strong> before you can enroll.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Button
+              onClick={() => setShowEntranceModal(false)}
+              variant="outline"
+              className="border-2 border-[#0B2A5B]/20 text-[#0B2A5B] hover:bg-[#F4F1EA]"
+              size="lg"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => navigate(`/student/entrance-exam?course_id=${selectedCourse}`)}
+              className="bg-[#D50032] text-white hover:bg-[#b00029] shadow-lg shadow-[#D50032]/20 px-8"
+              size="lg"
+            >
+              Take Entrance Exam Now
+            </Button>
+          </div>
+        </Card>
+      ) : !showPayment ? (
         <div className="grid md:grid-cols-2 gap-6">
           {courses.map((course) => (
             <Card key={course.id} className="p-6 bg-white shadow-lg hover:shadow-xl transition-shadow">
@@ -282,12 +329,21 @@ export default function CourseEnrollment() {
                     </p>
                   </div>
                 </div>
-                <Button
-                  onClick={() => handleEnroll(course.id)}
-                  className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] shadow-lg shadow-[#0B2A5B]/20"
-                >
-                  Enroll Now
-                </Button>
+                {enrolledIds.includes(course.id) ? (
+                  <Button
+                    onClick={() => navigate("/student/modules")}
+                    className="bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-600/20 font-bold"
+                  >
+                    Start Learning
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => handleEnroll(course.id)}
+                    className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] shadow-lg shadow-[#0B2A5B]/20 font-bold"
+                  >
+                    Enroll Now
+                  </Button>
+                )}
               </div>
             </Card>
           ))}
@@ -299,33 +355,6 @@ export default function CourseEnrollment() {
             </div>
           )}
         </div>
-      ) : showEntranceModal ? (
-        <Card className="max-w-xl mx-auto p-8 bg-white shadow-2xl text-center border-t-4 border-[#D50032]">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <FileText className="text-[#D50032]" size={32} />
-          </div>
-          <h2 className="text-2xl font-bold text-[#0B2A5B] mb-4">Entrance Exam Required</h2>
-          <p className="text-[#0B2A5B]/70 mb-8 text-lg">
-            You must pass the entrance exam for <strong className="text-[#0B2A5B]">{selectedCourseData?.title}</strong> before you can enroll.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <Button
-              onClick={() => setShowEntranceModal(false)}
-              variant="outline"
-              className="border-2 border-[#0B2A5B]/20 text-[#0B2A5B] hover:bg-[#F4F1EA]"
-              size="lg"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => navigate(`/student/entrance-exam?course_id=${selectedCourse}`)}
-              className="bg-[#D50032] text-white hover:bg-[#b00029] shadow-lg shadow-[#D50032]/20 px-8"
-              size="lg"
-            >
-              Take Entrance Exam Now
-            </Button>
-          </div>
-        </Card>
       ) : (
         <Card className="max-w-2xl mx-auto p-8 bg-white shadow-xl">
           <h2 className="text-2xl font-bold text-[#0B2A5B] mb-6">Complete Your Enrollment</h2>

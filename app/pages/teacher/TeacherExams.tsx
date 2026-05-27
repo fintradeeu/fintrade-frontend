@@ -24,12 +24,16 @@ export default function TeacherExams() {
     title: "",
     type: "entrance",
     course_id: "",
+    module_id: "",
     duration_minutes: 60,
     passing_score: 60,
     questions_per_attempt: "",
     marks_per_question: 1,
     negative_marks: 0,
   });
+  // Modules for selected course (used when exam type is module_final)
+  const [modules, setModules] = useState<any[]>([]);
+
 
   // Preview state
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -69,6 +73,7 @@ export default function TeacherExams() {
     fetchExams();
     api.get("/admin/courses")
       .then(res => {
+        console.log('Fetched courses:', res.data);
         setCourses(res.data);
         const map: Record<number, string> = {};
         res.data.forEach((c: any) => { map[c.id] = c.title; });
@@ -76,6 +81,20 @@ export default function TeacherExams() {
       })
       .catch(err => console.error("Error fetching courses:", err));
   }, []);
+
+  // Load modules when a course is selected and exam type is module_final
+  useEffect(() => {
+    if (formData.type === "module_final" && formData.course_id) {
+      api.get(`/courses/${formData.course_id}`)
+        .then(res => {
+          const modulesData = res.data.modules || [];
+          setModules(modulesData);
+        })
+        .catch(err => console.error("Error fetching modules for course:", err));
+    } else {
+      setModules([]);
+    }
+  }, [formData.course_id, formData.type]);
 
   const handleCreate = async () => {
     try {
@@ -97,6 +116,10 @@ export default function TeacherExams() {
         payload.questions_per_attempt = parseInt(formData.questions_per_attempt);
       }
 
+      if (formData.type === "module_final" && formData.module_id) {
+        payload.module_id = parseInt(formData.module_id);
+      }
+
       if (formData.type === "entrance") {
         await api.post("/admin/exams/create", payload);
       } else {
@@ -108,7 +131,8 @@ export default function TeacherExams() {
       
       toast.success("Exam created successfully!");
       setIsModalOpen(false);
-      setFormData({ title: "", type: "entrance", course_id: "", duration_minutes: 60, passing_score: 60, questions_per_attempt: "", marks_per_question: 1, negative_marks: 0 });
+      setFormData({ title: "", type: "entrance", course_id: "", module_id: "", duration_minutes: 60, passing_score: 60, questions_per_attempt: "", marks_per_question: 1, negative_marks: 0 });
+      setModules([]);
       setLoading(true);
       fetchExams();
     } catch (err: any) {
@@ -231,6 +255,21 @@ export default function TeacherExams() {
                 placeholder="e.g. Month 1 Final"
               />
             </div>
+            {formData.type === "module_final" && (
+               <div className="grid gap-2">
+                 <Label>Course</Label>
+                 <select
+                   className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm"
+                   value={formData.course_id}
+                   onChange={(e) => setFormData({ ...formData, course_id: e.target.value })}
+                 >
+                   <option value="">Select a Course</option>
+                   {courses.map(c => (
+                     <option key={c.id} value={c.id}>{c.title}</option>
+                   ))}
+                 </select>
+               </div>
+             )}
             <div className="grid gap-2">
               <Label>Exam Type</Label>
               <select
@@ -243,19 +282,18 @@ export default function TeacherExams() {
                 <option value="monthly">Monthly Assessment</option>
                 <option value="module_final">Module Final</option>
               </select>
-            </div>
-            <div className="grid gap-2">
-              <Label>Course</Label>
-              <select
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={formData.course_id}
-                onChange={(e) => setFormData({ ...formData, course_id: e.target.value })}
-              >
-                <option value="">Select a Course</option>
-                {courses.map(c => (
-                  <option key={c.id} value={c.id}>{c.title}</option>
-                ))}
-              </select>
+              {formData.type === "module_final" && modules.length > 0 && (
+                <select
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm mt-2"
+                  value={formData.module_id}
+                  onChange={(e) => setFormData({ ...formData, module_id: e.target.value })}
+                >
+                  <option value="">Select a Module</option>
+                  {modules.map((mod: any) => (
+                    <option key={mod.id} value={mod.id}>{mod.title}</option>
+                  ))}
+                </select>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">

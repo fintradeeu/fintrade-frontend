@@ -133,14 +133,6 @@ export default function MonthlyExams() {
             </button>
             <button
               className={`flex-1 py-2.5 px-4 whitespace-nowrap rounded-lg text-sm font-semibold transition-all ${
-                activeTab === "entrance" ? "bg-[#0B2A5B] text-white shadow" : "text-[#0B2A5B]/70 hover:bg-gray-50"
-              }`}
-              onClick={() => setActiveTab("entrance")}
-            >
-              Entrance Exams ({entranceExams.length})
-            </button>
-            <button
-              className={`flex-1 py-2.5 px-4 whitespace-nowrap rounded-lg text-sm font-semibold transition-all ${
                 activeTab === "monthly" ? "bg-[#0B2A5B] text-white shadow" : "text-[#0B2A5B]/70 hover:bg-gray-50"
               }`}
               onClick={() => setActiveTab("monthly")}
@@ -240,77 +232,6 @@ export default function MonthlyExams() {
             )
           )}
 
-          {/* ─── ENTRANCE EXAMS TAB ─── */}
-          {activeTab === "entrance" && (
-            entranceExams.length === 0 ? (
-              <Card className="p-8 bg-white shadow-lg text-center">
-                <p className="text-[#0B2A5B]/60">No pending entrance exams found.</p>
-              </Card>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {entranceExams.map((exam) => (
-                  <Card key={`entrance-${exam.id}`} className="p-6 shadow-lg bg-white flex flex-col">
-                    <div className="mb-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Badge className="bg-amber-600 text-white">Entrance Exam</Badge>
-                      </div>
-                      <h3 className="text-xl font-semibold text-[#0B2A5B] mb-1">{exam.title}</h3>
-                      <p className="text-sm text-[#0B2A5B]/70 line-clamp-2 mb-2">Clear this exam to unlock Course #{exam.course_id}</p>
-                    </div>
-
-                    <div className="space-y-2 mb-4 pb-4 border-b border-[#0B2A5B]/10 flex-1">
-                      <div className="flex items-center gap-2 text-sm text-[#0B2A5B]/70">
-                        <Clock size={14} className="text-[#C2A86A]" />
-                        <span>{exam.duration_minutes} minutes</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-[#0B2A5B]/70">
-                        <FileText size={14} className="text-[#C2A86A]" />
-                        <span>Passing: {exam.passing_score}%</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-[#0B2A5B]/70">
-                        <AlertCircle size={14} className="text-[#C2A86A]" />
-                        <span>{exam.questions_count} questions in pool</span>
-                      </div>
-                    </div>
-
-                    {/* Attempts History */}
-                    {exam.attempts && exam.attempts.length > 0 && (
-                      <div className="mb-4 space-y-2">
-                        <p className="text-xs font-bold text-[#0B2A5B]/40 uppercase tracking-wider">Your Attempts</p>
-                        {exam.attempts.map((att: any) => (
-                          <div key={att.id} className="flex items-center justify-between p-2 rounded bg-gray-50 border border-gray-100 group">
-                            <div className="flex flex-col">
-                              <span className={`text-xs font-bold ${att.passed ? 'text-green-600' : 'text-red-600'}`}>
-                                {att.percentage}% — {att.passed ? 'Passed' : 'Failed'}
-                              </span>
-                              <span className="text-[10px] text-[#0B2A5B]/40">
-                                {new Date(att.submitted_at).toLocaleDateString()}
-                              </span>
-                            </div>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-7 px-2 text-[#C2A86A] opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={() => navigate(`/student/exam/review/${att.id}?type=entrance`)}
-                            >
-                              Review <ExternalLink size={10} className="ml-1" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    <Button 
-                      onClick={() => handleStartExam(exam.id, "entrance")} 
-                      className="w-full bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a]"
-                    >
-                      {exam.attempts && exam.attempts.length > 0 ? "Retake Exam" : "Start Exam"}
-                    </Button>
-                  </Card>
-                ))}
-              </div>
-            )
-          )}
 
           {/* ─── MONTHLY EXAMS TAB ─── */}
           {activeTab === "monthly" && (

@@ -55,6 +55,7 @@ function CursorGlow() {
   );
 }
 
+
 // Dynamic "Popping" Ambient Glow
 function AmbientGlow() {
   const [blobs, setBlobs] = useState<{ id: number; x: number; y: number; size: number }[]>([]);
@@ -545,7 +546,7 @@ export default function MarketingHome() {
           );
           setApiCourses(detailed);
         }
-      } catch (err) {}
+      } catch (err) { }
     };
     fetchFeatured();
 
@@ -555,7 +556,7 @@ export default function MarketingHome() {
         const settingsObj = res.data.reduce((acc: any, s: any) => ({ ...acc, [s.key]: s.value }), {});
         setCmsSettings(settingsObj);
       } catch (err) { console.error("CMS fetch failed", err); }
-      
+
       try {
         const res = await api.get("/news");
         setBlogStories(res.data.filter((n: any) => n.type === "Blog Story").slice(0, 4));
@@ -687,7 +688,7 @@ export default function MarketingHome() {
                   We are not building another trading course company. We are building <span className="text-[#D50032]">India's first Trader-to-Funded Professional Pipeline</span> — where every student has a pathway to professional capital.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 w-full">
-                  <Link to={isAuthenticated ? "/student/courses" : "/register"} className="block w-full sm:w-auto">
+                  <Link to={isAuthenticated ? "/courses" : "/register"} className="block w-full sm:w-auto">
                     <Button
                       size="lg"
                       className="w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all hover:scale-105 text-lg px-8 py-6 bg-gradient-to-r from-[#D50032] to-[#FF0000] text-white hover:from-[#D50032] hover:to-[#D50032]"
@@ -778,6 +779,11 @@ export default function MarketingHome() {
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
                 Master trading with our industry-leading certifications
               </p>
+              <div className="mt-6 text-center">
+                <Link to="/courses" className="inline-block">
+                  <Button className="bg-[#D50032] hover:bg-[#b00029] text-white font-bold px-6 py-2 rounded-lg shadow-lg transition-all duration-300">View More Courses</Button>
+                </Link>
+              </div>
             </div>
             <div
               className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible pb-8 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
@@ -841,7 +847,7 @@ export default function MarketingHome() {
 
             {apiCourses.length > 3 && (
               <div className="mt-8 text-center">
-                <Link to={isAuthenticated ? "/student/courses" : "/register"}>
+                <Link to="/courses">
                   <Button className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] px-8 py-2 rounded-full font-semibold transition-all">
                     View More Courses
                   </Button>
@@ -1290,77 +1296,77 @@ export default function MarketingHome() {
             </div>
           </div>
         </footer>
-      {/* Brochure Modal */}
-      <Dialog open={brochureOpen} onOpenChange={setBrochureOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{otpSent ? "Verify Mobile" : "Download Brochure"}</DialogTitle>
-            <DialogDescription>
-              {otpSent
-                ? `Enter the 6-digit OTP sent to ${leadData.contact}`
-                : "Enter your details to receive the comprehensive course brochure."}
-            </DialogDescription>
-          </DialogHeader>
+        {/* Brochure Modal */}
+        <Dialog open={brochureOpen} onOpenChange={setBrochureOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>{otpSent ? "Verify Mobile" : "Download Brochure"}</DialogTitle>
+              <DialogDescription>
+                {otpSent
+                  ? `Enter the 6-digit OTP sent to ${leadData.contact}`
+                  : "Enter your details to receive the comprehensive course brochure."}
+              </DialogDescription>
+            </DialogHeader>
 
-          {!otpSent ? (
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Full Name <span className="text-[#D50032]">*</span></Label>
-                <Input id="name" placeholder="John Doe" value={leadData.name} onChange={(e) => setLeadData({ ...leadData, name: e.target.value })} />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="contact">Mobile Number <span className="text-[#D50032]">*</span></Label>
-                <Input id="contact" placeholder="+91 98765 43210" value={leadData.contact} onChange={(e) => setLeadData({ ...leadData, contact: e.target.value })} />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" placeholder="john@example.com" value={leadData.email} onChange={(e) => setLeadData({ ...leadData, email: e.target.value })} />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="city">City</Label>
-                <Input id="city" placeholder="Mumbai" value={leadData.city} onChange={(e) => setLeadData({ ...leadData, city: e.target.value })} />
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-6 py-8">
-              <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
-                </InputOTPGroup>
-              </InputOTP>
-              <Button variant="link" className="text-xs text-[#D50032]" onClick={() => setOtpSent(false)}>Edit Mobile Number</Button>
-            </div>
-          )}
-
-          <DialogFooter>
             {!otpSent ? (
-              <Button className="w-full" style={{ background: "#D50032", color: "white" }} onClick={sendOTP} disabled={!leadData.name || !leadData.contact}>
-                Get OTP
-              </Button>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Full Name <span className="text-[#D50032]">*</span></Label>
+                  <Input id="name" placeholder="John Doe" value={leadData.name} onChange={(e) => setLeadData({ ...leadData, name: e.target.value })} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="contact">Mobile Number <span className="text-[#D50032]">*</span></Label>
+                  <Input id="contact" placeholder="+91 98765 43210" value={leadData.contact} onChange={(e) => setLeadData({ ...leadData, contact: e.target.value })} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input id="email" type="email" placeholder="john@example.com" value={leadData.email} onChange={(e) => setLeadData({ ...leadData, email: e.target.value })} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input id="city" placeholder="Mumbai" value={leadData.city} onChange={(e) => setLeadData({ ...leadData, city: e.target.value })} />
+                </div>
+              </div>
             ) : (
-              <Button className="w-full" style={{ background: "#D50032", color: "white" }} onClick={verifyAndDownload} disabled={otp.length !== 6}>
-                Verify & Download
-              </Button>
+              <div className="flex flex-col items-center gap-6 py-8">
+                <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+                <Button variant="link" className="text-xs text-[#D50032]" onClick={() => setOtpSent(false)}>Edit Mobile Number</Button>
+              </div>
             )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      {selectedCourseForCheckout && (
-        <CourseCheckoutModal
-          course={selectedCourseForCheckout}
-          onClose={() => setSelectedCourseForCheckout(null)}
-          onSuccess={() => {
-            setSelectedCourseForCheckout(null);
-            window.location.href = "/student/modules";
-          }}
-        />
-      )}
-    </div>
+
+            <DialogFooter>
+              {!otpSent ? (
+                <Button className="w-full" style={{ background: "#D50032", color: "white" }} onClick={sendOTP} disabled={!leadData.name || !leadData.contact}>
+                  Get OTP
+                </Button>
+              ) : (
+                <Button className="w-full" style={{ background: "#D50032", color: "white" }} onClick={verifyAndDownload} disabled={otp.length !== 6}>
+                  Verify & Download
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {selectedCourseForCheckout && (
+          <CourseCheckoutModal
+            course={selectedCourseForCheckout}
+            onClose={() => setSelectedCourseForCheckout(null)}
+            onSuccess={() => {
+              setSelectedCourseForCheckout(null);
+              window.location.href = "/student/modules";
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }
