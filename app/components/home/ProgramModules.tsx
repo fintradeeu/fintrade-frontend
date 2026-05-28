@@ -122,13 +122,12 @@ const programSections: ProgramSection[] = [
 ];
 
 export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | null }) {
-  const [activeSectionIdx, setActiveSectionIdx] = useState(0);
-  const [expandedModuleKey, setExpandedModuleKey] = useState<string>("0-1");
+  const [expandedStageIdx, setExpandedStageIdx] = useState<number | null>(0);
 
   const sectionsToUse: ProgramSection[] = apiCourses && apiCourses.length > 0 
     ? apiCourses.map((c: any) => ({
         title: c.title,
-        duration: c.duration_hours ? `${c.duration_hours} Hours` : "TBD",
+        duration: c.duration_hours ? `${c.duration_hours} Days` : "TBD",
         modules: c.modules?.length > 0 ? c.modules.map((m: any, i: number) => ({
           num: i + 1,
           title: m.title,
@@ -139,191 +138,117 @@ export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | nu
       }))
     : programSections;
 
-  const toggleModule = (sectionIdx: number, moduleNum: number) => {
-    const key = `${sectionIdx}-${moduleNum}`;
-    setExpandedModuleKey((prev) => (prev === key ? "" : key));
+  const toggleStage = (idx: number) => {
+    setExpandedStageIdx((prev) => (prev === idx ? null : idx));
   };
 
-  const currentSection = sectionsToUse[activeSectionIdx] || sectionsToUse[0];
-
   return (
-    <section className="py-16 relative z-10" style={{ background: "linear-gradient(to bottom, transparent, rgba(213,0,50,0.01), transparent)" }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-4 md:py-6 relative z-10 bg-transparent">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#D50032]/30" style={{ background: "rgba(213,0,50,0.08)" }}>
-            <span className="text-[#D50032] font-semibold text-sm">📚 Program Curriculum</span>
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-4 border border-[#D50032]/20 bg-[#D50032]/5">
+            <span className="text-xs font-bold text-[#D50032] flex items-center gap-1">
+              📋 Program Structure
+            </span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>
-            {apiCourses && apiCourses.length > 0 ? "Explore Our Course Syllabus" : "Certified Professional Trading Program"}
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4 text-gray-900 tracking-tight text-center uppercase">
+            Certified Professional <span className="text-[#D50032]">Trading Program</span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            {apiCourses && apiCourses.length > 0 ? "A comprehensive look at the modules and topics covered across our expert-led programs." : "A comprehensive, rigorous 5-stage institutional curriculum designed to take you from a beginner to an expert funded trader."}
+          <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto font-medium text-center leading-relaxed">
+            A comprehensive 5-stage program spanning 105 days — from mindset to live market execution.
           </p>
         </div>
 
-        {/* Dynamic Selector & Accordions Layout */}
-        <div className="grid lg:grid-cols-12 gap-8 items-start">
-          
-          {/* Left Column: Navigation Phases (Desktop) */}
-          <div className="hidden lg:flex lg:col-span-5 flex-col gap-3.5">
-            {sectionsToUse.map((sec, idx) => {
-              const isActive = activeSectionIdx === idx;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setActiveSectionIdx(idx);
-                    setExpandedModuleKey(`${idx}-1`);
-                  }}
-                  className={`text-left p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden group whitespace-normal ${
-                    isActive
-                      ? "border-[#D50032] bg-white shadow-[0_8px_30px_rgba(213,0,50,0.06)]"
-                      : "border-gray-200 bg-white/60 hover:bg-white hover:border-gray-300 hover:shadow-md"
-                  }`}
-                >
-                  {/* Left accent bar for active tab */}
-                  {isActive && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#D50032]" />
-                  )}
+        {/* Timeline Container */}
+        <div className="relative">
+          {/* Centered Vertical Line on Desktop, Left-aligned on Mobile */}
+          <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-[3px] bg-gradient-to-b from-[#D50032]/20 via-[#D50032]/30 to-[#D50032]/10 -translate-x-1/2 z-0" />
 
-                  <div className="flex justify-between items-start mb-2 pl-2">
-                    <span className={`text-xs font-bold uppercase tracking-wider ${isActive ? "text-[#D50032]" : "text-gray-400"}`}>
-                      Course 0{idx + 1}
-                    </span>
-                    <span
-                      className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border ${
-                        isActive
-                          ? "bg-[#D50032]/10 text-[#D50032] border-[#D50032]/20"
-                          : "bg-gray-100 text-gray-500 border-gray-200"
+          <div className="space-y-6 md:space-y-8 relative z-10">
+            {sectionsToUse.map((sec, idx) => {
+              const isExpanded = expandedStageIdx === idx;
+              const isLeft = idx % 2 === 0;
+
+              return (
+                <div key={idx} className="relative flex flex-col md:flex-row items-center w-full">
+                  {/* Circular Node dot indicator on the timeline */}
+                  <div className="absolute left-4 md:left-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
+                    <button
+                      onClick={() => toggleStage(idx)}
+                      className={`w-6 h-6 rounded-full border-4 border-white transition-all duration-300 shadow-md ${
+                        isExpanded 
+                          ? "bg-[#D50032] scale-110 shadow-[0_0_12px_rgba(213,0,50,0.5)]" 
+                          : "bg-gray-200 hover:bg-gray-300"
                       }`}
-                    >
-                      <Clock className="w-3 h-3" />
-                      {sec.duration}
-                    </span>
+                    />
                   </div>
 
-                  <h3
-                    className={`text-sm font-extrabold tracking-wide uppercase leading-snug pl-2 ${
-                      isActive ? "text-[#121212]" : "text-gray-600 group-hover:text-gray-800"
-                    }`}
-                  >
-                    {sec.title}
-                  </h3>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Horizontal Scroller: Navigation Phases (Mobile/Tablet) */}
-          <div className="lg:hidden w-full overflow-x-auto pb-4 -mx-4 px-4 flex gap-3 scrollbar-hide snap-x">
-            {sectionsToUse.map((sec, idx) => {
-              const isActive = activeSectionIdx === idx;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setActiveSectionIdx(idx);
-                    setExpandedModuleKey(`${idx}-1`);
-                  }}
-                  className={`flex-shrink-0 snap-center p-4 rounded-xl border text-left min-w-[260px] max-w-[280px] transition-all relative overflow-hidden whitespace-normal flex flex-col justify-between ${
-                    isActive
-                      ? "border-[#D50032] bg-white shadow-lg"
-                      : "border-gray-200 bg-white"
-                  }`}
-                >
-                  {isActive && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D50032]" />
-                  )}
-                  <div className="flex justify-between items-center mb-1.5 pl-1.5">
-                    <span className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? "text-[#D50032]" : "text-gray-400"}`}>
-                      Course 0{idx + 1}
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200 flex items-center gap-1">
-                      <Clock className="w-2.5 h-2.5" />
-                      {sec.duration}
-                    </span>
-                  </div>
-                  <h3 className={`text-xs font-bold tracking-wide uppercase whitespace-normal pl-1.5 leading-snug ${isActive ? "text-[#121212]" : "text-gray-600"}`}>
-                    {sec.title}
-                  </h3>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Right Column: Module Accordions */}
-          <div className="lg:col-span-7 flex flex-col gap-4 w-full">
-            {/* Phase title heading for mobile or reference */}
-            <div className="flex items-center gap-3 mb-2 p-2 rounded-2xl bg-gray-50 border border-gray-100 lg:hidden">
-              <div className="w-10 h-10 rounded-xl bg-[#D50032]/10 flex items-center justify-center flex-shrink-0 text-[#D50032]">
-                <Layers className="w-5 h-5" />
-              </div>
-              <div>
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Selected Course</span>
-                <h4 className="text-xs font-extrabold uppercase text-gray-800 leading-tight">
-                  {currentSection.title} ({currentSection.duration})
-                </h4>
-              </div>
-            </div>
-
-            {currentSection.modules.map((mod) => {
-              const isExpanded = expandedModuleKey === `${activeSectionIdx}-${mod.num}`;
-              return (
-                <div
-                  key={mod.num}
-                  onClick={() => toggleModule(activeSectionIdx, mod.num)}
-                  className={`rounded-2xl border transition-all duration-300 cursor-pointer overflow-hidden ${
-                    isExpanded
-                      ? "border-[#D50032]/30 bg-white shadow-[0_8px_30px_rgba(213,0,50,0.04)]"
-                      : "border-gray-200 bg-[#F9FAFB] hover:border-gray-300 hover:bg-white"
-                  }`}
-                >
-                  {/* Accordion Header */}
-                  <div className="p-5 flex justify-between items-start gap-4 select-none">
-                    <div className="space-y-1">
-                      <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                        Module {mod.num}
-                      </span>
-                      <h3
-                        className={`text-lg sm:text-xl font-bold leading-snug transition-colors duration-300 ${
-                          isExpanded ? "text-[#D50032]" : "text-gray-700"
-                        }`}
-                      >
-                        {mod.title}
-                      </h3>
-                    </div>
+                  {/* Stage Card */}
+                  <div className={`w-full md:w-[calc(50%-28px)] ${
+                    isLeft 
+                      ? "md:mr-auto pl-10 md:pl-0 md:pr-10 text-left" 
+                      : "md:ml-auto pl-10 md:pl-10 text-left"
+                  }`}>
                     <div
-                      className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
-                        isExpanded ? "bg-[#D50032]/10 text-[#D50032]" : "bg-gray-100 text-gray-400"
+                      onClick={() => toggleStage(idx)}
+                      className={`w-full p-4.5 sm:p-5 bg-white border rounded-2xl transition-all duration-300 cursor-pointer text-left ${
+                        isExpanded
+                          ? "border-[#D50032] shadow-[0_12px_45px_rgba(213,0,50,0.04)] relative ring-1 ring-[#D50032]/10"
+                          : "border-gray-100 shadow-[0_8px_35px_rgba(0,0,0,0.015)] hover:border-gray-200 hover:shadow-[0_12px_45px_rgba(0,0,0,0.02)]"
                       }`}
                     >
-                      {isExpanded ? (
-                        <ChevronUp className="w-5 h-5 text-[#D50032]" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5" />
-                      )}
-                    </div>
-                  </div>
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex-1">
+                          <span className={`text-[10px] sm:text-xs font-black uppercase tracking-widest leading-none block mb-2 ${
+                            isExpanded ? "text-[#D50032]" : "text-gray-400"
+                          }`}>
+                            Stage 0{idx + 1}
+                          </span>
+                          <h3 className="text-base sm:text-lg font-black text-gray-900 leading-snug tracking-tight mb-1.5">
+                            {sec.title}
+                          </h3>
+                          <span className={`text-[11px] sm:text-xs font-bold leading-none uppercase tracking-wider block ${
+                            isExpanded ? "text-[#D50032]/85" : "text-gray-400"
+                          }`}>
+                            {sec.duration} • {sec.modules.length} Modules
+                          </span>
+                        </div>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
+                          isExpanded ? "bg-[#D50032]/5 text-[#D50032]" : "bg-gray-50 text-gray-400"
+                        }`}>
+                          {isExpanded ? <ChevronUp className="w-4 h-4 stroke-[2.5]" /> : <ChevronDown className="w-4 h-4 stroke-[2.5]" />}
+                        </div>
+                      </div>
 
-                  {/* Accordion Body */}
-                  <div
-                    className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                      isExpanded ? "max-h-[300px] border-t border-gray-100" : "max-h-0"
-                    }`}
-                  >
-                    <div className="p-6 bg-white/50 text-sm sm:text-base leading-relaxed text-gray-600">
-                      <span className="font-extrabold text-gray-800 mr-1.5">Overview :</span>
-                      {mod.overview}
+                      {/* Accordion Body: Sequential expanded Module Cards */}
+                      {isExpanded && (
+                        <div className="mt-4 pt-4 border-t border-gray-100 space-y-2.5 transition-all duration-500 ease-in-out">
+                          {sec.modules.map((mod, modIdx) => (
+                            <div key={modIdx} className="bg-white hover:bg-gray-50/50 border border-gray-100 rounded-xl p-3 sm:p-3.5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-[0_8px_30px_rgba(213,0,50,0.02)] transition-all">
+                              <div className="flex items-center gap-2.5 mb-1.5">
+                                <div className="w-6 h-6 rounded-full bg-[#D50032]/5 text-[#D50032] border border-[#D50032]/10 flex items-center justify-center text-[10px] sm:text-[11px] font-black flex-shrink-0">
+                                  {mod.num}
+                                </div>
+                                <h4 className="font-extrabold text-gray-900 text-sm sm:text-base leading-snug">
+                                  {mod.title}
+                                </h4>
+                              </div>
+                              <p className="text-gray-500 text-xs sm:text-sm font-medium leading-relaxed pl-8">
+                                <span className="font-bold text-gray-700 mr-1 text-xs">Overview:</span>
+                                {mod.overview}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
               );
             })}
           </div>
-
         </div>
-
       </div>
     </section>
   );

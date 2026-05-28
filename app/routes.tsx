@@ -12,6 +12,7 @@ import CoursesPage from "./pages/CoursesPage";
 import MarketsPage from "./pages/MarketsPage";
 import MarketUpdatesPage from "./pages/MarketUpdatesPage";
 import BlogPage from "./pages/BlogPage";
+import AboutUs from "./pages/AboutUs";
 import MarketingLayout from "./components/MarketingLayout";
 
 // Student Pages
@@ -91,6 +92,10 @@ export const router = createBrowserRouter([
       {
         path: "/blog",
         Component: BlogPage,
+      },
+      {
+        path: "/about",
+        Component: AboutUs,
       },
     ]
   },

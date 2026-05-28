@@ -183,7 +183,7 @@ export default function MarketingLayout() {
               <Link to="/category/all" className="text-gray-700 hover:text-[#D50032] transition-colors font-medium">Categories</Link>
               <Link to="/updates" className="text-gray-700 hover:text-[#D50032] transition-colors font-medium">Update</Link>
               <Link to="/blog" className="text-gray-700 hover:text-[#D50032] transition-colors font-medium">Blog</Link>
-              <a href="/#about" className="text-gray-700 hover:text-[#D50032] transition-colors font-medium">About</a>
+              <Link to="/about" className="text-gray-700 hover:text-[#D50032] transition-colors font-medium">About</Link>
             </div>
             <div className="flex items-center gap-3">
               <button onClick={() => setSearchOpen(true)} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-gray-600 hover:text-[#D50032] hover:bg-[#D50032]/10 transition-all" title="Search">
@@ -299,7 +299,7 @@ export default function MarketingLayout() {
             <div>
               <h4 className="font-bold mb-4">Company</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="/#about" className="hover:text-[#D50032] transition-colors">About Us</a></li>
+                <li><Link to="/about" className="hover:text-[#D50032] transition-colors">About Us</Link></li>
                 <li><a href="#" className="hover:text-[#D50032] transition-colors">Careers</a></li>
                 <li><a href="#" className="hover:text-[#D50032] transition-colors">Press</a></li>
                 <li><Link to="/blog" className="hover:text-[#D50032] transition-colors">Blog</Link></li>
