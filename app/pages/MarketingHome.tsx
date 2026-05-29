@@ -1388,10 +1388,10 @@ export default function MarketingHome() {
         </section>
 
         {/* Learning Path Section */}
-        <section className="py-6 md:py-8 bg-transparent relative z-10">
+        <section className="py-4 md:py-6 bg-transparent relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Header */}
-            <div className="text-center mb-12">
+            <div className="text-center mb-8">
               <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-4 border border-[#D50032]/20 bg-[#D50032]/5">
                 <span className="text-xs font-bold text-[#D50032] flex items-center gap-1">
                   🗺️ Course Roadmap
@@ -1407,10 +1407,10 @@ export default function MarketingHome() {
 
             {/* Desktop Curved Learning Path Card */}
             <div className="hidden lg:block w-full bg-white border border-gray-100 rounded-[40px] shadow-[0_15px_50px_rgba(0,0,0,0.02)] p-8 relative overflow-hidden">
-              <div className="aspect-[1000/420] w-full relative select-none">
+              <div className="aspect-[1000/320] w-full relative select-none">
 
                 {/* Curve Line SVG */}
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 600" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
                   {/* Dashed base line (locked path) */}
                   <path
                     d="M 200,520 C 300,520 400,450 500,380 C 600,310 700,310 800,240 C 900,170 800,130 550,120 C 450,110 360,110 360,110"

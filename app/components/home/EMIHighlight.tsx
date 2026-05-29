@@ -42,14 +42,14 @@ export default function EMIHighlight() {
   ];
 
   return (
-    <section className="py-12 md:py-20 relative z-10 bg-transparent overflow-hidden">
+    <section className="py-6 md:py-10 relative z-10 bg-transparent overflow-hidden">
       {/* Decorative background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-[#D50032]/3 rounded-full blur-[130px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Section Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-8">
           <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-3 border border-[#D50032]/25 bg-[#D50032]/5">
             <span className="text-[#D50032] font-extrabold text-xs tracking-wider uppercase flex items-center gap-1">
               💳 Easy Payments
