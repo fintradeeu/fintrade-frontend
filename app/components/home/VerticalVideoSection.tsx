@@ -64,7 +64,7 @@ export default function VerticalVideoSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(3); // Default playing card
   const [isPaused, setIsPaused] = useState(false);
-  const [selectedVideo, setSelectedVideo] = useState<any | null>(null);
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
   const isReversingRef = useRef(false);
 
   const scroll = (dir: "left" | "right") => {
@@ -76,7 +76,7 @@ export default function VerticalVideoSection() {
 
   // Autoslide mechanism
   useEffect(() => {
-    if (isPaused || !!selectedVideo) return; // Pause auto-sliding while modal is open
+    if (isPaused || !!playingVideoId) return; // Pause auto-sliding while video is playing
 
     const timer = setInterval(() => {
       setActiveIndex((prevIndex) => {
@@ -95,7 +95,7 @@ export default function VerticalVideoSection() {
     }, 1500);
 
     return () => clearInterval(timer);
-  }, [isPaused, selectedVideo]);
+  }, [isPaused, playingVideoId]);
 
   // Handle manual scroll update active index
   const handleScroll = () => {
@@ -115,7 +115,7 @@ export default function VerticalVideoSection() {
       {/* Header and Controls Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header - Left-aligned with top badge and right-aligned buttons */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-6">
           <div className="text-left select-none">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full mb-3.5 border border-[#D50032]/25 bg-[#D50032]/5">
               <span className="text-[#D50032] font-black text-[10px] md:text-xs tracking-wider uppercase flex items-center gap-1">
@@ -158,72 +158,112 @@ export default function VerticalVideoSection() {
         onMouseLeave={() => setIsPaused(false)}
         onTouchStart={() => setIsPaused(true)}
         onTouchEnd={() => setIsPaused(false)}
-        className="flex gap-5 overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory w-full px-4 md:pl-[calc((100vw-1280px)/2+2rem)]"
+        className="flex gap-5 overflow-x-auto py-14 items-center scrollbar-hide snap-x snap-mandatory w-full px-4 md:pl-[calc((100vw-1280px)/2+2rem)]"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {verticalVideos.map((vid, idx) => {
-          const isPlaying = idx === activeIndex;
+          const isCurrentActive = idx === activeIndex;
+          const isVideoPlaying = playingVideoId === vid.id;
           return (
             <Card
               key={vid.id}
-              onClick={() => setSelectedVideo(vid)}
+              onClick={() => {
+                if (isVideoPlaying) {
+                  setPlayingVideoId(null);
+                } else {
+                  setPlayingVideoId(vid.id);
+                  setActiveIndex(idx);
+                  if (scrollRef.current) {
+                    const cardWidth = 240 + 20;
+                    scrollRef.current.scrollTo({
+                      left: idx * cardWidth,
+                      behavior: "smooth"
+                    });
+                  }
+                }
+              }}
               className={`flex-shrink-0 w-[240px] aspect-[9/16] overflow-hidden rounded-[32px] relative snap-center group transition-all duration-500 origin-center cursor-pointer ${
-                isPlaying 
+                isCurrentActive 
                   ? "border-2 border-[#D50032] shadow-[0_20px_45px_rgba(213,0,50,0.28)] scale-[1.06] z-20" 
                   : "border border-gray-150 hover:border-[#D50032]/30 shadow-md scale-[0.94] opacity-50 grayscale-[20%] blur-[0.3px] z-10"
               }`}
             >
-              {/* Background Thumbnail Image with dark overlay */}
-              <div className="absolute inset-0 z-0">
-                <img 
-                  src={vid.thumbnail} 
-                  alt={vid.title} 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/50" />
-              </div>
-
-              {/* Top Bar with Badge & Music Icon */}
-              <div className="absolute top-4 inset-x-4 flex justify-between items-center z-10">
-                {isPlaying ? (
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black text-white bg-[#D50032] animate-pulse">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white inline-block animate-ping" />
-                    NOW PLAYING
+              {isVideoPlaying ? (
+                <div className="absolute inset-0 z-0 bg-black flex items-center justify-center p-4">
+                  <video
+                    src={vid.videoUrl}
+                    autoPlay
+                    controls
+                    loop
+                    playsInline
+                    className="w-full h-full object-contain rounded-2xl bg-black"
+                  />
+                  {/* Close/Stop Playback Button Overlay */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPlayingVideoId(null);
+                    }}
+                    className="absolute top-6 right-6 z-30 text-white/80 hover:text-white bg-black/60 hover:bg-black/80 rounded-full p-1.5 transition-all shadow-sm"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Background Thumbnail Image with dark overlay */}
+                  <div className="absolute inset-0 z-0">
+                    <img 
+                      src={vid.thumbnail} 
+                      alt={vid.title} 
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/50" />
                   </div>
-                ) : (
-                  <div className="px-2.5 py-1 rounded-full text-[9px] font-bold text-white bg-white/20 backdrop-blur-md border border-white/10">
-                    {vid.num}
+
+                  {/* Top Bar with Badge & Music Icon */}
+                  <div className="absolute top-4 inset-x-4 flex justify-between items-center z-10">
+                    {isCurrentActive ? (
+                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black text-white bg-[#D50032] animate-pulse">
+                        <span className="w-1.5 h-1.5 rounded-full bg-white inline-block animate-ping" />
+                        NOW PLAYING
+                      </div>
+                    ) : (
+                      <div className="px-2.5 py-1 rounded-full text-[9px] font-bold text-white bg-white/20 backdrop-blur-md border border-white/10">
+                        {vid.num}
+                      </div>
+                    )}
+                    <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white">
+                      <Music className="w-3.5 h-3.5" />
+                    </div>
                   </div>
-                )}
-                <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white">
-                  <Music className="w-3.5 h-3.5" />
-                </div>
-              </div>
 
-              {/* Play Button Icon Overlay in the center */}
-              <div className="absolute inset-0 flex items-center justify-center z-10">
-                <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-350 cursor-pointer shadow-lg ${
-                  isPlaying 
-                    ? "bg-[#D50032] text-white hover:scale-110 shadow-[#D50032]/35" 
-                    : "bg-white/15 text-white backdrop-blur-sm border-2 border-white/30 hover:bg-[#D50032] hover:border-transparent group-hover:scale-105"
-                }`}>
-                  <Play className="w-6 h-6 fill-current text-white ml-0.5" />
-                </div>
-              </div>
+                  {/* Play Button Icon Overlay in the center */}
+                  <div className="absolute inset-0 flex items-center justify-center z-10">
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-350 cursor-pointer shadow-lg ${
+                      isCurrentActive 
+                        ? "bg-[#D50032] text-white hover:scale-110 shadow-[#D50032]/35" 
+                        : "bg-white/15 text-white backdrop-blur-sm border-2 border-white/30 hover:bg-[#D50032] hover:border-transparent group-hover:scale-105"
+                    }`}>
+                      <Play className="w-6 h-6 fill-current text-white ml-0.5" />
+                    </div>
+                  </div>
 
-              {/* Bottom Text Content & Views Count */}
-              <div className="absolute bottom-5 inset-x-5 z-10 flex flex-col justify-end text-left select-none">
-                <h3 className="font-extrabold text-white text-base leading-snug mb-2.5 drop-shadow-sm group-hover:text-[#D50032] transition-colors duration-300">
-                  {vid.title}
-                </h3>
-                <div className="flex items-center justify-between text-xs text-gray-300 font-medium">
-                  <span>{vid.author}</span>
-                  <span className="flex items-center gap-1">
-                    <Eye className="w-3.5 h-3.5 stroke-[2.5]" />
-                    {vid.views}
-                  </span>
-                </div>
-              </div>
+                  {/* Bottom Text Content & Views Count */}
+                  <div className="absolute bottom-5 inset-x-5 z-10 flex flex-col justify-end text-left select-none">
+                    <h3 className="font-extrabold text-white text-base leading-snug mb-2.5 drop-shadow-sm group-hover:text-[#D50032] transition-colors duration-300">
+                      {vid.title}
+                    </h3>
+                    <div className="flex items-center justify-between text-xs text-gray-300 font-medium">
+                      <span>{vid.author}</span>
+                      <span className="flex items-center gap-1">
+                        <Eye className="w-3.5 h-3.5 stroke-[2.5]" />
+                        {vid.views}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
             </Card>
           );
         })}
@@ -256,50 +296,6 @@ export default function VerticalVideoSection() {
           })}
         </div>
       </div>
-
-      {/* Short Vertical Video Player Modal */}
-      {selectedVideo && (
-        <div 
-          className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-md flex items-center justify-center p-4"
-          onClick={() => setSelectedVideo(null)}
-        >
-          <div 
-            className="relative w-full max-w-[360px] aspect-[9/16] bg-black rounded-[32px] overflow-hidden shadow-2xl border border-white/10 flex flex-col items-center justify-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close Button */}
-            <button 
-              onClick={() => setSelectedVideo(null)} 
-              className="absolute top-4 right-4 z-50 text-white/70 hover:text-white bg-black/40 hover:bg-black/60 rounded-full p-2.5 transition-all shadow-md"
-            >
-              <X size={20} />
-            </button>
-
-            {/* Native Video Player */}
-            <video
-              src={selectedVideo.videoUrl}
-              autoPlay
-              controls
-              loop
-              playsInline
-              className="w-full h-full object-cover"
-            />
-
-            {/* Video overlay info inside modal */}
-            <div className="absolute bottom-5 inset-x-5 z-10 text-left pointer-events-none select-none">
-              <span className="bg-[#D50032] text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full mb-2 inline-block">
-                ★ FinTrade Shorts
-              </span>
-              <h3 className="font-extrabold text-white text-base leading-snug drop-shadow-sm mb-1">
-                {selectedVideo.title}
-              </h3>
-              <p className="text-gray-350 text-xs font-semibold">
-                By {selectedVideo.author} • {selectedVideo.views} views
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }

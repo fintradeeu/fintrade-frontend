@@ -927,25 +927,27 @@ export default function MarketingHome() {
               </a>
             </div>
 
-            {/* High-Impact Performance Metrics Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-6 relative py-6 px-4 bg-white/[0.02] border border-white/5 backdrop-blur-sm rounded-[24px]">
-              {[
-                { val: "250+", lbl: "Traders Trained" },
-                { val: "₹25Cr+", lbl: "Capital Managed" },
-                { val: "20+", lbl: "Years Experience" },
-                { val: "95%", lbl: "Success Focus" }
-              ].map((m, idx) => (
-                <div key={idx} className="flex flex-col items-center justify-center text-center relative">
-                  {idx > 0 && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[1px] h-8 bg-white/10 hidden md:block" />}
-                  <span className="text-3xl md:text-4xl font-extrabold text-[#D50032] leading-none mb-1.5 font-sans">
-                    {m.val}
-                  </span>
-                  <span className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
-                    {m.lbl}
-                  </span>
-                </div>
-              ))}
-            </div>
+            {/* High-Impact Performance Metrics Row - Temporarily hidden for future admin integration */}
+            {false && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-6 relative py-6 px-4 bg-white/[0.02] border border-white/5 backdrop-blur-sm rounded-[24px]">
+                {[
+                  { val: "250+", lbl: "Traders Trained" },
+                  { val: "₹25Cr+", lbl: "Capital Managed" },
+                  { val: "20+", lbl: "Years Experience" },
+                  { val: "95%", lbl: "Success Focus" }
+                ].map((m, idx) => (
+                  <div key={idx} className="flex flex-col items-center justify-center text-center relative">
+                    {idx > 0 && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[1px] h-8 bg-white/10 hidden md:block" />}
+                    <span className="text-3xl md:text-4xl font-extrabold text-[#D50032] leading-none mb-1.5 font-sans">
+                      {m.val}
+                    </span>
+                    <span className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
+                      {m.lbl}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Start Your Trading Career Slider Card */}
             <div className="relative max-w-4xl mx-auto mt-2 bg-[#131b2e]/40 border border-white/10 rounded-[32px] p-8 md:p-10 text-center shadow-[0_30px_70px_rgba(0,0,0,0.4)] overflow-hidden select-none backdrop-blur-xl">
