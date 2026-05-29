@@ -2,6 +2,16 @@ import { defineConfig } from 'vite'
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+import fs from 'fs'
+
+try {
+  fs.copyFileSync(
+    path.resolve(__dirname, 'imports/fintrade_logo.png'),
+    path.resolve(__dirname, 'public/favicon.png')
+  )
+} catch (err) {
+  // Silent fallback
+}
 
 
 function figmaAssetResolver() {

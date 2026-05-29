@@ -182,10 +182,10 @@ export default function VerticalVideoSection() {
                   }
                 }
               }}
-              className={`flex-shrink-0 w-[240px] aspect-[9/16] overflow-hidden rounded-[32px] relative snap-center group transition-all duration-500 origin-center cursor-pointer ${
+              className={`flex-shrink-0 w-[240px] aspect-[9/16] overflow-hidden rounded-[32px] relative snap-center group transition-all duration-550 origin-center cursor-pointer ${
                 isCurrentActive 
-                  ? "border-2 border-[#D50032] shadow-[0_20px_45px_rgba(213,0,50,0.28)] scale-[1.06] z-20" 
-                  : "border border-gray-150 hover:border-[#D50032]/30 shadow-md scale-[0.94] opacity-50 grayscale-[20%] blur-[0.3px] z-10"
+                  ? "border-2 border-[#D50032] shadow-[0_20px_45px_rgba(213,0,50,0.28)] scale-[1.06] hover:scale-[1.09] z-20" 
+                  : "border border-gray-150 hover:border-[#D50032]/40 shadow-md scale-[0.94] hover:scale-[0.98] opacity-50 hover:opacity-85 grayscale-[20%] hover:grayscale-0 blur-[0.3px] hover:blur-0 z-10"
               }`}
             >
               {isVideoPlaying ? (

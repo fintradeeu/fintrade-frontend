@@ -1404,7 +1404,7 @@ export default function MarketingHome() {
 
             {/* Desktop Curved Learning Path Card */}
             <div className="hidden lg:block w-full bg-white border border-gray-100 rounded-[40px] shadow-[0_15px_50px_rgba(0,0,0,0.02)] p-8 relative overflow-hidden">
-              <div className="aspect-[1000/320] w-full relative select-none">
+              <div className="aspect-[1000/400] w-full relative select-none">
 
                 {/* Curve Line SVG */}
                 <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 600" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1437,13 +1437,13 @@ export default function MarketingHome() {
                 {/* Render Steps */}
                 {[
                   { num: "1", title: "Market Foundations", desc: "Markets, exchanges & instruments", status: "completed", x: 20, y: 86.6, align: "bottom", isStart: true },
-                  { num: "2", title: "Technical Analysis", desc: "Chart patterns & price action", status: "completed", x: 35, y: 76.6, align: "left" },
-                  { num: "3", title: "Risk Management", desc: "Position sizing & capital protection", status: "current", x: 50, y: 63.3, align: "right", isCurrent: true },
-                  { num: "4", title: "Trading Psychology", desc: "Emotional discipline & consistency", status: "locked", x: 65, y: 53.3, align: "left" },
-                  { num: "5", title: "Options & Derivat", desc: "Options pricing, Gre", status: "locked", x: 80, y: 40, align: "right" },
-                  { num: "6", title: "Advanced Strategies", desc: "Algo trading & quant analysis", status: "locked", x: 72, y: 26.6, align: "right" },
-                  { num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "locked", x: 55, y: 20, align: "left" },
-                  { num: "8", title: "Certification & Placement", desc: "Final assessment & career placement", status: "locked", x: 36, y: 18.3, align: "left", isSummit: true },
+                  { num: "2", title: "Technical Analysis", desc: "Chart patterns & price action", status: "completed", x: 35, y: 76.6, align: "top" },
+                  { num: "3", title: "Risk Management", desc: "Position sizing & capital protection", status: "current", x: 50, y: 63.3, align: "top", isCurrent: true },
+                  { num: "4", title: "Trading Psychology", desc: "Emotional discipline & consistency", status: "locked", x: 65, y: 53.3, align: "top" },
+                  { num: "5", title: "Options & Derivat", desc: "Options pricing, Gre", status: "locked", x: 80, y: 40, align: "top" },
+                  { num: "6", title: "Advanced Strategies", desc: "Algo trading & quant analysis", status: "locked", x: 72, y: 26.6, align: "top" },
+                  { num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "locked", x: 55, y: 20, align: "top" },
+                  { num: "8", title: "Certification & Placement", desc: "Final assessment & career placement", status: "locked", x: 36, y: 18.3, align: "top", isSummit: true },
                 ].map((step, idx) => {
                   const isCompleted = step.status === "completed";
                   const isCurrent = step.status === "current";
@@ -1452,7 +1452,7 @@ export default function MarketingHome() {
                     <div key={idx}>
                       {/* Node Circle */}
                       <div
-                        className="absolute -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center"
+                        className="absolute -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center transition-all duration-300 hover:scale-115 cursor-pointer origin-center"
                         style={{ left: `${step.x}%`, top: `${step.y}%` }}
                       >
                         {isCurrent ? (
@@ -1559,7 +1559,7 @@ export default function MarketingHome() {
                 const isCurrent = step.status === "current";
 
                 return (
-                  <div key={idx} className="flex gap-4 items-stretch relative">
+                  <div key={idx} className="flex gap-4 items-stretch relative transition-all duration-300 hover:scale-[1.02] cursor-pointer origin-left">
                     {/* Vertical Line Connector */}
                     {idx < 7 && (
                       <div className="absolute top-7 bottom-[-24px] left-[13px] w-[2px] bg-gray-100" />
