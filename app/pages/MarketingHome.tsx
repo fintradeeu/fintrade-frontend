@@ -1140,14 +1140,6 @@ export default function MarketingHome() {
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
                 Master trading with our industry-leading certifications
               </p>
-              <div className="mt-6 text-center">
-                <Button 
-                  onClick={() => setIsCoursesExpanded(!isCoursesExpanded)}
-                  className="bg-[#D50032] hover:bg-[#b00029] text-white font-bold px-6 py-2 rounded-lg shadow-lg transition-all duration-300 animate-fade-in"
-                >
-                  {isCoursesExpanded ? "View Less" : "View More Courses"}
-                </Button>
-              </div>
             </div>
             <div
               ref={coursesContainerRef}
