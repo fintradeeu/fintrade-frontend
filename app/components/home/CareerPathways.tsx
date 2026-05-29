@@ -1,8 +1,59 @@
-import { Search, Users, Building } from "lucide-react";
+import { useState } from "react";
+import { TrendingUp, Search, Users, Building2, Briefcase } from "lucide-react";
+
+interface Category {
+  id: string;
+  icon: React.ComponentType<any>;
+  title: string;
+  color: string;
+  roles: string[];
+  orbitR: number;
+  speed: number;
+  startDeg: number;
+}
+
+const categories: Category[] = [
+  {
+    id: 'trading',
+    icon: TrendingUp,
+    title: 'Trading Roles',
+    color: '#E63229',
+    roles: ['Equity Trader','Derivatives Trader','Intraday Trader','Options Trader','Commodity Trader','Currency Trader','Prop Trader','Technical Trader','Algo Trading Executive','Dealer / Terminal Operator'],
+    orbitR: 115, speed: 60, startDeg: 0,
+  },
+  {
+    id: 'research',
+    icon: Search,
+    title: 'Research & Analyst',
+    color: '#2563eb',
+    roles: ['Equity Research Analyst','Technical Analyst','Investment Analyst','Portfolio Analyst'],
+    orbitR: 175, speed: 80, startDeg: 90,
+  },
+  {
+    id: 'broking',
+    icon: Users,
+    title: 'Broking & Advisory',
+    color: '#16a34a',
+    roles: ['Relationship Manager','Investment Advisor','Financial Consultant','Client Acquisition Executive','RM Capital Markets'],
+    orbitR: 235, speed: 100, startDeg: 180,
+  },
+  {
+    id: 'institutional',
+    icon: Building2,
+    title: 'Institutional & Corporate',
+    color: '#9333ea',
+    roles: ['Proprietary Trading Firms','Stock Broking Companies','Investment Advisory Firms','AMCs','Hedge Funds','Research Firms','PMS'],
+    orbitR: 295, speed: 120, startDeg: 270,
+  },
+];
 
 export default function CareerPathways() {
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+
+  const activeCat = categories.find((cat) => cat.id === activeCategoryId);
+
   return (
-    <div className="w-full bg-white relative z-10 overflow-hidden">
+    <div className="w-full bg-white py-10 pb-20" style={{ overflow: "visible", position: "relative", zIndex: 5000 }}>
       <div className="w-full">
         
         {/* Section Header */}
@@ -15,17 +66,20 @@ export default function CareerPathways() {
           <h2 className="text-3xl md:text-4.5xl font-black mb-3 text-gray-900 tracking-tight">
             Placement & <span className="text-[#D50032]">Career Opportunities</span>
           </h2>
-          <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed px-4">
             FinTrade graduates are equipped for a wide range of roles across India's financial ecosystem.
           </p>
           <p className="text-xs text-gray-400 font-semibold italic mt-2 tracking-wide">
-            Orbits pause on hover
+            Orbits pause on hover • Hover icons to explore roles
           </p>
         </div>
-
+ 
         {/* Orbit Centered System */}
-        <div className="flex items-center justify-center relative overflow-hidden select-none py-4 md:py-8">
-          <div className="relative w-full max-w-[340px] md:max-w-[560px] aspect-square flex items-center justify-center orbit-wrapper">
+        <div 
+          className="flex items-center justify-center relative overflow-visible select-none py-4 md:py-8"
+          onMouseLeave={() => setActiveCategoryId(null)}
+        >
+          <div className="relative w-full max-w-[340px] md:max-w-[560px] aspect-square flex items-center justify-center orbit-wrapper" style={{ zIndex: 2000 }}>
             
             {/* Central Core Circle (Your Career Logo) */}
             <div className="absolute w-20 h-20 md:w-28 md:h-28 rounded-full bg-[#D50032] flex flex-col items-center justify-center shadow-[0_10px_35px_rgba(213,0,50,0.35)] z-30 transition-transform duration-300 hover:scale-105">
@@ -35,86 +89,93 @@ export default function CareerPathways() {
               </span>
             </div>
 
-            {/* Orbit 1 (Inner, Blue - Research & Analyst) */}
-            <div 
-              className="absolute rounded-full border border-blue-500/12 flex items-center justify-center animate-orbit-ring-2 orbit-ring-animate"
-              style={{
-                width: "calc(var(--ring-scale, 1) * 150px)",
-                height: "calc(var(--ring-scale, 1) * 150px)",
-              }}
-            >
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                <div className="animate-orbit-node-2 orbit-node-animate">
-                  <div 
-                    className="w-9 h-9 md:w-12 md:h-12 rounded-full border-2 border-blue-500 bg-white flex items-center justify-center shadow-lg transition-transform duration-300 hover:scale-110"
-                    aria-label="Research & Analyst Pathway"
-                  >
-                    <Search className="w-4.5 h-4.5 md:w-5.5 md:h-5.5 text-blue-500 stroke-[2.5]" />
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* Concentric Orbiting Rings & Nodes */}
+            {categories.map((cat) => {
+              const isSelected = activeCategoryId === cat.id;
+              const IconComponent = cat.icon;
 
-            {/* Orbit 2 (Middle, Green - Broking & Advisory) */}
-            <div 
-              className="absolute rounded-full border border-emerald-500/12 flex items-center justify-center animate-orbit-ring-3 orbit-ring-animate"
-              style={{
-                width: "calc(var(--ring-scale, 1) * 225px)",
-                height: "calc(var(--ring-scale, 1) * 225px)",
-              }}
-            >
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                <div className="animate-orbit-node-3 orbit-node-animate">
-                  <div 
-                    className="w-9 h-9 md:w-12 md:h-12 rounded-full border-2 border-emerald-500 bg-white flex items-center justify-center shadow-lg transition-transform duration-300 hover:scale-110"
-                    aria-label="Broking & Advisory Pathway"
-                  >
-                    <Users className="w-4.5 h-4.5 md:w-5.5 md:h-5.5 text-emerald-500 stroke-[2.5]" />
-                  </div>
-                </div>
-              </div>
-            </div>
+              return (
+                <div 
+                  key={cat.id}
+                  className="absolute rounded-full flex items-center justify-center orbit-ring-animate pointer-events-none"
+                  style={{
+                    width: `calc(var(--ring-scale, 1) * ${cat.orbitR}px)`,
+                    height: `calc(var(--ring-scale, 1) * ${cat.orbitR}px)`,
+                    border: isSelected ? `2px solid ${cat.color}35` : `1.5px solid ${cat.color}12`,
+                    animationName: 'orbit-rotation',
+                    animationDuration: `${cat.speed / 3}s`,
+                    animationTimingFunction: 'linear',
+                    animationIterationCount: 'infinite',
+                    // Pass dynamic starting angle values via CSS variables
+                    ['--start-deg' as any]: `${cat.startDeg}deg`,
+                    ['--counter-deg' as any]: `${-cat.startDeg}deg`,
+                    zIndex: isSelected ? 1000 : 0,
+                  }}
+                >
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-auto">
+                    <div 
+                      className="orbit-node-animate relative"
+                      style={{
+                        animationName: 'orbit-node-rotation',
+                        animationDuration: `${cat.speed / 3}s`,
+                        animationTimingFunction: 'linear',
+                        animationIterationCount: 'infinite',
+                        ['--start-deg' as any]: `${cat.startDeg}deg`,
+                        ['--counter-deg' as any]: `${-cat.startDeg}deg`,
+                      }}
+                    >
+                      <button 
+                        onMouseEnter={() => setActiveCategoryId(cat.id)}
+                        className="w-9 h-9 md:w-12 md:h-12 rounded-full border-2 bg-white flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-115 cursor-pointer relative group/btn"
+                        style={{ 
+                          borderColor: cat.color,
+                          boxShadow: isSelected ? `0 0 15px ${cat.color}45` : undefined,
+                        }}
+                        aria-label={cat.title}
+                      >
+                        <IconComponent 
+                          className="w-4.5 h-4.5 md:w-5.5 md:h-5.5 stroke-[2.5] transition-transform duration-300 group-hover/btn:scale-105" 
+                          style={{ color: cat.color }}
+                        />
+                      </button>
 
-            {/* Orbit 3 (Outer, Purple - Institutional & Corporate) */}
-            <div 
-              className="absolute rounded-full border border-purple-500/12 flex items-center justify-center animate-orbit-ring-4 orbit-ring-animate"
-              style={{
-                width: "calc(var(--ring-scale, 1) * 300px)",
-                height: "calc(var(--ring-scale, 1) * 300px)",
-              }}
-            >
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                <div className="animate-orbit-node-4 orbit-node-animate">
-                  <div 
-                    className="w-9 h-9 md:w-12 md:h-12 rounded-full border-2 border-purple-500 bg-white flex items-center justify-center shadow-lg transition-transform duration-300 hover:scale-110"
-                    aria-label="Institutional & Corporate Pathway"
-                  >
-                    <Building className="w-4.5 h-4.5 md:w-5.5 md:h-5.5 text-purple-500 stroke-[2.5]" />
+                      {/* Floating dynamic content popup matching the second image layout */}
+                      {isSelected && (
+                        <div 
+                          className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[260px] md:w-[320px] bg-white border-2 rounded-[24px] p-4.5 shadow-xl z-50 text-left animate-fade-in cursor-default pointer-events-auto select-text"
+                          style={{ borderColor: cat.color, zIndex: 1000 }}
+                        >
+                          <h4 className="text-xs md:text-sm font-black mb-3 uppercase tracking-wide" style={{ color: cat.color }}>
+                            {cat.title}
+                          </h4>
+                          <div className="flex flex-wrap gap-1.5 md:gap-2">
+                            {cat.roles.map((role, idx) => (
+                              <span 
+                                key={idx}
+                                className="px-3 py-1 rounded-full text-[9px] md:text-[11px] font-bold border transition-all duration-300 hover:scale-[1.03]"
+                                style={{
+                                  borderColor: `${cat.color}25`,
+                                  backgroundColor: `${cat.color}08`,
+                                  color: '#374151'
+                                }}
+                              >
+                                {role}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              );
+            })}
 
           </div>
         </div>
-
-        {/* Orbit Legend at the bottom */}
-        <div className="flex flex-wrap justify-center gap-6 md:gap-8 mt-12 border-t border-gray-100 pt-8">
-          {[
-            { label: "Research & Analyst", color: "bg-blue-500" },
-            { label: "Broking & Advisory", color: "bg-emerald-500" },
-            { label: "Institutional & Corporate", color: "bg-purple-500" }
-          ].map((item, idx) => (
-            <div key={idx} className="flex items-center gap-2 text-xs font-bold text-gray-700">
-              <span className={`w-2.5 h-2.5 rounded-full ${item.color}`} />
-              {item.label}
-            </div>
-          ))}
-        </div>
-
       </div>
 
-      {/* Hardware-Accelerated Animations Style Block */}
+      {/* Hardware-Accelerated Dynamic Animations Style Block */}
       <style>{`
         /* Responsive Rings Sizes */
         :root {
@@ -126,62 +187,39 @@ export default function CareerPathways() {
           }
         }
 
-        /* Clockwise Rotations */
-        @keyframes orbit-cw-2 {
-          from { transform: rotate(45deg); }
-          to { transform: rotate(405deg); }
-        }
-        @keyframes orbit-cw-3 {
-          from { transform: rotate(180deg); }
-          to { transform: rotate(540deg); }
-        }
-        @keyframes orbit-cw-4 {
-          from { transform: rotate(90deg); }
-          to { transform: rotate(450deg); }
+        /* Clockwise Rotation with Custom Start Degrees */
+        @keyframes orbit-rotation {
+          from { transform: rotate(var(--start-deg, 0deg)); }
+          to { transform: rotate(calc(var(--start-deg, 0deg) + 360deg)); }
         }
 
-        /* Counter-Clockwise Rotations for Lock Node Upright */
-        @keyframes orbit-ccw-2 {
-          from { transform: rotate(-45deg); }
-          to { transform: rotate(-405deg); }
-        }
-        @keyframes orbit-ccw-3 {
-          from { transform: rotate(-180deg); }
-          to { transform: rotate(-540deg); }
-        }
-        @keyframes orbit-ccw-4 {
-          from { transform: rotate(-90deg); }
-          to { transform: rotate(-450deg); }
+        /* Counter-Clockwise Rotation to Keep Icons Upright */
+        @keyframes orbit-node-rotation {
+          from { transform: rotate(var(--counter-deg, 0deg)); }
+          to { transform: rotate(calc(var(--counter-deg, 0deg) - 360deg)); }
         }
 
-        /* Speed and Loops */
-        .animate-orbit-ring-2 {
-          animation: orbit-cw-2 26s linear infinite;
+        /* Basic Animation Triggers */
+        .orbit-ring-animate {
+          animation-name: orbit-rotation;
+          animation-iteration-count: infinite;
+          animation-timing-function: linear;
         }
-        .animate-orbit-node-2 {
-          animation: orbit-ccw-2 26s linear infinite;
-        }
-
-        .animate-orbit-ring-3 {
-          animation: orbit-cw-3 38s linear infinite;
-        }
-        .animate-orbit-node-3 {
-          animation: orbit-ccw-3 38s linear infinite;
+        .orbit-node-animate {
+          animation-name: orbit-node-rotation;
+          animation-iteration-count: infinite;
+          animation-timing-function: linear;
         }
 
-        .animate-orbit-ring-4 {
-          animation: orbit-cw-4 52s linear infinite;
-        }
-        .animate-orbit-node-4 {
-          animation: orbit-ccw-4 52s linear infinite;
-        }
+        /* Continues orbiting smoothly even on hover */
 
-        /* Pause on Hover */
-        .orbit-wrapper:hover .orbit-ring-animate {
-          animation-play-state: paused !important;
+        /* Fade-in Animation for Hover Card */
+        @keyframes fade-in {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
         }
-        .orbit-wrapper:hover .orbit-node-animate {
-          animation-play-state: paused !important;
+        .animate-fade-in {
+          animation: fade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
       `}</style>
     </div>
