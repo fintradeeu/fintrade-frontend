@@ -558,6 +558,31 @@ export default function MarketingHome() {
   const [isBlogPaused, setIsBlogPaused] = useState(false);
   const blogTouchTimeoutRef = useRef<any>(null);
 
+  // States and refs for acronym vertical scroll reveal
+  const acronymRef = useRef<HTMLDivElement>(null);
+  const [isAcronymVisible, setIsAcronymVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsAcronymVisible(true);
+          observer.disconnect();
+        }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: "0px 0px -50px 0px",
+      }
+    );
+
+    if (acronymRef.current) {
+      observer.observe(acronymRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   const blogStoriesCount = blogStories.length > 0 ? blogStories.length : 4;
 
   const handleBlogScroll = () => {
@@ -984,125 +1009,112 @@ export default function MarketingHome() {
         </section>
 
         {/* What is FinTrade & Acronym Section */}
-        <section className="py-12 md:py-20 relative z-10 bg-white overflow-hidden border-b border-gray-100">
+        <section className="py-6 md:py-10 relative z-10 bg-white overflow-hidden border-b border-gray-100">
           {/* Decorative subtle background glows */}
           <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#D50032]/5 rounded-full blur-[120px] pointer-events-none" />
           
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Header: What is FinTrade? */}
+            {/* Header: What FINTRADE Stands For */}
             <div className="text-center mb-12 md:mb-16">
               <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-4 border border-[#D50032]/20 bg-[#D50032]/5">
                 <span className="text-xs font-bold text-[#D50032] flex items-center gap-1">
                   💡 Discover FinTrade
                 </span>
               </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-6 text-gray-900 tracking-tight">
-                What is <span className="text-[#D50032]">FinTrade</span>?
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 text-gray-900 tracking-tight">
+                What <span className="text-[#D50032]">FINTRADE</span> Stands For
               </h2>
-              <p className="text-base sm:text-lg text-gray-650 max-w-3xl mx-auto font-medium leading-relaxed">
-                The FinTrade is a modern trading education and capital allocation platform focused on building skilled, disciplined, and profitable traders. The name <span className="text-[#D50032] font-semibold">“FinTrade”</span> combines <span className="font-semibold text-gray-900">Finance</span> and <span className="font-semibold text-gray-900">Trading</span>, representing a complete ecosystem for learning, analyzing, and succeeding in financial markets.
+              <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto font-medium leading-relaxed">
+                Every letter reflects a core principle that shapes how we educate, train, and transform traders.
               </p>
             </div>
 
-            {/* F-I-N-T-R-A-D-E Acronym Title */}
-            <div className="text-center mb-10">
-              <h3 className="text-xl sm:text-2xl font-black text-gray-900 tracking-wide uppercase">
-                The Anatomy of <span className="text-[#D50032]">F-I-N-T-R-A-D-E</span>
-              </h3>
-              <p className="text-xs sm:text-sm text-gray-400 font-semibold mt-1">Our Core Pillars of Excellence</p>
-            </div>
-
-            {/* Grid of Acronyms */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            {/* Acronym Rows Stack */}
+            <div ref={acronymRef} className="max-w-4xl mx-auto space-y-4">
               {[
                 {
                   letter: "F",
                   title: "Financial Foundations",
-                  desc: "Building strong financial knowledge and market understanding.",
-                  icon: BookOpen,
-                  color: "from-red-500 to-rose-600",
+                  desc: "Building strong financial foundations for growth and stability.",
                 },
                 {
                   letter: "I",
                   title: "Intelligence",
-                  desc: "Using smart insights and market data for better decisions.",
-                  icon: Brain,
-                  color: "from-[#D50032] to-[#FF3D00]",
+                  desc: "Using smart insights and knowledge to make better decisions.",
                 },
                 {
                   letter: "N",
                   title: "Networking",
-                  desc: "Connecting traders, mentors, and opportunities together.",
-                  icon: Users,
-                  color: "from-orange-500 to-red-600",
+                  desc: "Connecting people, ideas, and opportunities to create impact.",
                 },
                 {
                   letter: "T",
-                  title: "Trading",
-                  desc: "Learning professional trading strategies and execution.",
-                  icon: TrendingUp,
-                  color: "from-red-600 to-rose-700",
+                  title: "Trading Strategy",
+                  desc: "Mastering professional market execution and advanced trading systems.",
                 },
                 {
                   letter: "R",
-                  title: "Research",
-                  desc: "Analyzing markets deeply to identify trends and opportunities.",
-                  icon: Search,
-                  color: "from-rose-500 to-orange-600",
+                  title: "Risk Management",
+                  desc: "Prioritizing capital preservation, risk-reward ratios, and strategic sizing.",
                 },
                 {
                   letter: "A",
                   title: "Analytics",
-                  desc: "Turning data into actionable trading insights.",
-                  icon: BarChart3,
-                  color: "from-red-500 to-orange-500",
+                  desc: "Turning live market data into actionable and profitable insights.",
                 },
                 {
                   letter: "D",
-                  title: "Development",
-                  desc: "Continuous growth, discipline, and skill enhancement.",
-                  icon: Activity,
-                  color: "from-rose-600 to-red-600",
+                  title: "Discipline",
+                  desc: "Cultivating emotional control, patience, and consistent trading habits.",
                 },
                 {
                   letter: "E",
                   title: "Excellence",
-                  desc: "Striving for the highest standards in trading performance.",
-                  icon: Trophy,
-                  color: "from-amber-500 to-[#D50032]",
+                  desc: "Striving for continuous improvement and professional standards.",
                 },
               ].map((item, idx) => {
-                const Icon = item.icon;
                 return (
                   <div
                     key={idx}
-                    className="relative flex flex-col justify-between overflow-hidden rounded-[28px] border border-gray-100/90 bg-white p-7 shadow-[0_12px_40px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(213,0,50,0.06)] hover:border-[#D50032]/20 transition-all duration-300 group select-none"
+                    style={{ transitionDelay: `${idx * 150}ms` }}
+                    className={`w-full rounded-2xl md:rounded-[24px] border border-gray-100 bg-[#FAFBFD]/30 p-4 md:p-5 flex items-center gap-4 md:gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.005)] hover:border-[#D50032]/25 hover:shadow-[0_12px_45px_rgba(213,0,50,0.03)] hover:bg-white select-none relative overflow-hidden transition-all duration-700 ease-out transform ${
+                      isAcronymVisible 
+                        ? "opacity-100 translate-y-0" 
+                        : "opacity-0 translate-y-8 pointer-events-none"
+                    } group`}
                   >
-                    {/* Big stylized letter overlay in background */}
-                    <span className="absolute -right-2 -bottom-4 text-8xl font-black text-gray-50 opacity-[0.06] group-hover:opacity-[0.12] transition-opacity duration-300 font-sans pointer-events-none select-none">
-                      {item.letter}
-                    </span>
+                    {/* Glowing light background hover effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#D50032]/0 via-[#D50032]/[0.01] to-[#D50032]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    
+                    {/* Letter Square Box */}
+                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0 z-10 transition-transform duration-300 group-hover:scale-105">
+                      <span className="text-xl md:text-2xl font-black text-[#D50032] font-sans">
+                        {item.letter}
+                      </span>
+                    </div>
 
-                    <div>
-                      {/* Top Row: Icon and Letter */}
-                      <div className="flex justify-between items-center w-full">
-                        <div className="w-12 h-12 rounded-2xl bg-[#FFF5F6] border border-[#D50032]/8 text-[#D50032] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                          <Icon className="h-6 w-6 stroke-[2.5]" />
-                        </div>
-                        <span className={`text-2xl font-black px-3.5 py-1.5 rounded-2xl bg-gradient-to-br ${item.color} text-white shadow-sm font-sans`}>
-                          {item.letter}
+                    {/* Divider Line */}
+                    <div className="h-8 w-[1px] bg-gray-200 flex-shrink-0 z-10" />
+
+                    {/* Title & Description Container */}
+                    <div className="flex-1 flex flex-col md:flex-row md:items-center gap-1 md:gap-8 z-10">
+                      {/* Title */}
+                      <div className="w-full md:w-48 flex-shrink-0 text-left">
+                        <span className="font-extrabold text-base md:text-lg text-gray-900 tracking-tight group-hover:text-[#D50032] transition-colors duration-300">
+                          {item.title}
                         </span>
                       </div>
-
-                      {/* Title */}
-                      <h4 className="text-lg font-black text-gray-950 mt-6 tracking-tight text-left group-hover:text-[#D50032] transition-colors duration-300">
-                        {item.title}
-                      </h4>
-
                       {/* Description */}
-                      <p className="text-gray-500 text-sm leading-relaxed mt-2 text-left">
-                        {item.desc}
-                      </p>
+                      <div className="text-left">
+                        <p className="text-gray-500 text-xs md:text-sm font-medium leading-relaxed">
+                          {item.desc}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Right Glowing Red Dot */}
+                    <div className="flex-shrink-0 pr-1 md:pr-2 z-10">
+                      <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-[#D50032] opacity-40 group-hover:opacity-100 group-hover:scale-125 transition-all duration-300 shadow-[0_0_8px_rgba(213,0,50,0.5)]" />
                     </div>
                   </div>
                 );
@@ -1212,6 +1224,9 @@ export default function MarketingHome() {
             )}
           </div>
         </section>
+
+        {/* EMI & Payment Plans Section */}
+        <EMIHighlight />
 
         {/* 2. Live Classes Section */}
         <section className="pt-2 pb-6 md:py-8 relative z-10 bg-white" style={{ backdropFilter: "blur(2px)" }}>
