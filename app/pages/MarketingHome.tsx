@@ -609,7 +609,7 @@ export default function MarketingHome() {
     }, 8000);
   };
 
-  const coursesCount = (apiCourses.length > 0 ? apiCourses : Array(3)).slice(0, 3).length;
+  const coursesCount = apiCourses.length > 0 ? apiCourses.length : 3;
 
   // Handle manual scroll synchronization
   const handleCoursesScroll = () => {
@@ -1160,60 +1160,99 @@ export default function MarketingHome() {
               className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible pt-5 pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-              {(apiCourses.length > 0 ? apiCourses.map((c: any) => {
-                const diff = c.difficulty_level || "beginner";
-                return {
-                  ...c,
-                  name: c.title,
-                  level: diff.charAt(0).toUpperCase() + diff.slice(1),
-                  duration: c.duration_hours ? `${c.duration_hours} Days` : "Self-paced",
-                  originalPrice: c.original_price && Number(c.original_price) > 0 ? `\u20B9${Number(c.original_price).toLocaleString("en-IN")}` : null,
-                  price: `\u20B9${Number(c.price).toLocaleString("en-IN")}`,
-                  savings: c.original_price && Number(c.original_price) > Number(c.price) ? `\u20B9${(Number(c.original_price) - Number(c.price)).toLocaleString("en-IN")}` : null,
-                  shortDescription: c.short_description || c.description || "Professional trading course",
-                  fullDescription: c.description || c.short_description || "Professional trading course.",
-                  icon: diff === "beginner" ? BookOpen : diff === "intermediate" ? LineChart : Trophy,
-                  modules: (c.modules || []).sort((a: any, b: any) => a.order - b.order),
-                };
-              }) : [
-                {
-                  name: "Financial Market Foundation (FMF)",
-                  level: "Foundation",
-                  duration: "30 Days",
-                  originalPrice: "₹20,000",
-                  price: "₹12,000",
-                  savings: "₹8,000",
-                  shortDescription: "Master the fundamentals of financial markets.",
-                  fullDescription: "Master the fundamentals of financial markets and start your trading journey with confidence.",
-                  icon: BookOpen,
-                },
-                {
-                  name: "Certified Analyst & Research Program (CARP)",
-                  level: "Intermediate",
-                  duration: "60 Days",
-                  originalPrice: "₹50,000",
-                  price: "₹30,000",
-                  savings: "₹20,000",
-                  shortDescription: "Deep dive into research methodologies and analysis.",
-                  fullDescription: "Deep dive into research methodologies, technical analysis, and fundamental research.",
-                  icon: LineChart,
-                },
-                {
-                  name: "Certified Professional Trading Program (CPTP)",
-                  level: "Professional",
-                  duration: "90 Days",
-                  originalPrice: "₹75,000",
-                  price: "₹45,000",
-                  savings: "₹30,000",
-                  shortDescription: "Professional grade trading strategies.",
-                  fullDescription: "Professional grade trading strategies, advanced risk management, and portfolio construction.",
-                  icon: Trophy,
-                },
-              ]).slice(0, 3).map((course, i) => (
-                <div key={i} className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex">
-                  <CourseCard course={course} onEnroll={() => setSelectedCourseForCheckout(course)} />
-                </div>
-              ))}
+              {apiCourses.length > 0
+                ? apiCourses.map((c: any) => {
+                    const diff = c.difficulty_level || "beginner";
+                    return {
+                      ...c,
+                      name: c.title,
+                      level: diff.charAt(0).toUpperCase() + diff.slice(1),
+                      duration: c.duration_hours ? `${c.duration_hours} Days` : "Self-paced",
+                      originalPrice: c.original_price && Number(c.original_price) > 0 ? `\u20B9${Number(c.original_price).toLocaleString("en-IN")}` : null,
+                      price: `\u20B9${Number(c.price).toLocaleString("en-IN")}`,
+                      savings: c.original_price && Number(c.original_price) > Number(c.price) ? `\u20B9${(Number(c.original_price) - Number(c.price)).toLocaleString("en-IN")}` : null,
+                      shortDescription: c.short_description || c.description || "Professional trading course",
+                      fullDescription: c.description || c.short_description || "Professional trading course.",
+                      icon: diff === "beginner" ? BookOpen : diff === "intermediate" ? LineChart : Trophy,
+                      modules: (c.modules || []).sort((a: any, b: any) => a.order - b.order),
+                    };
+                  }).map((course, i) => (
+                    <div key={i} className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex">
+                      <CourseCard course={course} onEnroll={() => setSelectedCourseForCheckout(course)} />
+                    </div>
+                  ))
+                : [
+                    {
+                      id: 13,
+                      name: "Course 2",
+                      level: "Beginner",
+                      duration: "10 Days",
+                      price: "₹1,299",
+                      originalPrice: null,
+                      savings: null,
+                      shortDescription: "Course 2",
+                      fullDescription: "Course 2.",
+                      icon: BookOpen,
+                      modules: [],
+                    },
+                    {
+                      id: 11,
+                      name: "c2",
+                      level: "Beginner",
+                      duration: "20 Days",
+                      price: "₹23,233",
+                      originalPrice: "₹199",
+                      savings: null,
+                      shortDescription: "asdfgh",
+                      fullDescription: "asdfgh.",
+                      icon: BookOpen,
+                      modules: [],
+                    },
+                    {
+                      id: 10,
+                      name: "Course1",
+                      level: "Beginner",
+                      duration: "30 Days",
+                      price: "₹4,999",
+                      originalPrice: null,
+                      savings: null,
+                      shortDescription: "Course1",
+                      fullDescription: "Course1.",
+                      icon: BookOpen,
+                      modules: [],
+                    },
+                    {
+                      id: 9,
+                      name: "c1",
+                      level: "Beginner",
+                      duration: "10 Days",
+                      price: "₹20",
+                      originalPrice: "₹299",
+                      savings: "₹279",
+                      shortDescription: "abcdefgh",
+                      fullDescription: "abcdefgh.",
+                      icon: BookOpen,
+                      modules: [],
+                    },
+                    {
+                      id: 8,
+                      name: "a",
+                      level: "Beginner",
+                      duration: "10 Days",
+                      price: "₹500",
+                      originalPrice: "₹1,000",
+                      savings: "₹500",
+                      shortDescription: "a",
+                      fullDescription: "a.",
+                      icon: BookOpen,
+                      modules: [],
+                    }
+                  ].map((course, i) => (
+                    <div key={i} className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex">
+                      <CourseCard course={course} onEnroll={() => setSelectedCourseForCheckout(course)} />
+                    </div>
+                  ))
+              }
             </div>
 
             {apiCourses.length > 3 && (

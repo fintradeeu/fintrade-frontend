@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp, Clock, BookOpen, Layers } from "lucide-react";
+import api from "../../services/api";
 
 interface Module {
   num: number;
@@ -15,107 +16,57 @@ interface ProgramSection {
 
 const programSections: ProgramSection[] = [
   {
-    title: "PROFESSIONAL TRADING MINDSET FOUNDATION",
-    duration: "2 Days",
+    title: "Course 2",
+    duration: "10 Days",
     modules: [
       {
         num: 1,
-        title: "Trader’s Mindset & Market Psychology",
-        overview: "Understanding psychological biases, developing emotional discipline, and establishing a professional risk-first perspective to avoid common trading pitfalls."
-      },
-      {
-        num: 2,
-        title: "Professional Trading Mindset Foundation",
-        overview: "Establishing the daily operational routines, journaling methods, and cognitive framing needed for long-term consistency and stress management."
+        title: "Introduction to Course 2",
+        overview: "Mastering the fundamentals and starting your trading journey in Course 2."
       }
     ]
   },
   {
-    title: "FINANCIAL MARKET FOUNDATION",
+    title: "c2",
+    duration: "20 Days",
+    modules: [
+      {
+        num: 1,
+        title: "Introduction to c2",
+        overview: "Deep dive into c2 trading systems and research methodologies."
+      }
+    ]
+  },
+  {
+    title: "Course1",
     duration: "30 Days",
     modules: [
       {
         num: 1,
-        title: "Introduction to Financial Market",
-        overview: "Mastering the fundamentals of equity, debt, commodity, and currency markets, and how capital flows through global economic systems."
-      },
-      {
-        num: 2,
-        title: "Understanding Security Market",
-        overview: "Deep-dive into stock exchanges (NSE & BSE), clearing corporations, depository participants, and order matching algorithms."
-      },
-      {
-        num: 3,
-        title: "Methods of analysing Financial Security",
-        overview: "Comparing fundamental, technical, and quantitative approaches to evaluating financial instruments for short-term trading and investing."
+        title: "Introduction to Course1",
+        overview: "Professional grade trading strategies and advanced risk management in Course1."
       }
     ]
   },
   {
-    title: "MARKET ANALYSIS AND TRADING STRATEGY DEVELOPMENT",
-    duration: "30 Days",
+    title: "c1",
+    duration: "10 Days",
     modules: [
       {
         num: 1,
-        title: "Fundamental Analysis Framework",
-        overview: "Reading balance sheets, income statements, cash flows, and key valuation metrics like P/E, D/E, and ROCE to evaluate company health."
-      },
-      {
-        num: 2,
-        title: "Application of Fundamental Analysis",
-        overview: "Applying macro and micro-economic analysis to industry sectors, assessing competitive moats, and predicting earnings growth."
-      },
-      {
-        num: 3,
-        title: "Technical Analysis for Trading and Investing",
-        overview: "Mastering support/resistance, trend lines, volume analysis, and major indicators like RSI, MACD, and Moving Averages."
-      },
-      {
-        num: 4,
-        title: "Trading & Analytics Software",
-        overview: "Hands-on training with professional trading terminals, charting tools, market depth screens, and data scanning software."
+        title: "Introduction to c1",
+        overview: "Applied technical analysis and intraday setups in c1."
       }
     ]
   },
   {
-    title: "ADVANCED INSTITUTIONAL TRADING AND RISK MANAGEMENT",
-    duration: "30 Days",
+    title: "a",
+    duration: "10 Days",
     modules: [
       {
         num: 1,
-        title: "Applied Technical Analysis",
-        overview: "Advanced price action, multiple timeframe analysis, multi-indicator confluence, and high-probability setup recognition."
-      },
-      {
-        num: 2,
-        title: "Mechanics of Derivative Market",
-        overview: "Understanding futures, options, open interest, cost of carry, option Greeks, and institutional positioning data."
-      },
-      {
-        num: 3,
-        title: "Options & Futures Strategies",
-        overview: "Designing spreads, straddles, strangles, iron condors, and hedging setups for various market regimes and volatility states."
-      },
-      {
-        num: 4,
-        title: "Professional Risk Management",
-        overview: "Position sizing models, value at risk (VaR), correlation management, drawdown control, and institutional risk metrics."
-      }
-    ]
-  },
-  {
-    title: "MARKET APPLICATION AND EXECUTION",
-    duration: "5 Days",
-    modules: [
-      {
-        num: 1,
-        title: "Trading Lab & Back testing Mastery",
-        overview: "Validating strategy rules historically, running statistical backtests, and optimizing parameters without curve-fitting."
-      },
-      {
-        num: 2,
-        title: "Real World Market Execution",
-        overview: "Executing trades in a live desk environment, managing order slippage, handling live positions under stress, and post-trade analysis."
+        title: "Introduction to a",
+        overview: "Capital allocation and proprietary desk simulation in course a."
       }
     ]
   }
@@ -123,26 +74,47 @@ const programSections: ProgramSection[] = [
 
 export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | null }) {
   const [expandedStageIdx, setExpandedStageIdx] = useState<number | null>(0);
+  const [courses, setCourses] = useState<any[]>([]);
 
-  // Find the Certified Professional Trading Program (CPTP) course specifically from API
-  const cptpCourse = apiCourses?.find((c: any) => 
-    c.title?.toLowerCase().includes("cptp") || 
-    c.title?.toLowerCase().includes("certified professional trading program")
-  ) || apiCourses?.find((c: any) => 
-    c.difficulty_level?.toLowerCase() === "advanced" || 
-    c.difficulty_level?.toLowerCase() === "professional"
-  ) || (apiCourses && apiCourses.length > 0 ? apiCourses[0] : null);
+  useEffect(() => {
+    if (apiCourses && apiCourses.length > 0) {
+      setCourses(apiCourses);
+      return;
+    }
 
-  const sectionsToUse: ProgramSection[] = cptpCourse && cptpCourse.modules?.length > 0
-    ? cptpCourse.modules.sort((a: any, b: any) => a.order - b.order).map((mod: any, idx: number) => ({
-        title: mod.title,
-        duration: mod.description || "TBD",
-        modules: mod.lessons?.length > 0 ? mod.lessons.sort((a: any, b: any) => a.order - b.order).map((l: any, i: number) => ({
+    const fetchCourses = async () => {
+      try {
+        const res = await api.get("/courses");
+        if (res.data && res.data.length > 0) {
+          const detailed = await Promise.all(
+            res.data.map(async (c: any) => {
+              try {
+                const det = await api.get(`/courses/${c.id}`);
+                return det.data;
+              } catch {
+                return c;
+              }
+            })
+          );
+          setCourses(detailed);
+        }
+      } catch (err) {
+        console.error("Failed to fetch courses in ProgramModules", err);
+      }
+    };
+    fetchCourses();
+  }, [apiCourses]);
+
+  const sectionsToUse: ProgramSection[] = courses.length > 0 
+    ? courses.map((c: any) => ({
+        title: c.title,
+        duration: c.duration_hours ? `${c.duration_hours} Days` : "TBD",
+        modules: c.modules?.length > 0 ? c.modules.map((m: any, i: number) => ({
           num: i + 1,
-          title: l.title,
-          overview: l.content || "No description provided."
+          title: m.title,
+          overview: m.description || "No description provided."
         })) : [
-          { num: 1, title: "Curriculum Pending", overview: "The syllabus for this stage is currently being prepared." }
+          { num: 1, title: "Curriculum Pending", overview: "The syllabus for this course is currently being prepared." }
         ]
       }))
     : programSections;
