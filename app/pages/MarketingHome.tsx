@@ -836,6 +836,7 @@ export default function MarketingHome() {
             <video
               src={activeVideoIdx !== null && showcaseVideos[activeVideoIdx]?.videoUrl ? showcaseVideos[activeVideoIdx].videoUrl : "https://assets.mixkit.co/videos/preview/mixkit-tablet-displaying-financial-charts-40433-large.mp4"}
               autoPlay
+              muted
               controls
               loop
               playsInline

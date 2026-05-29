@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router";
-import { Search, Phone, Instagram, Facebook, Youtube, Linkedin, X, Download, UserCircle, Save, Mail, Smartphone, AlertTriangle } from "lucide-react";
+import { Search, Phone, Instagram, Facebook, Youtube, Linkedin, X, Download, UserCircle, Save, Mail, Smartphone, AlertTriangle, Menu } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
@@ -14,6 +14,7 @@ export default function MarketingLayout() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [showViolationModal, setShowViolationModal] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -204,10 +205,97 @@ export default function MarketingLayout() {
                   <Button variant="ghost" className="text-gray-700 hover:text-[#D50032] hover:bg-[#D50032]/10" size="lg">Login</Button>
                 </Link>
               )}
+              {/* Mobile menu trigger */}
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:text-[#D50032] hover:bg-[#D50032]/10 transition-all active:scale-95"
+                title="Menu"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
             </div>
           </div>
         </div>
       </nav>
+
+      {/* Mobile Navigation Drawer */}
+      <div 
+        className={`fixed inset-0 z-[1000] transition-opacity duration-300 ${isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+      >
+        {/* Backdrop overlay */}
+        <div 
+          className="absolute inset-0 bg-black/55 backdrop-blur-sm"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+        {/* Drawer Panel */}
+        <aside 
+          className={`absolute top-0 left-0 bottom-0 w-64 bg-white shadow-2xl z-10 flex flex-col transition-transform duration-300 ease-out transform ${
+            isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          {/* Drawer Header */}
+          <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+            <div className="h-[40px] w-[100px] overflow-hidden flex items-center justify-start">
+              <img
+                src={logo}
+                alt="FinTrade"
+                className="h-full w-full object-contain scale-[2.2] -translate-x-2 -translate-y-0.5"
+                style={{ transformOrigin: "left center" }}
+              />
+            </div>
+            <button 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Drawer Links */}
+          <nav className="flex-1 p-5 overflow-y-auto space-y-2">
+            {[
+              { label: "Home", path: "/" },
+              { label: "Courses", path: "/courses" },
+              { label: "Markets", path: "/markets" },
+              { label: "Categories", path: "/category/all" },
+              { label: "Update", path: "/updates" },
+              { label: "Blog", path: "/blog" },
+              { label: "About", path: "/about" },
+            ].map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center px-4 py-3 rounded-xl font-bold text-sm text-gray-700 hover:text-[#D50032] hover:bg-[#D50032]/5 transition-all"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Drawer Footer */}
+          <div className="p-5 border-t border-gray-100 bg-gray-50/50">
+            {isAuthenticated ? (
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setProfileOpen(true);
+                }}
+                className="w-full flex items-center gap-2.5 px-4 py-3 bg-[#FFF0F2] text-[#D50032] font-extrabold text-xs tracking-wider uppercase rounded-xl transition-all hover:bg-[#D50032] hover:text-white"
+              >
+                <UserCircle className="h-5 w-5" />
+                View Profile
+              </button>
+            ) : (
+              <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
+                <Button className="w-full bg-[#D50032] hover:bg-[#b00029] text-white font-extrabold py-3 rounded-xl text-xs tracking-wider uppercase shadow-md shadow-[#D50032]/10 transition-all hover:scale-[1.02]">
+                  Login / Register
+                </Button>
+              </Link>
+            )}
+          </div>
+        </aside>
+      </div>
 
       <main className="flex-1 flex flex-col">
         <Outlet />

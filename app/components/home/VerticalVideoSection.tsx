@@ -193,6 +193,7 @@ export default function VerticalVideoSection() {
                   <video
                     src={vid.videoUrl}
                     autoPlay
+                    muted
                     controls
                     loop
                     playsInline
