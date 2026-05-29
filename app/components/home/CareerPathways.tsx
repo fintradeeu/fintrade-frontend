@@ -126,15 +126,19 @@ export default function CareerPathways() {
                     >
                       <button 
                         onMouseEnter={() => setActiveCategoryId(cat.id)}
-                        className="w-9 h-9 md:w-12 md:h-12 rounded-full border-2 bg-white flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-115 cursor-pointer relative group/btn"
+                        className={`w-9 h-9 md:w-12 md:h-12 rounded-full border-2 bg-white flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-115 cursor-pointer relative group/btn ${
+                          isSelected ? "scale-115" : ""
+                        }`}
                         style={{ 
                           borderColor: cat.color,
-                          boxShadow: isSelected ? `0 0 15px ${cat.color}45` : undefined,
+                          boxShadow: isSelected ? `0 0 18px ${cat.color}55` : undefined,
                         }}
                         aria-label={cat.title}
                       >
                         <IconComponent 
-                          className="w-4.5 h-4.5 md:w-5.5 md:h-5.5 stroke-[2.5] transition-transform duration-300 group-hover/btn:scale-105" 
+                          className={`w-4.5 h-4.5 md:w-5.5 md:h-5.5 stroke-[2.5] transition-transform duration-300 group-hover/btn:scale-105 ${
+                            isSelected ? "scale-105" : ""
+                          }`} 
                           style={{ color: cat.color }}
                         />
                       </button>
@@ -173,6 +177,47 @@ export default function CareerPathways() {
 
           </div>
         </div>
+
+        {/* Horizontal Legend Row below orbit system matching mockup */}
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-9 mt-8 md:mt-12 px-4 select-none max-w-4xl mx-auto z-30 relative animate-fade-in">
+          {categories.map((cat) => {
+            const IconComponent = cat.icon;
+            const isSelected = activeCategoryId === cat.id;
+            return (
+              <div 
+                key={cat.id}
+                onMouseEnter={() => setActiveCategoryId(cat.id)}
+                onMouseLeave={() => setActiveCategoryId(null)}
+                onClick={() => setActiveCategoryId(isSelected ? null : cat.id)}
+                className={`flex items-center gap-2.5 px-3.5 py-2 rounded-full border transition-all duration-300 cursor-pointer ${
+                  isSelected 
+                    ? "bg-gray-50 scale-105 shadow-sm border-gray-100" 
+                    : "bg-transparent border-transparent hover:bg-gray-50/50"
+                }`}
+                style={{
+                  borderColor: isSelected ? `${cat.color}25` : undefined
+                }}
+              >
+                <div 
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 bg-white flex items-center justify-center flex-shrink-0 transition-all duration-300"
+                  style={{ 
+                    borderColor: cat.color,
+                    boxShadow: isSelected ? `0 0 10px ${cat.color}35` : undefined
+                  }}
+                >
+                  <IconComponent 
+                    className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" 
+                    style={{ color: cat.color }}
+                  />
+                </div>
+                <span className="text-xs sm:text-[13px] font-bold text-gray-700 tracking-tight">
+                  {cat.title}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
       </div>
 
       {/* Hardware-Accelerated Dynamic Animations Style Block */}

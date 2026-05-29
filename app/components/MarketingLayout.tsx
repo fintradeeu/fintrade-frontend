@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router";
-import { Search, Phone, Instagram, Facebook, Youtube, Linkedin, X, Download, UserCircle, Save, Mail, Smartphone, AlertTriangle, Menu } from "lucide-react";
+import { Search, Phone, Instagram, Facebook, Youtube, Linkedin, X, Download, UserCircle, Save, Mail, Smartphone, AlertTriangle, Menu, LogIn } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
@@ -78,7 +78,7 @@ export default function MarketingLayout() {
     try {
       // Call backend API to update the profile in the database
       const res = await api.put("/auth/my-profile", profileForm);
-      
+
       // Update localStorage with the latest server data
       localStorage.setItem("user", JSON.stringify(res.data));
       setProfileOpen(false);
@@ -104,7 +104,7 @@ export default function MarketingLayout() {
 
   return (
     <div className="min-h-screen flex flex-col font-sans" style={{ background: "radial-gradient(circle at 50% 50%, #FFFFFF 0%, #F8F8F8 50%, #F4F4F4 100%)" }}>
-      
+
       {/* Search Overlay */}
       {searchOpen && (
         <div className="fixed inset-0 z-[9998] flex items-start justify-center pt-32" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} onClick={() => setSearchOpen(false)}>
@@ -132,7 +132,7 @@ export default function MarketingLayout() {
           <div className="flex items-center justify-between h-12 text-sm">
             <div className="flex items-center gap-4">
               <a href="tel:+919876543210" className="flex items-center gap-2 text-white bg-[#D50032] px-3.5 py-1.5 rounded-full font-bold shadow-[0_0_15px_rgba(213,0,50,0.45)] hover:bg-[#FF0000] hover:scale-105 transition-all duration-300">
-                <Phone className="h-3.5 w-3.5 fill-current" /> <span className="hidden sm:inline">+91 98765 43210</span><span className="sm:hidden">Call</span>
+                <Phone className="h-3.5 w-3.5 fill-current" /> <span className="hidden sm:inline">+91 92746 75947</span><span className="sm:hidden">Call</span>
               </a>
               <span className="text-gray-600 hidden sm:inline">|</span>
               <span className="text-gray-400 hidden sm:inline">Support & Info</span>
@@ -201,8 +201,13 @@ export default function MarketingLayout() {
                   <UserCircle className="h-8 w-8" />
                 </button>
               ) : (
-                <Link to="/login">
-                  <Button variant="ghost" className="text-gray-700 hover:text-[#D50032] hover:bg-[#D50032]/10" size="lg">Login</Button>
+                <Link to="/login" className="inline-block select-none">
+                  <button 
+                    className="h-10 px-5 rounded-full bg-[#D50032] hover:bg-[#b00029] text-white font-extrabold text-xs sm:text-sm tracking-wide flex items-center gap-2 transition-all duration-300 shadow-[0_4px_12px_rgba(213,0,50,0.22)] hover:shadow-[0_6px_18px_rgba(213,0,50,0.32)] hover:scale-105 active:scale-95 border-0 cursor-pointer"
+                  >
+                    <LogIn className="h-3.5 w-3.5 sm:h-4 sm:w-4 stroke-[3]" />
+                    <span>Login</span>
+                  </button>
                 </Link>
               )}
               {/* Mobile menu trigger */}
@@ -219,19 +224,18 @@ export default function MarketingLayout() {
       </nav>
 
       {/* Mobile Navigation Drawer */}
-      <div 
+      <div
         className={`fixed inset-0 z-[1000] transition-opacity duration-300 ${isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
       >
         {/* Backdrop overlay */}
-        <div 
+        <div
           className="absolute inset-0 bg-black/55 backdrop-blur-sm"
           onClick={() => setIsMobileMenuOpen(false)}
         />
         {/* Drawer Panel */}
-        <aside 
-          className={`absolute top-0 left-0 bottom-0 w-64 bg-white shadow-2xl z-10 flex flex-col transition-transform duration-300 ease-out transform ${
-            isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+        <aside
+          className={`absolute top-0 left-0 bottom-0 w-64 bg-white shadow-2xl z-10 flex flex-col transition-transform duration-300 ease-out transform ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
         >
           {/* Drawer Header */}
           <div className="p-5 border-b border-gray-100 flex items-center justify-between">
@@ -243,7 +247,7 @@ export default function MarketingLayout() {
                 style={{ transformOrigin: "left center" }}
               />
             </div>
-            <button 
+            <button
               onClick={() => setIsMobileMenuOpen(false)}
               className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
             >
@@ -436,7 +440,7 @@ export default function MarketingLayout() {
                 <AlertTriangle size={36} className="text-red-500" />
               </div>
             </div>
-            
+
             <h2 className="text-2xl font-bold text-center text-[#0B2A5B] mb-2">Proctored Exam Warning</h2>
             <p className="text-center text-red-600 font-semibold mb-6">
               System detected tab switching or application switching during your entrance exam!

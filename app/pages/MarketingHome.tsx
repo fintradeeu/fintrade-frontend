@@ -541,6 +541,7 @@ export default function MarketingHome() {
   ];
 
   const [apiCourses, setApiCourses] = useState<any[]>([]);
+  const [isCoursesExpanded, setIsCoursesExpanded] = useState(false);
   const [cmsSettings, setCmsSettings] = useState<any>({});
   const [blogStories, setBlogStories] = useState<any[]>([]);
   const [marketUpdates, setMarketUpdates] = useState<any[]>([]);
@@ -609,7 +610,9 @@ export default function MarketingHome() {
     }, 8000);
   };
 
-  const coursesCount = apiCourses.length > 0 ? apiCourses.length : 3;
+  const coursesCount = isCoursesExpanded 
+    ? (apiCourses.length > 0 ? apiCourses.length : 5) 
+    : 3;
 
   // Handle manual scroll synchronization
   const handleCoursesScroll = () => {
@@ -1138,9 +1141,12 @@ export default function MarketingHome() {
                 Master trading with our industry-leading certifications
               </p>
               <div className="mt-6 text-center">
-                <Link to="/courses" className="inline-block">
-                  <Button className="bg-[#D50032] hover:bg-[#b00029] text-white font-bold px-6 py-2 rounded-lg shadow-lg transition-all duration-300">View More Courses</Button>
-                </Link>
+                <Button 
+                  onClick={() => setIsCoursesExpanded(!isCoursesExpanded)}
+                  className="bg-[#D50032] hover:bg-[#b00029] text-white font-bold px-6 py-2 rounded-lg shadow-lg transition-all duration-300 animate-fade-in"
+                >
+                  {isCoursesExpanded ? "View Less" : "View More Courses"}
+                </Button>
               </div>
             </div>
             <div
@@ -1160,7 +1166,7 @@ export default function MarketingHome() {
               className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible pt-5 pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-              {apiCourses.length > 0
+              {(apiCourses.length > 0
                 ? apiCourses.map((c: any) => {
                     const diff = c.difficulty_level || "beginner";
                     return {
@@ -1176,11 +1182,7 @@ export default function MarketingHome() {
                       icon: diff === "beginner" ? BookOpen : diff === "intermediate" ? LineChart : Trophy,
                       modules: (c.modules || []).sort((a: any, b: any) => a.order - b.order),
                     };
-                  }).map((course, i) => (
-                    <div key={i} className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex">
-                      <CourseCard course={course} onEnroll={() => setSelectedCourseForCheckout(course)} />
-                    </div>
-                  ))
+                  })
                 : [
                     {
                       id: 13,
@@ -1247,21 +1249,27 @@ export default function MarketingHome() {
                       icon: BookOpen,
                       modules: [],
                     }
-                  ].map((course, i) => (
-                    <div key={i} className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex">
-                      <CourseCard course={course} onEnroll={() => setSelectedCourseForCheckout(course)} />
-                    </div>
-                  ))
-              }
+                  ]
+              ).slice(0, isCoursesExpanded ? undefined : 3).map((course, i) => (
+                <div key={i} className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex">
+                  <CourseCard course={course} onEnroll={() => setSelectedCourseForCheckout(course)} />
+                </div>
+              ))}
             </div>
 
-            {apiCourses.length > 3 && (
+            {((apiCourses.length > 3) || (apiCourses.length === 0)) && (
               <div className="mt-8 text-center">
-                <Link to="/courses">
-                  <Button className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] px-8 py-2 rounded-full font-semibold transition-all">
-                    View More Courses
-                  </Button>
-                </Link>
+                <Button 
+                  onClick={() => {
+                    setIsCoursesExpanded(!isCoursesExpanded);
+                    if (isCoursesExpanded) {
+                      document.getElementById("courses")?.scrollIntoView({ behavior: "smooth" });
+                    }
+                  }}
+                  className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] px-8 py-2.5 rounded-full font-semibold transition-all shadow-md"
+                >
+                  {isCoursesExpanded ? "View Less" : "View More Courses"}
+                </Button>
               </div>
             )}
           </div>
