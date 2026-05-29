@@ -252,54 +252,54 @@ export default function ExpertProfile() {
       {/* Dynamic Modal Dialog Dossier */}
       {activeLeader !== null && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-950/60 backdrop-blur-sm animate-modal-bg"
+          className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 bg-gray-950/60 backdrop-blur-sm overflow-y-auto animate-modal-bg"
           onClick={() => setActiveLeader(null)}
         >
           {/* Modal Container */}
           <div 
-            className="relative bg-white rounded-[32px] max-w-2xl w-full p-6 sm:p-8 shadow-2xl overflow-y-auto max-h-[90vh] md:max-h-none select-none animate-modal-box"
+            className="relative bg-white rounded-[24px] md:rounded-[32px] max-w-2xl w-full p-5 sm:p-8 shadow-2xl my-auto select-none animate-modal-box max-h-[90vh] sm:max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button X */}
             <button 
               onClick={() => setActiveLeader(null)}
-              className="absolute top-6 right-6 text-gray-400 hover:text-gray-700 transition-colors p-1.5 cursor-pointer bg-transparent border-none rounded-full hover:bg-gray-50"
+              className="absolute top-4 right-4 md:top-6 md:right-6 text-gray-400 hover:text-gray-700 transition-colors p-1.5 cursor-pointer bg-transparent border-none rounded-full hover:bg-gray-50 z-20"
               aria-label="Close dossier"
             >
               <X className="w-5 h-5 stroke-[2.5]" />
             </button>
 
             {/* Modal Header */}
-            <div className="flex items-center gap-4.5">
-              <div className="w-18 h-18 rounded-full bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-xl font-black text-[#D50032] tracking-tighter">
+            <div className="flex items-center gap-3.5 md:gap-4.5 text-left">
+              <div className="w-14 h-14 md:w-18 md:h-18 rounded-full bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-lg md:text-xl font-black text-[#D50032] tracking-tighter">
                   {leadersData[activeLeader].monogram}
                 </span>
               </div>
-              <div className="space-y-1 text-left">
-                <h3 className="text-2xl font-black text-gray-950 tracking-tight leading-none">
+              <div className="space-y-1">
+                <h3 className="text-xl md:text-2xl font-black text-gray-950 tracking-tight leading-none">
                   {leadersData[activeLeader].name}
                 </h3>
-                <p className="text-sm font-extrabold text-[#D50032] leading-none mt-1">
+                <p className="text-xs md:text-sm font-extrabold text-[#D50032] leading-none mt-1">
                   {leadersData[activeLeader].title}
                 </p>
-                <p className="text-xs font-extrabold text-gray-400 leading-none mt-2 uppercase tracking-wide">
+                <p className="text-[10px] md:text-xs font-extrabold text-gray-400 leading-none mt-2 uppercase tracking-wide">
                   {leadersData[activeLeader].headerDetail}
                 </p>
               </div>
             </div>
 
             {/* Featured stats row (3 cards) */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mt-6">
               {leadersData[activeLeader].stats.map((stat, sIdx) => (
                 <div 
                   key={sIdx}
-                  className="bg-[#FFF5F6] border border-[#D50032]/8 rounded-2xl p-4 flex flex-col justify-center items-center text-center shadow-[0_2px_8px_rgba(213,0,50,0.01)]"
+                  className="bg-[#FFF5F6] border border-[#D50032]/8 rounded-xl md:rounded-2xl p-3 md:p-4 flex flex-col justify-center items-center text-center shadow-[0_2px_8px_rgba(213,0,50,0.01)]"
                 >
-                  <span className="text-base sm:text-lg font-black text-[#D50032] leading-tight tracking-tight break-words">
+                  <span className="text-sm md:text-base lg:text-lg font-black text-[#D50032] leading-tight tracking-tight break-words">
                     {stat.value}
                   </span>
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider mt-1.5 leading-none">
+                  <span className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-wider mt-1.5 leading-none">
                     {stat.label}
                   </span>
                 </div>
@@ -310,7 +310,7 @@ export default function ExpertProfile() {
             <div className="w-full h-[1px] bg-gray-100 my-6" />
 
             {/* Deep bio content */}
-            <p className="text-gray-500 text-sm sm:text-base leading-relaxed text-left font-medium">
+            <p className="text-gray-500 text-xs sm:text-sm md:text-base leading-relaxed text-left font-medium">
               {leadersData[activeLeader].bio}
             </p>
 

@@ -1,4 +1,5 @@
 import { Check, CreditCard, ShieldCheck, Percent } from "lucide-react";
+import { motion } from "motion/react";
 
 export default function EMIHighlight() {
   const paymentDetails = [
@@ -54,7 +55,13 @@ export default function EMIHighlight() {
       {/* Decorative background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-[#D50032]/3 rounded-full blur-[130px] pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <motion.div
+        initial={{ opacity: 0, y: 35 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10"
+      >
         
         {/* Section Header */}
         <div className="text-center mb-10 select-none">
@@ -159,7 +166,7 @@ export default function EMIHighlight() {
           })}
         </div>
 
-      </div>
+      </motion.div>
     </section>
   );
 }

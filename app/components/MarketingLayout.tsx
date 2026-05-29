@@ -163,8 +163,8 @@ export default function MarketingLayout() {
       {/* Navbar */}
       <nav className="sticky top-0 z-[100] bg-white/90 border-b border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.05)] backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20 -translate-x-4 md:-translate-x-8">
-            <div className="flex-shrink-0 flex items-center h-[50px] w-[140px] md:h-[60px] md:w-[220px]">
+          <div className="flex items-center justify-between h-20">
+            <div className="flex-shrink-0 flex items-center h-[50px] w-[140px] md:h-[60px] md:w-[220px] -translate-x-4 md:-translate-x-8">
               <Link to="/" className="flex items-center justify-center h-full w-full overflow-hidden">
                 <img
                   src={logo}
@@ -202,7 +202,7 @@ export default function MarketingLayout() {
                 </button>
               ) : (
                 <Link to="/login" className="inline-block select-none">
-                  <button 
+                  <button
                     className="h-10 px-5 rounded-full bg-[#D50032] hover:bg-[#b00029] text-white font-extrabold text-xs sm:text-sm tracking-wide flex items-center gap-2 transition-all duration-300 shadow-[0_4px_12px_rgba(213,0,50,0.22)] hover:shadow-[0_6px_18px_rgba(213,0,50,0.32)] hover:scale-105 active:scale-95 border-0 cursor-pointer"
                   >
                     <LogIn className="h-3.5 w-3.5 sm:h-4 sm:w-4 stroke-[3]" />
@@ -301,7 +301,7 @@ export default function MarketingLayout() {
         </aside>
       </div>
 
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col overflow-x-hidden">
         <Outlet />
       </main>
 
