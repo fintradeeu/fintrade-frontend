@@ -10,7 +10,7 @@ const verticalVideos = [
     author: "Rahul S.",
     views: "12K",
     thumbnail: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
-    videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-tablet-displaying-financial-charts-40433-large.mp4"
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
   },
   {
     id: "v2",
@@ -19,7 +19,7 @@ const verticalVideos = [
     author: "Priya V.",
     views: "8.5K",
     thumbnail: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
-    videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-financial-data-on-a-monitor-screen-40431-large.mp4"
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
   },
   {
     id: "v3",
@@ -28,7 +28,7 @@ const verticalVideos = [
     author: "Amit P.",
     views: "15K",
     thumbnail: "https://images.unsplash.com/photo-1535320903710-d993d3d77d29?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
-    videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-business-charts-on-a-laptop-42171-large.mp4"
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"
   },
   {
     id: "v4",
@@ -38,7 +38,7 @@ const verticalVideos = [
     views: "9.2K",
     isPlaying: true, // Mark active card like in the mockup
     thumbnail: "https://images.unsplash.com/photo-1616587896649-79b16d8b173d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
-    videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-financial-charts-on-a-computer-screen-40432-large.mp4"
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"
   },
   {
     id: "v5",
@@ -47,7 +47,7 @@ const verticalVideos = [
     author: "Sneha R.",
     views: "11K",
     thumbnail: "https://images.unsplash.com/photo-1640340434855-6084b1f4901c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
-    videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-tablet-displaying-financial-charts-40433-large.mp4"
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4"
   },
   {
     id: "v6",
@@ -56,7 +56,7 @@ const verticalVideos = [
     author: "Vikram D.",
     views: "7.8K",
     thumbnail: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
-    videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-financial-data-on-a-monitor-screen-40431-large.mp4"
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4"
   },
 ];
 

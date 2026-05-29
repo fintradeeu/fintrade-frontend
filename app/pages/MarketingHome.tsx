@@ -834,7 +834,7 @@ export default function MarketingHome() {
               <X size={24} />
             </button>
             <video
-              src={activeVideoIdx !== null && showcaseVideos[activeVideoIdx]?.videoUrl ? showcaseVideos[activeVideoIdx].videoUrl : "https://assets.mixkit.co/videos/preview/mixkit-tablet-displaying-financial-charts-40433-large.mp4"}
+              src={activeVideoIdx !== null && showcaseVideos[activeVideoIdx]?.videoUrl ? showcaseVideos[activeVideoIdx].videoUrl : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"}
               autoPlay
               muted
               controls
