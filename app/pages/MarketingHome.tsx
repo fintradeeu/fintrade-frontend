@@ -1519,8 +1519,8 @@ export default function MarketingHome() {
                       { num: "3", title: "Risk Management", desc: "Position sizing & capital protection", status: "current", x: 50, y: 63.3, align: isMobileViewport ? "right" : "bottom", isCurrent: true },
                       { num: "4", title: "Trading Psychology", desc: "Emotional discipline & consistency", status: "locked", x: 65, y: 53.3, align: isMobileViewport ? "left" : "top" },
                       { num: "5", title: "Options & Derivatives", desc: "Options pricing, Greeks & hedging", status: "locked", x: 80, y: 40, align: isMobileViewport ? "left" : "bottom" },
-                      { num: "6", title: "Advanced Strategies", desc: "Algo trading & quant analysis", status: "locked", x: 72, y: 26.6, align: isMobileViewport ? "right" : "top" },
-                      { num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "locked", x: 55, y: 20, align: isMobileViewport ? "left" : "bottom" },
+                      {num: "6", title: "Advanced Strategies", desc: "Algo trading & quant analysis", status: "locked", x: 72, y: 26.6, align: isMobileViewport ? "left" : "top"},
+                      {num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "locked", x: 55, y: 20, align: isMobileViewport ? "right" : "bottom"},
                       { num: "8", title: "Certification & Placement", desc: "Final assessment & placement", status: "locked", x: 36, y: 18.3, align: isMobileViewport ? "top" : "top", isSummit: true },
                     ].map((step, idx) => {
                       const isCompleted = step.status === "completed";

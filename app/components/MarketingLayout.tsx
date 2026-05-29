@@ -140,7 +140,7 @@ export default function MarketingLayout() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col font-sans" style={{ background: "radial-gradient(circle at 50% 50%, #FFFFFF 0%, #F8F8F8 50%, #F4F4F4 100%)" }}>
+    <div className="min-h-screen flex flex-col font-sans overflow-x-hidden" style={{ background: "radial-gradient(circle at 50% 50%, #FFFFFF 0%, #F8F8F8 50%, #F4F4F4 100%)" }}>
 
       {/* Premium Preloader Intro Screen */}
       {shouldRenderLoader && (
