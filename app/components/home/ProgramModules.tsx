@@ -124,16 +124,25 @@ const programSections: ProgramSection[] = [
 export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | null }) {
   const [expandedStageIdx, setExpandedStageIdx] = useState<number | null>(0);
 
-  const sectionsToUse: ProgramSection[] = apiCourses && apiCourses.length > 0 
-    ? apiCourses.map((c: any) => ({
-        title: c.title,
-        duration: c.duration_hours ? `${c.duration_hours} Days` : "TBD",
-        modules: c.modules?.length > 0 ? c.modules.map((m: any, i: number) => ({
+  // Find the Certified Professional Trading Program (CPTP) course specifically from API
+  const cptpCourse = apiCourses?.find((c: any) => 
+    c.title?.toLowerCase().includes("cptp") || 
+    c.title?.toLowerCase().includes("certified professional trading program")
+  ) || apiCourses?.find((c: any) => 
+    c.difficulty_level?.toLowerCase() === "advanced" || 
+    c.difficulty_level?.toLowerCase() === "professional"
+  ) || (apiCourses && apiCourses.length > 0 ? apiCourses[0] : null);
+
+  const sectionsToUse: ProgramSection[] = cptpCourse && cptpCourse.modules?.length > 0
+    ? cptpCourse.modules.sort((a: any, b: any) => a.order - b.order).map((mod: any, idx: number) => ({
+        title: mod.title,
+        duration: mod.description || "TBD",
+        modules: mod.lessons?.length > 0 ? mod.lessons.sort((a: any, b: any) => a.order - b.order).map((l: any, i: number) => ({
           num: i + 1,
-          title: m.title,
-          overview: m.description || "No description provided."
+          title: l.title,
+          overview: l.content || "No description provided."
         })) : [
-          { num: 1, title: "Curriculum Pending", overview: "The syllabus for this course is currently being prepared." }
+          { num: 1, title: "Curriculum Pending", overview: "The syllabus for this stage is currently being prepared." }
         ]
       }))
     : programSections;
