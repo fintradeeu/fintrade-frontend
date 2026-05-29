@@ -10,7 +10,7 @@ const verticalVideos = [
     author: "Rahul S.",
     views: "12K",
     thumbnail: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+    embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
   },
   {
     id: "v2",
@@ -19,7 +19,7 @@ const verticalVideos = [
     author: "Priya V.",
     views: "8.5K",
     thumbnail: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
+    embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
   },
   {
     id: "v3",
@@ -28,7 +28,7 @@ const verticalVideos = [
     author: "Amit P.",
     views: "15K",
     thumbnail: "https://images.unsplash.com/photo-1535320903710-d993d3d77d29?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"
+    embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
   },
   {
     id: "v4",
@@ -38,7 +38,7 @@ const verticalVideos = [
     views: "9.2K",
     isPlaying: true, // Mark active card like in the mockup
     thumbnail: "https://images.unsplash.com/photo-1616587896649-79b16d8b173d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"
+    embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
   },
   {
     id: "v5",
@@ -47,7 +47,7 @@ const verticalVideos = [
     author: "Sneha R.",
     views: "11K",
     thumbnail: "https://images.unsplash.com/photo-1640340434855-6084b1f4901c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4"
+    embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
   },
   {
     id: "v6",
@@ -56,7 +56,7 @@ const verticalVideos = [
     author: "Vikram D.",
     views: "7.8K",
     thumbnail: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4"
+    embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
   },
 ];
 
@@ -190,14 +190,12 @@ export default function VerticalVideoSection() {
             >
               {isVideoPlaying ? (
                 <div className="absolute inset-0 z-0 bg-black flex items-center justify-center p-4">
-                  <video
-                    src={vid.videoUrl}
-                    autoPlay
-                    muted
-                    controls
-                    loop
-                    playsInline
-                    className="w-full h-full object-contain rounded-2xl bg-black"
+                  <iframe
+                    src={`${vid.embedUrl}?autoplay=1&mute=1&controls=1&rel=0&modestbranding=1`}
+                    title={vid.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="w-full h-full rounded-2xl bg-black border-0"
                   />
                   {/* Close/Stop Playback Button Overlay */}
                   <button
