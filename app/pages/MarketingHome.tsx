@@ -1227,9 +1227,6 @@ export default function MarketingHome() {
           </div>
         </section>
 
-        {/* EMI & Payment Plans Section */}
-        <EMIHighlight />
-
         {/* 2. Live Classes Section */}
         <section className="pt-2 pb-6 md:py-8 relative z-10 bg-white" style={{ backdropFilter: "blur(2px)" }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1860,6 +1857,9 @@ export default function MarketingHome() {
 
         {/* 6.5 Certification Section (Moved below Modules) */}
         <CertificatePreview />
+
+        {/* EMI & Payment Plans Section */}
+        <EMIHighlight />
 
         {/* Placement & Career Opportunities Orbit Section */}
         <CareerPathways />
