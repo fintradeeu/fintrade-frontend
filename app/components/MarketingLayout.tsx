@@ -17,6 +17,43 @@ export default function MarketingLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
+  // Premium Preloader States & Hook
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [shouldRenderLoader, setShouldRenderLoader] = useState(true);
+
+  useEffect(() => {
+    const preloaded = sessionStorage.getItem("website_preloaded");
+    if (preloaded === "true") {
+      setIsLoading(false);
+      setShouldRenderLoader(false);
+      return;
+    }
+
+    let progress = 0;
+    const startTime = Date.now();
+    const duration = 3000; // 3 seconds strictly
+
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      progress = Math.min(100, Math.floor((elapsed / duration) * 100));
+      setLoadingProgress(progress);
+
+      if (progress >= 100) {
+        clearInterval(interval);
+        setTimeout(() => {
+          setIsLoading(false);
+          sessionStorage.setItem("website_preloaded", "true");
+          setTimeout(() => {
+            setShouldRenderLoader(false);
+          }, 800);
+        }, 300);
+      }
+    }, 30); // frequent updates for perfectly smooth bar flow
+
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     if (localStorage.getItem("entrance_violation_popup") === "true") {
       setShowViolationModal(true);
@@ -104,6 +141,58 @@ export default function MarketingLayout() {
 
   return (
     <div className="min-h-screen flex flex-col font-sans" style={{ background: "radial-gradient(circle at 50% 50%, #FFFFFF 0%, #F8F8F8 50%, #F4F4F4 100%)" }}>
+
+      {/* Premium Preloader Intro Screen */}
+      {shouldRenderLoader && (
+        <div
+          className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#0b0f19] select-none transition-opacity duration-700 ease-in-out ${
+            isLoading ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+        >
+          {/* Subtle Ambient Radial Glows */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-[#D50032]/10 blur-[120px] pointer-events-none" />
+          <div className="absolute -top-40 -left-40 w-[400px] h-[400px] rounded-full border border-white/5 opacity-20 pointer-events-none" />
+          <div className="absolute -bottom-40 -right-40 w-[400px] h-[400px] rounded-full border border-[#D50032]/5 opacity-25 pointer-events-none" />
+
+          {/* Logo & Brand Wrapper */}
+          <div className="relative flex flex-col items-center z-10">
+            {/* Glowing Logo Circle */}
+            <div className="relative mb-8 flex items-center justify-center animate-bounce duration-[3000ms]">
+              <div className="absolute inset-0 rounded-full bg-[#D50032]/20 blur-xl animate-pulse" />
+              <div className="w-24 h-24 rounded-3xl bg-[#131b2e] border-2 border-[#D50032]/30 shadow-2xl flex items-center justify-center overflow-hidden relative">
+                <img
+                  src={logo}
+                  alt="FinTrade logo"
+                  className="h-full w-full object-contain scale-[3.2] -translate-x-0.5 -translate-y-0.5 animate-pulse"
+                />
+              </div>
+            </div>
+
+            {/* Brand Name with tracking-widest */}
+            <h1 className="text-3xl md:text-4.5xl font-black text-white tracking-[0.25em] uppercase font-sans mb-3 text-center flex items-center justify-center">
+              FIN<span className="text-[#D50032]">TRADE</span>
+            </h1>
+
+            {/* Subtext */}
+            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest text-center max-w-xs mb-8">
+              India's Prop Trading Powerhouse
+            </p>
+
+            {/* Sleek Progress Container */}
+            <div className="w-64 h-1.5 bg-white/5 border border-white/10 rounded-full overflow-hidden relative mb-4">
+              <div
+                className="h-full bg-gradient-to-r from-[#D50032] to-[#FF3D00] rounded-full shadow-[0_0_12px_#D50032] transition-all duration-100 ease-out"
+                style={{ width: `${loadingProgress}%` }}
+              />
+            </div>
+
+            {/* Percentage Text */}
+            <span className="text-sm font-black text-white/70 tracking-widest tabular-nums animate-pulse">
+              {loadingProgress}%
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Search Overlay */}
       {searchOpen && (

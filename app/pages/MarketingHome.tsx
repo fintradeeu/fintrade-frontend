@@ -579,6 +579,17 @@ export default function MarketingHome() {
   const acronymRef = useRef<HTMLDivElement>(null);
   const [isAcronymVisible, setIsAcronymVisible] = useState(false);
 
+  // Responsive hook to scale curved timeline sizing
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileViewport(window.innerWidth < 1024);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -1126,7 +1137,7 @@ export default function MarketingHome() {
                     <div className="flex-1 flex flex-col md:flex-row md:items-center gap-1 md:gap-8 z-10">
                       {/* Title */}
                       <div className="w-full md:w-48 flex-shrink-0 text-left">
-                        <span className="font-extrabold text-base md:text-lg text-gray-900 tracking-tight group-hover:text-[#D50032] transition-colors duration-300">
+                        <span className="font-extrabold text-base md:text-lg text-gray-900 tracking-normal group-hover:text-[#D50032] transition-colors duration-300">
                           {item.title}
                         </span>
                       </div>
@@ -1469,221 +1480,147 @@ export default function MarketingHome() {
                 </p>
               </div>
 
-              {/* Desktop Curved Learning Path Card */}
-              <div className="hidden lg:block w-full bg-white border border-gray-100 rounded-[40px] shadow-[0_15px_50px_rgba(0,0,0,0.02)] p-8 relative overflow-hidden">
-                <div className="aspect-[1000/400] w-full relative select-none">
+              {/* Curved Learning Path Card (Fully Responsive - Zero Scroll) */}
+              <div className="w-full bg-white border border-gray-100 rounded-[24px] md:rounded-[40px] shadow-[0_15px_50px_rgba(0,0,0,0.02)] p-4 sm:p-6 md:p-8 relative overflow-hidden">
+                <div className="w-full relative">
+                  <div className={`relative w-full select-none ${isMobileViewport ? "aspect-[1000/1350]" : "aspect-[1000/680]"}`}>
 
-                  {/* Curve Line SVG */}
-                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 600" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    {/* Dashed base line (locked path) */}
-                    <path
-                      d="M 200,520 C 300,520 400,450 500,380 C 600,310 700,310 800,240 C 900,170 800,130 550,120 C 450,110 360,110 360,110"
-                      stroke="#E5E7EB"
-                      strokeWidth="6"
-                      strokeLinecap="round"
-                      strokeDasharray="12 10"
-                    />
+                    {/* Curve Line SVG */}
+                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 600" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      {/* Dashed base line (locked path) */}
+                      <path
+                        d="M 200,520 C 300,520 400,450 500,380 C 600,310 700,310 800,240 C 900,170 800,130 550,120 C 450,110 360,110 360,110"
+                        className="stroke-gray-200 stroke-[3.5px] lg:stroke-[6px]"
+                        strokeLinecap="round"
+                        strokeDasharray="12 10"
+                      />
 
-                    {/* Completed gold path (1 to 3) */}
-                    <path
-                      d="M 200,520 C 300,520 400,450 500,380"
-                      stroke="url(#completedGradient)"
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                    />
+                      {/* Completed gold path (1 to 3) */}
+                      <path
+                        d="M 200,520 C 300,520 400,450 500,380"
+                        stroke="url(#completedGradient)"
+                        className="stroke-[5px] lg:stroke-[8px]"
+                        strokeLinecap="round"
+                      />
 
-                    {/* Gradient Definitions */}
-                    <defs>
-                      <linearGradient id="completedGradient" x1="0%" y1="100%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#10B981" />
-                        <stop offset="100%" stopColor="#D50032" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
+                      {/* Gradient Definitions */}
+                      <defs>
+                        <linearGradient id="completedGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#10B981" />
+                          <stop offset="100%" stopColor="#D50032" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
 
-                  {/* Render Steps */}
-                  {[
-                    { num: "1", title: "Market Foundations", desc: "Markets, exchanges & instruments", status: "completed", x: 20, y: 86.6, align: "bottom", isStart: true },
-                    { num: "2", title: "Technical Analysis", desc: "Chart patterns & price action", status: "completed", x: 35, y: 76.6, align: "top" },
-                    { num: "3", title: "Risk Management", desc: "Position sizing & capital protection", status: "current", x: 50, y: 63.3, align: "top", isCurrent: true },
-                    { num: "4", title: "Trading Psychology", desc: "Emotional discipline & consistency", status: "locked", x: 65, y: 53.3, align: "top" },
-                    { num: "5", title: "Options & Derivat", desc: "Options pricing, Gre", status: "locked", x: 80, y: 40, align: "top" },
-                    { num: "6", title: "Advanced Strategies", desc: "Algo trading & quant analysis", status: "locked", x: 72, y: 26.6, align: "top" },
-                    { num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "locked", x: 55, y: 20, align: "top" },
-                    { num: "8", title: "Certification & Placement", desc: "Final assessment & career placement", status: "locked", x: 36, y: 18.3, align: "top", isSummit: true },
-                  ].map((step, idx) => {
-                    const isCompleted = step.status === "completed";
-                    const isCurrent = step.status === "current";
+                    {/* Render Steps */}
+                    {[
+                      { num: "1", title: "Market Foundations", desc: "Markets, exchanges & instruments", status: "completed", x: 20, y: 86.6, align: isMobileViewport ? "right" : "bottom", isStart: true },
+                      { num: "2", title: "Technical Analysis", desc: "Chart patterns & price action", status: "completed", x: 35, y: 76.6, align: isMobileViewport ? "left" : "top" },
+                      { num: "3", title: "Risk Management", desc: "Position sizing & capital protection", status: "current", x: 50, y: 63.3, align: isMobileViewport ? "right" : "bottom", isCurrent: true },
+                      { num: "4", title: "Trading Psychology", desc: "Emotional discipline & consistency", status: "locked", x: 65, y: 53.3, align: isMobileViewport ? "left" : "top" },
+                      { num: "5", title: "Options & Derivatives", desc: "Options pricing, Greeks & hedging", status: "locked", x: 80, y: 40, align: isMobileViewport ? "left" : "bottom" },
+                      { num: "6", title: "Advanced Strategies", desc: "Algo trading & quant analysis", status: "locked", x: 72, y: 26.6, align: isMobileViewport ? "right" : "top" },
+                      { num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "locked", x: 55, y: 20, align: isMobileViewport ? "left" : "bottom" },
+                      { num: "8", title: "Certification & Placement", desc: "Final assessment & placement", status: "locked", x: 36, y: 18.3, align: isMobileViewport ? "top" : "top", isSummit: true },
+                    ].map((step, idx) => {
+                      const isCompleted = step.status === "completed";
+                      const isCurrent = step.status === "current";
 
-                    return (
-                      <div key={idx}>
-                        {/* Node Circle */}
-                        <div
-                          className="absolute -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center transition-all duration-300 hover:scale-115 cursor-pointer origin-center"
-                          style={{ left: `${step.x}%`, top: `${step.y}%` }}
-                        >
-                          {isCurrent ? (
-                            <div className="relative flex items-center justify-center">
-                              {/* Outer pulse rings */}
-                              <div className="absolute w-12 h-12 rounded-full bg-[#D50032]/25 animate-ping" />
-                              <div className="absolute w-9 h-9 rounded-full bg-[#D50032]/40" />
-                              {/* Inner circle */}
-                              <div className="w-8 h-8 rounded-full bg-[#D50032] border-2 border-white shadow-md flex items-center justify-center text-white font-extrabold text-sm relative z-30">
+                      return (
+                        <div key={idx}>
+                          {/* Node Circle */}
+                          <div
+                            className="absolute -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center transition-all duration-300 hover:scale-115 cursor-pointer origin-center"
+                            style={{ left: `${step.x}%`, top: `${step.y}%` }}
+                          >
+                            {isCurrent ? (
+                              <div className="relative flex items-center justify-center">
+                                {/* Outer pulse rings */}
+                                <div className={`absolute rounded-full bg-[#D50032]/25 animate-ping ${isMobileViewport ? 'w-5 h-5' : 'w-12 h-12'}`} />
+                                <div className={`absolute rounded-full bg-[#D50032]/40 ${isMobileViewport ? 'w-3.5 h-3.5' : 'w-9 h-9'}`} />
+                                {/* Inner circle */}
+                                <div className={`rounded-full bg-[#D50032] border-2 border-white shadow-md flex items-center justify-center text-white font-extrabold relative z-30 ${isMobileViewport ? 'w-3 h-3 text-[5.5px]' : 'w-8 h-8 text-sm'}`}>
+                                  {step.num}
+                                </div>
+                                {/* Current Module Pill Badge */}
+                                <div className={`absolute bg-[#D50032] text-white font-black uppercase rounded-full shadow-sm z-30 whitespace-nowrap ${isMobileViewport ? 'top-4 px-1 py-0.5 text-[4.5px]' : 'top-10 px-2.5 py-0.5 text-[9px]'}`}>
+                                  Current Module
+                                </div>
+                              </div>
+                            ) : isCompleted ? (
+                              <div className={`rounded-full bg-emerald-500 border-2 border-white shadow flex items-center justify-center text-white z-30 ${isMobileViewport ? 'w-3 h-3' : 'w-7 h-7'}`}>
+                                <CheckCircle className={`fill-emerald-500 stroke-white stroke-[3px] ${isMobileViewport ? 'w-1.5 h-1.5' : 'w-5 h-5'}`} />
+                              </div>
+                            ) : (
+                              <div className={`rounded-full bg-gray-200 border-2 border-white shadow flex items-center justify-center text-gray-500 font-extrabold z-30 ${isMobileViewport ? 'w-3 h-3 text-[5.5px]' : 'w-7 h-7 text-xs'}`}>
                                 {step.num}
                               </div>
-                              {/* Current Module Pill Badge */}
-                              <div className="absolute top-10 bg-[#D50032] text-white text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full shadow-sm z-30 whitespace-nowrap">
-                                Current Module
+                            )}
+
+                            {/* Start Label */}
+                            {step.isStart && (
+                              <div className={`absolute font-black uppercase text-gray-400 tracking-wider ${isMobileViewport ? '-top-3.5 text-[5.5px]' : '-top-6 text-[10px]'}`}>
+                                Start
                               </div>
-                            </div>
-                          ) : isCompleted ? (
-                            <div className="w-7 h-7 rounded-full bg-emerald-500 border-2 border-white shadow flex items-center justify-center text-white z-30">
-                              <CheckCircle className="w-5 h-5 fill-emerald-500 stroke-white stroke-[3px]" />
-                            </div>
-                          ) : (
-                            <div className="w-7 h-7 rounded-full bg-gray-200 border-2 border-white shadow flex items-center justify-center text-gray-500 font-extrabold text-xs z-30">
-                              {step.num}
-                            </div>
-                          )}
+                            )}
 
-                          {/* Start Label */}
-                          {step.isStart && (
-                            <div className="absolute -top-6 text-[10px] font-black uppercase text-gray-400 tracking-wider">
-                              Start
-                            </div>
-                          )}
+                            {/* Summit Label */}
+                            {step.isSummit && (
+                              <div className={`absolute font-black uppercase text-[#D50032] tracking-wider flex items-center gap-0.5 ${isMobileViewport ? 'bottom-3.5 text-[5.5px]' : 'bottom-8 text-[10px]'}`}>
+                                🏆 Summit
+                              </div>
+                            )}
+                          </div>
 
-                          {/* Summit Label */}
-                          {step.isSummit && (
-                            <div className="absolute bottom-8 text-[10px] font-black uppercase text-[#D50032] tracking-wider flex items-center gap-0.5">
-                              🏆 Summit
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Label Container */}
-                        <div
-                          className={`absolute -translate-y-1/2 w-[200px] z-10 ${step.align === "left" ? "text-right" : (step.align === "top" || step.align === "bottom") ? "text-center" : "text-left"
-                            }`}
-                          style={{
-                            left: step.align === "left"
-                              ? `calc(${step.x}% - 220px)`
-                              : (step.align === "top" || step.align === "bottom")
-                                ? `calc(${step.x}% - 100px)`
-                                : `calc(${step.x}% + 20px)`,
-                            top: step.align === "top"
-                              ? `calc(${step.y}% - 52px)`
-                              : step.align === "bottom"
-                                ? `calc(${step.y}% + 52px)`
-                                : `${step.y}%`
-                          }}
-                        >
-                          <h3
-                            className={`font-black text-sm sm:text-base mb-0.5 tracking-tight ${isCurrent ? "text-[#D50032]" : isCompleted ? "text-gray-900" : "text-gray-400"
-                              }`}
+                          {/* Label Container */}
+                          <div
+                            className={`absolute -translate-y-1/2 z-10 ${step.align === "left" ? "text-right" : (step.align === "top" || step.align === "bottom") ? "text-center" : "text-left"}`}
+                            style={{
+                              width: `${isMobileViewport ? 90 : 200}px`,
+                              left: step.align === "left"
+                                ? `calc(${step.x}% - ${isMobileViewport ? 102 : 220}px)`
+                                : (step.align === "top" || step.align === "bottom")
+                                  ? `calc(${step.x}% - ${isMobileViewport ? 45 : 100}px)`
+                                  : `calc(${step.x}% + ${isMobileViewport ? 12 : 20}px)`,
+                              top: step.align === "top"
+                                ? `calc(${step.y}% - ${isMobileViewport ? 22 : 58}px)`
+                                : step.align === "bottom"
+                                  ? `calc(${step.y}% + ${isMobileViewport ? 22 : 58}px)`
+                                  : `${step.y}%`
+                            }}
                           >
-                            {step.title}
-                          </h3>
-                          <p className="text-gray-500 text-[10px] sm:text-xs font-medium leading-tight max-w-[200px] inline-block">
-                            {step.desc}
-                          </p>
+                            <h3
+                              className={`font-black tracking-normal mb-1.5 ${
+                                isCurrent ? "text-[#D50032]" : isCompleted ? "text-gray-900" : "text-gray-400"
+                              } ${isMobileViewport ? 'text-[7.5px] leading-none mb-1 font-extrabold' : 'text-sm sm:text-base font-black'}`}
+                            >
+                              {step.title}
+                            </h3>
+                            <p className={`font-semibold leading-normal inline-block ${isMobileViewport ? 'text-gray-450 text-[5.8px] leading-tight max-w-[85px]' : 'text-gray-500 text-[10px] sm:text-xs max-w-[200px]'}`}>
+                              {step.desc}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Bottom Legend */}
-                <div className="flex justify-center items-center gap-6 mt-8 pt-6 border-t border-gray-100 text-xs font-semibold text-gray-500">
+                <div className="flex justify-center items-center gap-4 sm:gap-6 mt-4 pt-4 border-t border-gray-100 text-[9px] sm:text-xs font-semibold text-gray-500">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                    <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-emerald-500" />
                     Completed
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#D50032]" />
+                    <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#D50032]" />
                     Current
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-gray-200" />
+                    <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-gray-200" />
                     Locked
                   </div>
                 </div>
-              </div>
-
-              {/* Mobile Vertical Learning Journey Timeline */}
-              <div className="lg:hidden w-full bg-white border border-gray-100 rounded-[32px] shadow-lg p-6 sm:p-8 space-y-6">
-                {[
-                  { num: "1", title: "Market Foundations", desc: "Markets, exchanges & instruments", status: "completed", isStart: true },
-                  { num: "2", title: "Technical Analysis", desc: "Chart patterns & price action", status: "completed" },
-                  { num: "3", title: "Risk Management", desc: "Position sizing & capital protection", status: "current", isCurrent: true },
-                  { num: "4", title: "Trading Psychology", desc: "Emotional discipline & consistency", status: "locked" },
-                  { num: "5", title: "Options & Derivat", desc: "Options pricing, Gre", status: "locked" },
-                  { num: "6", title: "Advanced Strategies", desc: "Algo trading & quant analysis", status: "locked" },
-                  { num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "locked" },
-                  { num: "8", title: "Certification & Placement", desc: "Final assessment & career placement", status: "locked", isSummit: true },
-                ].map((step, idx) => {
-                  const isCompleted = step.status === "completed";
-                  const isCurrent = step.status === "current";
-
-                  return (
-                    <div key={idx} className="flex gap-4 items-stretch relative transition-all duration-300 hover:scale-[1.02] cursor-pointer origin-left">
-                      {/* Vertical Line Connector */}
-                      {idx < 7 && (
-                        <div className="absolute top-7 bottom-[-24px] left-[13px] w-[2px] bg-gray-100" />
-                      )}
-
-                      {/* Node */}
-                      <div className="flex-shrink-0 relative">
-                        {isCurrent ? (
-                          <div className="relative flex items-center justify-center w-7 h-7">
-                            <div className="absolute w-7 h-7 rounded-full bg-[#D50032]/20 animate-ping" />
-                            <div className="w-6 h-6 rounded-full bg-[#D50032] border-2 border-white shadow flex items-center justify-center text-white font-extrabold text-xs relative z-20">
-                              {step.num}
-                            </div>
-                          </div>
-                        ) : isCompleted ? (
-                          <div className="w-7 h-7 rounded-full bg-emerald-500 border-2 border-white shadow flex items-center justify-center text-white z-20">
-                            <CheckCircle className="w-4 h-4 fill-emerald-500 stroke-white stroke-[3px]" />
-                          </div>
-                        ) : (
-                          <div className="w-7 h-7 rounded-full bg-gray-200 border-2 border-white shadow flex items-center justify-center text-gray-500 font-extrabold text-xs z-20">
-                            {step.num}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Text Description */}
-                      <div className="flex-1 pb-1">
-                        <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                          <h3
-                            className={`font-extrabold text-sm sm:text-base leading-none ${isCurrent ? "text-[#D50032]" : isCompleted ? "text-gray-900" : "text-gray-400"
-                              }`}
-                          >
-                            {step.title}
-                          </h3>
-                          {isCurrent && (
-                            <span className="bg-[#D50032] text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full scale-90 origin-left">
-                              Current
-                            </span>
-                          )}
-                          {step.isStart && (
-                            <span className="border border-gray-300 text-gray-400 text-[8px] font-black uppercase px-2 py-0.5 rounded-full scale-90 origin-left">
-                              Start
-                            </span>
-                          )}
-                          {step.isSummit && (
-                            <span className="border border-[#D50032]/45 text-[#D50032] text-[8px] font-black uppercase px-2 py-0.5 rounded-full scale-90 origin-left">
-                              🏆 Summit
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-gray-500 text-xs font-medium">
-                          {step.desc}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
               </div>
             </ScrollReveal>
           </div>
