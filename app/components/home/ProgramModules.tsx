@@ -101,6 +101,17 @@ export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | nu
   const [expandedStageIdx, setExpandedStageIdx] = useState<number | null>(0);
   const [courses, setCourses] = useState<any[]>([]);
   const [mobileActiveModKey, setMobileActiveModKey] = useState<string | null>(null);
+  const [expandedDescKeys, setExpandedDescKeys] = useState<Set<string>>(new Set());
+
+  const toggleDesc = (key: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedDescKeys(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -216,17 +227,17 @@ export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | nu
                           : "border-gray-100 shadow-[0_8px_35px_rgba(0,0,0,0.015)] hover:border-gray-200 hover:shadow-[0_12px_45px_rgba(0,0,0,0.02)]"
                       }`}
                     >
-                      <div className="flex justify-between items-start gap-2 sm:gap-4">
+                      <div className="flex justify-between items-center gap-2 sm:gap-4">
                         <div className="flex-1 min-w-0">
-                          <span className={`text-[8px] sm:text-xs font-black uppercase tracking-widest leading-none block mb-1 sm:mb-2 ${
+                          <span className={`text-[8px] sm:text-xs font-black uppercase tracking-widest leading-normal block mb-0.5 sm:mb-2 ${
                             isExpanded ? "text-[#D50032]" : "text-gray-400"
                           }`}>
                             Stage 0{idx + 1}
                           </span>
-                          <h3 className="text-xs sm:text-lg font-black text-gray-900 leading-snug tracking-tight mb-1 truncate">
+                          <h3 className="text-xs sm:text-lg font-black text-gray-900 leading-tight tracking-tight mb-0.5 sm:mb-1 truncate">
                             {sec.title}
                           </h3>
-                          <span className={`text-[9px] sm:text-xs font-bold leading-none uppercase tracking-wider block ${
+                          <span className={`text-[9px] sm:text-xs font-bold leading-normal uppercase tracking-wider block ${
                             isExpanded ? "text-[#D50032]/85" : "text-gray-400"
                           }`}>
                             {sec.duration} • {sec.modules.length} Modules
@@ -254,20 +265,20 @@ export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | nu
                                   const key = `${idx}-${modIdx}`;
                                   setMobileActiveModKey(prev => prev === key ? null : key);
                                 }}
-                                className="group relative bg-white hover:bg-gray-50/50 border border-gray-100 rounded-xl p-3 sm:p-3.5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-[0_8px_30px_rgba(213,0,50,0.02)] transition-all cursor-pointer select-none"
+                                className="group relative bg-white hover:bg-gray-50/50 border border-gray-100 rounded-xl p-2 sm:p-3.5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-[0_8px_30px_rgba(213,0,50,0.02)] transition-all cursor-pointer select-none"
                               >
-                                <div className="flex items-center justify-between gap-3">
-                                  <div className="flex items-center gap-2.5">
-                                    <div className="w-6 h-6 rounded-full bg-[#D50032]/5 text-[#D50032] border border-[#D50032]/10 flex items-center justify-center text-[10px] sm:text-[11px] font-black flex-shrink-0">
+                                <div className="flex items-center justify-between gap-1.5 sm:gap-3">
+                                  <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1">
+                                    <div className="w-5 h-5 sm:w-6 h-6 rounded-full bg-[#D50032]/5 text-[#D50032] border border-[#D50032]/10 flex items-center justify-center text-[9px] sm:text-[11px] font-black flex-shrink-0">
                                       {mod.num}
                                     </div>
-                                    <h4 className="font-extrabold text-gray-900 text-sm sm:text-base leading-snug group-hover:text-[#D50032] transition-colors">
+                                    <h4 className="font-extrabold text-gray-900 text-[11px] sm:text-base leading-snug group-hover:text-[#D50032] transition-colors truncate sm:whitespace-normal">
                                       {mod.title}
                                     </h4>
                                   </div>
-                                  <span className="text-[10px] md:hidden font-bold text-gray-400">
-                                    {isMobileActive ? "Hide Syllabus" : "View Syllabus"}
-                                  </span>
+                                  <div className="md:hidden w-5 h-5 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center flex-shrink-0 border border-gray-150 transition-all">
+                                    {isMobileActive ? <ChevronUp className="w-3 h-3 text-[#D50032]" /> : <ChevronDown className="w-3 h-3" />}
+                                  </div>
                                 </div>
 
                                 {/* Floating Hover Details Card (Desktop only) */}
@@ -354,35 +365,47 @@ export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | nu
                                     <h4 className="font-extrabold text-gray-900 text-sm leading-snug">
                                       {mod.title}
                                     </h4>
-                                    <p className="text-gray-500 text-xs font-medium leading-relaxed">
-                                      {mod.overview}
-                                    </p>
+                                    
+                                    {/* Overview Description with Read More / Read Less */}
+                                    <div className="text-gray-500 text-xs font-medium leading-relaxed">
+                                      <span>
+                                        {!mod.overview || mod.overview.length <= 50 || expandedDescKeys.has(mobileKey)
+                                          ? mod.overview
+                                          : `${mod.overview.slice(0, 45)}...`}
+                                      </span>
+                                      {mod.overview && mod.overview.length > 50 && (
+                                        <button
+                                          onClick={(e) => toggleDesc(mobileKey, e)}
+                                          className="text-[9px] font-black text-[#D50032] hover:text-[#FF3D00] focus:outline-none ml-1 uppercase tracking-wider inline-block cursor-pointer"
+                                        >
+                                          {expandedDescKeys.has(mobileKey) ? "Read Less" : "Read More"}
+                                        </button>
+                                      )}
+                                    </div>
 
                                     {mod.lessons && mod.lessons.length > 0 && (
                                       <div className="border-t border-gray-200/80 pt-3">
                                         <h5 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1">
                                           📚 Lectures & Topics ({mod.lessons.length})
                                         </h5>
-                                        <div className="space-y-2">
+                                        <div className="flex flex-col gap-2">
                                           {mod.lessons.map((lesson: any, lessonIdx: number) => (
                                             <div
                                               key={lessonIdx}
-                                              className="flex items-center justify-between gap-3 p-2 rounded-lg bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.01)]"
+                                              className="flex flex-col gap-1.5 p-2 rounded-lg bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.01)] text-left"
                                             >
-                                              <div className="flex items-center gap-2 overflow-hidden">
-                                                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100">
-                                                  {getTypeIcon(lesson.content_type)}
-                                                </div>
-                                                <span className="text-gray-700 text-xs font-extrabold truncate max-w-[170px]">
-                                                  {lesson.title}
-                                                </span>
+                                              <span className="text-gray-700 text-[10px] sm:text-xs font-extrabold leading-snug break-words">
+                                                {lesson.title}
+                                              </span>
+                                              <div className="flex items-center gap-1 text-[8px] sm:text-[9px] font-semibold text-gray-400 uppercase">
+                                                {getTypeIcon(lesson.content_type)}
+                                                {lesson.duration_minutes && (
+                                                  <span className="flex items-center gap-0.5 ml-1">
+                                                    <Clock className="w-2.5 h-2.5 text-gray-400" />
+                                                    {lesson.duration_minutes}m
+                                                  </span>
+                                                )}
                                               </div>
-                                              {lesson.duration_minutes && (
-                                                <span className="flex-shrink-0 flex items-center gap-0.5 text-[9px] font-semibold text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
-                                                  <Clock className="w-2.5 h-2.5 text-gray-400" />
-                                                  {lesson.duration_minutes}m
-                                                </span>
-                                              )}
                                             </div>
                                           ))}
                                         </div>

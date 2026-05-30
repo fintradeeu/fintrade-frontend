@@ -1576,30 +1576,45 @@ export default function MarketingHome() {
                           <div
                             className={`absolute -translate-y-1/2 z-10 ${step.align === "left" ? "text-right" : (step.align === "top" || step.align === "bottom") ? "text-center" : "text-left"}`}
                             style={{
-                              width: `${isMobileViewport ? 90 : 200}px`,
+                              width: `${isMobileViewport ? 105 : 200}px`,
                               left: step.align === "left"
-                                ? `calc(${step.x}% - ${isMobileViewport ? 102 : 220}px)`
+                                ? `calc(${step.x}% - ${isMobileViewport ? 117 : 220}px)`
                                 : (step.align === "top" || step.align === "bottom")
-                                  ? `calc(${step.x}% - ${isMobileViewport ? 45 : 100}px)`
+                                  ? `calc(${step.x}% - ${isMobileViewport ? 52 : 100}px)`
                                   : `calc(${step.x}% + ${isMobileViewport ? 12 : 20}px)`,
-                              top: step.align === "top"
-                                ? `calc(${step.y}% - ${isMobileViewport ? 22 : 58}px)`
-                                : step.align === "bottom"
-                                  ? `calc(${step.y}% + ${isMobileViewport ? 22 : 58}px)`
-                                  : `${step.y}%`
+                              top: isMobileViewport
+                                ? step.num === "8"
+                                  ? `calc(${step.y}% - 40px)`
+                                  : step.num === "7"
+                                    ? `calc(${step.y}% - 18px)`
+                                    : step.num === "6"
+                                      ? `calc(${step.y}% + 18px)`
+                                      : step.num === "3"
+                                        ? `calc(${step.y}% + 22px)` // Shifts down to clear the "CURRENT MODULE" badge!
+                                        : step.align === "top"
+                                          ? `calc(${step.y}% - 22px)`
+                                          : step.align === "bottom"
+                                            ? `calc(${step.y}% + 22px)`
+                                            : `${step.y}%`
+                                : step.align === "top"
+                                  ? `calc(${step.y}% - 58px)`
+                                  : step.align === "bottom"
+                                    ? `calc(${step.y}% + 58px)`
+                                    : `${step.y}%`
                             }}
                           >
                             <h3
                               className={`font-black tracking-normal mb-1.5 ${
                                 isCurrent ? "text-[#D50032]" : isCompleted ? "text-gray-900" : "text-gray-400"
-                              } ${isMobileViewport ? 'text-[7.5px] leading-none mb-1 font-extrabold' : 'text-sm sm:text-base font-black'}`}
+                              } ${isMobileViewport ? 'text-[8.5px] leading-tight mb-0.5 font-black' : 'text-sm sm:text-base font-black'}`}
                             >
                               {step.title}
                             </h3>
-                            <p className={`font-semibold leading-normal inline-block ${isMobileViewport ? 'text-gray-450 text-[5.8px] leading-tight max-w-[85px]' : 'text-gray-500 text-[10px] sm:text-xs max-w-[200px]'}`}>
+                            <p className={`font-semibold leading-normal inline-block ${isMobileViewport ? 'text-gray-455 text-[6.8px] leading-tight max-w-[100px]' : 'text-gray-500 text-[10px] sm:text-xs max-w-[200px]'}`}>
                               {step.desc}
                             </p>
                           </div>
+
                         </div>
                       );
                     })}
