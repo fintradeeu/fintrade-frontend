@@ -12,6 +12,7 @@ import CoursesPage from "./pages/CoursesPage";
 import MarketsPage from "./pages/MarketsPage";
 import MarketUpdatesPage from "./pages/MarketUpdatesPage";
 import BlogPage from "./pages/BlogPage";
+import AboutUs from "./pages/AboutUs";
 import MarketingLayout from "./components/MarketingLayout";
 
 // Student Pages
@@ -31,6 +32,7 @@ import CourseExamInterface from "./pages/student/CourseExamInterface";
 import StudentAssignments from "./pages/student/StudentAssignments";
 import Leaderboard from "./pages/student/Leaderboard";
 import ExamResultReview from "./pages/student/ExamResultReview";
+import InvoicePage from "./pages/student/InvoicePage";
 
 // Teacher Pages
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
@@ -47,6 +49,7 @@ import TeacherAssignments from "./pages/teacher/TeacherAssignments";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminStudents from "./pages/admin/AdminStudents";
 import AdminCourses from "./pages/admin/AdminCourses";
+import AdminModuleStudents from "./pages/admin/AdminModuleStudents";
 import AdminLectures from "./pages/admin/AdminLectures";
 import AdminExams from "./pages/admin/AdminExams";
 import AdminPayments from "./pages/admin/AdminPayments";
@@ -89,6 +92,10 @@ export const router = createBrowserRouter([
       {
         path: "/blog",
         Component: BlogPage,
+      },
+      {
+        path: "/about",
+        Component: AboutUs,
       },
     ]
   },
@@ -178,6 +185,10 @@ export const router = createBrowserRouter([
     path: "/student/contract-kyc",
     Component: ContractKYC,
   },
+  {
+    path: "/student/invoice",
+    Component: InvoicePage,
+  },
   // Teacher Routes
   {
     path: "/teacher/dashboard",
@@ -227,6 +238,10 @@ export const router = createBrowserRouter([
   {
     path: "/admin/courses",
     Component: AdminCourses,
+  },
+  {
+    path: "/admin/module-students",
+    Component: AdminModuleStudents,
   },
   {
     path: "/admin/lectures",

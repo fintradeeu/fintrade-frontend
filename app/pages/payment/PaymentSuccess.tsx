@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Download } from "lucide-react";
 
 export default function PaymentSuccess() {
   const location = useLocation();
@@ -27,12 +27,21 @@ export default function PaymentSuccess() {
           Please note: Your course access will be unlocked shortly as we verify the payment. Check your email for the invoice.
         </div>
 
-        <Link
-          to="/student/dashboard"
-          className="block w-full bg-[#D50032] hover:bg-[#b00029] text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg shadow-red-500/20"
-        >
-          Go to Dashboard
-        </Link>
+        <div className="flex flex-col gap-3">
+          <Link
+            to="/student/dashboard"
+            className="block w-full bg-[#D50032] hover:bg-[#b00029] text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg shadow-red-500/20 text-center"
+          >
+            Go to Dashboard
+          </Link>
+          <Link
+            to="/student/invoice"
+            className="block w-full border-2 border-[#0B2A5B] text-[#0B2A5B] hover:bg-[#0B2A5B]/5 font-bold py-3 px-6 rounded-lg transition-colors text-center flex items-center justify-center gap-2"
+          >
+            <Download size={18} />
+            Download Invoice (PDF)
+          </Link>
+        </div>
       </div>
     </div>
   );

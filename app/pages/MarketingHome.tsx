@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router";
 import api from "../services/api";
-import { Play, TrendingUp, Award, Users, BookOpen, LineChart, Video, CheckCircle, Star, ArrowRight, BarChart3, Brain, Target, Trophy, X, FileText, Search, Phone, Download, Instagram, Youtube, Linkedin, Twitter, Facebook, ChevronRight, ChevronDown } from "lucide-react";
+import { Play, TrendingUp, Award, Users, BookOpen, LineChart, Video, CheckCircle, Star, ArrowRight, BarChart3, Brain, Target, Trophy, X, FileText, Search, Phone, Download, Instagram, Youtube, Linkedin, Twitter, Facebook, ChevronRight, ChevronLeft, ChevronDown, Shield, UserCheck, Monitor, Wifi, Activity, ClipboardCheck, GitBranch, Cpu, Clock } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../components/ui/dialog";
@@ -18,6 +18,7 @@ import EMIHighlight from "../components/home/EMIHighlight";
 import KeyInsights from "../components/home/KeyInsights";
 import CertificatePreview from "../components/home/CertificatePreview";
 import PlatformFeatures from "../components/home/PlatformFeatures";
+import CareerPathways from "../components/home/CareerPathways";
 import ModuleRoadmap from "../components/home/ModuleRoadmap";
 import ProgramModules from "../components/home/ProgramModules";
 import logo from "../../imports/fintrade_logo.png";
@@ -25,119 +26,12 @@ import CourseCheckoutModal from "../components/CourseCheckoutModal";
 
 // Interactive Cursor Glow
 function CursorGlow() {
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
-
-  return (
-    <div
-      style={{
-        position: "fixed",
-        left: mousePos.x,
-        top: mousePos.y,
-        width: 150,
-        height: 150,
-        borderRadius: "50%",
-        background: "rgba(213,0,50, 0.15)",
-        filter: "blur(40px)",
-        pointerEvents: "none",
-        zIndex: 40, // Above ambient glows but below text/content buttons
-        transform: "translate(-50%, -50%)",
-        transition: "left 0.1s ease-out, top 0.1s ease-out",
-      }}
-    />
-  );
+  return null;
 }
 
 // Dynamic "Popping" Ambient Glow
 function AmbientGlow() {
-  const [blobs, setBlobs] = useState<{ id: number; x: number; y: number; size: number }[]>([]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const id = Date.now();
-      const newBlob = {
-        id,
-        x: Math.random() * 100,
-        y: Math.random() * 80 + 10, // Avoid extreme edges
-        size: Math.random() * 400 + 300,
-      };
-
-      setBlobs((prev) => [...prev, newBlob]);
-
-      // Remove blob after 5 seconds
-      setTimeout(() => {
-        setBlobs((prev) => prev.filter((b) => b.id !== id));
-      }, 5000);
-    }, 1800); // Shorter interval (1.8s) for more activity
-
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 5, overflow: "hidden" }}>
-      {/* Increased base glows for better visibility */}
-      <div style={{
-        position: "absolute", top: "5%", left: "-10%", width: 800, height: 800,
-        borderRadius: "50%", background: "#D50032", filter: "blur(140px)",
-        opacity: 0.12, animation: "glow-slow-drift 35s linear infinite"
-      }} />
-      <div style={{
-        position: "absolute", top: "40%", right: "-15%", width: 900, height: 900,
-        borderRadius: "50%", background: "#D50032", filter: "blur(150px)",
-        opacity: 0.1, animation: "glow-slow-drift 45s linear infinite reverse"
-      }} />
-      <div style={{
-        position: "absolute", bottom: "-10%", left: "30%", width: 700, height: 700,
-        borderRadius: "50%", background: "#D50032", filter: "blur(130px)",
-        opacity: 0.08, animation: "glow-slow-drift 40s linear infinite"
-      }} />
-
-      {/* Dynamic Popping Blobs (Boosted Opacity) */}
-      {blobs.map((blob) => (
-        <div
-          key={blob.id}
-          style={{
-            position: "absolute",
-            left: `${blob.x}%`,
-            top: `${blob.y}%`,
-            width: blob.size,
-            height: blob.size,
-            borderRadius: "50%",
-            background: "#D50032",
-            filter: "blur(120px)",
-            opacity: 0,
-            transform: "translate(-50%, -50%)",
-            animation: "glow-pop-in-out 5s ease-in-out forwards",
-          }}
-        />
-      ))}
-
-      <style>{`
-        @keyframes glow-slow-drift {
-          0% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(80px, 40px) scale(1.1); }
-          66% { transform: translate(-40px, 80px) scale(0.9); }
-          100% { transform: translate(0, 0) scale(1); }
-        }
-        @keyframes glow-pop-in-out {
-          0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
-          20% { opacity: 0.18; transform: translate(-50%, -50%) scale(1); }
-          50% { opacity: 0.22; transform: translate(-50%, -50%) scale(1.1); }
-          80% { opacity: 0.15; transform: translate(-50%, -50%) scale(1.2); }
-          100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
-        }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-      `}</style>
-
-    </div>
-  );
+  return null;
 }
 
 // Video modal component
@@ -307,15 +201,79 @@ const courseDetails: Record<string, { description: string; highlights: string[];
   }
 };
 
-// Course Card Component to handle local state for Read More and Program Details Dialog
+const benefits = [
+  {
+    num: "01",
+    title: "Full Trading Program",
+    desc: "Institutional curriculum from foundations to professional-level execution.",
+    icon: BookOpen,
+  },
+  {
+    num: "02",
+    title: "3 Tested Strategies",
+    desc: "Three proven, back-tested trading strategies for consistent performance.",
+    icon: TrendingUp,
+  },
+  {
+    num: "03",
+    title: "Risk Policy Manual",
+    desc: "Comprehensive risk management guidelines to protect capital at all times.",
+    icon: FileText,
+  },
+  {
+    num: "04",
+    title: "Performance Audit System",
+    desc: "Structured periodic audits to track, analyze and improve your trading.",
+    icon: BarChart3,
+  },
+  {
+    num: "05",
+    title: "Simulated $200k Account",
+    desc: "Practice with a $200,000 simulated prop account to build confidence.",
+    icon: Shield,
+  },
+  {
+    num: "06",
+    title: "90 Day Performance Report",
+    desc: "Detailed 90-day performance review with actionable improvement insights.",
+    icon: Award,
+  },
+  {
+    num: "07",
+    title: "Control Drawdown",
+    desc: "Learn to manage and minimize drawdown through disciplined trading rules.",
+    icon: Target,
+  },
+  {
+    num: "08",
+    title: "Manage 5-7 Figure Capital",
+    desc: "Training to confidently handle large institutional-scale capital.",
+    icon: Trophy,
+  },
+  {
+    num: "09",
+    title: "Management",
+    desc: "Holistic trading management skills covering psychology, strategy and ops.",
+    icon: Brain,
+  },
+];
+
+const servicesCards = [
+  { icon: UserCheck, title: 'Mentor', desc: 'One-on-one expert guidance from seasoned market professionals.' },
+  { icon: Monitor, title: 'Online Class', desc: 'Live, interactive online sessions accessible from anywhere.' },
+  { icon: Wifi, title: 'Live Market Sessions', desc: 'Real-time market participation and analysis with experts.' },
+  { icon: Activity, title: 'Real Time Trading', desc: 'Hands-on trading during live market hours under supervision.' },
+  { icon: ClipboardCheck, title: 'Practical Evaluation', desc: 'Structured assessments to measure and certify your progress.' },
+  { icon: GitBranch, title: 'Strategy Building', desc: 'Develop personalised trading strategies backed by data.' },
+  { icon: Cpu, title: 'AI-Integrated Financial Course', desc: 'Modern curriculum powered by AI tools and analytical methods.' },
+  { icon: LineChart, title: 'AI-Analytics', desc: 'Leverage AI-driven analytics for smarter market insights.' },
+];
+
+// Course Card Component to handle local state for Program Details Dialog
 export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () => void }) {
   const isAuthenticated = !!localStorage.getItem("token");
-  const [showFullDesc, setShowFullDesc] = useState(false);
-  const [showFullTitle, setShowFullTitle] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [enrollLoading, setEnrollLoading] = useState(false);
-  const MAX_DESC_LENGTH = 100;
-  const MAX_TITLE_LENGTH = 45;
 
   const courseKey = course.name.includes("FMF") ? "FMF" : course.name.includes("CARP") ? "CARP" : "CPTP";
   const details = courseDetails[courseKey];
@@ -359,81 +317,112 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
     }
   };
 
+  // Format level badge to match mockup (Foundation -> Beginner)
+  let levelBadge = course.level || "Beginner";
+  if (levelBadge === "Foundation") levelBadge = "Beginner";
+
+  // Format duration to Hours for consistency with mockup image
+  let displayDuration = "30 Hours";
+  if (course.duration) {
+    const match = course.duration.match(/\d+/);
+    if (match) {
+      displayDuration = `${match[0]} Hours`;
+    } else {
+      displayDuration = course.duration;
+    }
+  }
+
+  // Calculate discount percentage dynamically
+  const priceNum = parseFloat(course.price?.replace(/[^\d]/g, "") || "0");
+  const originalPriceNum = course.originalPrice ? parseFloat(course.originalPrice.replace(/[^\d]/g, "") || "0") : 0;
+  let discountPercentage = 40; // Default
+  if (originalPriceNum && priceNum && originalPriceNum > priceNum) {
+    discountPercentage = Math.round(((originalPriceNum - priceNum) / originalPriceNum) * 100);
+  }
+
+  // Determine if this is the "Most Popular" card
+  const isMostPopular = course.name.includes("CARP") || levelBadge === "Intermediate";
+
+  // Modules count fallback
+  const modulesCount = course.modules?.length || (course.name.includes("FMF") ? 6 : course.name.includes("CARP") ? 12 : 18);
+
   return (
     <>
-      <Card
-        className="w-full flex flex-col group transition-all duration-500 overflow-hidden rounded-2xl border border-gray-200 hover:border-[#D50032]/50 hover:shadow-2xl"
+      <div
+        className={`w-full h-full flex flex-col group transition-all duration-300 relative bg-white rounded-[32px] p-8 ${isMostPopular
+          ? "border-2 border-[#FFD2D6] shadow-[0_15px_40px_rgba(213,0,50,0.04)]"
+          : "border border-gray-100 shadow-[0_10px_35px_rgba(0,0,0,0.015)]"
+          } hover:shadow-2xl hover:scale-[1.01]`}
       >
-        {/* Gradient Header */}
-        <div className="relative px-6 pt-6 pb-4 min-h-[210px] flex flex-col justify-between overflow-hidden bg-gradient-to-br from-[#D50032] via-[#E60036] to-[#FF3366]">
-          {/* Ambient subtle pattern/glow in header */}
-          <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
-          <div className="relative z-10">
-            <div className="flex items-start justify-between mb-3">
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)" }}>
-                <course.icon className="h-7 w-7 text-white" />
-              </div>
-              <div className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/30" style={{ background: "rgba(255,255,255,0.1)" }}>
-                {course.duration}
-              </div>
-            </div>
-            <h3 className="text-lg font-bold text-white mb-1 leading-snug">
-              {showFullTitle || course.name.length <= MAX_TITLE_LENGTH ? course.name : `${course.name.substring(0, MAX_TITLE_LENGTH)}...`}
-              {course.name.length > MAX_TITLE_LENGTH && (
-                <button onClick={(e) => { e.preventDefault(); setShowFullTitle(!showFullTitle); }} className="text-white/80 text-[10px] ml-1 hover:underline">
-                  {showFullTitle ? "Read Less" : "Read More"}
-                </button>
-              )}
-            </h3>
+        {/* Most Popular overlapping badge */}
+        {isMostPopular && (
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full text-[11px] font-black text-white bg-[#D50032] shadow-[0_4px_12px_rgba(213,0,50,0.25)] uppercase tracking-wider z-20">
+            Most Popular
           </div>
-          <span className="text-white/70 text-xs font-medium uppercase tracking-widest block">{course.level} Program</span>
+        )}
+
+        {/* Top Badges and Duration */}
+        <div className="flex flex-col items-start w-full mb-4">
+          <span className="px-3.5 py-1 rounded-full text-xs font-bold text-[#D50032] bg-[#FFF5F6] border border-[#D50032]/8 inline-block mb-3.5">
+            {levelBadge}
+          </span>
+          <div className="flex items-center gap-2 text-2xl sm:text-3.5xl font-black text-[#D50032] tracking-tight leading-none">
+            <Clock className="w-6.5 h-6.5 text-[#D50032] stroke-[2.5]" />
+            <span>{displayDuration}</span>
+          </div>
         </div>
 
-        {/* Card Body */}
-        <div className="flex flex-col flex-1 p-4 bg-white">
-          <div className="text-gray-600 text-sm mb-4 leading-relaxed">
-            <p>
-              {showFullDesc || course.shortDescription.length <= MAX_DESC_LENGTH ? course.shortDescription : `${course.shortDescription.substring(0, MAX_DESC_LENGTH)}...`}
-              {course.shortDescription.length > MAX_DESC_LENGTH && (
-                <button onClick={(e) => { e.preventDefault(); setShowFullDesc(!showFullDesc); }} className="text-[#D50032] font-bold ml-1 hover:underline">
-                  {showFullDesc ? "Read Less" : "Read More"}
-                </button>
-              )}
-            </p>
+        {/* Title and description */}
+        <div className="flex flex-col mb-5">
+          <h3 className="text-xl sm:text-2xl font-black text-[#121212] mb-3 leading-snug tracking-tight">
+            {course.name}
+          </h3>
+          <p className="text-sm text-gray-500 font-medium leading-relaxed">
+            {course.shortDescription}
+          </p>
+        </div>
+
+        {/* Price block - gray rounded container */}
+        <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 flex items-center justify-between gap-4 mb-5">
+          <div className="flex items-baseline gap-2.5">
+            <span className="text-2xl sm:text-3xl font-black text-[#121212] tracking-tight leading-none">
+              {course.price}
+            </span>
+            {course.originalPrice && (
+              <span className="text-sm sm:text-base text-gray-400 line-through font-semibold leading-none">
+                {course.originalPrice}
+              </span>
+            )}
           </div>
+          <span className="bg-green-50 text-emerald-600 border border-emerald-100 px-2.5 py-1 text-xs font-black rounded-lg uppercase tracking-wider">
+            {discountPercentage}% OFF
+          </span>
+        </div>
 
-          <div className="flex-1" />
+        {/* Modules Count */}
+        <div className="flex items-center gap-2 text-sm text-gray-500 font-bold mb-5 pl-1">
+          <BookOpen className="w-4.5 h-4.5 text-gray-400" />
+          <span>{modulesCount} Modules</span>
+        </div>
 
-          <div className="border-t border-gray-100 pt-5 mb-5">
-            <div className="flex items-end justify-between">
-              <div>
-                {course.originalPrice && (
-                  <div className="text-sm text-gray-400 line-through">{course.originalPrice}</div>
-                )}
-                <div className="text-3xl font-extrabold tracking-tight" style={{ color: "#121212" }}>
-                  {course.price}<span className="text-sm font-normal text-gray-500 ml-1">+ GST</span>
-                </div>
-              </div>
-              {course.savings && (
-                <div className="px-3 py-1.5 rounded-lg bg-green-50/80 border border-green-200 text-green-700 flex flex-col items-end shadow-sm">
-                  <span className="text-[10px] font-bold text-green-600 uppercase tracking-widest leading-none mb-1">You Save</span>
-                  <span className="text-sm font-extrabold leading-none">{course.savings}</span>
-                </div>
-              )}
-            </div>
-          </div>
+        {/* Divider */}
+        <hr className="border-gray-100 w-full mb-5" />
 
-          <Button
-            onClick={() => { setIsDetailsOpen(true); }}
-            className="w-full h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-[#D50032] to-[#FF0000] text-white hover:from-[#D50032] hover:to-[#D50032] transition-all duration-300 group-hover:shadow-lg shadow-[0_4px_15px_rgba(213,0,50,0.2)]"
-          >
+        {/* Card Footer Actions */}
+        <button
+          onClick={() => { setIsDetailsOpen(true); }}
+          className="flex items-center justify-between w-full mt-auto pt-1 text-left cursor-pointer group/footer"
+        >
+          <span className="text-[#D50032] font-extrabold text-sm sm:text-base group-hover/footer:text-[#FF3D00] transition-colors leading-none">
             View Program Details
-            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-          </Button>
-        </div>
-      </Card>
+          </span>
+          <div className="w-9 h-9 rounded-full bg-[#FFF5F6] group-hover/footer:bg-[#D50032] group-hover/footer:scale-105 flex items-center justify-center text-[#D50032] group-hover/footer:text-white transition-all duration-300">
+            <ChevronRight className="w-4.5 h-4.5 stroke-[2.5]" />
+          </div>
+        </button>
+      </div>
 
-      {/* Program Details Modal */}
+      {/* Program Details Dialog */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <DialogContent className="sm:max-w-2xl bg-white text-[#121212] rounded-3xl overflow-hidden border border-gray-100 shadow-2xl p-0 z-[10000] max-h-[90vh] flex flex-col">
           {/* Header Gradient (Fixed) */}
@@ -514,12 +503,41 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
   );
 }
 
-
 export default function MarketingHome() {
   const [videoOpen, setVideoOpen] = useState(false);
   const [activeVideoIdx, setActiveVideoIdx] = useState<number | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const isAuthenticated = !!localStorage.getItem("token");
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [currentBgIdx, setCurrentBgIdx] = useState(0);
+
+  useEffect(() => {
+    const bgTimer = setInterval(() => {
+      setCurrentBgIdx((prev) => (prev + 1) % 3);
+    }, 1500);
+    return () => clearInterval(bgTimer);
+  }, []);
+
+  const slides = [
+    {
+      title: "Start Your Trading Career",
+      subtitle: "From beginner to funded professional in 90 days",
+      buttonText: "Explore Programs",
+      link: "#courses"
+    },
+    {
+      title: "Learn from the Best",
+      subtitle: "Get 1-on-1 mentorship from seasoned market experts",
+      buttonText: "Meet Mentors",
+      link: "/about"
+    },
+    {
+      title: "Trade with Our Capital",
+      subtitle: "Pass the challenge and unlock live trading accounts up to ₹50 Lakhs",
+      buttonText: "Learn More",
+      link: "#courses"
+    }
+  ];
 
   const [apiCourses, setApiCourses] = useState<any[]>([]);
   const [cmsSettings, setCmsSettings] = useState<any>({});
@@ -527,6 +545,102 @@ export default function MarketingHome() {
   const [marketUpdates, setMarketUpdates] = useState<any[]>([]);
   const [selectedCourseForCheckout, setSelectedCourseForCheckout] = useState<any | null>(null);
 
+  // States and refs for premium mobile autoslide behavior
+  const coursesContainerRef = useRef<HTMLDivElement>(null);
+  const [activeCourseIdx, setActiveCourseIdx] = useState(0);
+  const [isCoursesPaused, setIsCoursesPaused] = useState(false);
+  const touchTimeoutRef = useRef<any>(null);
+
+  // States and refs for premium blog mobile autoslide behavior
+  const blogScrollRef = useRef<HTMLDivElement>(null);
+  const [blogActiveIndex, setBlogActiveIndex] = useState(0);
+  const [isBlogPaused, setIsBlogPaused] = useState(false);
+  const blogTouchTimeoutRef = useRef<any>(null);
+
+  const blogStoriesCount = blogStories.length > 0 ? blogStories.length : 4;
+
+  const handleBlogScroll = () => {
+    if (!blogScrollRef.current) return;
+    const container = blogScrollRef.current;
+    const cardWidth = container.firstElementChild?.getBoundingClientRect().width || 0;
+    const gap = 16; // gap-4 is 16px
+    const scrollLeft = container.scrollLeft;
+    const currentIdx = Math.round(scrollLeft / (cardWidth + gap));
+    if (currentIdx !== blogActiveIndex && currentIdx >= 0 && currentIdx < blogStoriesCount) {
+      setBlogActiveIndex(currentIdx);
+    }
+  };
+
+  const handleBlogTouchStart = () => {
+    setIsBlogPaused(true);
+    if (blogTouchTimeoutRef.current) clearTimeout(blogTouchTimeoutRef.current);
+  };
+
+  const handleBlogTouchEnd = () => {
+    if (blogTouchTimeoutRef.current) clearTimeout(blogTouchTimeoutRef.current);
+    blogTouchTimeoutRef.current = setTimeout(() => {
+      setIsBlogPaused(false);
+    }, 8000);
+  };
+
+  const coursesCount = (apiCourses.length > 0 ? apiCourses : Array(3)).slice(0, 3).length;
+
+  // Handle manual scroll synchronization
+  const handleCoursesScroll = () => {
+    if (!coursesContainerRef.current) return;
+    const container = coursesContainerRef.current;
+    const cardWidth = container.firstElementChild?.getBoundingClientRect().width || 0;
+    const gap = 24; // gap-6
+    const scrollLeft = container.scrollLeft;
+    const currentIdx = Math.round(scrollLeft / (cardWidth + gap));
+    if (currentIdx !== activeCourseIdx && currentIdx >= 0 && currentIdx < coursesCount) {
+      setActiveCourseIdx(currentIdx);
+    }
+  };
+
+  // Autoslide Timer on Mobile
+  useEffect(() => {
+    if (isCoursesPaused) return;
+
+    const timer = setInterval(() => {
+      if (window.innerWidth < 768 && coursesContainerRef.current) {
+        const nextIdx = (activeCourseIdx + 1) % coursesCount;
+        setActiveCourseIdx(nextIdx);
+
+        const container = coursesContainerRef.current;
+        const cardWidth = container.firstElementChild?.getBoundingClientRect().width || 0;
+        const gap = 24;
+        container.scrollTo({
+          left: nextIdx * (cardWidth + gap),
+          behavior: "smooth"
+        });
+      }
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [activeCourseIdx, isCoursesPaused, coursesCount]);
+
+  // Autoslide Timer on Mobile for Blog section
+  useEffect(() => {
+    if (isBlogPaused) return;
+
+    const timer = setInterval(() => {
+      if (window.innerWidth < 768 && blogScrollRef.current) {
+        const nextIdx = (blogActiveIndex + 1) % blogStoriesCount;
+        setBlogActiveIndex(nextIdx);
+
+        const container = blogScrollRef.current;
+        const cardWidth = container.firstElementChild?.getBoundingClientRect().width || 0;
+        const gap = 16;
+        container.scrollTo({
+          left: nextIdx * (cardWidth + gap),
+          behavior: "smooth"
+        });
+      }
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [blogActiveIndex, isBlogPaused, blogStoriesCount]);
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -545,7 +659,7 @@ export default function MarketingHome() {
           );
           setApiCourses(detailed);
         }
-      } catch (err) {}
+      } catch (err) { }
     };
     fetchFeatured();
 
@@ -555,7 +669,7 @@ export default function MarketingHome() {
         const settingsObj = res.data.reduce((acc: any, s: any) => ({ ...acc, [s.key]: s.value }), {});
         setCmsSettings(settingsObj);
       } catch (err) { console.error("CMS fetch failed", err); }
-      
+
       try {
         const res = await api.get("/news");
         setBlogStories(res.data.filter((n: any) => n.type === "Blog Story").slice(0, 4));
@@ -565,6 +679,46 @@ export default function MarketingHome() {
     fetchCMSAndNews();
 
   }, []);
+
+  // States and refs for Why Choose FinTrade mobile autoslide
+  const whyChooseScrollRef = useRef<HTMLDivElement>(null);
+  const [whyChooseActiveIndex, setWhyChooseActiveIndex] = useState(0);
+  const [isWhyChoosePaused, setIsWhyChoosePaused] = useState(false);
+  const whyChooseTouchTimeoutRef = useRef<any>(null);
+  const whyChooseCardsCount = 4;
+
+  const handleWhyChooseScroll = () => {
+    if (!whyChooseScrollRef.current) return;
+    const container = whyChooseScrollRef.current;
+    const cardWidth = container.firstElementChild?.getBoundingClientRect().width || 0;
+    const gap = 24; // md:gap-6 (24px)
+    const scrollLeft = container.scrollLeft;
+    const currentIdx = Math.round(scrollLeft / (cardWidth + gap));
+    if (currentIdx !== whyChooseActiveIndex && currentIdx >= 0 && currentIdx < whyChooseCardsCount) {
+      setWhyChooseActiveIndex(currentIdx);
+    }
+  };
+
+  useEffect(() => {
+    if (isWhyChoosePaused) return;
+
+    const timer = setInterval(() => {
+      if (window.innerWidth < 768 && whyChooseScrollRef.current) {
+        const nextIdx = (whyChooseActiveIndex + 1) % whyChooseCardsCount;
+        setWhyChooseActiveIndex(nextIdx);
+
+        const container = whyChooseScrollRef.current;
+        const cardWidth = container.firstElementChild?.getBoundingClientRect().width || 0;
+        const gap = 24;
+        container.scrollTo({
+          left: nextIdx * (cardWidth + gap),
+          behavior: "smooth"
+        });
+      }
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [whyChooseActiveIndex, isWhyChoosePaused]);
 
   // Brochure Download Flow State
   const [brochureOpen, setBrochureOpen] = useState(false);
@@ -613,18 +767,21 @@ export default function MarketingHome() {
       subtitle: "From Zero to Prop Trader in 9 Months",
       duration: "3:24",
       thumbnail: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
+      videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-tablet-displaying-financial-charts-40433-large.mp4"
     },
     {
       title: "Trading Simulator Walkthrough",
       subtitle: "Experience Real Markets, Zero Risk",
       duration: "2:10",
       thumbnail: "https://images.unsplash.com/photo-1612178991541-b48cc8e92a4d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
+      videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-financial-data-on-a-monitor-screen-40431-large.mp4"
     },
     {
       title: "What Our Alumni Say",
       subtitle: "Hear from Placed Traders",
       duration: "4:55",
       thumbnail: "https://images.unsplash.com/photo-1659353221405-29b7d087f9e5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
+      videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-business-charts-on-a-laptop-42171-large.mp4"
     },
   ];
 
@@ -639,23 +796,24 @@ export default function MarketingHome() {
 
   return (
     <div className="flex-1 relative">
-      {/* Ambient Red Glow Blobs (Higher Z-Index but behind content) */}
+      {/* Dynamic Popping Ambient Glow */}
       <AmbientGlow />
       <CursorGlow />
 
       {/* Video Modal */}
       {videoOpen && (
         <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative w-full max-w-5xl aspect-video rounded-2xl overflow-hidden shadow-2xl">
+          <div className="relative w-full max-w-5xl aspect-video rounded-2xl overflow-hidden shadow-2xl bg-black">
             <button onClick={() => { setVideoOpen(false); setActiveVideoIdx(null); }} className="absolute top-4 right-4 z-10 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 rounded-full p-2 transition-all">
               <X size={24} />
             </button>
-            <iframe
-              src={activeVideoIdx !== null && showcaseVideos[activeVideoIdx].videoUrl ? showcaseVideos[activeVideoIdx].videoUrl : "https://www.youtube.com/embed/dQw4w9WgXcQ"}
-              title="Testimonial Video"
-              className="w-full h-full border-0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
+            <video
+              src={activeVideoIdx !== null && showcaseVideos[activeVideoIdx]?.videoUrl ? showcaseVideos[activeVideoIdx].videoUrl : "https://assets.mixkit.co/videos/preview/mixkit-tablet-displaying-financial-charts-40433-large.mp4"}
+              autoPlay
+              controls
+              loop
+              playsInline
+              className="w-full h-full object-contain"
             />
           </div>
         </div>
@@ -668,107 +826,292 @@ export default function MarketingHome() {
 
       <div className="relative z-[50]">
 
-        {/* Hero Section (Soft gradient background) */}
-        <section className="relative py-10 md:py-16 overflow-hidden" style={{ background: "radial-gradient(circle at 80% 20%, rgba(255,255,255,0.8) 0%, transparent 100%)" }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
-            <div className="grid md:grid-cols-2 gap-10 md:gap-20 items-center">
-              {/* Left Content */}
-              <div className="relative z-10 pl-2 md:pl-6">
-                <div className="inline-block px-4 py-2 rounded-full mb-6 border border-[#D50032]/30" style={{ background: "rgba(213,0,50, 0.08)" }}>
-                  <span className="text-[#D50032] font-medium">🎯 India's Premier Trading Education</span>
-                </div>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-6 leading-[1.1] uppercase tracking-tight" style={{ color: "#121212" }}>
-                  India&apos;s Trading <br />
-                  <span className="bg-gradient-to-r from-[#D50032] via-[#FF4D70] to-[#D50032] bg-clip-text text-transparent">
-                    Powerhouse
+        {/* Hero Section (Premium Dark Integrated Theme) */}
+        <section
+          className="relative pt-6 pb-8 md:pt-10 md:pb-10 overflow-hidden select-none bg-[#0b0f19] text-white"
+        >
+          {/* Auto Slider Background */}
+          <div className="absolute inset-0 z-0">
+            {["/background.jpg", "/backgroundimage-1.avif", "/backgroundimage-2.avif"].map((img, idx) => (
+              <div
+                key={img}
+                className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out"
+                style={{
+                  backgroundImage: `linear-gradient(to bottom, rgba(11, 15, 25, 0.88), rgba(11, 15, 25, 0.96)), url('${img}')`,
+                  opacity: currentBgIdx === idx ? 1 : 0,
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Subtle Accent Concentric Vectors / Glow Blobs */}
+          <div className="absolute -top-40 -left-40 w-[450px] h-[450px] rounded-full border border-white/5 opacity-40 z-[1] pointer-events-none" />
+          <div className="absolute -top-10 -right-10 w-[550px] h-[550px] rounded-full border border-white/5 opacity-40 z-[1] pointer-events-none" />
+          <div className="absolute top-[40%] left-[10%] w-[300px] h-[300px] rounded-full bg-[#D50032]/5 blur-[90px] z-[1] pointer-events-none" />
+
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center">
+
+            {/* Top Pill Badge */}
+            <div className="inline-flex items-center px-4.5 py-1.5 rounded-full mb-6 border border-white/10 bg-white/5 backdrop-blur-md">
+              <span className="w-2 h-2 rounded-full bg-[#D50032] mr-2 inline-block animate-pulse" />
+              <span className="text-[10px] md:text-xs font-black tracking-widest uppercase text-white/80">
+                India's First Structured Prop Trading Academy
+              </span>
+            </div>
+
+            {/* Main Headline */}
+            <h1 className="text-4xl sm:text-5xl md:text-6.5xl font-black mb-6 tracking-tight leading-none text-white font-sans max-w-4xl mx-auto uppercase">
+              India&apos;s Trading <span className="text-[#D50032]">Powerhouse</span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-sm sm:text-base md:text-lg text-gray-300 max-w-3xl mx-auto leading-relaxed mb-10 font-medium">
+              Learn to Earn — India's first structured Prop Trading Academy with paper trading capital. Build consistency, confidence, and profitability from basics to professional-level trading.
+            </p>
+
+            {/* Action Buttons Row */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4.5 max-w-2xl mx-auto mb-6">
+              <Link to="/courses" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto bg-[#D50032] hover:bg-[#FF3D00] text-white rounded-2xl px-8 py-5 h-auto text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all hover:scale-105"
+                >
+                  Apply Now
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+
+              <button
+                onClick={() => { setActiveVideoIdx(0); setVideoOpen(true); }}
+                className="w-full sm:w-auto bg-white/5 hover:bg-white/10 text-white border border-white/15 rounded-2xl px-6 py-5 h-auto text-base font-bold transition-all inline-flex items-center justify-center gap-2.5"
+              >
+                <span className="w-6 h-6 rounded-full bg-[#D50032] flex items-center justify-center shadow-sm">
+                  <Play className="h-2.5 w-2.5 text-white ml-0.5 fill-white" />
+                </span>
+                Watch: The FinTrade Story
+              </button>
+
+              <a
+                href="#"
+                onClick={handleDownloadClick}
+                className="w-full sm:w-auto bg-white/5 hover:bg-white/10 text-white border border-white/15 rounded-2xl px-6 py-5 h-auto text-base font-bold transition-all inline-flex items-center justify-center gap-2.5"
+              >
+                <Download className="h-4.5 w-4.5 text-white" />
+                Download Brochure
+              </a>
+            </div>
+
+            {/* High-Impact Performance Metrics Row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-6 relative py-6 px-4 bg-white/[0.02] border border-white/5 backdrop-blur-sm rounded-[24px]">
+              {[
+                { val: "250+", lbl: "Traders Trained" },
+                { val: "₹25Cr+", lbl: "Capital Managed" },
+                { val: "20+", lbl: "Years Experience" },
+                { val: "95%", lbl: "Success Focus" }
+              ].map((m, idx) => (
+                <div key={idx} className="flex flex-col items-center justify-center text-center relative">
+                  {idx > 0 && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[1px] h-8 bg-white/10 hidden md:block" />}
+                  <span className="text-3xl md:text-4xl font-extrabold text-[#D50032] leading-none mb-1.5 font-sans">
+                    {m.val}
                   </span>
-                </h1>
-                <p className="text-base md:text-lg text-gray-600 mb-8 leading-relaxed font-medium">
-                  We are not building another trading course company. We are building <span className="text-[#D50032]">India's first Trader-to-Funded Professional Pipeline</span> — where every student has a pathway to professional capital.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 w-full">
-                  <Link to={isAuthenticated ? "/student/courses" : "/register"} className="block w-full sm:w-auto">
-                    <Button
-                      size="lg"
-                      className="w-full sm:w-auto shadow-xl hover:shadow-2xl transition-all hover:scale-105 text-lg px-8 py-6 bg-gradient-to-r from-[#D50032] to-[#FF0000] text-white hover:from-[#D50032] hover:to-[#D50032]"
-                      style={{ boxShadow: "0 10px 40px rgba(213,0,50, 0.4)" }}
-                    >
-                      Apply Now
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
-                  </Link>
-                  <a href="#" onClick={handleDownloadClick} className="block w-full sm:w-auto">
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="w-full sm:w-auto border-2 border-[#D50032] text-[#D50032] hover:bg-[#D50032] hover:text-white text-lg px-8 py-6 transition-all duration-300"
-                    >
-                      <Download className="mr-2 h-5 w-5" />
-                      Download Brochure
-                    </Button>
-                  </a>
+                  <span className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
+                    {m.lbl}
+                  </span>
                 </div>
+              ))}
+            </div>
+
+            {/* Start Your Trading Career Slider Card */}
+            <div className="relative max-w-4xl mx-auto mt-2 bg-[#131b2e]/40 border border-white/10 rounded-[32px] p-8 md:p-10 text-center shadow-[0_30px_70px_rgba(0,0,0,0.4)] overflow-hidden select-none backdrop-blur-xl">
+
+              {/* Subtle Red Top Accent Bar */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-1 bg-[#D50032] rounded-b-full shadow-[0_0_15px_#D50032]" />
+
+              {/* Slider content wrapper */}
+              <div className="min-h-[110px] flex flex-col justify-center items-center px-6">
+                <h3 className="text-2xl md:text-3.5xl font-black tracking-tight text-white mb-2 leading-none font-sans">
+                  {slides[activeSlide].title}
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-400 font-semibold mb-6 max-w-lg">
+                  {slides[activeSlide].subtitle}
+                </p>
+                <Link to={slides[activeSlide].link}>
+                  <Button
+                    className="bg-[#D50032] hover:bg-[#FF3D00] text-white rounded-xl px-7 py-3 h-auto text-xs md:text-sm font-bold shadow-md shadow-[#D50032]/10 transition-all hover:scale-105"
+                  >
+                    {slides[activeSlide].buttonText}
+                    <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                  </Button>
+                </Link>
               </div>
 
-              {/* Right - Video Card */}
-              <div className="relative">
-                <div
-                  className="absolute -inset-4 rounded-2xl"
-                  style={{ background: "linear-gradient(135deg, rgba(213,0,50,0.08) 0%, rgba(213,0,50,0.03) 100%)", filter: "blur(20px)" }}
-                />
-                <Card
-                  className="relative overflow-hidden shadow-2xl border border-gray-200 cursor-pointer group"
-                  style={{ boxShadow: "0 20px 60px rgba(213,0,50, 0.12), 0 4px 20px rgba(0,0,0,0.08)" }}
-                  onClick={() => setVideoOpen(true)}
-                >
-                  {/* Thumbnail */}
-                  <div className="relative h-64 overflow-hidden bg-gray-900">
-                    <img
-                      src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=900"
-                      alt="FinTrade Story"
-                      className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.3)" }}>
-                      <div
-                        className="w-20 h-20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-2xl"
-                        style={{ background: "#D50032", boxShadow: "0 0 40px rgba(213,0,50,0.6)" }}
-                      >
-                        <Play className="h-9 w-9 text-white ml-1" />
-                      </div>
-                    </div>
-                    <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold text-white animate-pulse" style={{ background: "#D50032" }}>
-                      ● WATCH
-                    </div>
-                    <div className="absolute bottom-3 right-3 px-2 py-1 rounded bg-black/70 text-white text-xs font-medium">
-                      3:24
-                    </div>
-                  </div>
-                  {/* Card Info */}
-                  <div className="p-5 bg-white">
-                    <h3 className="font-bold text-lg mb-1" style={{ color: "#121212" }}>Watch: The FinTrade Story</h3>
-                    <p className="text-gray-500 text-sm">See how we train India's most disciplined traders</p>
-                    <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
-                      <div className="flex items-center gap-1 text-xs text-gray-500">
-                        <Users className="h-3 w-3" style={{ color: "#D50032" }} /> 1,200+ students
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-gray-500">
-                        <Star className="h-3 w-3 fill-current" style={{ color: "#D50032" }} /> 4.9 rating
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-gray-500">
-                        <Award className="h-3 w-3" style={{ color: "#D50032" }} /> Certified
-                      </div>
-                      <div className="ml-auto">
-                        <ShareButton title="Watch: The FinTrade Story" variant="icon" />
-                      </div>
-                    </div>
-                  </div>
-                </Card>
+              {/* Slider Left Arrow Navigation */}
+              <button
+                onClick={() => setActiveSlide((prev) => (prev - 1 + slides.length) % slides.length)}
+                className="w-8 h-8 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center text-white absolute left-4 md:left-6 top-1/2 -translate-y-1/2 cursor-pointer transition-all hover:scale-105 active:scale-95 animate-none"
+                style={{ background: "rgba(255,255,255,0.05)" }}
+                aria-label="Previous Slide"
+              >
+                <ChevronLeft className="w-4 h-4 text-white" />
+              </button>
+
+              {/* Slider Right Arrow Navigation */}
+              <button
+                onClick={() => setActiveSlide((prev) => (prev + 1) % slides.length)}
+                className="w-8 h-8 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center text-white absolute right-4 md:right-6 top-1/2 -translate-y-1/2 cursor-pointer transition-all hover:scale-105 active:scale-95 animate-none"
+                style={{ background: "rgba(255,255,255,0.05)" }}
+                aria-label="Next Slide"
+              >
+                <ChevronRight className="w-4 h-4 text-white" />
+              </button>
+
+              {/* Slider Pagination Dots */}
+              <div className="flex justify-center items-center gap-1.5 mt-8">
+                {slides.map((_, dotIdx) => (
+                  <button
+                    key={dotIdx}
+                    onClick={() => setActiveSlide(dotIdx)}
+                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${activeSlide === dotIdx ? "bg-[#D50032] w-5" : "bg-white/20 hover:bg-white/45"}`}
+                    aria-label={`Go to slide ${dotIdx + 1}`}
+                  />
+                ))}
               </div>
+
+            </div>
+
+          </div>
+        </section>
+
+        {/* What is FinTrade & Acronym Section */}
+        <section className="py-12 md:py-20 relative z-10 bg-white overflow-hidden border-b border-gray-100">
+          {/* Decorative subtle background glows */}
+          <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#D50032]/5 rounded-full blur-[120px] pointer-events-none" />
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Header: What is FinTrade? */}
+            <div className="text-center mb-12 md:mb-16">
+              <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-4 border border-[#D50032]/20 bg-[#D50032]/5">
+                <span className="text-xs font-bold text-[#D50032] flex items-center gap-1">
+                  💡 Discover FinTrade
+                </span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-6 text-gray-900 tracking-tight">
+                What is <span className="text-[#D50032]">FinTrade</span>?
+              </h2>
+              <p className="text-base sm:text-lg text-gray-650 max-w-3xl mx-auto font-medium leading-relaxed">
+                The FinTrade is a modern trading education and capital allocation platform focused on building skilled, disciplined, and profitable traders. The name <span className="text-[#D50032] font-semibold">“FinTrade”</span> combines <span className="font-semibold text-gray-900">Finance</span> and <span className="font-semibold text-gray-900">Trading</span>, representing a complete ecosystem for learning, analyzing, and succeeding in financial markets.
+              </p>
+            </div>
+
+            {/* F-I-N-T-R-A-D-E Acronym Title */}
+            <div className="text-center mb-10">
+              <h3 className="text-xl sm:text-2xl font-black text-gray-900 tracking-wide uppercase">
+                The Anatomy of <span className="text-[#D50032]">F-I-N-T-R-A-D-E</span>
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-400 font-semibold mt-1">Our Core Pillars of Excellence</p>
+            </div>
+
+            {/* Grid of Acronyms */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+              {[
+                {
+                  letter: "F",
+                  title: "Financial Foundations",
+                  desc: "Building strong financial knowledge and market understanding.",
+                  icon: BookOpen,
+                  color: "from-red-500 to-rose-600",
+                },
+                {
+                  letter: "I",
+                  title: "Intelligence",
+                  desc: "Using smart insights and market data for better decisions.",
+                  icon: Brain,
+                  color: "from-[#D50032] to-[#FF3D00]",
+                },
+                {
+                  letter: "N",
+                  title: "Networking",
+                  desc: "Connecting traders, mentors, and opportunities together.",
+                  icon: Users,
+                  color: "from-orange-500 to-red-600",
+                },
+                {
+                  letter: "T",
+                  title: "Trading",
+                  desc: "Learning professional trading strategies and execution.",
+                  icon: TrendingUp,
+                  color: "from-red-600 to-rose-700",
+                },
+                {
+                  letter: "R",
+                  title: "Research",
+                  desc: "Analyzing markets deeply to identify trends and opportunities.",
+                  icon: Search,
+                  color: "from-rose-500 to-orange-600",
+                },
+                {
+                  letter: "A",
+                  title: "Analytics",
+                  desc: "Turning data into actionable trading insights.",
+                  icon: BarChart3,
+                  color: "from-red-500 to-orange-500",
+                },
+                {
+                  letter: "D",
+                  title: "Development",
+                  desc: "Continuous growth, discipline, and skill enhancement.",
+                  icon: Activity,
+                  color: "from-rose-600 to-red-600",
+                },
+                {
+                  letter: "E",
+                  title: "Excellence",
+                  desc: "Striving for the highest standards in trading performance.",
+                  icon: Trophy,
+                  color: "from-amber-500 to-[#D50032]",
+                },
+              ].map((item, idx) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={idx}
+                    className="relative flex flex-col justify-between overflow-hidden rounded-[28px] border border-gray-100/90 bg-white p-7 shadow-[0_12px_40px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(213,0,50,0.06)] hover:border-[#D50032]/20 transition-all duration-300 group select-none"
+                  >
+                    {/* Big stylized letter overlay in background */}
+                    <span className="absolute -right-2 -bottom-4 text-8xl font-black text-gray-50 opacity-[0.06] group-hover:opacity-[0.12] transition-opacity duration-300 font-sans pointer-events-none select-none">
+                      {item.letter}
+                    </span>
+
+                    <div>
+                      {/* Top Row: Icon and Letter */}
+                      <div className="flex justify-between items-center w-full">
+                        <div className="w-12 h-12 rounded-2xl bg-[#FFF5F6] border border-[#D50032]/8 text-[#D50032] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <Icon className="h-6 w-6 stroke-[2.5]" />
+                        </div>
+                        <span className={`text-2xl font-black px-3.5 py-1.5 rounded-2xl bg-gradient-to-br ${item.color} text-white shadow-sm font-sans`}>
+                          {item.letter}
+                        </span>
+                      </div>
+
+                      {/* Title */}
+                      <h4 className="text-lg font-black text-gray-950 mt-6 tracking-tight text-left group-hover:text-[#D50032] transition-colors duration-300">
+                        {item.title}
+                      </h4>
+
+                      {/* Description */}
+                      <p className="text-gray-500 text-sm leading-relaxed mt-2 text-left">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
+
         {/* 1. Featured Courses Section */}
-        <section id="courses" className="py-8 relative z-10" style={{ background: "linear-gradient(to bottom, transparent, rgba(213,0,50, 0.02), transparent)" }}>
+        <section id="courses" className="pt-6 pb-2 md:py-8 relative z-10 bg-transparent">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-10">
               <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#D50032]/30" style={{ background: "rgba(213,0,50, 0.08)" }}>
@@ -780,7 +1123,20 @@ export default function MarketingHome() {
               </p>
             </div>
             <div
-              className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible pb-8 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
+              ref={coursesContainerRef}
+              onScroll={handleCoursesScroll}
+              onMouseEnter={() => setIsCoursesPaused(true)}
+              onMouseLeave={() => setIsCoursesPaused(false)}
+              onTouchStart={() => {
+                setIsCoursesPaused(true);
+                if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
+              }}
+              onTouchEnd={() => {
+                touchTimeoutRef.current = setTimeout(() => {
+                  setIsCoursesPaused(false);
+                }, 5000);
+              }}
+              className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible pt-5 pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               {(apiCourses.length > 0 ? apiCourses.map((c: any) => {
@@ -841,7 +1197,7 @@ export default function MarketingHome() {
 
             {apiCourses.length > 3 && (
               <div className="mt-8 text-center">
-                <Link to={isAuthenticated ? "/student/courses" : "/register"}>
+                <Link to="/courses">
                   <Button className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] px-8 py-2 rounded-full font-semibold transition-all">
                     View More Courses
                   </Button>
@@ -851,10 +1207,8 @@ export default function MarketingHome() {
           </div>
         </section>
 
-        <ProgramModules apiCourses={apiCourses.length > 0 ? apiCourses : null} />
-
         {/* 2. Live Classes Section */}
-        <section className="py-8 relative z-10" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(248,248,248,0.4) 100%)", backdropFilter: "blur(2px)" }}>
+        <section className="pt-2 pb-6 md:py-8 relative z-10 bg-white" style={{ backdropFilter: "blur(2px)" }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-6">
               <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#D50032]/30" style={{ background: "rgba(213,0,50,0.08)" }}>
@@ -883,7 +1237,7 @@ export default function MarketingHome() {
                         </div>
                         {lecture.status === "live" ? (
                           <div className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold text-white animate-pulse" style={{ background: "#D50032" }}>
-                            <span className="w-2 h-2 rounded-full bg-white animate-ping" /> LIVE NOW
+                            <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping" /> LIVE NOW
                           </div>
                         ) : (
                           <div className="px-4 py-1.5 rounded-full text-xs font-bold text-white border border-white/30" style={{ background: "rgba(255,255,255,0.1)" }}>
@@ -943,120 +1297,424 @@ export default function MarketingHome() {
           </div>
         </section>
 
-        {/* 3. Learning Journey Section */}
-        <section className="py-6 bg-transparent relative z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-6">
-              <h2 className="text-4xl font-bold mb-2" style={{ color: "#121212" }}>Your Learning Journey</h2>
-              <p className="text-xl text-gray-600">From beginner to professional trader in 5 structured steps</p>
+        <ProgramModules apiCourses={apiCourses.length > 0 ? apiCourses : null} />
+
+        {/* Program Benefits Section */}
+        <section className="py-6 md:py-8 bg-transparent relative z-10 overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 text-center">
+            <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-4 border border-[#D50032]/20 bg-[#D50032]/5">
+              <span className="text-xs font-bold text-[#D50032] flex items-center gap-1">
+                🎁 Key Advantages
+              </span>
             </div>
-            <div className="relative">
-              <div className="hidden md:block">
-                <div className="absolute top-1/2 left-0 right-0 h-1 -translate-y-1/2" style={{ background: "linear-gradient(to right, #D50032, #121212)" }} />
-                <div className="grid grid-cols-5 gap-4 relative">
-                  {[
-                    { title: "Entrance Exam", desc: "Test your baseline knowledge", icon: CheckCircle },
-                    { title: "Course Learning", desc: "Structured curriculum & modules", icon: BookOpen },
-                    { title: "Monthly Exams", desc: "Track your progress", icon: Award },
-                    { title: "Trading Simulator", desc: "Practice with virtual capital", icon: LineChart },
-                    { title: "Placement", desc: "Join trading firms", icon: Trophy },
-                  ].map((step, i) => (
-                    <div key={i} className="flex flex-col items-center">
-                      <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 relative z-10 border-4 border-white shadow-lg" style={{ background: i <= 2 ? "#D50032" : "#121212" }}>
-                        <step.icon className="h-8 w-8 text-white" />
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4 text-gray-900 tracking-tight text-center uppercase">
+              Program <span className="text-[#D50032]">Benefits</span>
+            </h2>
+            <p className="text-base sm:text-lg text-gray-500 max-w-3xl mx-auto font-medium text-center leading-relaxed">
+              Everything you need to become a consistently profitable, professional trader.
+            </p>
+          </div>
+
+          {/* Marquee Wrapper */}
+          <div className="relative w-full flex overflow-x-hidden py-4">
+            <div className="animate-marquee flex gap-6 whitespace-nowrap" style={{ display: 'flex', minWidth: '100%' }}>
+              {benefits.concat(benefits).map((b, idx) => {
+                const Icon = b.icon;
+                return (
+                  <div
+                    key={idx}
+                    className="w-[280px] sm:w-[320px] p-6 bg-white border border-gray-100 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_40px_rgba(213,0,50,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex-shrink-0 flex flex-col group select-none whitespace-normal text-left"
+                  >
+                    <div className="flex items-start justify-between mb-5">
+                      {/* Number Badge */}
+                      <span className="text-2xl font-black text-[#D50032]/15 group-hover:text-[#D50032]/30 transition-colors duration-300">
+                        {b.num}
+                      </span>
+                      {/* Icon Box */}
+                      <div className="w-10 h-10 rounded-xl bg-[#D50032]/5 text-[#D50032] flex items-center justify-center shadow-sm border border-[#D50032]/10 group-hover:scale-110 transition-transform duration-300">
+                        <Icon className="h-5 w-5" />
                       </div>
-                      <h3 className="font-bold text-center mb-2" style={{ color: "#121212" }}>{step.title}</h3>
-                      <p className="text-sm text-gray-600 text-center">{step.desc}</p>
                     </div>
-                  ))}
-                </div>
-              </div>
-              <div className="md:hidden space-y-6">
-                {[
-                  { title: "Entrance Exam", desc: "Test your baseline knowledge", icon: CheckCircle },
-                  { title: "Course Learning", desc: "Structured curriculum & modules", icon: BookOpen },
-                  { title: "Monthly Exams", desc: "Track your progress", icon: Award },
-                  { title: "Trading Simulator", desc: "Practice with virtual capital", icon: LineChart },
-                  { title: "Placement", desc: "Join trading firms", icon: Trophy },
-                ].map((step, i) => (
-                  <div key={i} className="flex gap-4">
-                    <div className="w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: i <= 2 ? "#D50032" : "#121212" }}>
-                      <step.icon className="h-6 w-6 text-white" />
-                    </div>
+
                     <div>
-                      <h3 className="font-bold mb-1" style={{ color: "#121212" }}>{step.title}</h3>
-                      <p className="text-sm text-gray-600">{step.desc}</p>
+                      <h3 className="font-extrabold text-gray-900 text-base sm:text-lg mb-2 group-hover:text-[#D50032] transition-colors duration-300">
+                        {b.title}
+                      </h3>
+                      <p className="text-gray-500 text-xs sm:text-sm leading-relaxed font-medium">
+                        {b.desc}
+                      </p>
                     </div>
                   </div>
-                ))}
+                );
+              })}
+            </div>
+
+            <style>{`
+            @keyframes marquee {
+              0% { transform: translate3d(0, 0, 0); }
+              100% { transform: translate3d(-50%, 0, 0); }
+            }
+            .animate-marquee {
+              animation: marquee 18s linear infinite;
+            }
+            .animate-marquee:hover {
+              animation-play-state: paused;
+            }
+          `}</style>
+          </div>
+        </section>
+
+        {/* Learning Path Section */}
+        <section className="py-6 md:py-8 bg-transparent relative z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Header */}
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-4 border border-[#D50032]/20 bg-[#D50032]/5">
+                <span className="text-xs font-bold text-[#D50032] flex items-center gap-1">
+                  🗺️ Course Roadmap
+                </span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4 text-gray-900 tracking-tight text-center">
+                Your <span className="text-[#D50032]">Learning Path</span>
+              </h2>
+              <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto font-medium text-center">
+                A structured roadmap from beginner to professional trader
+              </p>
+            </div>
+
+            {/* Desktop Curved Learning Path Card */}
+            <div className="hidden lg:block w-full bg-white border border-gray-100 rounded-[40px] shadow-[0_15px_50px_rgba(0,0,0,0.02)] p-8 relative overflow-hidden">
+              <div className="aspect-[1000/420] w-full relative select-none">
+
+                {/* Curve Line SVG */}
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  {/* Dashed base line (locked path) */}
+                  <path
+                    d="M 200,520 C 300,520 400,450 500,380 C 600,310 700,310 800,240 C 900,170 800,130 550,120 C 450,110 360,110 360,110"
+                    stroke="#E5E7EB"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    strokeDasharray="12 10"
+                  />
+
+                  {/* Completed gold path (1 to 3) */}
+                  <path
+                    d="M 200,520 C 300,520 400,450 500,380"
+                    stroke="url(#completedGradient)"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Gradient Definitions */}
+                  <defs>
+                    <linearGradient id="completedGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#10B981" />
+                      <stop offset="100%" stopColor="#D50032" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+
+                {/* Render Steps */}
+                {[
+                  { num: "1", title: "Market Foundations", desc: "Markets, exchanges & instruments", status: "completed", x: 20, y: 86.6, align: "bottom", isStart: true },
+                  { num: "2", title: "Technical Analysis", desc: "Chart patterns & price action", status: "completed", x: 35, y: 76.6, align: "left" },
+                  { num: "3", title: "Risk Management", desc: "Position sizing & capital protection", status: "current", x: 50, y: 63.3, align: "right", isCurrent: true },
+                  { num: "4", title: "Trading Psychology", desc: "Emotional discipline & consistency", status: "locked", x: 65, y: 53.3, align: "left" },
+                  { num: "5", title: "Options & Derivat", desc: "Options pricing, Gre", status: "locked", x: 80, y: 40, align: "right" },
+                  { num: "6", title: "Advanced Strategies", desc: "Algo trading & quant analysis", status: "locked", x: 72, y: 26.6, align: "right" },
+                  { num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "locked", x: 55, y: 20, align: "left" },
+                  { num: "8", title: "Certification & Placement", desc: "Final assessment & career placement", status: "locked", x: 36, y: 18.3, align: "left", isSummit: true },
+                ].map((step, idx) => {
+                  const isCompleted = step.status === "completed";
+                  const isCurrent = step.status === "current";
+
+                  return (
+                    <div key={idx}>
+                      {/* Node Circle */}
+                      <div
+                        className="absolute -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center"
+                        style={{ left: `${step.x}%`, top: `${step.y}%` }}
+                      >
+                        {isCurrent ? (
+                          <div className="relative flex items-center justify-center">
+                            {/* Outer pulse rings */}
+                            <div className="absolute w-12 h-12 rounded-full bg-[#D50032]/25 animate-ping" />
+                            <div className="absolute w-9 h-9 rounded-full bg-[#D50032]/40" />
+                            {/* Inner circle */}
+                            <div className="w-8 h-8 rounded-full bg-[#D50032] border-2 border-white shadow-md flex items-center justify-center text-white font-extrabold text-sm relative z-30">
+                              {step.num}
+                            </div>
+                            {/* Current Module Pill Badge */}
+                            <div className="absolute top-10 bg-[#D50032] text-white text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full shadow-sm z-30 whitespace-nowrap">
+                              Current Module
+                            </div>
+                          </div>
+                        ) : isCompleted ? (
+                          <div className="w-7 h-7 rounded-full bg-emerald-500 border-2 border-white shadow flex items-center justify-center text-white z-30">
+                            <CheckCircle className="w-5 h-5 fill-emerald-500 stroke-white stroke-[3px]" />
+                          </div>
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-gray-200 border-2 border-white shadow flex items-center justify-center text-gray-500 font-extrabold text-xs z-30">
+                            {step.num}
+                          </div>
+                        )}
+
+                        {/* Start Label */}
+                        {step.isStart && (
+                          <div className="absolute -top-6 text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                            Start
+                          </div>
+                        )}
+
+                        {/* Summit Label */}
+                        {step.isSummit && (
+                          <div className="absolute bottom-8 text-[10px] font-black uppercase text-[#D50032] tracking-wider flex items-center gap-0.5">
+                            🏆 Summit
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Label Container */}
+                      <div
+                        className={`absolute -translate-y-1/2 w-[200px] z-10 ${step.align === "left" ? "text-right" : (step.align === "top" || step.align === "bottom") ? "text-center" : "text-left"
+                          }`}
+                        style={{
+                          left: step.align === "left"
+                            ? `calc(${step.x}% - 220px)`
+                            : (step.align === "top" || step.align === "bottom")
+                              ? `calc(${step.x}% - 100px)`
+                              : `calc(${step.x}% + 20px)`,
+                          top: step.align === "top"
+                            ? `calc(${step.y}% - 52px)`
+                            : step.align === "bottom"
+                              ? `calc(${step.y}% + 52px)`
+                              : `${step.y}%`
+                        }}
+                      >
+                        <h3
+                          className={`font-black text-sm sm:text-base mb-0.5 tracking-tight ${isCurrent ? "text-[#D50032]" : isCompleted ? "text-gray-900" : "text-gray-400"
+                            }`}
+                        >
+                          {step.title}
+                        </h3>
+                        <p className="text-gray-500 text-[10px] sm:text-xs font-medium leading-tight max-w-[200px] inline-block">
+                          {step.desc}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Bottom Legend */}
+              <div className="flex justify-center items-center gap-6 mt-8 pt-6 border-t border-gray-100 text-xs font-semibold text-gray-500">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  Completed
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#D50032]" />
+                  Current
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-gray-200" />
+                  Locked
+                </div>
               </div>
             </div>
+
+            {/* Mobile Vertical Learning Journey Timeline */}
+            <div className="lg:hidden w-full bg-white border border-gray-100 rounded-[32px] shadow-lg p-6 sm:p-8 space-y-6">
+              {[
+                { num: "1", title: "Market Foundations", desc: "Markets, exchanges & instruments", status: "completed", isStart: true },
+                { num: "2", title: "Technical Analysis", desc: "Chart patterns & price action", status: "completed" },
+                { num: "3", title: "Risk Management", desc: "Position sizing & capital protection", status: "current", isCurrent: true },
+                { num: "4", title: "Trading Psychology", desc: "Emotional discipline & consistency", status: "locked" },
+                { num: "5", title: "Options & Derivat", desc: "Options pricing, Gre", status: "locked" },
+                { num: "6", title: "Advanced Strategies", desc: "Algo trading & quant analysis", status: "locked" },
+                { num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "locked" },
+                { num: "8", title: "Certification & Placement", desc: "Final assessment & career placement", status: "locked", isSummit: true },
+              ].map((step, idx) => {
+                const isCompleted = step.status === "completed";
+                const isCurrent = step.status === "current";
+
+                return (
+                  <div key={idx} className="flex gap-4 items-stretch relative">
+                    {/* Vertical Line Connector */}
+                    {idx < 7 && (
+                      <div className="absolute top-7 bottom-[-24px] left-[13px] w-[2px] bg-gray-100" />
+                    )}
+
+                    {/* Node */}
+                    <div className="flex-shrink-0 relative">
+                      {isCurrent ? (
+                        <div className="relative flex items-center justify-center w-7 h-7">
+                          <div className="absolute w-7 h-7 rounded-full bg-[#D50032]/20 animate-ping" />
+                          <div className="w-6 h-6 rounded-full bg-[#D50032] border-2 border-white shadow flex items-center justify-center text-white font-extrabold text-xs relative z-20">
+                            {step.num}
+                          </div>
+                        </div>
+                      ) : isCompleted ? (
+                        <div className="w-7 h-7 rounded-full bg-emerald-500 border-2 border-white shadow flex items-center justify-center text-white z-20">
+                          <CheckCircle className="w-4 h-4 fill-emerald-500 stroke-white stroke-[3px]" />
+                        </div>
+                      ) : (
+                        <div className="w-7 h-7 rounded-full bg-gray-200 border-2 border-white shadow flex items-center justify-center text-gray-500 font-extrabold text-xs z-20">
+                          {step.num}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Text Description */}
+                    <div className="flex-1 pb-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                        <h3
+                          className={`font-extrabold text-sm sm:text-base leading-none ${isCurrent ? "text-[#D50032]" : isCompleted ? "text-gray-900" : "text-gray-400"
+                            }`}
+                        >
+                          {step.title}
+                        </h3>
+                        {isCurrent && (
+                          <span className="bg-[#D50032] text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full scale-90 origin-left">
+                            Current
+                          </span>
+                        )}
+                        {step.isStart && (
+                          <span className="border border-gray-300 text-gray-400 text-[8px] font-black uppercase px-2 py-0.5 rounded-full scale-90 origin-left">
+                            Start
+                          </span>
+                        )}
+                        {step.isSummit && (
+                          <span className="border border-[#D50032]/45 text-[#D50032] text-[8px] font-black uppercase px-2 py-0.5 rounded-full scale-90 origin-left">
+                            🏆 Summit
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-gray-500 text-xs font-medium">
+                        {step.desc}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
+        </section>
+
+        {/* Our Services Section */}
+        <section className="pt-6 pb-2 md:py-8 bg-transparent relative z-10 overflow-hidden border-t border-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 text-center">
+            <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-4 border border-[#D50032]/20 bg-[#D50032]/5">
+              <span className="text-xs font-bold text-[#D50032] flex items-center gap-1">
+                ⚙️ What We Offer
+              </span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4 text-gray-900 tracking-tight text-center uppercase">
+              Our <span className="text-[#D50032]">Services</span>
+            </h2>
+            <p className="text-base sm:text-lg text-gray-500 max-w-3xl mx-auto font-medium text-center leading-relaxed">
+              We provide dynamic, modern tools and programs to support your journey.
+            </p>
+          </div>
+
+          {/* Single marquee */}
+          <div className="relative w-full flex flex-col gap-6 overflow-x-hidden py-4 select-none">
+            {/* Row 1 - Forward */}
+            <div className="animate-marquee flex gap-6 whitespace-nowrap" style={{ display: 'flex', minWidth: '100%' }}>
+              {servicesCards.concat(servicesCards).map((s, idx) => {
+                const Icon = s.icon;
+                return (
+                  <div
+                    key={idx}
+                    className="w-[280px] sm:w-[320px] p-6 bg-white border border-gray-100 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_40px_rgba(213,0,50,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex-shrink-0 flex flex-col group select-none whitespace-normal text-left"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-[#FFF5F6] border border-[#D50032]/8 text-[#D50032] flex items-center justify-center mb-5 group-hover:scale-105 transition-transform duration-300">
+                      <Icon className="h-6 w-6 stroke-[2.5]" />
+                    </div>
+
+                    <div>
+                      <h3 className="font-extrabold text-gray-900 text-base sm:text-lg mb-2 group-hover:text-[#D50032] transition-colors duration-300">
+                        {s.title}
+                      </h3>
+                      <p className="text-gray-500 text-xs sm:text-sm leading-relaxed font-medium">
+                        {s.desc}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
         </section>
 
         {/* 4. Vertical Video Section */}
         <VerticalVideoSection />
 
         {/* 5. FinTrade Blog Section */}
-        <section className="py-8 relative z-10" style={{ background: "linear-gradient(to right, rgba(255,255,255,0.5), rgba(213,0,50, 0.03), rgba(255,255,255,0.5))" }}>
+        <section className="py-4 md:py-6 relative z-10 bg-transparent">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 gap-4">
               <div>
-                <div className="inline-block px-4 py-2 rounded-full mb-2 border border-[#D50032]/30" style={{ background: "rgba(213,0,50,0.08)" }}>
-                  <span className="text-[#D50032] font-semibold text-sm">✍️ Latest from Blog</span>
+                <div className="inline-block px-3 py-1 rounded-full mb-1 border border-[#D50032]/30" style={{ background: "rgba(213,0,50,0.08)" }}>
+                  <span className="text-[#D50032] font-semibold text-xs">✍️ Latest from Blog</span>
                 </div>
-                <h2 className="text-4xl font-bold mb-4" style={{ color: "#121212" }}>Market Insights & Articles</h2>
-                <p className="text-xl text-gray-600">Stay updated with our research and trading strategies</p>
+                <h2 className="text-2xl font-bold mb-1.5" style={{ color: "#121212" }}>Market Insights & Articles</h2>
+                <p className="text-sm text-gray-500">Stay updated with our research and trading strategies</p>
               </div>
               <Link to="/category/technical-analysis">
-                <Button variant="outline" className="border-2 border-[#D50032] text-[#D50032] hover:bg-[#D50032] hover:text-white transition-all duration-300">
+                <Button variant="outline" className="border-2 border-[#D50032] text-[#D50032] hover:bg-[#D50032] hover:text-white transition-all duration-300 py-1.5 px-3.5 text-sm h-9">
                   View All Articles
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ml-2.5 h-3.5 w-3.5" />
                 </Button>
               </Link>
             </div>
 
-            <div className="grid lg:grid-cols-12 gap-8 items-stretch">
+            <div className="grid lg:grid-cols-12 gap-5 items-stretch">
               {/* Featured Video (Left Side) */}
               <div className="lg:col-span-5">
                 {marketUpdates.length > 0 ? (
-                  <Card className="overflow-hidden border-0 shadow-2xl relative group h-full flex flex-col">
-                    <div className="relative flex-1 min-h-[300px]">
+                  <Card 
+                    onClick={() => { setActiveVideoIdx(0); setVideoOpen(true); }}
+                    className="overflow-hidden border-0 shadow-md relative group h-full flex flex-col cursor-pointer"
+                  >
+                    <div className="relative flex-1 min-h-[180px]">
                       <img
                         src={marketUpdates[0].thumbnail_url || "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80"}
                         className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         alt={marketUpdates[0].title}
                       />
-                      {marketUpdates[0].video_url && (
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                          <a href={marketUpdates[0].video_url} target="_blank" rel="noreferrer" className="w-20 h-20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl hover:bg-red-700" style={{ background: "#D50032", boxShadow: "0 0 30px rgba(213,0,50,0.5)" }}>
-                            <Play className="h-8 w-8 text-white ml-1" />
-                          </a>
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <div className="w-14 h-14 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl" style={{ background: "#D50032", boxShadow: "0 0 30px rgba(213,0,50,0.5)" }}>
+                          <Play className="h-5 w-5 text-white ml-0.5" />
                         </div>
-                      )}
+                      </div>
                     </div>
-                    <div className="p-6 bg-white">
-                      <h3 className="text-2xl font-bold mb-2" style={{ color: "#121212" }}>{marketUpdates[0].title}</h3>
-                      <p className="text-gray-600 line-clamp-3">{marketUpdates[0].content}</p>
+                    <div className="p-4 bg-white">
+                      <h3 className="text-base font-bold mb-1" style={{ color: "#121212" }}>{marketUpdates[0].title}</h3>
+                      <p className="text-xs text-gray-500 line-clamp-2">{marketUpdates[0].content}</p>
                     </div>
                   </Card>
                 ) : (
-                  <Card className="overflow-hidden border-0 shadow-2xl relative group h-full flex flex-col">
-                    <div className="relative flex-1 min-h-[300px]">
+                  <Card 
+                    onClick={() => { setActiveVideoIdx(0); setVideoOpen(true); }}
+                    className="overflow-hidden border-0 shadow-md relative group h-full flex flex-col cursor-pointer"
+                  >
+                    <div className="relative flex-1 min-h-[180px]">
                       <img
                         src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80"
                         className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         alt="Featured Video"
                       />
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        <div className="w-20 h-20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl" style={{ background: "#D50032", boxShadow: "0 0 30px rgba(213,0,50,0.5)" }}>
-                          <Play className="h-8 w-8 text-white ml-1" />
+                        <div className="w-14 h-14 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl" style={{ background: "#D50032", boxShadow: "0 0 30px rgba(213,0,50,0.5)" }}>
+                          <Play className="h-5 w-5 text-white ml-0.5" />
                         </div>
                       </div>
                     </div>
-                    <div className="p-6 bg-white">
-                      <h3 className="text-2xl font-bold mb-2" style={{ color: "#121212" }}>FinTrade: Master the Market Dynamics</h3>
-                      <p className="text-gray-600">Watch our exclusive masterclass on market analysis and risk management techniques for 2026.</p>
+                    <div className="p-4 bg-white">
+                      <h3 className="text-base font-bold mb-1" style={{ color: "#121212" }}>FinTrade: Master the Market Dynamics</h3>
+                      <p className="text-xs text-gray-500">Watch our exclusive masterclass on market analysis and risk management techniques for 2026.</p>
                     </div>
                   </Card>
                 )}
@@ -1064,26 +1722,30 @@ export default function MarketingHome() {
 
               {/* Blog Stories (4 Cards) */}
               <div
-                className="lg:col-span-7 flex md:grid md:grid-cols-2 gap-6 overflow-x-auto lg:overflow-x-visible pb-6 lg:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 lg:px-0 lg:mx-0 items-stretch"
+                ref={blogScrollRef}
+                onScroll={handleBlogScroll}
+                onTouchStart={handleBlogTouchStart}
+                onTouchEnd={handleBlogTouchEnd}
+                className="lg:col-span-7 flex md:grid md:grid-cols-2 gap-4 overflow-x-auto lg:overflow-x-visible pb-6 lg:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 lg:px-0 lg:mx-0 items-stretch"
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
               >
                 {blogStories.length > 0 ? blogStories.map((story, i) => (
-                  <Card key={i} className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 flex flex-col border-0 shadow-lg group hover:-translate-y-1 transition-all duration-300 snap-center">
-                    <div className="h-48 overflow-hidden relative">
+                  <Card key={i} className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 flex flex-col border-0 shadow-md group hover:-translate-y-1 transition-all duration-300 snap-center">
+                    <div className="h-32 overflow-hidden relative">
                       <img src={story.thumbnail_url || "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80"} alt={story.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-[#D50032]">
+                      <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2.5 py-0.5 rounded-full text-[10px] font-bold text-[#D50032]">
                         Blog
                       </div>
                     </div>
-                    <div className="p-6 flex flex-col flex-1">
-                      <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                        <span className="flex items-center gap-1"><FileText size={14} />Read</span>
+                    <div className="p-4 flex flex-col flex-1">
+                      <div className="flex items-center justify-between text-[11px] text-gray-500 mb-1.5">
+                        <span className="flex items-center gap-1"><FileText size={12} />Read</span>
                         <span>5 min read</span>
                       </div>
-                      <h3 className="font-bold text-lg mb-2 line-clamp-2 hover:text-[#D50032] transition-colors cursor-pointer" style={{ color: "#121212" }}>{story.title}</h3>
-                      <p className="text-sm text-gray-600 mb-4 line-clamp-2 flex-1">{story.content}</p>
-                      <Link to="/blog" className="text-[#D50032] font-semibold text-sm flex items-center group-hover:gap-2 transition-all">
-                        Read Story <ChevronRight size={16} />
+                      <h3 className="font-bold text-sm mb-1 line-clamp-2 hover:text-[#D50032] transition-colors cursor-pointer" style={{ color: "#121212" }}>{story.title}</h3>
+                      <p className="text-xs text-gray-500 mb-2 line-clamp-2 flex-1">{story.content}</p>
+                      <Link to="/blog" className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all">
+                        Read Story <ChevronRight size={14} />
                       </Link>
                     </div>
                   </Card>
@@ -1117,250 +1779,297 @@ export default function MarketingHome() {
                     desc: "Step-by-step process to backtest and deploy your own profitable strategy."
                   }
                 ].map((post, i) => (
-                  <Card key={i} className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 flex flex-col border-0 shadow-lg group hover:-translate-y-1 transition-all duration-300 snap-center">
-                    <div className="h-48 overflow-hidden relative">
+                  <Card key={i} className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 flex flex-col border-0 shadow-md group hover:-translate-y-1 transition-all duration-300 snap-center">
+                    <div className="h-32 overflow-hidden relative">
                       <img src={post.img} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-[#D50032]">
+                      <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2.5 py-0.5 rounded-full text-[10px] font-bold text-[#D50032]">
                         {post.category}
                       </div>
                     </div>
-                    <div className="p-6 flex flex-col flex-1">
-                      <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                        <span className="flex items-center gap-1"><FileText size={14} /> Article</span>
+                    <div className="p-4 flex flex-col flex-1">
+                      <div className="flex items-center justify-between text-[11px] text-gray-500 mb-1.5">
+                        <span className="flex items-center gap-1"><FileText size={12} /> Article</span>
                         <span>{post.readTime}</span>
                       </div>
-                      <h3 className="font-bold text-lg mb-2 line-clamp-2 hover:text-[#D50032] transition-colors cursor-pointer" style={{ color: "#121212" }}>{post.title}</h3>
-                      <p className="text-sm text-gray-600 mb-4 line-clamp-2 flex-1">{post.desc}</p>
-                      <button className="text-[#D50032] font-semibold text-sm flex items-center group-hover:gap-2 transition-all mt-auto self-start">
+                      <h3 className="font-bold text-sm mb-1 line-clamp-2 hover:text-[#D50032] transition-colors cursor-pointer" style={{ color: "#121212" }}>{post.title}</h3>
+                      <p className="text-xs text-gray-500 mb-2 line-clamp-2 flex-1">{post.desc}</p>
+                      <button className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all mt-auto self-start">
                         Read Full Article <ChevronRight size={16} />
                       </button>
                     </div>
                   </Card>
                 ))}
               </div>
+
+              {/* Mobile Dot Indicators for Blog Section */}
+              <div className="flex md:hidden gap-1.5 justify-center items-center mt-1 w-full">
+                {Array.from({ length: blogStoriesCount }).map((_, idx) => {
+                  const isActive = idx === blogActiveIndex;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setIsBlogPaused(true);
+                        setBlogActiveIndex(idx);
+                        const container = blogScrollRef.current;
+                        if (container) {
+                          const cardWidth = container.firstElementChild?.getBoundingClientRect().width || 0;
+                          const gap = 16;
+                          container.scrollTo({
+                            left: idx * (cardWidth + gap),
+                            behavior: "smooth"
+                          });
+                        }
+                        if (blogTouchTimeoutRef.current) clearTimeout(blogTouchTimeoutRef.current);
+                        blogTouchTimeoutRef.current = setTimeout(() => {
+                          setIsBlogPaused(false);
+                        }, 8000);
+                      }}
+                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${isActive ? "w-5 bg-[#D50032]" : "w-1.5 bg-gray-300 hover:bg-gray-400"
+                        }`}
+                    />
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </section>
-
-
-
-        {/* 6. Curriculum Roadmap Section */}
-        <section className="py-6 relative z-10" style={{ background: "#121212" }}>
-          <ModuleRoadmap />
         </section>
 
         {/* 6.5 Certification Section (Moved below Modules) */}
         <CertificatePreview />
 
-        {/* 7. EMI Options Section */}
-        <EMIHighlight />
-
+        {/* Placement & Career Opportunities Orbit Section */}
+        <CareerPathways />
 
 
         {/* 8. Why Choose FinTrade */}
-        <section id="about" className="py-8 relative z-10" style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(248,248,248,0.6))" }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-8">
-              <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#D50032]/30" style={{ background: "rgba(213,0,50,0.08)" }}>
-                <span className="text-[#D50032] font-semibold text-sm">💡 Our Edge</span>
+        <section id="about" className="py-6 md:py-8 bg-white relative z-10 overflow-hidden">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            {/* Section Header */}
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-1.5 px-4.5 py-1.5 rounded-full mb-3 border border-[#D50032]/25 bg-[#D50032]/5">
+                <span className="text-[#D50032] font-extrabold text-xs tracking-wider uppercase">💡 Our Edge</span>
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Why Choose FinTrade</h2>
-              <p className="text-xl text-gray-600">Everything you need to become a successful trader</p>
+              <h2 className="text-3xl md:text-4.5xl font-black mb-3 text-gray-900 tracking-tight">
+                Why Choose <span className="text-[#D50032]">FinTrade</span>
+              </h2>
+              <p className="text-base sm:text-lg text-gray-500 max-w-xl mx-auto leading-relaxed">
+                Everything you need to become a successful trader
+              </p>
             </div>
+
+            {/* Cards Grid / Carousel */}
             <div
-              className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-8 overflow-x-auto md:overflow-x-visible pb-6 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
+              ref={whyChooseScrollRef}
+              onScroll={handleWhyChooseScroll}
+              onTouchStart={() => {
+                setIsWhyChoosePaused(true);
+                if (whyChooseTouchTimeoutRef.current) clearTimeout(whyChooseTouchTimeoutRef.current);
+              }}
+              onTouchEnd={() => {
+                if (whyChooseTouchTimeoutRef.current) clearTimeout(whyChooseTouchTimeoutRef.current);
+                whyChooseTouchTimeoutRef.current = setTimeout(() => {
+                  setIsWhyChoosePaused(false);
+                }, 8000);
+              }}
+              className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 overflow-x-auto md:overflow-x-visible pb-6 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               {[
-                { icon: Brain, title: "AI Tutor Support", description: "Get 24/7 assistance from our AI-powered trading assistant for doubts and guidance", num: "01" },
-                { icon: BookOpen, title: "Structured Curriculum", description: "Follow a proven learning path from basics to advanced strategies with expert content", num: "02" },
-                { icon: LineChart, title: "Real Trading Simulation", description: "Practice with ₹10 lakh virtual capital in realistic market conditions without risk", num: "03" },
-                { icon: Trophy, title: "Placement Opportunities", description: "Top performers get placed in leading prop trading firms and financial institutions", num: "04" },
+                { icon: Brain, title: "AI Tutor Support", description: "Get personalized AI-powered guidance throughout your learning journey with real-time doubt resolution.", num: "01" },
+                { icon: BookOpen, title: "Structured Curriculum", description: "Follow a proven step-by-step curriculum designed by industry professionals and expert traders.", num: "02" },
+                { icon: LineChart, title: "Real Trading Simulation", description: "Practice with our advanced trading simulator using virtual capital in real market conditions.", num: "03" },
+                { icon: Trophy, title: "Placement Opportunities", description: "Get access to placement support with leading prop trading firms and financial institutions.", num: "04" },
               ].map((feature, i) => (
-                <div key={i} className="flex-shrink-0 w-[260px] sm:w-[320px] md:w-full md:flex-shrink snap-center flex">
-                  <Card className="w-full flex flex-col overflow-hidden rounded-2xl border border-gray-200 hover:border-[#D50032]/50 transition-all duration-300 hover:shadow-2xl group bg-white">
-                    <div className="flex flex-col flex-1 p-7 text-center">
-                      {/* Number Badge */}
-                      <div className="text-xs font-bold text-gray-300 mb-4 tracking-widest">{feature.num}</div>
-                      {/* Icon */}
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mx-auto mb-5 group-hover:scale-110 transition-transform duration-300" style={{ background: "linear-gradient(135deg, rgba(213,0,50,0.08), rgba(213,0,50,0.15))" }}>
-                        <feature.icon className="h-8 w-8" style={{ color: "#D50032" }} />
+                <div key={i} className="flex-shrink-0 w-[270px] sm:w-[320px] md:w-full md:flex-shrink snap-center flex">
+                  <div className="w-full flex flex-col justify-between overflow-hidden rounded-[28px] border border-gray-100/90 bg-white p-7 shadow-[0_12px_40px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)] hover:border-[#D50032]/10 transition-all duration-300 group select-none">
+                    <div>
+                      {/* Top Row */}
+                      <div className="flex justify-between items-center w-full">
+                        {/* Circular pink icon container */}
+                        <div className="w-12 h-12 rounded-full bg-[#FFF0F2] flex items-center justify-center flex-shrink-0">
+                          <feature.icon className="h-6 w-6 text-[#D50032]" />
+                        </div>
+
+                        {/* Large translucent numbers */}
+                        <span className="text-5xl font-black text-gray-100/80 tracking-tighter leading-none font-sans">
+                          {feature.num}
+                        </span>
                       </div>
-                      <h3 className="text-lg font-bold mb-3" style={{ color: "#121212" }}>{feature.title}</h3>
-                      <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
+
+                      {/* Title */}
+                      <h3 className="text-lg font-black text-gray-950 mt-6 tracking-tight text-left">
+                        {feature.title}
+                      </h3>
+
+                      {/* Description */}
+                      <p className="text-gray-500 text-sm leading-relaxed mt-2.5 text-left">
+                        {feature.description}
+                      </p>
                     </div>
-                    {/* Bottom accent */}
-                    <div className="h-1 w-full" style={{ background: "linear-gradient(to right, transparent, #D50032, transparent)" }} />
-                  </Card>
+                  </div>
                 </div>
               ))}
             </div>
+
+            {/* Mobile Dot Indicators for Why Choose Section */}
+            <div className="flex md:hidden gap-1.5 justify-center items-center mt-4 w-full">
+              {Array.from({ length: whyChooseCardsCount }).map((_, idx) => {
+                const isActive = idx === whyChooseActiveIndex;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setIsWhyChoosePaused(true);
+                      setWhyChooseActiveIndex(idx);
+                      const container = whyChooseScrollRef.current;
+                      if (container) {
+                        const cardWidth = container.firstElementChild?.getBoundingClientRect().width || 0;
+                        const gap = 24;
+                        container.scrollTo({
+                          left: idx * (cardWidth + gap),
+                          behavior: "smooth"
+                        });
+                      }
+                      if (whyChooseTouchTimeoutRef.current) clearTimeout(whyChooseTouchTimeoutRef.current);
+                      whyChooseTouchTimeoutRef.current = setTimeout(() => {
+                        setIsWhyChoosePaused(false);
+                      }, 8000);
+                    }}
+                    className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                      isActive ? "w-5 bg-[#D50032]" : "w-1.5 bg-gray-300 hover:bg-gray-400"
+                    }`}
+                  />
+                );
+              })}
+            </div>
+
           </div>
         </section>
 
-
-
+        {/* Leadership Section */}
+        <section className="py-12 bg-white relative z-10 border-t border-gray-100">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <ExpertProfile />
+          </div>
+        </section>
 
         {/* CTA Section */}
-        <section
-          className="py-16 relative z-10"
-          style={{ background: "#D50032" }}
-        >
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-black uppercase tracking-wide text-white mb-8 leading-tight">
-              <div>THE MARKET'S MOVING,</div>
-              <div>ARE YOU?</div>
-            </h2>
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
-              <Link to={isAuthenticated ? "/student/courses" : "/register"} className="block w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  className="w-full sm:w-auto rounded-full text-lg font-bold px-10 py-7 !bg-white hover:!bg-white !text-[#D50032] hover:!text-[#D50032] shadow-[0_4px_25px_rgba(255,255,255,0.15)] transition-all duration-300 transform hover:scale-105 border-none"
-                >
-                  Apply Now
-                </Button>
-              </Link>
-              <a href="#" onClick={handleDownloadClick} className="block w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  className="w-full sm:w-auto rounded-full text-lg font-bold px-10 py-7 border-2 border-white bg-transparent text-white hover:bg-white hover:text-[#D50032] transition-all duration-300 transform hover:scale-105"
-                >
-                  <Download className="mr-2 h-5 w-5" />
-                  Download Brochure
-                </Button>
-              </a>
+        <section className="py-6 md:py-8 bg-white relative z-10 overflow-hidden">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="relative bg-white border border-[#D50032]/8 rounded-[32px] p-8 md:p-12 text-center shadow-[0_15px_40px_rgba(213,0,50,0.02)] overflow-hidden select-none">
+
+              {/* Top glowing red gradient bar */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 md:w-44 h-1.5 bg-gradient-to-r from-[#D50032] via-[#FF4D6D] to-[#D50032] rounded-b-full shadow-[0_2px_10px_rgba(213,0,50,0.4)]" />
+
+              {/* Heading */}
+              <h2 className="text-3xl md:text-5xl font-black tracking-tight text-gray-950 leading-tight font-sans">
+                THE MARKET'S MOVING,<br />
+                <span className="text-[#D50032]">ARE YOU?</span>
+              </h2>
+
+              {/* Subtitle */}
+              <p className="text-gray-600 font-semibold text-sm sm:text-base max-w-xl mx-auto leading-relaxed mt-4.5 mb-8">
+                Join hundreds of traders who have transformed their financial future with The FinTrade Academy.
+              </p>
+
+              {/* Buttons */}
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-4.5">
+                <Link to="/courses" className="w-full sm:w-auto">
+                  <button className="w-full sm:w-auto py-3.5 px-8 rounded-2xl bg-gradient-to-r from-[#D50032] to-[#FF3D00] text-white font-extrabold text-sm hover:shadow-[0_8px_25px_rgba(213,0,50,0.35)] transition-all duration-300 transform active:scale-98 cursor-pointer flex items-center justify-center gap-1">
+                    Apply Now <span>→</span>
+                  </button>
+                </Link>
+
+                <a href="#" onClick={handleDownloadClick} className="w-full sm:w-auto">
+                  <button className="w-full sm:w-auto py-3.5 px-8 rounded-2xl border border-[#D50032] text-[#D50032] font-extrabold text-sm bg-white hover:bg-[#D50032]/5 transition-all duration-300 transform active:scale-98 cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.01)] border-solid">
+                    <Download className="w-4.5 h-4.5 stroke-[2.5]" />
+                    Download Brochure
+                  </button>
+                </a>
+              </div>
+
+              {/* Bottom glowing red gradient bar */}
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 md:w-44 h-1.5 bg-gradient-to-r from-[#D50032] via-[#FF4D6D] to-[#D50032] rounded-t-full shadow-[0_-2px_10px_rgba(213,0,50,0.4)]" />
+
             </div>
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="py-12 relative z-10" style={{ background: "#121212", color: "white" }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-4 gap-8 mb-8">
-              <div>
-                <h4 className="font-bold mb-4">Company</h4>
-                <ul className="space-y-2 text-gray-400">
-                  <li><a href="#about" className="hover:text-[#D50032] transition-colors">About Us</a></li>
-                  <li><a href="#" className="hover:text-[#D50032] transition-colors">Careers</a></li>
-                  <li><a href="#" className="hover:text-[#D50032] transition-colors">Press</a></li>
-                  <li><a href="#" className="hover:text-[#D50032] transition-colors">Blog</a></li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-bold mb-4">Courses</h4>
-                <ul className="space-y-2 text-gray-400">
-                  <li><Link to={isAuthenticated ? "/student/courses" : "/register"} className="hover:text-[#D50032] transition-colors">Basic Trading</Link></li>
-                  <li><Link to={isAuthenticated ? "/student/courses" : "/register"} className="hover:text-[#D50032] transition-colors">Intermediate Trading</Link></li>
-                  <li><Link to={isAuthenticated ? "/student/courses" : "/register"} className="hover:text-[#D50032] transition-colors">Advanced Trading</Link></li>
-                  <li><Link to={isAuthenticated ? "/student/courses" : "/register"} className="hover:text-[#D50032] transition-colors">Master Trading</Link></li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-bold mb-4">Resources</h4>
-                <ul className="space-y-2 text-gray-400">
-                  <li><a href="#market-updates" className="hover:text-[#D50032] transition-colors">Market Updates</a></li>
-                  <li><Link to={isAuthenticated ? "/student/lectures" : "/login"} className="hover:text-[#D50032] transition-colors">Live Classes</Link></li>
-                  <li><Link to={isAuthenticated ? "/student/ai-tutor" : "/login"} className="hover:text-[#D50032] transition-colors">AI Tutor</Link></li>
-                  <li><a href="#" className="hover:text-[#D50032] transition-colors">Help Center</a></li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-bold mb-4">Contact</h4>
-                <ul className="space-y-2 text-gray-400">
-                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4" style={{ color: "#D50032" }} />{cmsSettings.contact_email || "contact@fintrade.in"}</li>
-                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4" style={{ color: "#D50032" }} />{cmsSettings.contact_phone || "+91 98765 43210"}</li>
-                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4" style={{ color: "#D50032" }} />{cmsSettings.address || "Mumbai, India"}</li>
-                </ul>
-                <div className="flex gap-3 mt-4">
-                  {[
-                    { icon: Instagram, href: "https://www.instagram.com/the.fintrade/", label: "Instagram" },
-                    { icon: Facebook, href: "https://www.facebook.com/profile.php?id=61589528075521", label: "Facebook" },
-                    { icon: Youtube, href: "https://www.youtube.com/@The_FinTrade", label: "YouTube" },
-                    { icon: Linkedin, href: "https://www.linkedin.com/in/the-fintrade-7230b040a/", label: "LinkedIn" },
-                  ].map((s, i) => (
-                    <a key={i} href={s.href} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors" style={{ background: "rgba(213,0,50, 0.2)" }} title={s.label}>
-                      <s.icon className="h-5 w-5 text-white" />
-                    </a>
-                  ))}
+
+
+        {/* Brochure Modal */}
+        <Dialog open={brochureOpen} onOpenChange={setBrochureOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>{otpSent ? "Verify Mobile" : "Download Brochure"}</DialogTitle>
+              <DialogDescription>
+                {otpSent
+                  ? `Enter the 6-digit OTP sent to ${leadData.contact}`
+                  : "Enter your details to receive the comprehensive course brochure."}
+              </DialogDescription>
+            </DialogHeader>
+
+            {!otpSent ? (
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Full Name <span className="text-[#D50032]">*</span></Label>
+                  <Input id="name" placeholder="John Doe" value={leadData.name} onChange={(e) => setLeadData({ ...leadData, name: e.target.value })} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="contact">Mobile Number <span className="text-[#D50032]">*</span></Label>
+                  <Input id="contact" placeholder="+91 98765 43210" value={leadData.contact} onChange={(e) => setLeadData({ ...leadData, contact: e.target.value })} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input id="email" type="email" placeholder="john@example.com" value={leadData.email} onChange={(e) => setLeadData({ ...leadData, email: e.target.value })} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input id="city" placeholder="Mumbai" value={leadData.city} onChange={(e) => setLeadData({ ...leadData, city: e.target.value })} />
                 </div>
               </div>
-            </div>
-            <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-              <p>© 2026 FinTrade. All rights reserved. Learn to Earn with Discipline.</p>
-            </div>
-          </div>
-        </footer>
-      {/* Brochure Modal */}
-      <Dialog open={brochureOpen} onOpenChange={setBrochureOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{otpSent ? "Verify Mobile" : "Download Brochure"}</DialogTitle>
-            <DialogDescription>
-              {otpSent
-                ? `Enter the 6-digit OTP sent to ${leadData.contact}`
-                : "Enter your details to receive the comprehensive course brochure."}
-            </DialogDescription>
-          </DialogHeader>
-
-          {!otpSent ? (
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Full Name <span className="text-[#D50032]">*</span></Label>
-                <Input id="name" placeholder="John Doe" value={leadData.name} onChange={(e) => setLeadData({ ...leadData, name: e.target.value })} />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="contact">Mobile Number <span className="text-[#D50032]">*</span></Label>
-                <Input id="contact" placeholder="+91 98765 43210" value={leadData.contact} onChange={(e) => setLeadData({ ...leadData, contact: e.target.value })} />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" placeholder="john@example.com" value={leadData.email} onChange={(e) => setLeadData({ ...leadData, email: e.target.value })} />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="city">City</Label>
-                <Input id="city" placeholder="Mumbai" value={leadData.city} onChange={(e) => setLeadData({ ...leadData, city: e.target.value })} />
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-6 py-8">
-              <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
-                </InputOTPGroup>
-              </InputOTP>
-              <Button variant="link" className="text-xs text-[#D50032]" onClick={() => setOtpSent(false)}>Edit Mobile Number</Button>
-            </div>
-          )}
-
-          <DialogFooter>
-            {!otpSent ? (
-              <Button className="w-full" style={{ background: "#D50032", color: "white" }} onClick={sendOTP} disabled={!leadData.name || !leadData.contact}>
-                Get OTP
-              </Button>
             ) : (
-              <Button className="w-full" style={{ background: "#D50032", color: "white" }} onClick={verifyAndDownload} disabled={otp.length !== 6}>
-                Verify & Download
-              </Button>
+              <div className="flex flex-col items-center gap-6 py-8">
+                <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+                <Button variant="link" className="text-xs text-[#D50032]" onClick={() => setOtpSent(false)}>Edit Mobile Number</Button>
+              </div>
             )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      {selectedCourseForCheckout && (
-        <CourseCheckoutModal
-          course={selectedCourseForCheckout}
-          onClose={() => setSelectedCourseForCheckout(null)}
-          onSuccess={() => {
-            setSelectedCourseForCheckout(null);
-            window.location.href = "/student/modules";
-          }}
-        />
-      )}
-    </div>
+
+            <DialogFooter>
+              {!otpSent ? (
+                <Button className="w-full" style={{ background: "#D50032", color: "white" }} onClick={sendOTP} disabled={!leadData.name || !leadData.contact}>
+                  Get OTP
+                </Button>
+              ) : (
+                <Button className="w-full" style={{ background: "#D50032", color: "white" }} onClick={verifyAndDownload} disabled={otp.length !== 6}>
+                  Verify & Download
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {selectedCourseForCheckout && (
+          <CourseCheckoutModal
+            course={selectedCourseForCheckout}
+            onClose={() => setSelectedCourseForCheckout(null)}
+            onSuccess={() => {
+              setSelectedCourseForCheckout(null);
+              window.location.href = "/student/modules";
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }

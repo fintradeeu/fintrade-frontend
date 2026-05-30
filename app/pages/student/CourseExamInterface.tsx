@@ -107,6 +107,7 @@ export default function CourseExamInterface() {
   const [errorMsg, setErrorMsg] = useState("");
   const [flaggedQuestions, setFlaggedQuestions] = useState<Set<number>>(new Set());
   const [showCalculator, setShowCalculator] = useState(false);
+  const [showViolationModal, setShowViolationModal] = useState(false);
   const navigate = useNavigate();
 
   const toggleFlag = (qId: number) => {
@@ -163,16 +164,16 @@ export default function CourseExamInterface() {
 
       const handleVisibilityChange = async () => {
         if (document.hidden && newAttemptId) {
+          // Immediately display the violation warning modal in the UI
+          setShowViolationModal(true);
+          
           try {
             await api.post("/exams/violation", {
               attempt_id: newAttemptId,
               violation_type: "tab_switch"
             });
-            alert("Warning: You switched tabs during a proctored exam. Your exam has been automatically submitted.");
-            clearInterval((window as any).examTimer);
-            handleSubmitExam(newAttemptId);
           } catch (e) {
-            console.error("Failed to log violation");
+            console.error("Failed to log violation:", e);
           }
         }
       };
@@ -509,6 +510,59 @@ export default function CourseExamInterface() {
 
       {/* Calculator */}
       {showCalculator && <ExamCalculator onClose={() => setShowCalculator(false)} />}
+
+      {/* Proctoring Violation Warning Modal */}
+      {showViolationModal && (
+        <div className="fixed inset-0 z-[99999] bg-[#121212]/95 backdrop-blur-md flex items-center justify-center p-4">
+          <Card className="max-w-xl w-full p-8 bg-white border-t-4 border-red-500 shadow-2xl relative">
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center animate-bounce">
+                <AlertTriangle size={36} className="text-red-500" />
+              </div>
+            </div>
+            
+            <h2 className="text-2xl font-bold text-center text-[#0B2A5B] mb-2">Proctored Exam Warning</h2>
+            <p className="text-center text-red-600 font-semibold mb-6">
+              System detected tab switching or application switching!
+            </p>
+
+            <div className="bg-gray-50 rounded-xl p-5 border border-gray-100 mb-8 space-y-3">
+              <h3 className="font-bold text-[#0B2A5B] text-sm uppercase tracking-wider mb-2">Rules & Regulations:</h3>
+              <p className="text-xs text-gray-600 leading-relaxed flex items-start gap-2">
+                <span className="text-red-500 font-bold">•</span>
+                <span>Opening another tab, browser window, or minimizing this screen is strictly prohibited.</span>
+              </p>
+              <p className="text-xs text-gray-600 leading-relaxed flex items-start gap-2">
+                <span className="text-red-500 font-bold">•</span>
+                <span>Every single violation is logged automatically with a timestamp in your proctor report.</span>
+              </p>
+              <p className="text-xs text-gray-600 leading-relaxed flex items-start gap-2">
+                <span className="text-red-500 font-bold">•</span>
+                <span>Failing to resume immediately or repeated violations will result in automatic disqualification and exam termination.</span>
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={() => setShowViolationModal(false)}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold h-12 text-md shadow-lg shadow-green-600/20"
+              >
+                Start Same Exam
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowViolationModal(false);
+                  handleSubmitExam();
+                }}
+                variant="outline"
+                className="flex-1 border-2 border-red-200 text-red-600 hover:bg-red-50 font-bold h-12 text-md"
+              >
+                Back (Submit Progress)
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

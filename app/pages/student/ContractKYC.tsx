@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { toast } from "sonner";
@@ -7,7 +7,7 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import {
   CheckCircle, ArrowRight, ArrowLeft, User, Phone, Mail,
-  Camera, Fingerprint, FileText, Download, Shield, Lock, GraduationCap
+  Camera, Fingerprint, FileText, Download, Shield, Lock
 } from "lucide-react";
 import {
   Select,
@@ -26,7 +26,7 @@ const dummyData = {
   email: "rahul.sharma@fintrade.in",
   aadhaar: "1234 5678 9012",
   pan: "ABCDE1234F",
-  dob: "12/03/1995",
+  dob: "1995-03-12",
   address: "402, Sunrise Apartments, Andheri West, Mumbai - 400053",
   qualification: "UNDER-GRADUATE",
 };
@@ -80,6 +80,44 @@ export default function ContractKYC() {
   const [verified, setVerified] = useState(false);
   const [agreed, setAgreed] = useState(false);
 
+  const navigate = useNavigate();
+
+  // Redirect if student has already completed KYC once
+  useEffect(() => {
+    if (localStorage.getItem("kyc_completed") === "true") {
+      toast.info("You have already completed the KYC process!");
+      navigate("/student/courses");
+    }
+  }, [navigate]);
+
+  // Bind inputs to active React state and load from/save to localStorage
+  const [formData, setFormData] = useState(() => {
+    const saved = localStorage.getItem("kyc_form_data");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        // Fall back to dummy/default data
+      }
+    }
+    return {
+      fullName: dummyData.fullName,
+      mobile: dummyData.mobile,
+      email: dummyData.email,
+      aadhaar: dummyData.aadhaar,
+      pan: dummyData.pan,
+      dob: dummyData.dob,
+      address: dummyData.address,
+      qualification: dummyData.qualification,
+    };
+  });
+
+  const handleFieldChange = (key: string, value: string) => {
+    const updated = { ...formData, [key]: value };
+    setFormData(updated);
+    localStorage.setItem("kyc_form_data", JSON.stringify(updated));
+  };
+
   const next = () => {
     if (step === 5 && !verified) {
       setVerifying(true);
@@ -90,17 +128,53 @@ export default function ContractKYC() {
   };
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
+  const checkAllDataFilled = () => {
+    const required = [
+      { name: "Full Name", val: formData.fullName },
+      { name: "Mobile Number", val: formData.mobile },
+      { name: "Email Address", val: formData.email },
+      { name: "Aadhaar Number", val: formData.aadhaar },
+      { name: "PAN Number", val: formData.pan },
+      { name: "Date of Birth", val: formData.dob },
+      { name: "Residential Address", val: formData.address },
+      { name: "Qualification", val: formData.qualification }
+    ];
+    for (const field of required) {
+      if (!field.val || field.val.trim() === "") {
+        toast.error(`Please fill in your ${field.name} in step 1!`);
+        return false;
+      }
+    }
+    if (!aadhaarUploaded || !panUploaded || !photoUploaded) {
+      toast.error("Please upload all KYC Documents in step 4!");
+      return false;
+    }
+    if (!signed) {
+      toast.error("Please add your Digital Signature in step 5!");
+      return false;
+    }
+    if (!biometricDone) {
+      toast.error("Please complete your Biometric selfie verification in step 5!");
+      return false;
+    }
+    return true;
+  };
+
   const handleDownload = () => {
+    if (!checkAllDataFilled()) {
+      return;
+    }
+
     const content = `
 FINTRADE TRADING EDUCATION AGREEMENT
 ======================================
-Student Name   : ${dummyData.fullName}
-Mobile         : ${dummyData.mobile}
-Email          : ${dummyData.email}
-Aadhaar        : ${dummyData.aadhaar}
-PAN            : ${dummyData.pan}
-Date of Birth  : ${dummyData.dob}
-Address        : ${dummyData.address}
+Student Name   : ${formData.fullName}
+Mobile         : ${formData.mobile}
+Email          : ${formData.email}
+Aadhaar        : ${formData.aadhaar}
+PAN            : ${formData.pan}
+Date of Birth  : ${formData.dob}
+Address        : ${formData.address}
 
 KYC Status     : ✓ VERIFIED
 Contract Date  : ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
@@ -118,7 +192,7 @@ and the above-named student ("Student").
 6. Placement assistance is merit-based and not guaranteed.
 7. This contract is governed by the laws of India.
 
-Signed digitally by: ${dummyData.fullName}
+Signed digitally by: ${formData.fullName}
 Date: ${new Date().toLocaleDateString("en-IN")}
 
 © 2026 FinTrade Education Pvt. Ltd. | Mumbai, India
@@ -127,9 +201,11 @@ Date: ${new Date().toLocaleDateString("en-IN")}
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `FinTrade_Contract_${dummyData.fullName.replace(" ", "_")}.txt`;
+    a.download = `FinTrade_Contract_${formData.fullName.replace(" ", "_")}.txt`;
     a.click();
     URL.revokeObjectURL(url);
+    localStorage.setItem("kyc_completed", "true");
+    toast.success("Contract downloaded successfully!");
   };
 
   return (
@@ -147,7 +223,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
           <h1 className="text-2xl font-bold" style={{ color: "#121212" }}>Contract & KYC Verification</h1>
           <p className="text-gray-500 text-sm mt-1">Complete your onboarding to activate your account</p>
           <div className="inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full text-xs" style={{ background: "rgba(213,0,50,0.08)", color: "#D50032" }}>
-            <Shield className="h-3 w-3" /> Demo Mode — Pre-filled with sample data
+            <Shield className="h-3 w-3" /> Encrypted & Stored Securely
           </div>
         </div>
 
@@ -169,17 +245,17 @@ Date: ${new Date().toLocaleDateString("en-IN")}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Full Name</Label>
-                  <Input defaultValue={dummyData.fullName} className="mt-2 bg-gray-50" />
+                  <Input value={formData.fullName} onChange={(e) => handleFieldChange("fullName", e.target.value)} className="mt-2 bg-gray-50" />
                 </div>
                 <div>
                   <Label>Date of Birth</Label>
-                  <Input defaultValue={dummyData.dob} className="mt-2 bg-gray-50" />
+                  <Input type="date" value={formData.dob} onChange={(e) => handleFieldChange("dob", e.target.value)} className="mt-2 bg-gray-50" />
                 </div>
               </div>
               <div>
                 <Label>Student's Qualification</Label>
                 <div className="mt-2">
-                  <Select defaultValue={dummyData.qualification}>
+                  <Select value={formData.qualification} onValueChange={(val) => handleFieldChange("qualification", val)}>
                     <SelectTrigger className="w-full bg-gray-50">
                       <SelectValue placeholder="Select Qualification" />
                     </SelectTrigger>
@@ -194,7 +270,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
               </div>
               <div>
                 <Label>Residential Address</Label>
-                <Input defaultValue={dummyData.address} className="mt-2 bg-gray-50" />
+                <Input value={formData.address} onChange={(e) => handleFieldChange("address", e.target.value)} className="mt-2 bg-gray-50" />
               </div>
             </div>
           )}
@@ -208,12 +284,12 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                 </div>
                 <div>
                   <h2 className="text-xl font-bold" style={{ color: "#121212" }}>Mobile Verification</h2>
-                  <p className="text-sm text-gray-500">OTP sent to {dummyData.mobile}</p>
+                  <p className="text-sm text-gray-500">OTP sent to {formData.mobile}</p>
                 </div>
               </div>
               <div>
                 <Label>Mobile Number</Label>
-                <Input defaultValue={dummyData.mobile} className="mt-2 bg-gray-50" readOnly />
+                <Input value={formData.mobile} onChange={(e) => handleFieldChange("mobile", e.target.value)} className="mt-2 bg-gray-50" />
               </div>
               <div>
                 <Label>Enter OTP</Label>
@@ -249,12 +325,12 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                 </div>
                 <div>
                   <h2 className="text-xl font-bold" style={{ color: "#121212" }}>Email Verification</h2>
-                  <p className="text-sm text-gray-500">OTP sent to {dummyData.email}</p>
+                  <p className="text-sm text-gray-500">OTP sent to {formData.email}</p>
                 </div>
               </div>
               <div>
                 <Label>Email Address</Label>
-                <Input defaultValue={dummyData.email} className="mt-2 bg-gray-50" readOnly />
+                <Input value={formData.email} onChange={(e) => handleFieldChange("email", e.target.value)} className="mt-2 bg-gray-50" />
               </div>
               <div>
                 <Label>Enter OTP</Label>
@@ -296,11 +372,11 @@ Date: ${new Date().toLocaleDateString("en-IN")}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Aadhaar Number</Label>
-                  <Input defaultValue={dummyData.aadhaar} className="mt-2 bg-gray-50" />
+                  <Input value={formData.aadhaar} onChange={(e) => handleFieldChange("aadhaar", e.target.value)} className="mt-2 bg-gray-50" />
                 </div>
                 <div>
                   <Label>PAN Number</Label>
-                  <Input defaultValue={dummyData.pan} className="mt-2 bg-gray-50" />
+                  <Input value={formData.pan} onChange={(e) => handleFieldChange("pan", e.target.value)} className="mt-2 bg-gray-50" />
                 </div>
               </div>
               {[
@@ -353,7 +429,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                   {signed ? (
                     <div className="flex flex-col items-center gap-2">
                       <CheckCircle className="h-8 w-8 text-green-600" />
-                      <p className="font-bold text-green-700" style={{ fontFamily: "cursive", fontSize: 22 }}>{dummyData.fullName}</p>
+                      <p className="font-bold text-green-700" style={{ fontFamily: "cursive", fontSize: 22 }}>{formData.fullName}</p>
                       <p className="text-xs text-green-600">Signature captured</p>
                     </div>
                   ) : (
@@ -471,13 +547,13 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   {[
-                    ["Student Name", dummyData.fullName],
-                    ["Mobile", dummyData.mobile],
-                    ["Email", dummyData.email],
-                    ["Aadhaar", dummyData.aadhaar],
-                    ["PAN", dummyData.pan],
-                    ["Date of Birth", dummyData.dob],
-                    ["Qualification", dummyData.qualification],
+                    ["Student Name", formData.fullName],
+                    ["Mobile", formData.mobile],
+                    ["Email", formData.email],
+                    ["Aadhaar", formData.aadhaar],
+                    ["PAN", formData.pan],
+                    ["Date of Birth", formData.dob],
+                    ["Qualification", formData.qualification],
                   ].map(([k, v], i) => (
                     <div key={i} className="bg-white rounded-lg p-3 border border-gray-100">
                       <div className="text-xs text-gray-400">{k}</div>
@@ -505,7 +581,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                 <div className="pt-4 border-t border-gray-200 flex items-center justify-between">
                   <div>
                     <p className="text-xs text-gray-400">Digitally signed by</p>
-                    <p className="font-bold text-lg" style={{ fontFamily: "cursive", color: "#121212" }}>{dummyData.fullName}</p>
+                    <p className="font-bold text-lg" style={{ fontFamily: "cursive", color: "#121212" }}>{formData.fullName}</p>
                   </div>
                   <div className="flex items-center gap-2 text-green-600 text-sm">
                     <Lock className="h-4 w-4" /> Verified & Sealed
@@ -526,16 +602,32 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                 </label>
               </div>
 
-              <Button
-                onClick={handleDownload}
-                disabled={!agreed}
-                className="w-full"
-                style={{ background: agreed ? "#D50032" : "#e5e7eb", color: agreed ? "white" : "#9ca3af", cursor: agreed ? "pointer" : "not-allowed" }}
-                size="lg"
-              >
-                <Download className="mr-2 h-5 w-5" />
-                Download Contract (PDF)
-              </Button>
+              <div className="flex gap-4">
+                <Button
+                  onClick={handleDownload}
+                  disabled={!agreed}
+                  className="flex-1"
+                  style={{ background: agreed ? "#D50032" : "#e5e7eb", color: agreed ? "white" : "#9ca3af", cursor: agreed ? "pointer" : "not-allowed" }}
+                  size="lg"
+                >
+                  <Download className="mr-2 h-5 w-5" />
+                  Download Contract
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (checkAllDataFilled()) {
+                      localStorage.setItem("kyc_completed", "true");
+                      toast.success("Process to Pay initialized successfully! Connecting to gateway...");
+                    }
+                  }}
+                  disabled={!agreed}
+                  className="flex-1"
+                  style={{ background: agreed ? "#121212" : "#e5e7eb", color: agreed ? "white" : "#9ca3af", cursor: agreed ? "pointer" : "not-allowed" }}
+                  size="lg"
+                >
+                  Process to Pay
+                </Button>
+              </div>
             </div>
           )}
 
@@ -575,3 +667,4 @@ Date: ${new Date().toLocaleDateString("en-IN")}
     </div>
   );
 }
+

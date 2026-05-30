@@ -45,6 +45,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "Simulator", path: "/student/simulator", icon: <LineChart size={20} /> },
         { label: "Placement", path: "/student/placement", icon: <Briefcase size={20} /> },
         { label: "Certificate", path: "/student/certificate", icon: <Award size={20} /> },
+        { label: "Invoice", path: "/student/invoice", icon: <IndianRupee size={20} /> },
       ];
     case "teacher":
       return [
@@ -62,6 +63,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "Dashboard", path: "/admin/dashboard", icon: <Home size={20} /> },
         { label: "User Management", path: "/admin/students", icon: <Users size={20} /> },
         { label: "Courses", path: "/admin/courses", icon: <BookOpen size={20} /> },
+        { label: "Module Students", path: "/admin/module-students", icon: <GraduationCap size={20} /> },
         { label: "Lectures", path: "/admin/lectures", icon: <Video size={20} /> },
         { label: "Exams", path: "/admin/exams", icon: <FileQuestion size={20} /> },
         { label: "Payments & Coupons", path: "/admin/payments", icon: <IndianRupee size={20} /> },
@@ -148,7 +150,8 @@ export function DashboardLayout({
           setEnrolledCount(res.data.length);
           const allowedUnenrolledRoutes = [
             "/student/profile", "/student/courses",
-            "/student/contract-kyc", "/student/exams", "/student/entrance-exam"
+            "/student/contract-kyc", "/student/exams", "/student/entrance-exam",
+            "/student/invoice"
           ];
           if (res.data.length === 0 && !allowedUnenrolledRoutes.includes(location.pathname)) {
             navigate("/student/courses");
