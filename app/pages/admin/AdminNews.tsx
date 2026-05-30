@@ -11,8 +11,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/ta
 import { Plus, Edit, Trash2, Video, Newspaper, Info, PhoneCall } from "lucide-react";
 import { toast } from "sonner";
 import api from "../../services/api";
+import { useNavigate } from "react-router";
 
 export default function AdminNews() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("news");
   
   // CMS Content State
@@ -32,6 +34,7 @@ export default function AdminNews() {
   
   const [formData, setFormData] = useState({
     title: "",
+    type: "Market Update",
     description: "",
     video_url: "",
     thumbnail_url: "",
@@ -45,9 +48,23 @@ export default function AdminNews() {
 
   const fetchNews = async () => {
     try {
+      if (!localStorage.getItem("token")) {
+        navigate("/login");
+        return;
+      }
       const res = await api.get("/admin/news");
       setNewsList(res.data);
     } catch (err: any) {
+      if (err.response?.status === 401) {
+        toast.error("Please login as admin again");
+        navigate("/login");
+        return;
+      }
+      if (err.response?.status === 403) {
+        toast.error("Admin access required");
+        navigate("/");
+        return;
+      }
       toast.error("Failed to fetch news/blogs");
     }
   };
@@ -81,6 +98,7 @@ export default function AdminNews() {
       setCurrentId(item.id);
       setFormData({
         title: item.title,
+        type: item.type || (type === "news" ? "Market Update" : "Blog Story"),
         description: item.description || "",
         video_url: item.video_url || "",
         thumbnail_url: item.thumbnail_url || "",
@@ -91,6 +109,7 @@ export default function AdminNews() {
       setCurrentId(null);
       setFormData({
         title: "",
+        type: type === "news" ? "Market Update" : "Blog Story",
         description: "",
         video_url: "",
         thumbnail_url: "",
@@ -103,11 +122,15 @@ export default function AdminNews() {
   const handleSubmitNews = async () => {
     if (!formData.title) return toast.error("Title is required");
     try {
+      const payload = {
+        ...formData,
+        video_url: formData.type === "Market Update" ? formData.video_url : ""
+      };
       if (isEditing && currentId) {
-        await api.put(`/admin/news/${currentId}`, formData);
+        await api.put(`/admin/news/${currentId}`, payload);
         toast.success("Updated successfully");
       } else {
-        await api.post("/admin/news", formData);
+        await api.post("/admin/news", payload);
         toast.success("Created successfully");
       }
       setIsModalOpen(false);
@@ -129,8 +152,8 @@ export default function AdminNews() {
   };
 
   // Split data
-  const marketUpdates = newsList.filter(n => n.video_url && n.video_url.length > 0);
-  const blogStories = newsList.filter(n => !n.video_url || n.video_url.length === 0);
+  const marketUpdates = newsList.filter(n => (n.type || (n.video_url ? "Market Update" : "Blog Story")) === "Market Update");
+  const blogStories = newsList.filter(n => (n.type || (n.video_url ? "Market Update" : "Blog Story")) === "Blog Story");
 
   const renderTable = (data: any[], type: "news" | "blog") => (
     <Table>
@@ -287,8 +310,20 @@ export default function AdminNews() {
                 placeholder="Article title..."
               />
             </div>
+
+            <div className="grid gap-2">
+              <Label>Type</Label>
+              <select
+                value={formData.type}
+                onChange={e => setFormData({...formData, type: e.target.value})}
+                className="flex h-10 w-full items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="Market Update">Market Update</option>
+                <option value="Blog Story">Blog Story</option>
+              </select>
+            </div>
             
-            {activeTab === "news" && (
+            {formData.type === "Market Update" && (
               <div className="grid gap-2">
                 <Label>YouTube Video URL</Label>
                 <Input 

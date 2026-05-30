@@ -559,6 +559,11 @@ export default function MarketingHome() {
   const [apiCourses, setApiCourses] = useState<any[]>([]);
   const [isCoursesExpanded, setIsCoursesExpanded] = useState(false);
   const [cmsSettings, setCmsSettings] = useState<any>({});
+  const [apiBenefits, setApiBenefits] = useState<any[]>([]);
+  const [apiServices, setApiServices] = useState<any[]>([]);
+  const [apiQuickTips, setApiQuickTips] = useState<any[]>([]);
+  const [apiWhyChoose, setApiWhyChoose] = useState<any[]>([]);
+  const [apiLeadership, setApiLeadership] = useState<any[]>([]);
   const [blogStories, setBlogStories] = useState<any[]>([]);
   const [marketUpdates, setMarketUpdates] = useState<any[]>([]);
   const [selectedCourseForCheckout, setSelectedCourseForCheckout] = useState<any | null>(null);
@@ -727,6 +732,17 @@ export default function MarketingHome() {
       } catch (err) { console.error("CMS fetch failed", err); }
 
       try {
+        const res = await api.get("/settings/landing-page");
+        if (res.data) {
+          if (res.data.benefits) setApiBenefits(res.data.benefits);
+          if (res.data.services) setApiServices(res.data.services);
+          if (res.data.quick_tips) setApiQuickTips(res.data.quick_tips);
+          if (res.data.why_choose) setApiWhyChoose(res.data.why_choose);
+          if (res.data.leadership) setApiLeadership(res.data.leadership);
+        }
+      } catch (err) { console.error("Landing page fetch failed", err); }
+
+      try {
         const res = await api.get("/news");
         setBlogStories(res.data.filter((n: any) => n.type === "Blog Story").slice(0, 4));
         setMarketUpdates(res.data.filter((n: any) => n.type === "Market Update").slice(0, 1));
@@ -741,7 +757,22 @@ export default function MarketingHome() {
   const [whyChooseActiveIndex, setWhyChooseActiveIndex] = useState(0);
   const [isWhyChoosePaused, setIsWhyChoosePaused] = useState(false);
   const whyChooseTouchTimeoutRef = useRef<any>(null);
-  const whyChooseCardsCount = 4;
+
+  // Icon mapping for dynamic icons
+  const iconMap: Record<string, any> = {
+    Play, TrendingUp, Award, Users, BookOpen, LineChart, Video, CheckCircle, Star, ArrowRight, BarChart3, Brain, Target, Trophy, X, FileText, Search, Phone, Download, Instagram, Youtube, Linkedin, Twitter, Facebook, ChevronRight, ChevronLeft, ChevronDown, Shield, UserCheck, Monitor, Wifi, Activity, ClipboardCheck, GitBranch, Cpu, Clock
+  };
+
+  const benefitsList = (apiBenefits && apiBenefits.length > 0) ? apiBenefits : benefits;
+  const servicesList = (apiServices && apiServices.length > 0) ? apiServices : servicesCards;
+
+  const whyChooseList = (apiWhyChoose && apiWhyChoose.length > 0) ? apiWhyChoose : [
+    { icon: Brain, title: "AI Tutor Support", desc: "Get personalized AI-powered guidance throughout your learning journey with real-time doubt resolution.", num: "01" },
+    { icon: BookOpen, title: "Structured Curriculum", desc: "Follow a proven step-by-step curriculum designed by industry professionals and expert traders.", num: "02" },
+    { icon: LineChart, title: "Real Trading Simulation", desc: "Practice with our advanced trading simulator using virtual capital in real market conditions.", num: "03" },
+    { icon: Trophy, title: "Placement Opportunities", desc: "Get access to placement support with leading prop trading firms and financial institutions.", num: "04" },
+  ];
+  const whyChooseCardsCount = whyChooseList.length;
 
   const handleWhyChooseScroll = () => {
     if (!whyChooseScrollRef.current) return;
@@ -1415,8 +1446,8 @@ export default function MarketingHome() {
           {/* Marquee Wrapper */}
           <div className="relative w-full flex overflow-x-hidden py-4">
             <div className="animate-marquee flex gap-6 whitespace-nowrap" style={{ display: 'flex', minWidth: '100%' }}>
-              {benefits.concat(benefits).map((b, idx) => {
-                const Icon = b.icon;
+              {benefitsList.concat(benefitsList).map((b, idx) => {
+                const IconComponent = typeof b.icon === 'function' ? b.icon : (iconMap[b.icon] || BookOpen);
                 return (
                   <div
                     key={idx}
@@ -1429,7 +1460,7 @@ export default function MarketingHome() {
                       </span>
                       {/* Icon Box */}
                       <div className="w-10 h-10 rounded-xl bg-[#D50032]/5 text-[#D50032] flex items-center justify-center shadow-sm border border-[#D50032]/10 group-hover:scale-110 transition-transform duration-300">
-                        <Icon className="h-5 w-5" />
+                        <IconComponent className="h-5 w-5" />
                       </div>
                     </div>
 
@@ -1661,19 +1692,19 @@ export default function MarketingHome() {
           <div className="relative w-full flex flex-col gap-6 overflow-x-hidden py-4 select-none">
             {/* Row 1 - Forward */}
             <div className="animate-marquee flex gap-6 whitespace-nowrap" style={{ display: 'flex', minWidth: '100%' }}>
-              {servicesCards.concat(servicesCards).map((s, idx) => {
-                const Icon = s.icon;
+              {servicesList.concat(servicesList).map((s, idx) => {
+                const IconComponent = typeof s.icon === 'function' ? s.icon : (iconMap[s.icon] || UserCheck);
                 return (
                   <div
                     key={idx}
                     className="w-[280px] sm:w-[320px] p-6 bg-white border border-gray-100 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_40px_rgba(213,0,50,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex-shrink-0 flex flex-col group select-none whitespace-normal text-left"
                   >
                     <div className="w-12 h-12 rounded-2xl bg-[#FFF5F6] border border-[#D50032]/8 text-[#D50032] flex items-center justify-center mb-5 group-hover:scale-105 transition-transform duration-300">
-                      <Icon className="h-6 w-6 stroke-[2.5]" />
+                      <IconComponent className="h-6 w-6 stroke-[2.5]" />
                     </div>
 
                     <div>
-                      <h3 className="font-extrabold text-gray-900 text-base sm:text-lg mb-2 group-hover:text-[#D50032] transition-colors duration-300">
+                      <h3 className="font-extrabold text-gray-950 text-base sm:text-lg mb-2 group-hover:text-[#D50032] transition-colors duration-300">
                         {s.title}
                       </h3>
                       <p className="text-gray-500 text-xs sm:text-sm leading-relaxed font-medium">
@@ -1689,7 +1720,7 @@ export default function MarketingHome() {
         </section>
 
         {/* 4. Vertical Video Section */}
-        <VerticalVideoSection />
+        <VerticalVideoSection videos={apiQuickTips} />
 
         {/* 5. FinTrade Blog Section */}
         <section className="py-4 md:py-6 relative z-10 bg-transparent">
@@ -1922,41 +1953,39 @@ export default function MarketingHome() {
                 className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 overflow-x-auto md:overflow-x-visible pb-6 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
               >
-                {[
-                  { icon: Brain, title: "AI Tutor Support", description: "Get personalized AI-powered guidance throughout your learning journey with real-time doubt resolution.", num: "01" },
-                  { icon: BookOpen, title: "Structured Curriculum", description: "Follow a proven step-by-step curriculum designed by industry professionals and expert traders.", num: "02" },
-                  { icon: LineChart, title: "Real Trading Simulation", description: "Practice with our advanced trading simulator using virtual capital in real market conditions.", num: "03" },
-                  { icon: Trophy, title: "Placement Opportunities", description: "Get access to placement support with leading prop trading firms and financial institutions.", num: "04" },
-                ].map((feature, i) => (
-                  <div key={i} className="flex-shrink-0 w-[270px] sm:w-[320px] md:w-full md:flex-shrink snap-center flex">
-                    <div className="w-full flex flex-col justify-between overflow-hidden rounded-[28px] border border-gray-100/90 bg-white p-7 shadow-[0_12px_40px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)] hover:border-[#D50032]/10 transition-all duration-300 group select-none">
-                      <div>
-                        {/* Top Row */}
-                        <div className="flex justify-between items-center w-full">
-                          {/* Circular pink icon container */}
-                          <div className="w-12 h-12 rounded-full bg-[#FFF0F2] flex items-center justify-center flex-shrink-0">
-                            <feature.icon className="h-6 w-6 text-[#D50032]" />
+                {whyChooseList.map((feature, i) => {
+                  const IconComponent = typeof feature.icon === 'function' ? feature.icon : (iconMap[feature.icon] || Brain);
+                  return (
+                    <div key={i} className="flex-shrink-0 w-[270px] sm:w-[320px] md:w-full md:flex-shrink snap-center flex">
+                      <div className="w-full flex flex-col justify-between overflow-hidden rounded-[28px] border border-gray-100/90 bg-white p-7 shadow-[0_12px_40px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)] hover:border-[#D50032]/10 transition-all duration-300 group select-none">
+                        <div>
+                          {/* Top Row */}
+                          <div className="flex justify-between items-center w-full">
+                            {/* Circular pink icon container */}
+                            <div className="w-12 h-12 rounded-full bg-[#FFF0F2] flex items-center justify-center flex-shrink-0">
+                              <IconComponent className="h-6 w-6 text-[#D50032]" />
+                            </div>
+
+                            {/* Large translucent numbers */}
+                            <span className="text-5xl font-black text-gray-100/80 tracking-tighter leading-none font-sans">
+                              {feature.num}
+                            </span>
                           </div>
 
-                          {/* Large translucent numbers */}
-                          <span className="text-5xl font-black text-gray-100/80 tracking-tighter leading-none font-sans">
-                            {feature.num}
-                          </span>
+                          {/* Title */}
+                          <h3 className="text-lg font-black text-gray-950 mt-6 tracking-tight text-left">
+                            {feature.title}
+                          </h3>
+
+                          {/* Description */}
+                          <p className="text-gray-500 text-sm leading-relaxed mt-2.5 text-left">
+                            {feature.desc || feature.description}
+                          </p>
                         </div>
-
-                        {/* Title */}
-                        <h3 className="text-lg font-black text-gray-950 mt-6 tracking-tight text-left">
-                          {feature.title}
-                        </h3>
-
-                        {/* Description */}
-                        <p className="text-gray-500 text-sm leading-relaxed mt-2.5 text-left">
-                          {feature.description}
-                        </p>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Mobile Dot Indicators for Why Choose Section */}
@@ -1999,7 +2028,7 @@ export default function MarketingHome() {
         <section className="py-12 bg-white relative z-10 border-t border-gray-100">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <ScrollReveal>
-              <ExpertProfile />
+              <ExpertProfile leaders={apiLeadership} />
             </ScrollReveal>
           </div>
         </section>

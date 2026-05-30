@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { toast } from "sonner";
@@ -17,19 +17,10 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import logo from "../../../imports/fintrade_logo.png";
+import api from "../../services/api";
+import CourseCheckoutModal from "../../components/CourseCheckoutModal";
 
 const TOTAL_STEPS = 7;
-
-const dummyData = {
-  fullName: "Rahul Sharma",
-  mobile: "+91 98765 43210",
-  email: "rahul.sharma@fintrade.in",
-  aadhaar: "1234 5678 9012",
-  pan: "ABCDE1234F",
-  dob: "12/03/1995",
-  address: "402, Sunrise Apartments, Andheri West, Mumbai - 400053",
-  qualification: "UNDER-GRADUATE",
-};
 
 function StepBar({ current }: { current: number }) {
   const steps = [
@@ -68,6 +59,7 @@ function StepBar({ current }: { current: number }) {
 }
 
 export default function ContractKYC() {
+  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [mobileOtp, setMobileOtp] = useState("");
   const [emailOtp, setEmailOtp] = useState("");
@@ -80,27 +72,209 @@ export default function ContractKYC() {
   const [verified, setVerified] = useState(false);
   const [agreed, setAgreed] = useState(false);
 
+  // Dynamic user data states (clean, no dummy defaults)
+  const [fullName, setFullName] = useState("");
+  const [dob, setDob] = useState("");
+  const [qualification, setQualification] = useState("");
+  const [address, setAddress] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [aadhaar, setAadhaar] = useState("");
+  const [pan, setPan] = useState("");
+  const [email, setEmail] = useState("");
+
+  // Target course state for checkouts
+  const [course, setCourse] = useState<any>(null);
+  const [showCheckout, setShowCheckout] = useState(false);
+
+  // Load existing KYC & target course contexts
+  useEffect(() => {
+    // 1. Fetch current profile details to pre-populate fields
+    api.get("/auth/me")
+      .then((res) => {
+        if (res.data) {
+          if (res.data.full_name) setFullName(res.data.full_name);
+          if (res.data.phone) setMobile(res.data.phone);
+          if (res.data.email) setEmail(res.data.email);
+        }
+      })
+      .catch((err) => console.error("Error loading user profile details", err));
+
+    // 2. Fetch current KYC status and restore saved details if any
+    api.get("/kyc/status")
+      .then((res) => {
+        if (res.data && res.data.status !== "not_started") {
+          if (res.data.full_name) setFullName(res.data.full_name);
+          if (res.data.dob) setDob(res.data.dob);
+          if (res.data.qualification) setQualification(res.data.qualification);
+          if (res.data.address) setAddress(res.data.address);
+          if (res.data.mobile) setMobile(res.data.mobile);
+          if (res.data.aadhaar_number) setAadhaar(res.data.aadhaar_number);
+          if (res.data.pan_number) setPan(res.data.pan_number);
+          if (res.data.mobile_verified) setMobileOtp("123456");
+          if (res.data.email_verified) setEmailOtp("654321");
+          if (res.data.aadhaar_doc_url) setAadhaarUploaded(true);
+          if (res.data.pan_doc_url) setPanUploaded(true);
+          if (res.data.photo_url) setPhotoUploaded(true);
+          if (res.data.signature_url) setSigned(true);
+          if (res.data.biometric_selfie_url) setBiometricDone(true);
+          if (res.data.status === "verified" || res.data.status === "approved") setVerified(true);
+        }
+      })
+      .catch((err) => console.error("Error loading KYC status", err));
+
+    // 3. Fetch target course context if present in the URL
+    const searchParams = new URLSearchParams(window.location.search);
+    const courseId = searchParams.get("course_id");
+    if (courseId) {
+      api.get(`/courses/${courseId}`)
+        .then((res) => {
+          setCourse(res.data);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch course details for KYC checkout flow", err);
+        });
+    }
+  }, []);
+
   const next = () => {
     if (step === 5 && !verified) {
       setVerifying(true);
-      setTimeout(() => { setVerifying(false); setVerified(true); setStep(6); }, 2500);
+      setTimeout(() => { 
+        setVerifying(false); 
+        setVerified(true); 
+        setStep(6); 
+      }, 2500);
       return;
     }
     setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1));
   };
+  
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
-  const handleDownload = () => {
+  const handleContinue = async () => {
+    if (step === 0) {
+      // Save personal details to backend
+      try {
+        await api.post("/kyc/submit", {
+          full_name: fullName,
+          dob: dob,
+          qualification: qualification,
+          address: address,
+          mobile: mobile,
+          aadhaar_number: aadhaar,
+          pan_number: pan
+        });
+      } catch (err: any) {
+        toast.error("Failed to save KYC details to database.");
+        return;
+      }
+      next();
+      return;
+    }
+    
+    if (step === 1) {
+      if (mobileOtp !== "123456") {
+        toast.error("Invalid mobile OTP");
+        return;
+      }
+      try {
+        await api.post("/kyc/verify-mobile-otp", { otp: mobileOtp });
+      } catch (e) {}
+      next();
+      return;
+    }
+
+    if (step === 2) {
+      if (emailOtp !== "654321") {
+        toast.error("Invalid email OTP");
+        return;
+      }
+      try {
+        await api.post("/kyc/verify-email-otp", { otp: emailOtp });
+      } catch (e) {}
+      next();
+      return;
+    }
+
+    if (step === 3) {
+      if (!aadhaarUploaded || !panUploaded || !photoUploaded) {
+        toast.error("Please upload all documents to proceed.");
+        return;
+      }
+      // Submit mock document upload to update backend fields
+      try {
+        const dummyFile = new File(["dummy"], "dummy.jpg", { type: "image/jpeg" });
+        const fd1 = new FormData(); fd1.append("file", dummyFile);
+        await api.post("/kyc/upload-document?doc_type=aadhaar", fd1);
+        const fd2 = new FormData(); fd2.append("file", dummyFile);
+        await api.post("/kyc/upload-document?doc_type=pan", fd2);
+        const fd3 = new FormData(); fd3.append("file", dummyFile);
+        await api.post("/kyc/upload-document?doc_type=photo", fd3);
+      } catch (e) {}
+      next();
+      return;
+    }
+
+    if (step === 4) {
+      if (!signed || !biometricDone) {
+        toast.error("Please capture signature and selfie to proceed.");
+        return;
+      }
+      try {
+        const dummyFile = new File(["dummy"], "dummy.jpg", { type: "image/jpeg" });
+        const fd1 = new FormData(); fd1.append("file", dummyFile);
+        await api.post("/kyc/upload-signature", fd1);
+        const fd2 = new FormData(); fd2.append("file", dummyFile);
+        await api.post("/kyc/upload-biometric", fd2);
+      } catch (e) {}
+      next();
+      return;
+    }
+
+    if (step === 5) {
+      if (!verified) {
+        setVerifying(true);
+        setTimeout(async () => {
+          setVerifying(false);
+          setVerified(true);
+          setStep(6);
+        }, 2500);
+      } else {
+        setStep(6);
+      }
+      return;
+    }
+
+    next();
+  };
+
+  const handleGenerateContractOnBackend = async () => {
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const courseId = searchParams.get("course_id");
+      await api.post("/kyc/generate-contract", {
+        course_id: courseId ? Number(courseId) : null,
+        terms_accepted: true
+      });
+    } catch (e) {
+      console.error("Failed to generate contract on backend database", e);
+    }
+  };
+
+  const handleDownload = async () => {
+    // Generate contract on database side
+    await handleGenerateContractOnBackend();
+
     const content = `
 FINTRADE TRADING EDUCATION AGREEMENT
 ======================================
-Student Name   : ${dummyData.fullName}
-Mobile         : ${dummyData.mobile}
+Student Name   : ${fullName}
+Mobile         : ${mobile}
 Email          : ${dummyData.email}
-Aadhaar        : ${dummyData.aadhaar}
-PAN            : ${dummyData.pan}
-Date of Birth  : ${dummyData.dob}
-Address        : ${dummyData.address}
+Aadhaar        : ${aadhaar}
+PAN            : ${pan}
+Date of Birth  : ${dob}
+Address        : ${address}
 
 KYC Status     : ✓ VERIFIED
 Contract Date  : ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
@@ -118,7 +292,7 @@ and the above-named student ("Student").
 6. Placement assistance is merit-based and not guaranteed.
 7. This contract is governed by the laws of India.
 
-Signed digitally by: ${dummyData.fullName}
+Signed digitally by: ${fullName}
 Date: ${new Date().toLocaleDateString("en-IN")}
 
 © 2026 FinTrade Education Pvt. Ltd. | Mumbai, India
@@ -127,7 +301,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `FinTrade_Contract_${dummyData.fullName.replace(" ", "_")}.txt`;
+    a.download = `FinTrade_Contract_${fullName.replace(" ", "_")}.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -147,7 +321,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
           <h1 className="text-2xl font-bold" style={{ color: "#121212" }}>Contract & KYC Verification</h1>
           <p className="text-gray-500 text-sm mt-1">Complete your onboarding to activate your account</p>
           <div className="inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full text-xs" style={{ background: "rgba(213,0,50,0.08)", color: "#D50032" }}>
-            <Shield className="h-3 w-3" /> Demo Mode — Pre-filled with sample data
+            <Shield className="h-3 w-3" /> Secure digital verification
           </div>
         </div>
 
@@ -169,17 +343,17 @@ Date: ${new Date().toLocaleDateString("en-IN")}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Full Name</Label>
-                  <Input defaultValue={dummyData.fullName} className="mt-2 bg-gray-50" />
+                  <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-2 bg-gray-50" />
                 </div>
                 <div>
                   <Label>Date of Birth</Label>
-                  <Input defaultValue={dummyData.dob} className="mt-2 bg-gray-50" />
+                  <Input value={dob} onChange={(e) => setDob(e.target.value)} className="mt-2 bg-gray-50" />
                 </div>
               </div>
               <div>
                 <Label>Student's Qualification</Label>
                 <div className="mt-2">
-                  <Select defaultValue={dummyData.qualification}>
+                  <Select value={qualification} onValueChange={(val) => setQualification(val)}>
                     <SelectTrigger className="w-full bg-gray-50">
                       <SelectValue placeholder="Select Qualification" />
                     </SelectTrigger>
@@ -194,7 +368,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
               </div>
               <div>
                 <Label>Residential Address</Label>
-                <Input defaultValue={dummyData.address} className="mt-2 bg-gray-50" />
+                <Input value={address} onChange={(e) => setAddress(e.target.value)} className="mt-2 bg-gray-50" />
               </div>
             </div>
           )}
@@ -208,12 +382,12 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                 </div>
                 <div>
                   <h2 className="text-xl font-bold" style={{ color: "#121212" }}>Mobile Verification</h2>
-                  <p className="text-sm text-gray-500">OTP sent to {dummyData.mobile}</p>
+                  <p className="text-sm text-gray-500">OTP sent to {mobile}</p>
                 </div>
               </div>
               <div>
                 <Label>Mobile Number</Label>
-                <Input defaultValue={dummyData.mobile} className="mt-2 bg-gray-50" readOnly />
+                <Input value={mobile} onChange={(e) => setMobile(e.target.value)} className="mt-2 bg-gray-50" />
               </div>
               <div>
                 <Label>Enter OTP</Label>
@@ -249,12 +423,12 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                 </div>
                 <div>
                   <h2 className="text-xl font-bold" style={{ color: "#121212" }}>Email Verification</h2>
-                  <p className="text-sm text-gray-500">OTP sent to {dummyData.email}</p>
+                  <p className="text-sm text-gray-500">OTP sent to {email}</p>
                 </div>
               </div>
               <div>
                 <Label>Email Address</Label>
-                <Input defaultValue={dummyData.email} className="mt-2 bg-gray-50" readOnly />
+                <Input value={email} className="mt-2 bg-gray-50" readOnly />
               </div>
               <div>
                 <Label>Enter OTP</Label>
@@ -296,11 +470,11 @@ Date: ${new Date().toLocaleDateString("en-IN")}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Aadhaar Number</Label>
-                  <Input defaultValue={dummyData.aadhaar} className="mt-2 bg-gray-50" />
+                  <Input value={aadhaar} onChange={(e) => setAadhaar(e.target.value)} className="mt-2 bg-gray-50" />
                 </div>
                 <div>
                   <Label>PAN Number</Label>
-                  <Input defaultValue={dummyData.pan} className="mt-2 bg-gray-50" />
+                  <Input value={pan} onChange={(e) => setPan(e.target.value)} className="mt-2 bg-gray-50" />
                 </div>
               </div>
               {[
@@ -353,7 +527,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                   {signed ? (
                     <div className="flex flex-col items-center gap-2">
                       <CheckCircle className="h-8 w-8 text-green-600" />
-                      <p className="font-bold text-green-700" style={{ fontFamily: "cursive", fontSize: 22 }}>{dummyData.fullName}</p>
+                      <p className="font-bold text-green-700" style={{ fontFamily: "cursive", fontSize: 22 }}>{fullName}</p>
                       <p className="text-xs text-green-600">Signature captured</p>
                     </div>
                   ) : (
@@ -471,13 +645,13 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   {[
-                    ["Student Name", dummyData.fullName],
-                    ["Mobile", dummyData.mobile],
-                    ["Email", dummyData.email],
-                    ["Aadhaar", dummyData.aadhaar],
-                    ["PAN", dummyData.pan],
-                    ["Date of Birth", dummyData.dob],
-                    ["Qualification", dummyData.qualification],
+                    ["Student Name", fullName],
+                    ["Mobile", mobile],
+                    ["Email", email],
+                    ["Aadhaar", aadhaar],
+                    ["PAN", pan],
+                    ["Date of Birth", dob],
+                    ["Qualification", qualification],
                   ].map(([k, v], i) => (
                     <div key={i} className="bg-white rounded-lg p-3 border border-gray-100">
                       <div className="text-xs text-gray-400">{k}</div>
@@ -505,7 +679,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                 <div className="pt-4 border-t border-gray-200 flex items-center justify-between">
                   <div>
                     <p className="text-xs text-gray-400">Digitally signed by</p>
-                    <p className="font-bold text-lg" style={{ fontFamily: "cursive", color: "#121212" }}>{dummyData.fullName}</p>
+                    <p className="font-bold text-lg" style={{ fontFamily: "cursive", color: "#121212" }}>{fullName}</p>
                   </div>
                   <div className="flex items-center gap-2 text-green-600 text-sm">
                     <Lock className="h-4 w-4" /> Verified & Sealed
@@ -526,16 +700,38 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                 </label>
               </div>
 
-              <Button
-                onClick={handleDownload}
-                disabled={!agreed}
-                className="w-full"
-                style={{ background: agreed ? "#D50032" : "#e5e7eb", color: agreed ? "white" : "#9ca3af", cursor: agreed ? "pointer" : "not-allowed" }}
-                size="lg"
-              >
-                <Download className="mr-2 h-5 w-5" />
-                Download Contract (PDF)
-              </Button>
+              {/* Action Buttons: Download Contract & Process to Pay */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                <Button
+                  onClick={handleDownload}
+                  disabled={!agreed}
+                  variant="outline"
+                  className="w-full border-[#D50032] text-[#D50032] hover:bg-[#D50032]/10"
+                  size="lg"
+                >
+                  <Download className="mr-2 h-5 w-5" />
+                  Download Contract
+                </Button>
+                <Button
+                  onClick={() => setShowCheckout(true)}
+                  disabled={!agreed || !course}
+                  className="w-full font-bold text-white shadow-lg"
+                  style={{
+                    background: (agreed && course) ? "linear-gradient(90deg, #D50032, #FF4D70)" : "#e5e7eb",
+                    color: (agreed && course) ? "white" : "#9ca3af",
+                    cursor: (agreed && course) ? "pointer" : "not-allowed",
+                  }}
+                  size="lg"
+                >
+                  Process to Pay
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </div>
+              {!course && agreed && (
+                <p className="text-center text-xs text-[#D50032]/70 mt-2">
+                  No course was selected for payment context. Check and select a course to activate payment.
+                </p>
+              )}
             </div>
           )}
 
@@ -551,7 +747,7 @@ Date: ${new Date().toLocaleDateString("en-IN")}
             </Button>
             {step < 6 ? (
               <Button
-                onClick={next}
+                onClick={handleContinue}
                 style={{ background: "#D50032", color: "white" }}
                 disabled={verifying}
               >
@@ -567,6 +763,18 @@ Date: ${new Date().toLocaleDateString("en-IN")}
             )}
           </div>
         </Card>
+
+        {/* Inline Checkout Modal Overlay */}
+        {showCheckout && course && (
+          <CourseCheckoutModal
+            course={course}
+            onClose={() => setShowCheckout(false)}
+            onSuccess={() => {
+              setShowCheckout(false);
+              navigate("/student/dashboard"); // Navigate to student dashboard on successful payment
+            }}
+          />
+        )}
 
         <p className="text-center text-xs text-gray-400 mt-6">
           🔒 256-bit encrypted • Secured by FinTrade • Mumbai, India

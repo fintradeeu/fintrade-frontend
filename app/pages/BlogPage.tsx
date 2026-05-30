@@ -11,8 +11,7 @@ export default function BlogPage() {
     const fetchBlogs = async () => {
       try {
         const res = await api.get("/news");
-        // Filter out items with video URLs, assuming they are market updates
-        const blogItems = res.data.filter((n: any) => !n.video_url || n.video_url.trim() === "");
+        const blogItems = res.data.filter((n: any) => (n.type || (n.video_url ? "Market Update" : "Blog Story")) === "Blog Story");
         setBlogs(blogItems);
       } catch (err) {
         console.error("Failed to load blogs:", err);

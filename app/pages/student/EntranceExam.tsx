@@ -357,7 +357,9 @@ export default function EntranceExam() {
       if (passed) {
         stopCamera();
         alert(`Congratulations! You passed with a score of ${score}%.`);
-        navigate("/student/courses");
+        const searchParams = new URLSearchParams(window.location.search);
+        const urlCourseId = searchParams.get("course_id") || "";
+        navigate(`/student/contract-kyc?course_id=${urlCourseId}`);
       } else {
         stopCamera();
         alert(`Score: ${score}%. You need 60% to pass. Please try again after 30 days.`);

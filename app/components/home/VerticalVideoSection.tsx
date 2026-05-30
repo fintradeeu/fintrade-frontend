@@ -60,7 +60,8 @@ const verticalVideos = [
   },
 ];
 
-export default function VerticalVideoSection() {
+export default function VerticalVideoSection({ videos: videosProp }: { videos?: any[] }) {
+  const videos = (videosProp && videosProp.length > 0) ? videosProp : verticalVideos;
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(3); // Default playing card
   const [isPaused, setIsPaused] = useState(false);
@@ -81,7 +82,7 @@ export default function VerticalVideoSection() {
  
     const timer = setInterval(() => {
       setActiveIndex((prevIndex) => {
-        const nextIndex = (prevIndex + 1) % verticalVideos.length;
+        const nextIndex = (prevIndex + 1) % videos.length;
  
         if (scrollRef.current) {
           const container = scrollRef.current;
@@ -105,7 +106,7 @@ export default function VerticalVideoSection() {
     const scrollLeft = container.scrollLeft;
     const cardWidth = 240 + 20; // width + gap
     const idx = Math.round(scrollLeft / cardWidth);
-    if (idx >= 0 && idx < verticalVideos.length) {
+    if (idx >= 0 && idx < videos.length) {
       setActiveIndex(idx);
     }
   };
@@ -162,7 +163,7 @@ export default function VerticalVideoSection() {
         className="flex gap-5 overflow-x-auto py-14 items-center scrollbar-hide snap-x snap-mandatory w-full px-4 md:pl-[calc((100vw-1280px)/2+2rem)]"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
-        {verticalVideos.map((vid, idx) => {
+        {videos.map((vid, idx) => {
           const isCurrentActive = idx === activeIndex;
           const isInlinePlaying = inlinePlayingId === vid.id;
           return (
@@ -317,7 +318,7 @@ export default function VerticalVideoSection() {
         })}
       </div>      {/* Big Screen Video Modal / Lightbox Overlay */}
       {fullscreenVideoId && (() => {
-        const activeVid = verticalVideos.find(v => v.id === fullscreenVideoId);
+        const activeVid = videos.find(v => v.id === fullscreenVideoId);
         if (!activeVid) return null;
         return (
           <div 
@@ -357,7 +358,7 @@ export default function VerticalVideoSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Dot Indicators at the bottom */}
         <div className="flex gap-1.5 justify-center items-center mt-6 w-full">
-          {verticalVideos.map((_, idx) => {
+          {videos.map((_, idx) => {
             const isActive = idx === activeIndex;
             return (
               <button

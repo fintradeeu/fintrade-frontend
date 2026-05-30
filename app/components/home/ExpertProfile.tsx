@@ -16,10 +16,10 @@ interface LeaderModalData {
   tags: string[];
 }
 
-export default function ExpertProfile() {
+export default function ExpertProfile({ leaders: leadersProp }: { leaders?: LeaderModalData[] }) {
   const [activeLeader, setActiveLeader] = useState<number | null>(null);
 
-  const leadersData: LeaderModalData[] = [
+  const defaultLeadersData: LeaderModalData[] = [
     {
       name: "Het Vyas",
       title: "Founder & COO",
@@ -76,6 +76,8 @@ export default function ExpertProfile() {
     }
   ];
 
+  const leadersData = (leadersProp && leadersProp.length > 0) ? leadersProp : defaultLeadersData;
+
   return (
     <div className="w-full bg-transparent relative z-10">
       <div className="w-full">
@@ -98,151 +100,109 @@ export default function ExpertProfile() {
         {/* Leadership Grid Layout */}
         <div className="grid lg:grid-cols-12 gap-8 max-w-5xl mx-auto items-stretch select-none">
           
-          {/* Column 1: Featured Left Tall Card - Het Vyas (lg:col-span-6) */}
-          <div className="lg:col-span-6 flex">
-            <div className="w-full bg-white border border-gray-100/90 rounded-[28px] p-6 sm:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex flex-col justify-between items-stretch">
-              <div>
-                
-                {/* Header Profile Info */}
-                <div className="flex items-center gap-4.5">
-                  {/* Large Circular Avatar Monogram */}
-                  <div className="w-18 h-18 rounded-full bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xl font-extrabold text-[#D50032] tracking-tighter">HV</span>
-                  </div>
+          {/* Column 1: Featured Left Tall Card (lg:col-span-6) */}
+          {leadersData.length > 0 && (
+            <div className="lg:col-span-6 flex">
+              <div className="w-full bg-white border border-gray-100/90 rounded-[28px] p-6 sm:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex flex-col justify-between items-stretch">
+                <div>
                   
-                  {/* Name & Title */}
-                  <div className="space-y-1">
-                    <h3 className="text-xl font-black text-gray-900 tracking-tight leading-none">
-                      Het Vyas
-                    </h3>
-                    <p className="text-sm font-extrabold text-[#D50032] leading-none">
-                      Founder & COO
-                    </p>
+                  {/* Header Profile Info */}
+                  <div className="flex items-center gap-4.5">
+                    {/* Large Circular Avatar Monogram */}
+                    <div className="w-18 h-18 rounded-full bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0">
+                      <span className="text-xl font-extrabold text-[#D50032] tracking-tighter">{leadersData[0].monogram}</span>
+                    </div>
+                    
+                    {/* Name & Title */}
+                    <div className="space-y-1">
+                      <h3 className="text-xl font-black text-gray-900 tracking-tight leading-none">
+                        {leadersData[0].name}
+                      </h3>
+                      <p className="text-sm font-extrabold text-[#D50032] leading-none">
+                        {leadersData[0].title}
+                      </p>
+                    </div>
                   </div>
+
+                  {/* Horizontal Divider */}
+                  <div className="w-full h-[1px] bg-gray-100 my-6" />
+
+                  {/* Bio Description */}
+                  <p className="text-gray-500 text-sm leading-relaxed text-left">
+                    {leadersData[0].bio ? (leadersData[0].bio.length > 150 ? leadersData[0].bio.slice(0, 150) + "..." : leadersData[0].bio) : ""}
+                  </p>
+
+                  {/* Highlight Badges */}
+                  <div className="flex flex-wrap gap-2 mt-8">
+                    {(leadersData[0].tags || []).slice(0, 3).map((tag, tIdx) => (
+                      <span
+                        key={tIdx}
+                        className="px-3.5 py-1.5 text-[11px] font-bold text-gray-600 bg-[#FFF0F2]/50 border border-gray-100 rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
                 </div>
 
-                {/* Horizontal Divider */}
-                <div className="w-full h-[1px] bg-gray-100 my-6" />
-
-                {/* Bio Description */}
-                <p className="text-gray-500 text-sm leading-relaxed text-left">
-                  EdTech entrepreneur with ₹50 Cr+ live market experience, founder of India's first structured prop trading academy.
-                </p>
-
-                {/* Highlight Badges */}
-                <div className="flex flex-wrap gap-2 mt-8">
-                  {[
-                    "₹50 Cr+ Live Market Experience",
-                    "Forex, Equity & Derivatives",
-                    "EdTech Entrepreneur"
-                  ].map((tag, tIdx) => (
-                    <span
-                      key={tIdx}
-                      className="px-3.5 py-1.5 text-[11px] font-bold text-gray-600 bg-[#FFF0F2]/50 border border-gray-100 rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+                {/* Read Full Profile Link */}
+                <div className="mt-6 pt-1">
+                  <button 
+                    onClick={() => setActiveLeader(0)}
+                    className="text-xs font-black text-[#D50032] tracking-wider uppercase flex items-center gap-1 hover:gap-2 transition-all duration-300 self-start cursor-pointer border-none bg-transparent"
+                  >
+                    Read Full Profile <span className="text-sm leading-none mt-0.5">→</span>
+                  </button>
                 </div>
 
               </div>
-
-              {/* Read Full Profile Link */}
-              <div className="mt-6 pt-1">
-                <button 
-                  onClick={() => setActiveLeader(0)}
-                  className="text-xs font-black text-[#D50032] tracking-wider uppercase flex items-center gap-1 hover:gap-2 transition-all duration-300 self-start cursor-pointer border-none bg-transparent"
-                >
-                  Read Full Profile <span className="text-sm leading-none mt-0.5">→</span>
-                </button>
-              </div>
-
             </div>
-          </div>
+          )}
 
-          {/* Column 2: Two Stacked Profile Cards on Right - Chirag & Bhargav (lg:col-span-6) */}
+          {/* Column 2: Stacked Profile Cards on Right */}
           <div className="lg:col-span-6 flex flex-col gap-6 items-stretch justify-between">
-            
-            {/* Top Card: Chirag Panchal */}
-            <div className="w-full bg-white border border-gray-100/90 rounded-[28px] p-6 sm:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex flex-col justify-between items-stretch">
-              <div>
-                
-                {/* Header Profile Info */}
-                <div className="flex items-center gap-4">
-                  {/* Circular Avatar Monogram */}
-                  <div className="w-14 h-14 rounded-full bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-base font-extrabold text-[#D50032] tracking-tighter">CP</span>
-                  </div>
-                  
-                  {/* Name & Title */}
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-black text-gray-900 tracking-tight leading-none">
-                      Chirag Panchal
-                    </h3>
-                    <p className="text-xs font-extrabold text-[#D50032] leading-none">
-                      Managing Director & CEO
+            {leadersData.slice(1).map((leader, index) => {
+              const leaderIdx = index + 1;
+              return (
+                <div key={leaderIdx} className="w-full bg-white border border-gray-100/90 rounded-[28px] p-6 sm:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex flex-col justify-between items-stretch">
+                  <div>
+                    {/* Header Profile Info */}
+                    <div className="flex items-center gap-4">
+                      {/* Circular Avatar Monogram */}
+                      <div className="w-14 h-14 rounded-full bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-base font-extrabold text-[#D50032] tracking-tighter">{leader.monogram}</span>
+                      </div>
+                      
+                      {/* Name & Title */}
+                      <div className="space-y-1">
+                        <h3 className="text-lg font-black text-gray-900 tracking-tight leading-none">
+                          {leader.name}
+                        </h3>
+                        <p className="text-xs font-extrabold text-[#D50032] leading-none">
+                          {leader.title}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Bio Description */}
+                    <p className="text-gray-500 text-sm leading-relaxed mt-4 text-left">
+                      {leader.bio ? (leader.bio.length > 150 ? leader.bio.slice(0, 150) + "..." : leader.bio) : ""}
                     </p>
                   </div>
-                </div>
 
-                {/* Bio Description */}
-                <p className="text-gray-500 text-sm leading-relaxed mt-4 text-left">
-                  Media strategist with 22+ years of leadership experience. Built TV9 Gujarati, GSTV, Zee 24 Kalak and more.
-                </p>
-
-              </div>
-
-              {/* Read Profile Link */}
-              <div className="mt-6 pt-1">
-                <button 
-                  onClick={() => setActiveLeader(1)}
-                  className="text-xs font-black text-[#D50032] tracking-wider uppercase flex items-center gap-1 hover:gap-2 transition-all duration-300 self-start cursor-pointer border-none bg-transparent"
-                >
-                  Read Full Profile <span className="text-sm leading-none mt-0.5">→</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Bottom Card: Bhargav Dave */}
-            <div className="w-full bg-white border border-gray-100/90 rounded-[28px] p-6 sm:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex flex-col justify-between items-stretch">
-              <div>
-                
-                {/* Header Profile Info */}
-                <div className="flex items-center gap-4">
-                  {/* Circular Avatar Monogram */}
-                  <div className="w-14 h-14 rounded-full bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-base font-extrabold text-[#D50032] tracking-tighter">BD</span>
-                  </div>
-                  
-                  {/* Name & Title */}
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-black text-gray-900 tracking-tight leading-none">
-                      Bhargav Dave
-                    </h3>
-                    <p className="text-xs font-extrabold text-[#D50032] leading-none">
-                      VP, Training & Development
-                    </p>
+                  {/* Read Profile Link */}
+                  <div className="mt-6 pt-1">
+                    <button 
+                      onClick={() => setActiveLeader(leaderIdx)}
+                      className="text-xs font-black text-[#D50032] tracking-wider uppercase flex items-center gap-1 hover:gap-2 transition-all duration-300 self-start cursor-pointer border-none bg-transparent"
+                    >
+                      Read Full Profile <span className="text-sm leading-none mt-0.5">→</span>
+                    </button>
                   </div>
                 </div>
-
-                {/* Bio Description */}
-                <p className="text-gray-500 text-sm leading-relaxed mt-4 text-left">
-                  20+ years in capital markets, ₹25 Cr+ managed, 250+ traders trained via NISM & NSE Academy programs.
-                </p>
-
-              </div>
-
-              {/* Read Profile Link */}
-              <div className="mt-6 pt-1">
-                <button 
-                  onClick={() => setActiveLeader(2)}
-                  className="text-xs font-black text-[#D50032] tracking-wider uppercase flex items-center gap-1 hover:gap-2 transition-all duration-300 self-start cursor-pointer border-none bg-transparent"
-                >
-                  Read Full Profile <span className="text-sm leading-none mt-0.5">→</span>
-                </button>
-              </div>
-            </div>
-
+              );
+            })}
           </div>
 
         </div>
