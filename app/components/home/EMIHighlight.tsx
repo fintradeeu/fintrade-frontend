@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Check, CreditCard, ShieldCheck, Percent } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -50,6 +51,17 @@ export default function EMIHighlight() {
     },
   ];
 
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+
+  useEffect(() => {
+    if (isHovered) return;
+    const interval = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % paymentDetails.length);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [isHovered, paymentDetails.length]);
+
   return (
     <section className="py-12 md:py-16 relative z-10 bg-transparent overflow-hidden">
       {/* Decorative background glow */}
@@ -78,8 +90,8 @@ export default function EMIHighlight() {
           </p>
         </div>
 
-        {/* Premium Payment Details Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 items-stretch max-w-6xl mx-auto">
+        {/* Premium Payment Details Grid - Desktop (Visible only on medium screens and up) */}
+        <div className="hidden md:grid md:grid-cols-3 gap-8 md:gap-6 items-stretch max-w-6xl mx-auto">
           {paymentDetails.map((detail, idx) => {
             const IconComponent = detail.icon;
             return (
@@ -164,6 +176,128 @@ export default function EMIHighlight() {
               </div>
             );
           })}
+        </div>
+
+        {/* Premium Payment Details Auto-Slider - Mobile (Visible only on screens below 768px) */}
+        <div 
+          className="md:hidden relative max-w-sm mx-auto"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          onTouchStart={() => setIsHovered(true)}
+          onTouchEnd={() => setIsHovered(false)}
+        >
+          {/* Slider Window */}
+          <div className="overflow-hidden rounded-[32px]">
+            <div 
+              className="flex transition-transform duration-700 ease-in-out"
+              style={{
+                transform: `translateX(-${activeSlide * (100 / paymentDetails.length)}%)`,
+                width: `${paymentDetails.length * 100}%`,
+              }}
+            >
+              {paymentDetails.map((detail, idx) => {
+                const IconComponent = detail.icon;
+                return (
+                  <div
+                    key={idx}
+                    className="flex-shrink-0 px-2"
+                    style={{ width: `${100 / paymentDetails.length}%` }}
+                  >
+                    <div
+                      className="relative rounded-[32px] p-6.5 bg-white border flex flex-col justify-between transition-all duration-300 min-h-[440px]"
+                      style={{
+                        borderColor: detail.borderColor,
+                      }}
+                    >
+                      <div>
+                        {/* Top Bar with Icon */}
+                        <div 
+                          className="w-12.5 h-12.5 rounded-2xl flex items-center justify-center mb-5"
+                          style={{
+                            backgroundColor: detail.bgColor,
+                            color: detail.color,
+                            border: `1.5px solid ${detail.borderColor}`,
+                          }}
+                        >
+                          <IconComponent className="w-5.5 h-5.5 stroke-[2.2]" />
+                        </div>
+
+                        {/* Title & Tagline */}
+                        <h3 className="text-lg font-black text-gray-900 mb-0.5 tracking-tight">
+                          {detail.title}
+                        </h3>
+                        <p 
+                          className="text-[10px] font-extrabold uppercase tracking-widest mb-4"
+                          style={{ color: detail.color }}
+                        >
+                          {detail.tagline}
+                        </p>
+
+                        {/* Divider */}
+                        <hr className="border-gray-100 w-full mb-4" />
+
+                        {/* Bullets List */}
+                        <div className="space-y-3 mb-2">
+                          {detail.bullets.map((bullet, bIdx) => (
+                            <div key={bIdx} className="flex items-start gap-2.5 text-left">
+                              <div 
+                                className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                                style={{
+                                  backgroundColor: detail.bgColor,
+                                  border: `1px solid ${detail.borderColor}`,
+                                }}
+                              >
+                                <Check 
+                                  className="w-3.5 h-3.5 stroke-[3]" 
+                                  style={{ color: detail.color }}
+                                />
+                              </div>
+                              <span className="text-gray-600 text-xs font-semibold leading-relaxed">
+                                {bullet}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Choose Plan Action Button */}
+                      <div className="w-full mt-auto pt-6">
+                        <button
+                          className="w-full py-3.5 rounded-2xl font-extrabold text-xs text-white transition-all duration-300 transform active:scale-98 cursor-pointer flex items-center justify-center gap-1.5 shadow-md border-0"
+                          style={{
+                            backgroundColor: "#D50032",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = "#b00029";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = "#D50032";
+                          }}
+                        >
+                          {detail.btnText}
+                        </button>
+                      </div>
+
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Dots Indicator */}
+          <div className="flex justify-center gap-2 mt-5">
+            {paymentDetails.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setActiveSlide(idx)}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  activeSlide === idx ? "bg-[#D50032] w-5" : "bg-gray-200 w-1.5"
+                }`}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
+          </div>
         </div>
 
       </motion.div>
