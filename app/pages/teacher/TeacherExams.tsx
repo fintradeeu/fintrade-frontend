@@ -71,7 +71,7 @@ export default function TeacherExams() {
 
   useEffect(() => {
     fetchExams();
-    api.get("/admin/courses")
+    api.get("/courses")
       .then(res => {
         console.log('Fetched courses:', res.data);
         setCourses(res.data);

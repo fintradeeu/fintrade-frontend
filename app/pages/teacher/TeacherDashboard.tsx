@@ -16,7 +16,7 @@ export default function TeacherDashboard() {
     if (stored) setUserName(JSON.parse(stored).full_name || "Teacher");
 
     api.get("/lectures").then((r) => setLectures(r.data)).catch(console.error);
-    api.get("/admin/courses").then((r) => setCourses(r.data)).catch(console.error);
+    api.get("/courses").then((r) => setCourses(r.data)).catch(console.error);
   }, []);
 
   const now = new Date();

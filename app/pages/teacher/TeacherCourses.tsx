@@ -46,7 +46,7 @@ export default function TeacherCourses() {
   const [draggedLesson, setDraggedLesson] = useState<number | null>(null);
 
   const fetchCourses = async () => {
-    try { const res = await api.get("/admin/courses"); setCourses(res.data); }
+    try { const res = await api.get("/courses"); setCourses(res.data); }
     catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
@@ -79,7 +79,7 @@ export default function TeacherCourses() {
   const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault(); setSaving(true);
     try {
-      await api.post("/admin/courses", newCourse);
+      await api.post("/courses", newCourse);
       setShowCourseModal(false);
       setNewCourse({ title: "", description: "", short_description: "", original_price: 0, price: 0, difficulty_level: "beginner", duration_days: 0, is_published: false });
       fetchCourses();

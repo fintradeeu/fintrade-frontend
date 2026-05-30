@@ -355,14 +355,14 @@ export default function Modules() {
                       ) : activeLesson.content_type === "pdf" && activeLesson.video_url ? (
                         <div className="w-full rounded-lg overflow-hidden bg-white" style={{ minHeight: 500 }}>
                           <iframe
-                            src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || 'http://localhost:8000'}${activeLesson.video_url}`}
+                            src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || 'https://api.thefintrade.com'}${activeLesson.video_url}`}
                             className="w-full border-0"
                             style={{ height: 600 }}
                             title={activeLesson.title}
                           />
                           <div className="flex justify-center mt-4">
                             <a
-                              href={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || 'http://localhost:8000'}${activeLesson.video_url}`}
+                              href={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || 'https://api.thefintrade.com'}${activeLesson.video_url}`}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
@@ -377,7 +377,7 @@ export default function Modules() {
                           {activeLesson.video_url ? (
                             <div className="bg-white p-4 rounded-lg shadow-sm border border-[#0B2A5B]/10 flex flex-col items-center">
                               <p className="text-sm font-semibold text-[#0B2A5B] mb-2">Listen to this lesson:</p>
-                              <audio src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || 'http://localhost:8000'}${activeLesson.video_url}`} controls className="w-full max-w-md" onEnded={() => markCompleted(activeLesson.id)}></audio>
+                              <audio src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || 'https://api.thefintrade.com'}${activeLesson.video_url}`} controls className="w-full max-w-md" onEnded={() => markCompleted(activeLesson.id)}></audio>
                             </div>
                           ) : (
                             <div className="flex justify-end">

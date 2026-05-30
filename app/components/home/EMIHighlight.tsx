@@ -1,68 +1,306 @@
-import { CreditCard, CheckCircle, IndianRupee } from "lucide-react";
-import { Card } from "../ui/card";
-import { Button } from "../ui/button";
+import { useState, useEffect } from "react";
+import { Check, CreditCard, ShieldCheck, Percent } from "lucide-react";
+import { motion } from "motion/react";
 
 export default function EMIHighlight() {
-  return (
-    <section className="py-8 relative z-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Card
-          className="overflow-hidden border-2 border-[#D50032]/20 hover:border-[#D50032]/40 transition-all"
-          style={{
-            background: "linear-gradient(135deg, rgba(213,0,50,0.03) 0%, rgba(213,0,50,0.08) 50%, rgba(213,0,50,0.03) 100%)",
-          }}
-        >
-          <div className="grid md:grid-cols-2 gap-0">
-            {/* Left Content */}
-            <div className="p-8 md:p-10 flex flex-col justify-center">
-              <div className="inline-block px-3 py-1 rounded-full text-xs font-bold mb-4 self-start" style={{ background: "#D50032", color: "white" }}>
-                💰 EASY EMI
-              </div>
-              <h3 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: "#121212" }}>
-                Learn Now, <span style={{ color: "#D50032" }}>Pay in Easy EMIs</span>
-              </h3>
-              <p className="text-gray-600 mb-6 text-lg">
-                Don't let finances hold you back. Start your trading journey with affordable monthly installments.
-              </p>
-              <div className="space-y-3 mb-6">
-                {[
-                  "Course EMI options available for 6 months and 12 months tenures",
-                  "6 Months is No Cost EMI & 12 Months is 15% Interest p.a.",
-                  "EMI basis loans available exclusively for customers with CIBIL score of 730 and above",
-                  "Up to 5% cashback on payments made with any credit card",
-                  "Flat 5% discount on the course (applicable 3 months after installing payment gateway)",
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" style={{ color: "#D50032" }} />
-                    <span className="text-gray-700 font-medium text-sm md:text-base">{item}</span>
-                  </div>
-                ))}
-              </div>
-              <Button
-                className="self-start shadow-lg hover:shadow-xl transition-all hover:scale-105 bg-gradient-to-r from-[#D50032] to-[#FF0000] text-white hover:from-[#FF0000] hover:to-[#FF0000] transition-all duration-300"
-                style={{ boxShadow: "0 4px 20px rgba(213,0,50,0.4)" }}
-              >
-                <CreditCard className="mr-2 h-5 w-5" />
-                Check EMI Options
-              </Button>
-            </div>
+  const paymentDetails = [
+    {
+      icon: CreditCard,
+      title: "Flexible EMI Options",
+      tagline: "No Cost & Low-Interest Plans",
+      color: "#D50032",
+      hoverColor: "#b00029",
+      bgColor: "rgba(213, 0, 50, 0.03)",
+      borderColor: "rgba(213, 0, 50, 0.12)",
+      btnText: "Choose Plan",
+      bullets: [
+        <>EMI tenures available for <strong>6 Months</strong> and <strong>12 Months</strong>.</>,
+        <><strong>6-Month Tenure:</strong> 100% <strong>No-Cost EMI</strong> (0% interest).</>,
+        <><strong>12-Month Tenure:</strong> Competitive rate of <strong>15% Interest P.A.</strong></>,
+      ],
+    },
+    {
+      icon: ShieldCheck,
+      title: "Eligibility & Cashbacks",
+      tagline: "CIBIL Check & Credit Rewards",
+      color: "#16a34a",
+      hoverColor: "#15803d",
+      bgColor: "rgba(22, 163, 74, 0.03)",
+      borderColor: "rgba(22, 163, 74, 0.12)",
+      btnText: "Check Eligibility",
+      bullets: [
+        <>EMI loans offered exclusively for customers with <strong>730 & above CIBIL</strong> score.</>,
+        <>Get <strong>up to 5% Cashback</strong> instantly on your tuition payment.</>,
+        <>Cashback is applicable on payments made with <strong>any Credit Card</strong>.</>,
+      ],
+    },
+    {
+      icon: Percent,
+      title: "Special Gateway Discount",
+      tagline: "Upcoming Gateway Offer",
+      color: "#2563eb",
+      hoverColor: "#1d4ed8",
+      bgColor: "rgba(37, 99, 235, 0.03)",
+      borderColor: "rgba(37, 99, 235, 0.12)",
+      btnText: "Explore Discount",
+      bullets: [
+        <>Enjoy a flat <strong>5% Discount</strong> on the total course fee.</>,
+        <>Discount launches <strong>after 3 months of installing our payment gateway</strong>.</>,
+        <>Automatic early-bird reward directly at the checkout terminal.</>,
+      ],
+    },
+  ];
 
-            {/* Right Visual */}
-            <div className="hidden md:flex items-center justify-center p-10" style={{ background: "linear-gradient(135deg, #121212 0%, #1a1a1a 100%)" }}>
-              <div className="text-center">
-                <div className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ background: "rgba(213,0,50,0.2)", border: "3px solid #D50032" }}>
-                  <CreditCard className="h-12 w-12 text-white" />
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+
+  useEffect(() => {
+    if (isHovered) return;
+    const interval = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % paymentDetails.length);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [isHovered, paymentDetails.length]);
+
+  return (
+    <section className="py-12 md:py-16 relative z-10 bg-transparent overflow-hidden">
+      {/* Decorative background glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-[#D50032]/3 rounded-full blur-[130px] pointer-events-none" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 35 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10"
+      >
+        
+        {/* Section Header */}
+        <div className="text-center mb-10 select-none">
+          <div className="inline-flex items-center gap-1.5 px-4.5 py-1.5 rounded-full mb-3 border border-[#D50032]/25 bg-[#D50032]/5">
+            <span className="text-[#D50032] font-extrabold text-xs tracking-wider uppercase flex items-center gap-1">
+              💳 Easy Payments
+            </span>
+          </div>
+          <h2 className="text-3xl md:text-5xl font-black mb-3 text-gray-900 tracking-tight">
+            Flexible <span className="text-[#D50032]">EMI & Payment Plans</span>
+          </h2>
+          <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
+            Invest in your trading career with our convenient payment options and banking rewards
+          </p>
+        </div>
+
+        {/* Premium Payment Details Grid - Desktop (Visible only on medium screens and up) */}
+        <div className="hidden md:grid md:grid-cols-3 gap-8 md:gap-6 items-stretch max-w-6xl mx-auto">
+          {paymentDetails.map((detail, idx) => {
+            const IconComponent = detail.icon;
+            return (
+              <div
+                key={idx}
+                className="relative rounded-[32px] p-8 bg-white border flex flex-col justify-between transition-all duration-300 select-none hover:shadow-xl hover:-translate-y-1 group"
+                style={{
+                  borderColor: detail.borderColor,
+                }}
+              >
+                <div>
+                  {/* Top Bar with Icon */}
+                  <div 
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-105"
+                    style={{
+                      backgroundColor: detail.bgColor,
+                      color: detail.color,
+                      border: `1.5px solid ${detail.borderColor}`,
+                    }}
+                  >
+                    <IconComponent className="w-6.5 h-6.5 stroke-[2.2]" />
+                  </div>
+
+                  {/* Title & Tagline */}
+                  <h3 className="text-xl font-black text-gray-900 mb-1 tracking-tight">
+                    {detail.title}
+                  </h3>
+                  <p 
+                    className="text-xs font-extrabold uppercase tracking-widest mb-6"
+                    style={{ color: detail.color }}
+                  >
+                    {detail.tagline}
+                  </p>
+
+                  {/* Divider */}
+                  <hr className="border-gray-100 w-full mb-6" />
+
+                  {/* Bullets List */}
+                  <div className="space-y-4 mb-4">
+                    {detail.bullets.map((bullet, bIdx) => (
+                      <div key={bIdx} className="flex items-start gap-3 text-left">
+                        <div 
+                          className="w-5.5 h-5.5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                          style={{
+                            backgroundColor: detail.bgColor,
+                            border: `1px solid ${detail.borderColor}`,
+                          }}
+                        >
+                          <Check 
+                            className="w-3.5 h-3.5 stroke-[3]" 
+                            style={{ color: detail.color }}
+                          />
+                        </div>
+                        <span className="text-gray-600 text-sm font-semibold leading-relaxed">
+                          {bullet}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="text-5xl font-extrabold text-white mb-2">6 & 12</div>
-                <div className="text-gray-400 text-lg">Month EMI Tenures</div>
-                <div className="mt-4 inline-block px-4 py-2 rounded-full text-sm font-medium" style={{ background: "rgba(213,0,50,0.2)", color: "#D50032" }}>
-                  0% Interest (6 Months)
+
+                {/* Choose Plan Action Button */}
+                <div className="w-full mt-auto pt-8">
+                  <button
+                    className="w-full py-4 rounded-2xl font-extrabold text-sm text-white transition-all duration-300 transform active:scale-98 cursor-pointer flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg border-0"
+                    style={{
+                      backgroundColor: "#D50032",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#b00029";
+                      e.currentTarget.style.boxShadow = "0 8px 25px rgba(213, 0, 50, 0.25)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "#D50032";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  >
+                    {detail.btnText}
+                  </button>
                 </div>
+
               </div>
+            );
+          })}
+        </div>
+
+        {/* Premium Payment Details Auto-Slider - Mobile (Visible only on screens below 768px) */}
+        <div 
+          className="md:hidden relative max-w-sm mx-auto"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          onTouchStart={() => setIsHovered(true)}
+          onTouchEnd={() => setIsHovered(false)}
+        >
+          {/* Slider Window */}
+          <div className="overflow-hidden rounded-[32px]">
+            <div 
+              className="flex transition-transform duration-700 ease-in-out"
+              style={{
+                transform: `translateX(-${activeSlide * (100 / paymentDetails.length)}%)`,
+                width: `${paymentDetails.length * 100}%`,
+              }}
+            >
+              {paymentDetails.map((detail, idx) => {
+                const IconComponent = detail.icon;
+                return (
+                  <div
+                    key={idx}
+                    className="flex-shrink-0 px-2"
+                    style={{ width: `${100 / paymentDetails.length}%` }}
+                  >
+                    <div
+                      className="relative rounded-[32px] p-6.5 bg-white border flex flex-col justify-between transition-all duration-300 min-h-[440px]"
+                      style={{
+                        borderColor: detail.borderColor,
+                      }}
+                    >
+                      <div>
+                        {/* Top Bar with Icon */}
+                        <div 
+                          className="w-12.5 h-12.5 rounded-2xl flex items-center justify-center mb-5"
+                          style={{
+                            backgroundColor: detail.bgColor,
+                            color: detail.color,
+                            border: `1.5px solid ${detail.borderColor}`,
+                          }}
+                        >
+                          <IconComponent className="w-5.5 h-5.5 stroke-[2.2]" />
+                        </div>
+
+                        {/* Title & Tagline */}
+                        <h3 className="text-lg font-black text-gray-900 mb-0.5 tracking-tight">
+                          {detail.title}
+                        </h3>
+                        <p 
+                          className="text-[10px] font-extrabold uppercase tracking-widest mb-4"
+                          style={{ color: detail.color }}
+                        >
+                          {detail.tagline}
+                        </p>
+
+                        {/* Divider */}
+                        <hr className="border-gray-100 w-full mb-4" />
+
+                        {/* Bullets List */}
+                        <div className="space-y-3 mb-2">
+                          {detail.bullets.map((bullet, bIdx) => (
+                            <div key={bIdx} className="flex items-start gap-2.5 text-left">
+                              <div 
+                                className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                                style={{
+                                  backgroundColor: detail.bgColor,
+                                  border: `1px solid ${detail.borderColor}`,
+                                }}
+                              >
+                                <Check 
+                                  className="w-3.5 h-3.5 stroke-[3]" 
+                                  style={{ color: detail.color }}
+                                />
+                              </div>
+                              <span className="text-gray-600 text-xs font-semibold leading-relaxed">
+                                {bullet}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Choose Plan Action Button */}
+                      <div className="w-full mt-auto pt-6">
+                        <button
+                          className="w-full py-3.5 rounded-2xl font-extrabold text-xs text-white transition-all duration-300 transform active:scale-98 cursor-pointer flex items-center justify-center gap-1.5 shadow-md border-0"
+                          style={{
+                            backgroundColor: "#D50032",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = "#b00029";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = "#D50032";
+                          }}
+                        >
+                          {detail.btnText}
+                        </button>
+                      </div>
+
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </Card>
-      </div>
+
+          {/* Dots Indicator */}
+          <div className="flex justify-center gap-2 mt-5">
+            {paymentDetails.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setActiveSlide(idx)}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  activeSlide === idx ? "bg-[#D50032] w-5" : "bg-gray-200 w-1.5"
+                }`}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+
+      </motion.div>
     </section>
   );
 }

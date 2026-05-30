@@ -23,15 +23,32 @@ import ModuleRoadmap from "../components/home/ModuleRoadmap";
 import ProgramModules from "../components/home/ProgramModules";
 import logo from "../../imports/fintrade_logo.png";
 import CourseCheckoutModal from "../components/CourseCheckoutModal";
+import { motion } from "motion/react";
 
 // Interactive Cursor Glow
 function CursorGlow() {
   return null;
 }
 
+
 // Dynamic "Popping" Ambient Glow
 function AmbientGlow() {
   return null;
+}
+
+// Reusable Framer Motion Scroll Reveal Component
+function ScrollReveal({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 35 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
 // Video modal component
@@ -540,7 +557,13 @@ export default function MarketingHome() {
   ];
 
   const [apiCourses, setApiCourses] = useState<any[]>([]);
+  const [isCoursesExpanded, setIsCoursesExpanded] = useState(false);
   const [cmsSettings, setCmsSettings] = useState<any>({});
+  const [apiBenefits, setApiBenefits] = useState<any[]>([]);
+  const [apiServices, setApiServices] = useState<any[]>([]);
+  const [apiQuickTips, setApiQuickTips] = useState<any[]>([]);
+  const [apiWhyChoose, setApiWhyChoose] = useState<any[]>([]);
+  const [apiLeadership, setApiLeadership] = useState<any[]>([]);
   const [blogStories, setBlogStories] = useState<any[]>([]);
   const [marketUpdates, setMarketUpdates] = useState<any[]>([]);
   const [selectedCourseForCheckout, setSelectedCourseForCheckout] = useState<any | null>(null);
@@ -556,6 +579,42 @@ export default function MarketingHome() {
   const [blogActiveIndex, setBlogActiveIndex] = useState(0);
   const [isBlogPaused, setIsBlogPaused] = useState(false);
   const blogTouchTimeoutRef = useRef<any>(null);
+
+  // States and refs for acronym vertical scroll reveal
+  const acronymRef = useRef<HTMLDivElement>(null);
+  const [isAcronymVisible, setIsAcronymVisible] = useState(false);
+
+  // Responsive hook to scale curved timeline sizing
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileViewport(window.innerWidth < 1024);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsAcronymVisible(true);
+          observer.disconnect();
+        }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: "0px 0px -50px 0px",
+      }
+    );
+
+    if (acronymRef.current) {
+      observer.observe(acronymRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   const blogStoriesCount = blogStories.length > 0 ? blogStories.length : 4;
 
@@ -583,7 +642,9 @@ export default function MarketingHome() {
     }, 8000);
   };
 
-  const coursesCount = (apiCourses.length > 0 ? apiCourses : Array(3)).slice(0, 3).length;
+  const coursesCount = isCoursesExpanded 
+    ? (apiCourses.length > 0 ? apiCourses.length : 5) 
+    : 3;
 
   // Handle manual scroll synchronization
   const handleCoursesScroll = () => {
@@ -671,6 +732,17 @@ export default function MarketingHome() {
       } catch (err) { console.error("CMS fetch failed", err); }
 
       try {
+        const res = await api.get("/settings/landing-page");
+        if (res.data) {
+          if (res.data.benefits) setApiBenefits(res.data.benefits);
+          if (res.data.services) setApiServices(res.data.services);
+          if (res.data.quick_tips) setApiQuickTips(res.data.quick_tips);
+          if (res.data.why_choose) setApiWhyChoose(res.data.why_choose);
+          if (res.data.leadership) setApiLeadership(res.data.leadership);
+        }
+      } catch (err) { console.error("Landing page fetch failed", err); }
+
+      try {
         const res = await api.get("/news");
         setBlogStories(res.data.filter((n: any) => n.type === "Blog Story").slice(0, 4));
         setMarketUpdates(res.data.filter((n: any) => n.type === "Market Update").slice(0, 1));
@@ -685,7 +757,22 @@ export default function MarketingHome() {
   const [whyChooseActiveIndex, setWhyChooseActiveIndex] = useState(0);
   const [isWhyChoosePaused, setIsWhyChoosePaused] = useState(false);
   const whyChooseTouchTimeoutRef = useRef<any>(null);
-  const whyChooseCardsCount = 4;
+
+  // Icon mapping for dynamic icons
+  const iconMap: Record<string, any> = {
+    Play, TrendingUp, Award, Users, BookOpen, LineChart, Video, CheckCircle, Star, ArrowRight, BarChart3, Brain, Target, Trophy, X, FileText, Search, Phone, Download, Instagram, Youtube, Linkedin, Twitter, Facebook, ChevronRight, ChevronLeft, ChevronDown, Shield, UserCheck, Monitor, Wifi, Activity, ClipboardCheck, GitBranch, Cpu, Clock
+  };
+
+  const benefitsList = (apiBenefits && apiBenefits.length > 0) ? apiBenefits : benefits;
+  const servicesList = (apiServices && apiServices.length > 0) ? apiServices : servicesCards;
+
+  const whyChooseList = (apiWhyChoose && apiWhyChoose.length > 0) ? apiWhyChoose : [
+    { icon: Brain, title: "AI Tutor Support", desc: "Get personalized AI-powered guidance throughout your learning journey with real-time doubt resolution.", num: "01" },
+    { icon: BookOpen, title: "Structured Curriculum", desc: "Follow a proven step-by-step curriculum designed by industry professionals and expert traders.", num: "02" },
+    { icon: LineChart, title: "Real Trading Simulation", desc: "Practice with our advanced trading simulator using virtual capital in real market conditions.", num: "03" },
+    { icon: Trophy, title: "Placement Opportunities", desc: "Get access to placement support with leading prop trading firms and financial institutions.", num: "04" },
+  ];
+  const whyChooseCardsCount = whyChooseList.length;
 
   const handleWhyChooseScroll = () => {
     if (!whyChooseScrollRef.current) return;
@@ -808,8 +895,9 @@ export default function MarketingHome() {
               <X size={24} />
             </button>
             <video
-              src={activeVideoIdx !== null && showcaseVideos[activeVideoIdx]?.videoUrl ? showcaseVideos[activeVideoIdx].videoUrl : "https://assets.mixkit.co/videos/preview/mixkit-tablet-displaying-financial-charts-40433-large.mp4"}
+              src={activeVideoIdx !== null && showcaseVideos[activeVideoIdx]?.videoUrl ? showcaseVideos[activeVideoIdx].videoUrl : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"}
               autoPlay
+              muted
               controls
               loop
               playsInline
@@ -819,8 +907,8 @@ export default function MarketingHome() {
         </div>
       )}
 
-      {/* Ticker Strip - Now Sticky below Navbar */}
-      <div className="sticky top-20 z-[90]">
+      {/* Ticker Strip - Positioned directly after header in normal flow */}
+      <div className="relative z-[90] bg-[#121212]">
         <TickerStrip />
       </div>
 
@@ -850,258 +938,251 @@ export default function MarketingHome() {
           <div className="absolute top-[40%] left-[10%] w-[300px] h-[300px] rounded-full bg-[#D50032]/5 blur-[90px] z-[1] pointer-events-none" />
 
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center">
+            <ScrollReveal>
 
-            {/* Top Pill Badge */}
-            <div className="inline-flex items-center px-4.5 py-1.5 rounded-full mb-6 border border-white/10 bg-white/5 backdrop-blur-md">
-              <span className="w-2 h-2 rounded-full bg-[#D50032] mr-2 inline-block animate-pulse" />
-              <span className="text-[10px] md:text-xs font-black tracking-widest uppercase text-white/80">
-                India's First Structured Prop Trading Academy
-              </span>
-            </div>
-
-            {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl md:text-6.5xl font-black mb-6 tracking-tight leading-none text-white font-sans max-w-4xl mx-auto uppercase">
-              India&apos;s Trading <span className="text-[#D50032]">Powerhouse</span>
-            </h1>
-
-            {/* Subtitle */}
-            <p className="text-sm sm:text-base md:text-lg text-gray-300 max-w-3xl mx-auto leading-relaxed mb-10 font-medium">
-              Learn to Earn — India's first structured Prop Trading Academy with paper trading capital. Build consistency, confidence, and profitability from basics to professional-level trading.
-            </p>
-
-            {/* Action Buttons Row */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4.5 max-w-2xl mx-auto mb-6">
-              <Link to="/courses" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  className="w-full sm:w-auto bg-[#D50032] hover:bg-[#FF3D00] text-white rounded-2xl px-8 py-5 h-auto text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all hover:scale-105"
-                >
-                  Apply Now
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-
-              <button
-                onClick={() => { setActiveVideoIdx(0); setVideoOpen(true); }}
-                className="w-full sm:w-auto bg-white/5 hover:bg-white/10 text-white border border-white/15 rounded-2xl px-6 py-5 h-auto text-base font-bold transition-all inline-flex items-center justify-center gap-2.5"
-              >
-                <span className="w-6 h-6 rounded-full bg-[#D50032] flex items-center justify-center shadow-sm">
-                  <Play className="h-2.5 w-2.5 text-white ml-0.5 fill-white" />
+              {/* Top Pill Badge */}
+              <div className="inline-flex items-center px-4.5 py-1.5 rounded-full mb-6 border border-white/10 bg-white/5 backdrop-blur-md">
+                <span className="w-2 h-2 rounded-full bg-[#D50032] mr-2 inline-block animate-pulse" />
+                <span className="text-[10px] md:text-xs font-black tracking-widest uppercase text-white/80">
+                  India's First Structured Prop Trading Academy
                 </span>
-                Watch: The FinTrade Story
-              </button>
+              </div>
 
-              <a
-                href="#"
-                onClick={handleDownloadClick}
-                className="w-full sm:w-auto bg-white/5 hover:bg-white/10 text-white border border-white/15 rounded-2xl px-6 py-5 h-auto text-base font-bold transition-all inline-flex items-center justify-center gap-2.5"
-              >
-                <Download className="h-4.5 w-4.5 text-white" />
-                Download Brochure
-              </a>
-            </div>
+              {/* Main Headline */}
+              <h1 className="text-4xl sm:text-5xl md:text-6.5xl font-black mb-6 tracking-tight leading-none text-white font-sans max-w-4xl mx-auto uppercase">
+                India&apos;s Trading <span className="text-[#D50032]">Powerhouse</span>
+              </h1>
 
-            {/* High-Impact Performance Metrics Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-6 relative py-6 px-4 bg-white/[0.02] border border-white/5 backdrop-blur-sm rounded-[24px]">
-              {[
-                { val: "250+", lbl: "Traders Trained" },
-                { val: "₹25Cr+", lbl: "Capital Managed" },
-                { val: "20+", lbl: "Years Experience" },
-                { val: "95%", lbl: "Success Focus" }
-              ].map((m, idx) => (
-                <div key={idx} className="flex flex-col items-center justify-center text-center relative">
-                  {idx > 0 && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[1px] h-8 bg-white/10 hidden md:block" />}
-                  <span className="text-3xl md:text-4xl font-extrabold text-[#D50032] leading-none mb-1.5 font-sans">
-                    {m.val}
-                  </span>
-                  <span className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
-                    {m.lbl}
-                  </span>
-                </div>
-              ))}
-            </div>
+              {/* Subtitle */}
+              <p className="text-sm sm:text-base md:text-lg text-gray-300 max-w-3xl mx-auto leading-relaxed mb-10 font-medium">
+                Learn to Earn — India's first structured Prop Trading Academy with paper trading capital. Build consistency, confidence, and profitability from basics to professional-level trading.
+              </p>
 
-            {/* Start Your Trading Career Slider Card */}
-            <div className="relative max-w-4xl mx-auto mt-2 bg-[#131b2e]/40 border border-white/10 rounded-[32px] p-8 md:p-10 text-center shadow-[0_30px_70px_rgba(0,0,0,0.4)] overflow-hidden select-none backdrop-blur-xl">
-
-              {/* Subtle Red Top Accent Bar */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-1 bg-[#D50032] rounded-b-full shadow-[0_0_15px_#D50032]" />
-
-              {/* Slider content wrapper */}
-              <div className="min-h-[110px] flex flex-col justify-center items-center px-6">
-                <h3 className="text-2xl md:text-3.5xl font-black tracking-tight text-white mb-2 leading-none font-sans">
-                  {slides[activeSlide].title}
-                </h3>
-                <p className="text-xs sm:text-sm text-gray-400 font-semibold mb-6 max-w-lg">
-                  {slides[activeSlide].subtitle}
-                </p>
-                <Link to={slides[activeSlide].link}>
+              {/* Action Buttons Row */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4.5 max-w-2xl mx-auto mb-6">
+                <Link to="/courses" className="w-full sm:w-auto">
                   <Button
-                    className="bg-[#D50032] hover:bg-[#FF3D00] text-white rounded-xl px-7 py-3 h-auto text-xs md:text-sm font-bold shadow-md shadow-[#D50032]/10 transition-all hover:scale-105"
+                    size="lg"
+                    className="w-full sm:w-auto bg-[#D50032] hover:bg-[#FF3D00] text-white rounded-2xl px-8 py-5 h-auto text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all hover:scale-105"
                   >
-                    {slides[activeSlide].buttonText}
-                    <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                    Apply Now
+                    <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
+
+                <button
+                  onClick={() => { setActiveVideoIdx(0); setVideoOpen(true); }}
+                  className="w-full sm:w-auto bg-white/5 hover:bg-white/10 text-white border border-white/15 rounded-2xl px-6 py-5 h-auto text-base font-bold transition-all inline-flex items-center justify-center gap-2.5"
+                >
+                  <span className="w-6 h-6 rounded-full bg-[#D50032] flex items-center justify-center shadow-sm">
+                    <Play className="h-2.5 w-2.5 text-white ml-0.5 fill-white" />
+                  </span>
+                  Watch: The FinTrade Story
+                </button>
+
+                <a
+                  href="#"
+                  onClick={handleDownloadClick}
+                  className="w-full sm:w-auto bg-white/5 hover:bg-white/10 text-white border border-white/15 rounded-2xl px-6 py-5 h-auto text-base font-bold transition-all inline-flex items-center justify-center gap-2.5"
+                >
+                  <Download className="h-4.5 w-4.5 text-white" />
+                  Download Brochure
+                </a>
               </div>
 
-              {/* Slider Left Arrow Navigation */}
-              <button
-                onClick={() => setActiveSlide((prev) => (prev - 1 + slides.length) % slides.length)}
-                className="w-8 h-8 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center text-white absolute left-4 md:left-6 top-1/2 -translate-y-1/2 cursor-pointer transition-all hover:scale-105 active:scale-95 animate-none"
-                style={{ background: "rgba(255,255,255,0.05)" }}
-                aria-label="Previous Slide"
-              >
-                <ChevronLeft className="w-4 h-4 text-white" />
-              </button>
+              {/* High-Impact Performance Metrics Row - Temporarily hidden for future admin integration */}
+              {false && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-6 relative py-6 px-4 bg-white/[0.02] border border-white/5 backdrop-blur-sm rounded-[24px]">
+                  {[
+                    { val: "250+", lbl: "Traders Trained" },
+                    { val: "₹25Cr+", lbl: "Capital Managed" },
+                    { val: "20+", lbl: "Years Experience" },
+                    { val: "95%", lbl: "Success Focus" }
+                  ].map((m, idx) => (
+                    <div key={idx} className="flex flex-col items-center justify-center text-center relative">
+                      {idx > 0 && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[1px] h-8 bg-white/10 hidden md:block" />}
+                      <span className="text-3xl md:text-4xl font-extrabold text-[#D50032] leading-none mb-1.5 font-sans">
+                        {m.val}
+                      </span>
+                      <span className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
+                        {m.lbl}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-              {/* Slider Right Arrow Navigation */}
-              <button
-                onClick={() => setActiveSlide((prev) => (prev + 1) % slides.length)}
-                className="w-8 h-8 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center text-white absolute right-4 md:right-6 top-1/2 -translate-y-1/2 cursor-pointer transition-all hover:scale-105 active:scale-95 animate-none"
-                style={{ background: "rgba(255,255,255,0.05)" }}
-                aria-label="Next Slide"
-              >
-                <ChevronRight className="w-4 h-4 text-white" />
-              </button>
+              {/* Start Your Trading Career Slider Card */}
+              <div className="relative max-w-4xl mx-auto mt-2 bg-[#131b2e]/40 border border-white/10 rounded-[32px] p-8 md:p-10 text-center shadow-[0_30px_70px_rgba(0,0,0,0.4)] overflow-hidden select-none backdrop-blur-xl">
 
-              {/* Slider Pagination Dots */}
-              <div className="flex justify-center items-center gap-1.5 mt-8">
-                {slides.map((_, dotIdx) => (
-                  <button
-                    key={dotIdx}
-                    onClick={() => setActiveSlide(dotIdx)}
-                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${activeSlide === dotIdx ? "bg-[#D50032] w-5" : "bg-white/20 hover:bg-white/45"}`}
-                    aria-label={`Go to slide ${dotIdx + 1}`}
-                  />
-                ))}
+                {/* Subtle Red Top Accent Bar */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-1 bg-[#D50032] rounded-b-full shadow-[0_0_15px_#D50032]" />
+
+                {/* Slider content wrapper */}
+                <div className="min-h-[110px] flex flex-col justify-center items-center px-6">
+                  <h3 className="text-2xl md:text-3.5xl font-black tracking-tight text-white mb-2 leading-none font-sans">
+                    {slides[activeSlide].title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-400 font-semibold mb-6 max-w-lg">
+                    {slides[activeSlide].subtitle}
+                  </p>
+                  <Link to={slides[activeSlide].link}>
+                    <Button
+                      className="bg-[#D50032] hover:bg-[#FF3D00] text-white rounded-xl px-7 py-3 h-auto text-xs md:text-sm font-bold shadow-md shadow-[#D50032]/10 transition-all hover:scale-105"
+                    >
+                      {slides[activeSlide].buttonText}
+                      <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                    </Button>
+                  </Link>
+                </div>
+
+                {/* Slider Left Arrow Navigation */}
+                <button
+                  onClick={() => setActiveSlide((prev) => (prev - 1 + slides.length) % slides.length)}
+                  className="w-8 h-8 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center text-white absolute left-4 md:left-6 top-1/2 -translate-y-1/2 cursor-pointer transition-all hover:scale-105 active:scale-95 animate-none"
+                  style={{ background: "rgba(255,255,255,0.05)" }}
+                  aria-label="Previous Slide"
+                >
+                  <ChevronLeft className="w-4 h-4 text-white" />
+                </button>
+
+                {/* Slider Right Arrow Navigation */}
+                <button
+                  onClick={() => setActiveSlide((prev) => (prev + 1) % slides.length)}
+                  className="w-8 h-8 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center text-white absolute right-4 md:right-6 top-1/2 -translate-y-1/2 cursor-pointer transition-all hover:scale-105 active:scale-95 animate-none"
+                  style={{ background: "rgba(255,255,255,0.05)" }}
+                  aria-label="Next Slide"
+                >
+                  <ChevronRight className="w-4 h-4 text-white" />
+                </button>
+
+                {/* Slider Pagination Dots */}
+                <div className="flex justify-center items-center gap-1.5 mt-8">
+                  {slides.map((_, dotIdx) => (
+                    <button
+                      key={dotIdx}
+                      onClick={() => setActiveSlide(dotIdx)}
+                      className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${activeSlide === dotIdx ? "bg-[#D50032] w-5" : "bg-white/20 hover:bg-white/45"}`}
+                      aria-label={`Go to slide ${dotIdx + 1}`}
+                    />
+                  ))}
+                </div>
+
               </div>
 
-            </div>
-
+            </ScrollReveal>
           </div>
         </section>
 
         {/* What is FinTrade & Acronym Section */}
-        <section className="py-12 md:py-20 relative z-10 bg-white overflow-hidden border-b border-gray-100">
+        <section className="py-6 md:py-10 relative z-10 bg-white overflow-hidden border-b border-gray-100">
           {/* Decorative subtle background glows */}
           <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#D50032]/5 rounded-full blur-[120px] pointer-events-none" />
           
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Header: What is FinTrade? */}
-            <div className="text-center mb-12 md:mb-16">
-              <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-4 border border-[#D50032]/20 bg-[#D50032]/5">
-                <span className="text-xs font-bold text-[#D50032] flex items-center gap-1">
-                  💡 Discover FinTrade
-                </span>
+            {/* Header: What FINTRADE Stands For */}
+            <ScrollReveal>
+              <div className="text-center mb-12 md:mb-16">
+                <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-4 border border-[#D50032]/20 bg-[#D50032]/5">
+                  <span className="text-xs font-bold text-[#D50032] flex items-center gap-1">
+                    💡 Discover FinTrade
+                  </span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 text-gray-900 tracking-tight">
+                  What <span className="text-[#D50032]">FINTRADE</span> Stands For
+                </h2>
+                <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto font-medium leading-relaxed">
+                  Every letter reflects a core principle that shapes how we educate, train, and transform traders.
+                </p>
               </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-6 text-gray-900 tracking-tight">
-                What is <span className="text-[#D50032]">FinTrade</span>?
-              </h2>
-              <p className="text-base sm:text-lg text-gray-650 max-w-3xl mx-auto font-medium leading-relaxed">
-                The FinTrade is a modern trading education and capital allocation platform focused on building skilled, disciplined, and profitable traders. The name <span className="text-[#D50032] font-semibold">“FinTrade”</span> combines <span className="font-semibold text-gray-900">Finance</span> and <span className="font-semibold text-gray-900">Trading</span>, representing a complete ecosystem for learning, analyzing, and succeeding in financial markets.
-              </p>
-            </div>
+            </ScrollReveal>
 
-            {/* F-I-N-T-R-A-D-E Acronym Title */}
-            <div className="text-center mb-10">
-              <h3 className="text-xl sm:text-2xl font-black text-gray-900 tracking-wide uppercase">
-                The Anatomy of <span className="text-[#D50032]">F-I-N-T-R-A-D-E</span>
-              </h3>
-              <p className="text-xs sm:text-sm text-gray-400 font-semibold mt-1">Our Core Pillars of Excellence</p>
-            </div>
-
-            {/* Grid of Acronyms */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            {/* Acronym Rows Stack */}
+            <div ref={acronymRef} className="max-w-4xl mx-auto space-y-4">
               {[
                 {
                   letter: "F",
                   title: "Financial Foundations",
-                  desc: "Building strong financial knowledge and market understanding.",
-                  icon: BookOpen,
-                  color: "from-red-500 to-rose-600",
+                  desc: "Building strong financial foundations for growth and stability.",
                 },
                 {
                   letter: "I",
                   title: "Intelligence",
-                  desc: "Using smart insights and market data for better decisions.",
-                  icon: Brain,
-                  color: "from-[#D50032] to-[#FF3D00]",
+                  desc: "Using smart insights and knowledge to make better decisions.",
                 },
                 {
                   letter: "N",
                   title: "Networking",
-                  desc: "Connecting traders, mentors, and opportunities together.",
-                  icon: Users,
-                  color: "from-orange-500 to-red-600",
+                  desc: "Connecting people, ideas, and opportunities to create impact.",
                 },
                 {
                   letter: "T",
-                  title: "Trading",
-                  desc: "Learning professional trading strategies and execution.",
-                  icon: TrendingUp,
-                  color: "from-red-600 to-rose-700",
+                  title: "Trading Strategy",
+                  desc: "Mastering professional market execution and advanced trading systems.",
                 },
                 {
                   letter: "R",
-                  title: "Research",
-                  desc: "Analyzing markets deeply to identify trends and opportunities.",
-                  icon: Search,
-                  color: "from-rose-500 to-orange-600",
+                  title: "Risk Management",
+                  desc: "Prioritizing capital preservation, risk-reward ratios, and strategic sizing.",
                 },
                 {
                   letter: "A",
                   title: "Analytics",
-                  desc: "Turning data into actionable trading insights.",
-                  icon: BarChart3,
-                  color: "from-red-500 to-orange-500",
+                  desc: "Turning live market data into actionable and profitable insights.",
                 },
                 {
                   letter: "D",
-                  title: "Development",
-                  desc: "Continuous growth, discipline, and skill enhancement.",
-                  icon: Activity,
-                  color: "from-rose-600 to-red-600",
+                  title: "Discipline",
+                  desc: "Cultivating emotional control, patience, and consistent trading habits.",
                 },
                 {
                   letter: "E",
                   title: "Excellence",
-                  desc: "Striving for the highest standards in trading performance.",
-                  icon: Trophy,
-                  color: "from-amber-500 to-[#D50032]",
+                  desc: "Striving for continuous improvement and professional standards.",
                 },
               ].map((item, idx) => {
-                const Icon = item.icon;
                 return (
                   <div
                     key={idx}
-                    className="relative flex flex-col justify-between overflow-hidden rounded-[28px] border border-gray-100/90 bg-white p-7 shadow-[0_12px_40px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(213,0,50,0.06)] hover:border-[#D50032]/20 transition-all duration-300 group select-none"
+                    style={{ transitionDelay: `${idx * 150}ms` }}
+                    className={`w-full rounded-2xl md:rounded-[24px] border border-gray-100 bg-[#FAFBFD]/30 p-4 md:p-5 flex items-center gap-4 md:gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.005)] hover:border-[#D50032]/25 hover:shadow-[0_12px_45px_rgba(213,0,50,0.03)] hover:bg-white select-none relative overflow-hidden transition-all duration-700 ease-out transform ${
+                      isAcronymVisible 
+                        ? "opacity-100 translate-y-0" 
+                        : "opacity-0 translate-y-8 pointer-events-none"
+                    } group`}
                   >
-                    {/* Big stylized letter overlay in background */}
-                    <span className="absolute -right-2 -bottom-4 text-8xl font-black text-gray-50 opacity-[0.06] group-hover:opacity-[0.12] transition-opacity duration-300 font-sans pointer-events-none select-none">
-                      {item.letter}
-                    </span>
+                    {/* Glowing light background hover effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#D50032]/0 via-[#D50032]/[0.01] to-[#D50032]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    
+                    {/* Letter Square Box */}
+                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0 z-10 transition-transform duration-300 group-hover:scale-105">
+                      <span className="text-xl md:text-2xl font-black text-[#D50032] font-sans">
+                        {item.letter}
+                      </span>
+                    </div>
 
-                    <div>
-                      {/* Top Row: Icon and Letter */}
-                      <div className="flex justify-between items-center w-full">
-                        <div className="w-12 h-12 rounded-2xl bg-[#FFF5F6] border border-[#D50032]/8 text-[#D50032] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                          <Icon className="h-6 w-6 stroke-[2.5]" />
-                        </div>
-                        <span className={`text-2xl font-black px-3.5 py-1.5 rounded-2xl bg-gradient-to-br ${item.color} text-white shadow-sm font-sans`}>
-                          {item.letter}
+                    {/* Divider Line */}
+                    <div className="h-8 w-[1px] bg-gray-200 flex-shrink-0 z-10 hidden md:block" />
+
+                    {/* Title & Description Container */}
+                    <div className="flex-1 flex flex-col md:flex-row md:items-center gap-1 md:gap-8 z-10">
+                      {/* Title */}
+                      <div className="w-full md:w-48 flex-shrink-0 text-left">
+                        <span className="font-extrabold text-base md:text-lg text-gray-900 tracking-normal group-hover:text-[#D50032] transition-colors duration-300">
+                          {item.title}
                         </span>
                       </div>
-
-                      {/* Title */}
-                      <h4 className="text-lg font-black text-gray-950 mt-6 tracking-tight text-left group-hover:text-[#D50032] transition-colors duration-300">
-                        {item.title}
-                      </h4>
-
                       {/* Description */}
-                      <p className="text-gray-500 text-sm leading-relaxed mt-2 text-left">
-                        {item.desc}
-                      </p>
+                      <div className="text-left">
+                        <p className="text-gray-500 text-xs md:text-sm font-medium leading-relaxed">
+                          {item.desc}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Right Glowing Red Dot */}
+                    <div className="flex-shrink-0 pr-1 md:pr-2 z-10">
+                      <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-[#D50032] opacity-40 group-hover:opacity-100 group-hover:scale-125 transition-all duration-300 shadow-[0_0_8px_rgba(213,0,50,0.5)]" />
                     </div>
                   </div>
                 );
@@ -1113,187 +1194,232 @@ export default function MarketingHome() {
         {/* 1. Featured Courses Section */}
         <section id="courses" className="pt-6 pb-2 md:py-8 relative z-10 bg-transparent">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-10">
-              <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#D50032]/30" style={{ background: "rgba(213,0,50, 0.08)" }}>
-                <span className="text-[#D50032] font-semibold text-sm">🎓 Professional Certifications</span>
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Our Professional Programs</h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Master trading with our industry-leading certifications
-              </p>
-            </div>
-            <div
-              ref={coursesContainerRef}
-              onScroll={handleCoursesScroll}
-              onMouseEnter={() => setIsCoursesPaused(true)}
-              onMouseLeave={() => setIsCoursesPaused(false)}
-              onTouchStart={() => {
-                setIsCoursesPaused(true);
-                if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
-              }}
-              onTouchEnd={() => {
-                touchTimeoutRef.current = setTimeout(() => {
-                  setIsCoursesPaused(false);
-                }, 5000);
-              }}
-              className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible pt-5 pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-            >
-              {(apiCourses.length > 0 ? apiCourses.map((c: any) => {
-                const diff = c.difficulty_level || "beginner";
-                return {
-                  ...c,
-                  name: c.title,
-                  level: diff.charAt(0).toUpperCase() + diff.slice(1),
-                  duration: c.duration_hours ? `${c.duration_hours} Days` : "Self-paced",
-                  originalPrice: c.original_price && Number(c.original_price) > 0 ? `\u20B9${Number(c.original_price).toLocaleString("en-IN")}` : null,
-                  price: `\u20B9${Number(c.price).toLocaleString("en-IN")}`,
-                  savings: c.original_price && Number(c.original_price) > Number(c.price) ? `\u20B9${(Number(c.original_price) - Number(c.price)).toLocaleString("en-IN")}` : null,
-                  shortDescription: c.short_description || c.description || "Professional trading course",
-                  fullDescription: c.description || c.short_description || "Professional trading course.",
-                  icon: diff === "beginner" ? BookOpen : diff === "intermediate" ? LineChart : Trophy,
-                  modules: (c.modules || []).sort((a: any, b: any) => a.order - b.order),
-                };
-              }) : [
-                {
-                  name: "Financial Market Foundation (FMF)",
-                  level: "Foundation",
-                  duration: "30 Days",
-                  originalPrice: "₹20,000",
-                  price: "₹12,000",
-                  savings: "₹8,000",
-                  shortDescription: "Master the fundamentals of financial markets.",
-                  fullDescription: "Master the fundamentals of financial markets and start your trading journey with confidence.",
-                  icon: BookOpen,
-                },
-                {
-                  name: "Certified Analyst & Research Program (CARP)",
-                  level: "Intermediate",
-                  duration: "60 Days",
-                  originalPrice: "₹50,000",
-                  price: "₹30,000",
-                  savings: "₹20,000",
-                  shortDescription: "Deep dive into research methodologies and analysis.",
-                  fullDescription: "Deep dive into research methodologies, technical analysis, and fundamental research.",
-                  icon: LineChart,
-                },
-                {
-                  name: "Certified Professional Trading Program (CPTP)",
-                  level: "Professional",
-                  duration: "90 Days",
-                  originalPrice: "₹75,000",
-                  price: "₹45,000",
-                  savings: "₹30,000",
-                  shortDescription: "Professional grade trading strategies.",
-                  fullDescription: "Professional grade trading strategies, advanced risk management, and portfolio construction.",
-                  icon: Trophy,
-                },
-              ]).slice(0, 3).map((course, i) => (
-                <div key={i} className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex">
-                  <CourseCard course={course} onEnroll={() => setSelectedCourseForCheckout(course)} />
+            <ScrollReveal>
+              <div className="text-center mb-10">
+                <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#D50032]/30" style={{ background: "rgba(213,0,50, 0.08)" }}>
+                  <span className="text-[#D50032] font-semibold text-sm">🎓 Professional Certifications</span>
                 </div>
-              ))}
-            </div>
-
-            {apiCourses.length > 3 && (
-              <div className="mt-8 text-center">
-                <Link to="/courses">
-                  <Button className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] px-8 py-2 rounded-full font-semibold transition-all">
-                    View More Courses
-                  </Button>
-                </Link>
+                <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Our Professional Programs</h2>
+                <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                  Master trading with our industry-leading certifications
+                </p>
               </div>
-            )}
+              <div
+                ref={coursesContainerRef}
+                onScroll={handleCoursesScroll}
+                onMouseEnter={() => setIsCoursesPaused(true)}
+                onMouseLeave={() => setIsCoursesPaused(false)}
+                onTouchStart={() => {
+                  setIsCoursesPaused(true);
+                  if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
+                }}
+                onTouchEnd={() => {
+                  touchTimeoutRef.current = setTimeout(() => {
+                    setIsCoursesPaused(false);
+                  }, 5000);
+                }}
+                className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible pt-5 pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              >
+                {(apiCourses.length > 0
+                  ? apiCourses.map((c: any) => {
+                      const diff = c.difficulty_level || "beginner";
+                      return {
+                        ...c,
+                        name: c.title,
+                        level: diff.charAt(0).toUpperCase() + diff.slice(1),
+                        duration: c.duration_hours ? `${c.duration_hours} Days` : "Self-paced",
+                        originalPrice: c.original_price && Number(c.original_price) > 0 ? `\u20B9${Number(c.original_price).toLocaleString("en-IN")}` : null,
+                        price: `\u20B9${Number(c.price).toLocaleString("en-IN")}`,
+                        savings: c.original_price && Number(c.original_price) > Number(c.price) ? `\u20B9${(Number(c.original_price) - Number(c.price)).toLocaleString("en-IN")}` : null,
+                        shortDescription: c.short_description || c.description || "Professional trading course",
+                        fullDescription: c.description || c.short_description || "Professional trading course.",
+                        icon: diff === "beginner" ? BookOpen : diff === "intermediate" ? LineChart : Trophy,
+                        modules: (c.modules || []).sort((a: any, b: any) => a.order - b.order),
+                      };
+                    })
+                  : [
+                      {
+                        id: 13,
+                        name: "Course 2",
+                        level: "Beginner",
+                        duration: "10 Days",
+                        price: "₹1,299",
+                        originalPrice: null,
+                        savings: null,
+                        shortDescription: "Course 2",
+                        fullDescription: "Course 2.",
+                        icon: BookOpen,
+                        modules: [],
+                      },
+                      {
+                        id: 11,
+                        name: "c2",
+                        level: "Beginner",
+                        duration: "20 Days",
+                        price: "₹23,233",
+                        originalPrice: "₹199",
+                        savings: null,
+                        shortDescription: "asdfgh",
+                        fullDescription: "asdfgh.",
+                        icon: BookOpen,
+                        modules: [],
+                      },
+                      {
+                        id: 10,
+                        name: "Course1",
+                        level: "Beginner",
+                        duration: "30 Days",
+                        price: "₹4,999",
+                        originalPrice: null,
+                        savings: null,
+                        shortDescription: "Course1",
+                        fullDescription: "Course1.",
+                        icon: BookOpen,
+                        modules: [],
+                      },
+                      {
+                        id: 9,
+                        name: "c1",
+                        level: "Beginner",
+                        duration: "10 Days",
+                        price: "₹20",
+                        originalPrice: "₹299",
+                        savings: "₹279",
+                        shortDescription: "abcdefgh",
+                        fullDescription: "abcdefgh.",
+                        icon: BookOpen,
+                        modules: [],
+                      },
+                      {
+                        id: 8,
+                        name: "a",
+                        level: "Beginner",
+                        duration: "10 Days",
+                        price: "₹500",
+                        originalPrice: "₹1,000",
+                        savings: "₹500",
+                        shortDescription: "a",
+                        fullDescription: "a.",
+                        icon: BookOpen,
+                        modules: [],
+                      }
+                    ]
+                ).slice(0, isCoursesExpanded ? undefined : 3).map((course, i) => (
+                  <div key={i} className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex">
+                    <CourseCard course={course} onEnroll={() => setSelectedCourseForCheckout(course)} />
+                  </div>
+                ))}
+              </div>
+
+              {((apiCourses.length > 3) || (apiCourses.length === 0)) && (
+                <div className="mt-8 text-center">
+                  <Button 
+                    onClick={() => {
+                      setIsCoursesExpanded(!isCoursesExpanded);
+                      if (isCoursesExpanded) {
+                        document.getElementById("courses")?.scrollIntoView({ behavior: "smooth" });
+                      }
+                    }}
+                    className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] px-8 py-2.5 rounded-full font-semibold transition-all shadow-md"
+                  >
+                    {isCoursesExpanded ? "View Less" : "View More Courses"}
+                  </Button>
+                </div>
+              )}
+            </ScrollReveal>
           </div>
         </section>
 
         {/* 2. Live Classes Section */}
         <section className="pt-2 pb-6 md:py-8 relative z-10 bg-white" style={{ backdropFilter: "blur(2px)" }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-6">
-              <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#D50032]/30" style={{ background: "rgba(213,0,50,0.08)" }}>
-                <span className="text-[#D50032] font-semibold text-sm">📡 Real-Time Learning</span>
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Live Classes</h2>
-              <p className="text-xl text-gray-600">Learn from expert traders in real-time</p>
-            </div>
-            <div
-              className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible pb-8 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-            >
-              {[
-                { title: "Technical Analysis Masterclass", instructor: "Amit Desai", date: "April 18, 2026", time: "10:00 AM IST", students: 145, status: "live" },
-                { title: "Options Trading Strategies", instructor: "Priya Sharma", date: "April 19, 2026", time: "2:00 PM IST", students: 132, status: "upcoming" },
-                { title: "Risk Management Fundamentals", instructor: "Rajesh Kumar", date: "April 20, 2026", time: "4:00 PM IST", students: 178, status: "upcoming" },
-              ].map((lecture, i) => (
-                <div key={i} className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex">
-                  <Card className={`w-full flex flex-col overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-2xl ${lecture.status === "live" ? "border-2 border-[#D50032] shadow-xl" : "border border-gray-200 hover:border-[#D50032]/50"}`}>
-                    {/* Image Header */}
-                    <div className="relative h-44 bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center overflow-hidden">
-                      <img src="https://images.unsplash.com/photo-1616587896649-79b16d8b173d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" alt="Live class" className="absolute inset-0 w-full h-full object-cover opacity-25" />
-                      <div className="relative z-10 flex flex-col items-center">
-                        <div className="w-16 h-16 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center border-2 border-white/40 mb-3">
-                          <Video className="h-7 w-7 text-white" />
-                        </div>
-                        {lecture.status === "live" ? (
-                          <div className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold text-white animate-pulse" style={{ background: "#D50032" }}>
-                            <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping" /> LIVE NOW
-                          </div>
-                        ) : (
-                          <div className="px-4 py-1.5 rounded-full text-xs font-bold text-white border border-white/30" style={{ background: "rgba(255,255,255,0.1)" }}>
-                            UPCOMING
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Card Body */}
-                    <div className="flex flex-col flex-1 p-6 bg-white">
-                      <h3 className="font-bold text-lg mb-4 leading-snug" style={{ color: "#121212" }}>{lecture.title}</h3>
-                      <div className="space-y-3 mb-6 text-sm">
-                        <div className="flex items-center gap-3 text-gray-700">
-                          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(213,0,50,0.08)" }}>
-                            <Users className="h-4 w-4" style={{ color: "#D50032" }} />
-                          </div>
-                          <span className="font-medium">{lecture.instructor}</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-gray-600">
-                          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(213,0,50,0.08)" }}>
-                            <CheckCircle className="h-4 w-4" style={{ color: "#D50032" }} />
-                          </div>
-                          <span>{lecture.date} • {lecture.time}</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-gray-600">
-                          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(213,0,50,0.08)" }}>
-                            <Star className="h-4 w-4" style={{ color: "#D50032" }} />
-                          </div>
-                          <span>{lecture.students} students enrolled</span>
-                        </div>
-                      </div>
-
-                      {/* Spacer */}
-                      <div className="flex-1" />
-
-                      {/* CTA — always at bottom */}
-                      <Link to={isAuthenticated ? "/student/lectures" : "/login"} className="block">
-                        <Button
-                          className={`w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 ${lecture.status === "live"
-                            ? "!bg-gradient-to-r !from-[#D50032] !to-[#FF0000] !text-white hover:!from-[#FF0000] hover:!to-[#FF0000]"
-                            : "!bg-[#121212] !text-white hover:!bg-[#D50032] hover:!text-white"
-                            }`}
-                          style={{
-                            boxShadow: lecture.status === "live" ? "0 8px 30px rgba(213,0,50,0.3)" : "none"
-                          }}
-                        >
-                          {lecture.status === "live" ? "Join Now" : "Register Now"}
-                          <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </Card>
+            <ScrollReveal>
+              <div className="text-center mb-6">
+                <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#D50032]/30" style={{ background: "rgba(213,0,50,0.08)" }}>
+                  <span className="text-[#D50032] font-semibold text-sm">📡 Real-Time Learning</span>
                 </div>
-              ))}
-            </div>
+                <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Live Classes</h2>
+                <p className="text-xl text-gray-600">Learn from expert traders in real-time</p>
+              </div>
+              <div
+                className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible pb-8 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              >
+                {[
+                  { title: "Technical Analysis Masterclass", instructor: "Amit Desai", date: "April 18, 2026", time: "10:00 AM IST", students: 145, status: "live" },
+                  { title: "Options Trading Strategies", instructor: "Priya Sharma", date: "April 19, 2026", time: "2:00 PM IST", students: 132, status: "upcoming" },
+                  { title: "Risk Management Fundamentals", instructor: "Rajesh Kumar", date: "April 20, 2026", time: "4:00 PM IST", students: 178, status: "upcoming" },
+                ].map((lecture, i) => (
+                  <div key={i} className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex">
+                    <Card className={`w-full flex flex-col overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-2xl ${lecture.status === "live" ? "border-2 border-[#D50032] shadow-xl" : "border border-gray-200 hover:border-[#D50032]/50"}`}>
+                      {/* Image Header */}
+                      <div className="relative h-44 bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1616587896649-79b16d8b173d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" alt="Live class" className="absolute inset-0 w-full h-full object-cover opacity-25" />
+                        <div className="relative z-10 flex flex-col items-center">
+                          <div className="w-16 h-16 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center border-2 border-white/40 mb-3">
+                            <Video className="h-7 w-7 text-white" />
+                          </div>
+                          {lecture.status === "live" ? (
+                            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold text-white animate-pulse" style={{ background: "#D50032" }}>
+                              <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping" /> LIVE NOW
+                            </div>
+                          ) : (
+                            <div className="px-4 py-1.5 rounded-full text-xs font-bold text-white border border-white/30" style={{ background: "rgba(255,255,255,0.1)" }}>
+                              UPCOMING
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Card Body */}
+                      <div className="flex flex-col flex-1 p-6 bg-white">
+                        <h3 className="font-bold text-lg mb-4 leading-snug" style={{ color: "#121212" }}>{lecture.title}</h3>
+                        <div className="space-y-3 mb-6 text-sm">
+                          <div className="flex items-center gap-3 text-gray-700">
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(213,0,50,0.08)" }}>
+                              <Users className="h-4 w-4" style={{ color: "#D50032" }} />
+                            </div>
+                            <span className="font-medium">{lecture.instructor}</span>
+                          </div>
+                          <div className="flex items-center gap-3 text-gray-600">
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(213,0,50,0.08)" }}>
+                              <CheckCircle className="h-4 w-4" style={{ color: "#D50032" }} />
+                            </div>
+                            <span>{lecture.date} • {lecture.time}</span>
+                          </div>
+                          <div className="flex items-center gap-3 text-gray-600">
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(213,0,50,0.08)" }}>
+                              <Star className="h-4 w-4" style={{ color: "#D50032" }} />
+                            </div>
+                            <span>{lecture.students} students enrolled</span>
+                          </div>
+                        </div>
+
+                        {/* Spacer */}
+                        <div className="flex-1" />
+
+                        {/* CTA — always at bottom */}
+                        <Link to={isAuthenticated ? "/student/lectures" : "/login"} className="block">
+                          <Button
+                            className={`w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 ${lecture.status === "live"
+                              ? "!bg-gradient-to-r !from-[#D50032] !to-[#FF0000] !text-white hover:!from-[#FF0000] hover:!to-[#FF0000]"
+                              : "!bg-[#121212] !text-white hover:!bg-[#D50032] hover:!text-white"
+                              }`}
+                            style={{
+                              boxShadow: lecture.status === "live" ? "0 8px 30px rgba(213,0,50,0.3)" : "none"
+                            }}
+                          >
+                            {lecture.status === "live" ? "Join Now" : "Register Now"}
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </Card>
+                  </div>
+                ))}
+              </div>
+            </ScrollReveal>
           </div>
         </section>
 
@@ -1302,24 +1428,26 @@ export default function MarketingHome() {
         {/* Program Benefits Section */}
         <section className="py-6 md:py-8 bg-transparent relative z-10 overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 text-center">
-            <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-4 border border-[#D50032]/20 bg-[#D50032]/5">
-              <span className="text-xs font-bold text-[#D50032] flex items-center gap-1">
-                🎁 Key Advantages
-              </span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4 text-gray-900 tracking-tight text-center uppercase">
-              Program <span className="text-[#D50032]">Benefits</span>
-            </h2>
-            <p className="text-base sm:text-lg text-gray-500 max-w-3xl mx-auto font-medium text-center leading-relaxed">
-              Everything you need to become a consistently profitable, professional trader.
-            </p>
+            <ScrollReveal>
+              <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-4 border border-[#D50032]/20 bg-[#D50032]/5">
+                <span className="text-xs font-bold text-[#D50032] flex items-center gap-1">
+                  🎁 Key Advantages
+                </span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4 text-gray-900 tracking-tight text-center uppercase">
+                Program <span className="text-[#D50032]">Benefits</span>
+              </h2>
+              <p className="text-base sm:text-lg text-gray-500 max-w-3xl mx-auto font-medium text-center leading-relaxed">
+                Everything you need to become a consistently profitable, professional trader.
+              </p>
+            </ScrollReveal>
           </div>
 
           {/* Marquee Wrapper */}
           <div className="relative w-full flex overflow-x-hidden py-4">
             <div className="animate-marquee flex gap-6 whitespace-nowrap" style={{ display: 'flex', minWidth: '100%' }}>
-              {benefits.concat(benefits).map((b, idx) => {
-                const Icon = b.icon;
+              {benefitsList.concat(benefitsList).map((b, idx) => {
+                const IconComponent = typeof b.icon === 'function' ? b.icon : (iconMap[b.icon] || BookOpen);
                 return (
                   <div
                     key={idx}
@@ -1332,7 +1460,7 @@ export default function MarketingHome() {
                       </span>
                       {/* Icon Box */}
                       <div className="w-10 h-10 rounded-xl bg-[#D50032]/5 text-[#D50032] flex items-center justify-center shadow-sm border border-[#D50032]/10 group-hover:scale-110 transition-transform duration-300">
-                        <Icon className="h-5 w-5" />
+                        <IconComponent className="h-5 w-5" />
                       </div>
                     </div>
 
@@ -1365,239 +1493,182 @@ export default function MarketingHome() {
         </section>
 
         {/* Learning Path Section */}
-        <section className="py-6 md:py-8 bg-transparent relative z-10">
+        <section className="py-4 md:py-6 bg-transparent relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Header */}
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-4 border border-[#D50032]/20 bg-[#D50032]/5">
-                <span className="text-xs font-bold text-[#D50032] flex items-center gap-1">
-                  🗺️ Course Roadmap
-                </span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4 text-gray-900 tracking-tight text-center">
-                Your <span className="text-[#D50032]">Learning Path</span>
-              </h2>
-              <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto font-medium text-center">
-                A structured roadmap from beginner to professional trader
-              </p>
-            </div>
-
-            {/* Desktop Curved Learning Path Card */}
-            <div className="hidden lg:block w-full bg-white border border-gray-100 rounded-[40px] shadow-[0_15px_50px_rgba(0,0,0,0.02)] p-8 relative overflow-hidden">
-              <div className="aspect-[1000/420] w-full relative select-none">
-
-                {/* Curve Line SVG */}
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 600" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  {/* Dashed base line (locked path) */}
-                  <path
-                    d="M 200,520 C 300,520 400,450 500,380 C 600,310 700,310 800,240 C 900,170 800,130 550,120 C 450,110 360,110 360,110"
-                    stroke="#E5E7EB"
-                    strokeWidth="6"
-                    strokeLinecap="round"
-                    strokeDasharray="12 10"
-                  />
-
-                  {/* Completed gold path (1 to 3) */}
-                  <path
-                    d="M 200,520 C 300,520 400,450 500,380"
-                    stroke="url(#completedGradient)"
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                  />
-
-                  {/* Gradient Definitions */}
-                  <defs>
-                    <linearGradient id="completedGradient" x1="0%" y1="100%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#10B981" />
-                      <stop offset="100%" stopColor="#D50032" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-
-                {/* Render Steps */}
-                {[
-                  { num: "1", title: "Market Foundations", desc: "Markets, exchanges & instruments", status: "completed", x: 20, y: 86.6, align: "bottom", isStart: true },
-                  { num: "2", title: "Technical Analysis", desc: "Chart patterns & price action", status: "completed", x: 35, y: 76.6, align: "left" },
-                  { num: "3", title: "Risk Management", desc: "Position sizing & capital protection", status: "current", x: 50, y: 63.3, align: "right", isCurrent: true },
-                  { num: "4", title: "Trading Psychology", desc: "Emotional discipline & consistency", status: "locked", x: 65, y: 53.3, align: "left" },
-                  { num: "5", title: "Options & Derivat", desc: "Options pricing, Gre", status: "locked", x: 80, y: 40, align: "right" },
-                  { num: "6", title: "Advanced Strategies", desc: "Algo trading & quant analysis", status: "locked", x: 72, y: 26.6, align: "right" },
-                  { num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "locked", x: 55, y: 20, align: "left" },
-                  { num: "8", title: "Certification & Placement", desc: "Final assessment & career placement", status: "locked", x: 36, y: 18.3, align: "left", isSummit: true },
-                ].map((step, idx) => {
-                  const isCompleted = step.status === "completed";
-                  const isCurrent = step.status === "current";
-
-                  return (
-                    <div key={idx}>
-                      {/* Node Circle */}
-                      <div
-                        className="absolute -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center"
-                        style={{ left: `${step.x}%`, top: `${step.y}%` }}
-                      >
-                        {isCurrent ? (
-                          <div className="relative flex items-center justify-center">
-                            {/* Outer pulse rings */}
-                            <div className="absolute w-12 h-12 rounded-full bg-[#D50032]/25 animate-ping" />
-                            <div className="absolute w-9 h-9 rounded-full bg-[#D50032]/40" />
-                            {/* Inner circle */}
-                            <div className="w-8 h-8 rounded-full bg-[#D50032] border-2 border-white shadow-md flex items-center justify-center text-white font-extrabold text-sm relative z-30">
-                              {step.num}
-                            </div>
-                            {/* Current Module Pill Badge */}
-                            <div className="absolute top-10 bg-[#D50032] text-white text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full shadow-sm z-30 whitespace-nowrap">
-                              Current Module
-                            </div>
-                          </div>
-                        ) : isCompleted ? (
-                          <div className="w-7 h-7 rounded-full bg-emerald-500 border-2 border-white shadow flex items-center justify-center text-white z-30">
-                            <CheckCircle className="w-5 h-5 fill-emerald-500 stroke-white stroke-[3px]" />
-                          </div>
-                        ) : (
-                          <div className="w-7 h-7 rounded-full bg-gray-200 border-2 border-white shadow flex items-center justify-center text-gray-500 font-extrabold text-xs z-30">
-                            {step.num}
-                          </div>
-                        )}
-
-                        {/* Start Label */}
-                        {step.isStart && (
-                          <div className="absolute -top-6 text-[10px] font-black uppercase text-gray-400 tracking-wider">
-                            Start
-                          </div>
-                        )}
-
-                        {/* Summit Label */}
-                        {step.isSummit && (
-                          <div className="absolute bottom-8 text-[10px] font-black uppercase text-[#D50032] tracking-wider flex items-center gap-0.5">
-                            🏆 Summit
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Label Container */}
-                      <div
-                        className={`absolute -translate-y-1/2 w-[200px] z-10 ${step.align === "left" ? "text-right" : (step.align === "top" || step.align === "bottom") ? "text-center" : "text-left"
-                          }`}
-                        style={{
-                          left: step.align === "left"
-                            ? `calc(${step.x}% - 220px)`
-                            : (step.align === "top" || step.align === "bottom")
-                              ? `calc(${step.x}% - 100px)`
-                              : `calc(${step.x}% + 20px)`,
-                          top: step.align === "top"
-                            ? `calc(${step.y}% - 52px)`
-                            : step.align === "bottom"
-                              ? `calc(${step.y}% + 52px)`
-                              : `${step.y}%`
-                        }}
-                      >
-                        <h3
-                          className={`font-black text-sm sm:text-base mb-0.5 tracking-tight ${isCurrent ? "text-[#D50032]" : isCompleted ? "text-gray-900" : "text-gray-400"
-                            }`}
-                        >
-                          {step.title}
-                        </h3>
-                        <p className="text-gray-500 text-[10px] sm:text-xs font-medium leading-tight max-w-[200px] inline-block">
-                          {step.desc}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
+            <ScrollReveal>
+              {/* Header */}
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-4 border border-[#D50032]/20 bg-[#D50032]/5">
+                  <span className="text-xs font-bold text-[#D50032] flex items-center gap-1">
+                    🗺️ Course Roadmap
+                  </span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4 text-gray-900 tracking-tight text-center">
+                  Your <span className="text-[#D50032]">Learning Path</span>
+                </h2>
+                <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto font-medium text-center">
+                  A structured roadmap from beginner to professional trader
+                </p>
               </div>
 
-              {/* Bottom Legend */}
-              <div className="flex justify-center items-center gap-6 mt-8 pt-6 border-t border-gray-100 text-xs font-semibold text-gray-500">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                  Completed
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#D50032]" />
-                  Current
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-gray-200" />
-                  Locked
-                </div>
-              </div>
-            </div>
+              {/* Curved Learning Path Card (Fully Responsive - Zero Scroll) */}
+              <div className="w-full bg-white border border-gray-100 rounded-[24px] md:rounded-[40px] shadow-[0_15px_50px_rgba(0,0,0,0.02)] p-4 sm:p-6 md:p-8 relative overflow-hidden">
+                <div className="w-full relative">
+                  <div className={`relative w-full select-none ${isMobileViewport ? "aspect-[1000/1350]" : "aspect-[1000/680]"}`}>
 
-            {/* Mobile Vertical Learning Journey Timeline */}
-            <div className="lg:hidden w-full bg-white border border-gray-100 rounded-[32px] shadow-lg p-6 sm:p-8 space-y-6">
-              {[
-                { num: "1", title: "Market Foundations", desc: "Markets, exchanges & instruments", status: "completed", isStart: true },
-                { num: "2", title: "Technical Analysis", desc: "Chart patterns & price action", status: "completed" },
-                { num: "3", title: "Risk Management", desc: "Position sizing & capital protection", status: "current", isCurrent: true },
-                { num: "4", title: "Trading Psychology", desc: "Emotional discipline & consistency", status: "locked" },
-                { num: "5", title: "Options & Derivat", desc: "Options pricing, Gre", status: "locked" },
-                { num: "6", title: "Advanced Strategies", desc: "Algo trading & quant analysis", status: "locked" },
-                { num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "locked" },
-                { num: "8", title: "Certification & Placement", desc: "Final assessment & career placement", status: "locked", isSummit: true },
-              ].map((step, idx) => {
-                const isCompleted = step.status === "completed";
-                const isCurrent = step.status === "current";
+                    {/* Curve Line SVG */}
+                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 600" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      {/* Dashed base line (locked path) */}
+                      <path
+                        d="M 200,520 C 300,520 400,450 500,380 C 600,310 700,310 800,240 C 900,170 800,130 550,120 C 450,110 360,110 360,110"
+                        className="stroke-gray-200 stroke-[3.5px] lg:stroke-[6px]"
+                        strokeLinecap="round"
+                        strokeDasharray="12 10"
+                      />
 
-                return (
-                  <div key={idx} className="flex gap-4 items-stretch relative">
-                    {/* Vertical Line Connector */}
-                    {idx < 7 && (
-                      <div className="absolute top-7 bottom-[-24px] left-[13px] w-[2px] bg-gray-100" />
-                    )}
+                      {/* Completed gold path (1 to 3) */}
+                      <path
+                        d="M 200,520 C 300,520 400,450 500,380"
+                        stroke="url(#completedGradient)"
+                        className="stroke-[5px] lg:stroke-[8px]"
+                        strokeLinecap="round"
+                      />
 
-                    {/* Node */}
-                    <div className="flex-shrink-0 relative">
-                      {isCurrent ? (
-                        <div className="relative flex items-center justify-center w-7 h-7">
-                          <div className="absolute w-7 h-7 rounded-full bg-[#D50032]/20 animate-ping" />
-                          <div className="w-6 h-6 rounded-full bg-[#D50032] border-2 border-white shadow flex items-center justify-center text-white font-extrabold text-xs relative z-20">
-                            {step.num}
+                      {/* Gradient Definitions */}
+                      <defs>
+                        <linearGradient id="completedGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#10B981" />
+                          <stop offset="100%" stopColor="#D50032" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+
+                    {/* Render Steps */}
+                    {[
+                      { num: "1", title: "Market Foundations", desc: "Markets, exchanges & instruments", status: "completed", x: 20, y: 86.6, align: isMobileViewport ? "right" : "bottom", isStart: true },
+                      { num: "2", title: "Technical Analysis", desc: "Chart patterns & price action", status: "completed", x: 35, y: 76.6, align: isMobileViewport ? "left" : "top" },
+                      { num: "3", title: "Risk Management", desc: "Position sizing & capital protection", status: "current", x: 50, y: 63.3, align: isMobileViewport ? "right" : "bottom", isCurrent: true },
+                      { num: "4", title: "Trading Psychology", desc: "Emotional discipline & consistency", status: "locked", x: 65, y: 53.3, align: isMobileViewport ? "left" : "top" },
+                      { num: "5", title: "Options & Derivatives", desc: "Options pricing, Greeks & hedging", status: "locked", x: 80, y: 40, align: isMobileViewport ? "left" : "bottom" },
+                      {num: "6", title: "Advanced Strategies", desc: "Algo trading & quant analysis", status: "locked", x: 72, y: 26.6, align: isMobileViewport ? "left" : "top"},
+                      {num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "locked", x: 55, y: 20, align: isMobileViewport ? "right" : "bottom"},
+                      { num: "8", title: "Certification & Placement", desc: "Final assessment & placement", status: "locked", x: 36, y: 18.3, align: isMobileViewport ? "top" : "top", isSummit: true },
+                    ].map((step, idx) => {
+                      const isCompleted = step.status === "completed";
+                      const isCurrent = step.status === "current";
+
+                      return (
+                        <div key={idx}>
+                          {/* Node Circle */}
+                          <div
+                            className="absolute -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center transition-all duration-300 hover:scale-115 cursor-pointer origin-center"
+                            style={{ left: `${step.x}%`, top: `${step.y}%` }}
+                          >
+                            {isCurrent ? (
+                              <div className="relative flex items-center justify-center">
+                                {/* Outer pulse rings */}
+                                <div className={`absolute rounded-full bg-[#D50032]/25 animate-ping ${isMobileViewport ? 'w-5 h-5' : 'w-12 h-12'}`} />
+                                <div className={`absolute rounded-full bg-[#D50032]/40 ${isMobileViewport ? 'w-3.5 h-3.5' : 'w-9 h-9'}`} />
+                                {/* Inner circle */}
+                                <div className={`rounded-full bg-[#D50032] border-2 border-white shadow-md flex items-center justify-center text-white font-extrabold relative z-30 ${isMobileViewport ? 'w-3 h-3 text-[5.5px]' : 'w-8 h-8 text-sm'}`}>
+                                  {step.num}
+                                </div>
+                                {/* Current Module Pill Badge */}
+                                <div className={`absolute bg-[#D50032] text-white font-black uppercase rounded-full shadow-sm z-30 whitespace-nowrap ${isMobileViewport ? 'top-4 px-1 py-0.5 text-[4.5px]' : 'top-10 px-2.5 py-0.5 text-[9px]'}`}>
+                                  Current Module
+                                </div>
+                              </div>
+                            ) : isCompleted ? (
+                              <div className={`rounded-full bg-emerald-500 border-2 border-white shadow flex items-center justify-center text-white z-30 ${isMobileViewport ? 'w-3 h-3' : 'w-7 h-7'}`}>
+                                <CheckCircle className={`fill-emerald-500 stroke-white stroke-[3px] ${isMobileViewport ? 'w-1.5 h-1.5' : 'w-5 h-5'}`} />
+                              </div>
+                            ) : (
+                              <div className={`rounded-full bg-gray-200 border-2 border-white shadow flex items-center justify-center text-gray-500 font-extrabold z-30 ${isMobileViewport ? 'w-3 h-3 text-[5.5px]' : 'w-7 h-7 text-xs'}`}>
+                                {step.num}
+                              </div>
+                            )}
+
+                            {/* Start Label */}
+                            {step.isStart && (
+                              <div className={`absolute font-black uppercase text-gray-400 tracking-wider ${isMobileViewport ? '-top-3.5 text-[5.5px]' : '-top-6 text-[10px]'}`}>
+                                Start
+                              </div>
+                            )}
+
+                            {/* Summit Label */}
+                            {step.isSummit && (
+                              <div className={`absolute font-black uppercase text-[#D50032] tracking-wider flex items-center gap-0.5 ${isMobileViewport ? 'bottom-3.5 text-[5.5px]' : 'bottom-8 text-[10px]'}`}>
+                                🏆 Summit
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      ) : isCompleted ? (
-                        <div className="w-7 h-7 rounded-full bg-emerald-500 border-2 border-white shadow flex items-center justify-center text-white z-20">
-                          <CheckCircle className="w-4 h-4 fill-emerald-500 stroke-white stroke-[3px]" />
-                        </div>
-                      ) : (
-                        <div className="w-7 h-7 rounded-full bg-gray-200 border-2 border-white shadow flex items-center justify-center text-gray-500 font-extrabold text-xs z-20">
-                          {step.num}
-                        </div>
-                      )}
-                    </div>
 
-                    {/* Text Description */}
-                    <div className="flex-1 pb-1">
-                      <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                        <h3
-                          className={`font-extrabold text-sm sm:text-base leading-none ${isCurrent ? "text-[#D50032]" : isCompleted ? "text-gray-900" : "text-gray-400"
-                            }`}
-                        >
-                          {step.title}
-                        </h3>
-                        {isCurrent && (
-                          <span className="bg-[#D50032] text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full scale-90 origin-left">
-                            Current
-                          </span>
-                        )}
-                        {step.isStart && (
-                          <span className="border border-gray-300 text-gray-400 text-[8px] font-black uppercase px-2 py-0.5 rounded-full scale-90 origin-left">
-                            Start
-                          </span>
-                        )}
-                        {step.isSummit && (
-                          <span className="border border-[#D50032]/45 text-[#D50032] text-[8px] font-black uppercase px-2 py-0.5 rounded-full scale-90 origin-left">
-                            🏆 Summit
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-gray-500 text-xs font-medium">
-                        {step.desc}
-                      </p>
-                    </div>
+                          {/* Label Container */}
+                          <div
+                            className={`absolute -translate-y-1/2 z-10 ${step.align === "left" ? "text-right" : (step.align === "top" || step.align === "bottom") ? "text-center" : "text-left"}`}
+                            style={{
+                              width: `${isMobileViewport ? 105 : 200}px`,
+                              left: step.align === "left"
+                                ? `calc(${step.x}% - ${isMobileViewport ? 117 : 220}px)`
+                                : (step.align === "top" || step.align === "bottom")
+                                  ? `calc(${step.x}% - ${isMobileViewport ? 52 : 100}px)`
+                                  : `calc(${step.x}% + ${isMobileViewport ? 12 : 20}px)`,
+                              top: isMobileViewport
+                                ? step.num === "8"
+                                  ? `calc(${step.y}% - 40px)`
+                                  : step.num === "7"
+                                    ? `calc(${step.y}% - 18px)`
+                                    : step.num === "6"
+                                      ? `calc(${step.y}% + 18px)`
+                                      : step.num === "3"
+                                        ? `calc(${step.y}% + 22px)` // Shifts down to clear the "CURRENT MODULE" badge!
+                                        : step.align === "top"
+                                          ? `calc(${step.y}% - 22px)`
+                                          : step.align === "bottom"
+                                            ? `calc(${step.y}% + 22px)`
+                                            : `${step.y}%`
+                                : step.align === "top"
+                                  ? `calc(${step.y}% - 58px)`
+                                  : step.align === "bottom"
+                                    ? `calc(${step.y}% + 58px)`
+                                    : `${step.y}%`
+                            }}
+                          >
+                            <h3
+                              className={`font-black tracking-normal mb-1.5 ${
+                                isCurrent ? "text-[#D50032]" : isCompleted ? "text-gray-900" : "text-gray-400"
+                              } ${isMobileViewport ? 'text-[8.5px] leading-tight mb-0.5 font-black' : 'text-sm sm:text-base font-black'}`}
+                            >
+                              {step.title}
+                            </h3>
+                            <p className={`font-semibold leading-normal inline-block ${isMobileViewport ? 'text-gray-455 text-[6.8px] leading-tight max-w-[100px]' : 'text-gray-500 text-[10px] sm:text-xs max-w-[200px]'}`}>
+                              {step.desc}
+                            </p>
+                          </div>
+
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+
+                {/* Bottom Legend */}
+                <div className="flex justify-center items-center gap-4 sm:gap-6 mt-4 pt-4 border-t border-gray-100 text-[9px] sm:text-xs font-semibold text-gray-500">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-emerald-500" />
+                    Completed
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#D50032]" />
+                    Current
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-gray-200" />
+                    Locked
+                  </div>
+                </div>
+              </div>
+            </ScrollReveal>
           </div>
         </section>
 
@@ -1621,19 +1692,19 @@ export default function MarketingHome() {
           <div className="relative w-full flex flex-col gap-6 overflow-x-hidden py-4 select-none">
             {/* Row 1 - Forward */}
             <div className="animate-marquee flex gap-6 whitespace-nowrap" style={{ display: 'flex', minWidth: '100%' }}>
-              {servicesCards.concat(servicesCards).map((s, idx) => {
-                const Icon = s.icon;
+              {servicesList.concat(servicesList).map((s, idx) => {
+                const IconComponent = typeof s.icon === 'function' ? s.icon : (iconMap[s.icon] || UserCheck);
                 return (
                   <div
                     key={idx}
                     className="w-[280px] sm:w-[320px] p-6 bg-white border border-gray-100 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_40px_rgba(213,0,50,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex-shrink-0 flex flex-col group select-none whitespace-normal text-left"
                   >
                     <div className="w-12 h-12 rounded-2xl bg-[#FFF5F6] border border-[#D50032]/8 text-[#D50032] flex items-center justify-center mb-5 group-hover:scale-105 transition-transform duration-300">
-                      <Icon className="h-6 w-6 stroke-[2.5]" />
+                      <IconComponent className="h-6 w-6 stroke-[2.5]" />
                     </div>
 
                     <div>
-                      <h3 className="font-extrabold text-gray-900 text-base sm:text-lg mb-2 group-hover:text-[#D50032] transition-colors duration-300">
+                      <h3 className="font-extrabold text-gray-950 text-base sm:text-lg mb-2 group-hover:text-[#D50032] transition-colors duration-300">
                         {s.title}
                       </h3>
                       <p className="text-gray-500 text-xs sm:text-sm leading-relaxed font-medium">
@@ -1649,194 +1720,199 @@ export default function MarketingHome() {
         </section>
 
         {/* 4. Vertical Video Section */}
-        <VerticalVideoSection />
+        <VerticalVideoSection videos={apiQuickTips} />
 
         {/* 5. FinTrade Blog Section */}
         <section className="py-4 md:py-6 relative z-10 bg-transparent">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 gap-4">
-              <div>
-                <div className="inline-block px-3 py-1 rounded-full mb-1 border border-[#D50032]/30" style={{ background: "rgba(213,0,50,0.08)" }}>
-                  <span className="text-[#D50032] font-semibold text-xs">✍️ Latest from Blog</span>
+            <ScrollReveal>
+              <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 gap-4">
+                <div>
+                  <div className="inline-block px-3 py-1 rounded-full mb-1 border border-[#D50032]/30" style={{ background: "rgba(213,0,50,0.08)" }}>
+                    <span className="text-[#D50032] font-semibold text-xs">✍️ Latest from Blog</span>
+                  </div>
+                  <h2 className="text-2xl font-bold mb-1.5" style={{ color: "#121212" }}>Market Insights & Articles</h2>
+                  <p className="text-sm text-gray-500">Stay updated with our research and trading strategies</p>
                 </div>
-                <h2 className="text-2xl font-bold mb-1.5" style={{ color: "#121212" }}>Market Insights & Articles</h2>
-                <p className="text-sm text-gray-500">Stay updated with our research and trading strategies</p>
+                <Link to="/category/technical-analysis">
+                  <Button variant="outline" className="border-2 border-[#D50032] text-[#D50032] hover:bg-[#D50032] hover:text-white transition-all duration-300 py-1.5 px-3.5 text-sm h-9">
+                    View All Articles
+                    <ArrowRight className="ml-2.5 h-3.5 w-3.5" />
+                  </Button>
+                </Link>
               </div>
-              <Link to="/category/technical-analysis">
-                <Button variant="outline" className="border-2 border-[#D50032] text-[#D50032] hover:bg-[#D50032] hover:text-white transition-all duration-300 py-1.5 px-3.5 text-sm h-9">
-                  View All Articles
-                  <ArrowRight className="ml-2.5 h-3.5 w-3.5" />
-                </Button>
-              </Link>
-            </div>
 
-            <div className="grid lg:grid-cols-12 gap-5 items-stretch">
-              {/* Featured Video (Left Side) */}
-              <div className="lg:col-span-5">
-                {marketUpdates.length > 0 ? (
-                  <Card 
-                    onClick={() => { setActiveVideoIdx(0); setVideoOpen(true); }}
-                    className="overflow-hidden border-0 shadow-md relative group h-full flex flex-col cursor-pointer"
-                  >
-                    <div className="relative flex-1 min-h-[180px]">
-                      <img
-                        src={marketUpdates[0].thumbnail_url || "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80"}
-                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                        alt={marketUpdates[0].title}
-                      />
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        <div className="w-14 h-14 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl" style={{ background: "#D50032", boxShadow: "0 0 30px rgba(213,0,50,0.5)" }}>
-                          <Play className="h-5 w-5 text-white ml-0.5" />
+              <div className="grid lg:grid-cols-12 gap-5 items-stretch">
+                {/* Featured Video (Left Side) */}
+                <div className="lg:col-span-5">
+                  {marketUpdates.length > 0 ? (
+                    <Card 
+                      onClick={() => { setActiveVideoIdx(0); setVideoOpen(true); }}
+                      className="overflow-hidden border-0 shadow-md relative group h-full flex flex-col cursor-pointer"
+                    >
+                      <div className="relative flex-1 min-h-[180px]">
+                        <img
+                          src={marketUpdates[0].thumbnail_url || "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80"}
+                          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          alt={marketUpdates[0].title}
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <div className="w-14 h-14 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl" style={{ background: "#D50032", boxShadow: "0 0 30px rgba(213,0,50,0.5)" }}>
+                            <Play className="h-5 w-5 text-white ml-0.5" />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="p-4 bg-white">
-                      <h3 className="text-base font-bold mb-1" style={{ color: "#121212" }}>{marketUpdates[0].title}</h3>
-                      <p className="text-xs text-gray-500 line-clamp-2">{marketUpdates[0].content}</p>
-                    </div>
-                  </Card>
-                ) : (
-                  <Card 
-                    onClick={() => { setActiveVideoIdx(0); setVideoOpen(true); }}
-                    className="overflow-hidden border-0 shadow-md relative group h-full flex flex-col cursor-pointer"
-                  >
-                    <div className="relative flex-1 min-h-[180px]">
-                      <img
-                        src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80"
-                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                        alt="Featured Video"
-                      />
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        <div className="w-14 h-14 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl" style={{ background: "#D50032", boxShadow: "0 0 30px rgba(213,0,50,0.5)" }}>
-                          <Play className="h-5 w-5 text-white ml-0.5" />
+                      <div className="p-4 bg-white">
+                        <h3 className="text-base font-bold mb-1" style={{ color: "#121212" }}>{marketUpdates[0].title}</h3>
+                        <p className="text-xs text-gray-500 line-clamp-2">{marketUpdates[0].content}</p>
+                      </div>
+                    </Card>
+                  ) : (
+                    <Card 
+                      onClick={() => { setActiveVideoIdx(0); setVideoOpen(true); }}
+                      className="overflow-hidden border-0 shadow-md relative group h-full flex flex-col cursor-pointer"
+                    >
+                      <div className="relative flex-1 min-h-[180px]">
+                        <img
+                          src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80"
+                          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          alt="Featured Video"
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <div className="w-14 h-14 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl" style={{ background: "#D50032", boxShadow: "0 0 30px rgba(213,0,50,0.5)" }}>
+                            <Play className="h-5 w-5 text-white ml-0.5" />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="p-4 bg-white">
-                      <h3 className="text-base font-bold mb-1" style={{ color: "#121212" }}>FinTrade: Master the Market Dynamics</h3>
-                      <p className="text-xs text-gray-500">Watch our exclusive masterclass on market analysis and risk management techniques for 2026.</p>
-                    </div>
-                  </Card>
-                )}
-              </div>
+                      <div className="p-4 bg-white">
+                        <h3 className="text-base font-bold mb-1" style={{ color: "#121212" }}>FinTrade: Master the Market Dynamics</h3>
+                        <p className="text-xs text-gray-500">Watch our exclusive masterclass on market analysis and risk management techniques for 2026.</p>
+                      </div>
+                    </Card>
+                  )}
+                </div>
 
-              {/* Blog Stories (4 Cards) */}
-              <div
-                ref={blogScrollRef}
-                onScroll={handleBlogScroll}
-                onTouchStart={handleBlogTouchStart}
-                onTouchEnd={handleBlogTouchEnd}
-                className="lg:col-span-7 flex md:grid md:grid-cols-2 gap-4 overflow-x-auto lg:overflow-x-visible pb-6 lg:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 lg:px-0 lg:mx-0 items-stretch"
-                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-              >
-                {blogStories.length > 0 ? blogStories.map((story, i) => (
-                  <Card key={i} className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 flex flex-col border-0 shadow-md group hover:-translate-y-1 transition-all duration-300 snap-center">
-                    <div className="h-32 overflow-hidden relative">
-                      <img src={story.thumbnail_url || "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80"} alt={story.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2.5 py-0.5 rounded-full text-[10px] font-bold text-[#D50032]">
-                        Blog
+                {/* Blog Stories (4 Cards) */}
+                <div
+                  ref={blogScrollRef}
+                  onScroll={handleBlogScroll}
+                  onTouchStart={handleBlogTouchStart}
+                  onTouchEnd={handleBlogTouchEnd}
+                  className="lg:col-span-7 flex md:grid md:grid-cols-2 gap-4 overflow-x-auto lg:overflow-x-visible pb-6 lg:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 lg:px-0 lg:mx-0 items-stretch"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
+                  {blogStories.length > 0 ? blogStories.map((story, i) => (
+                    <Card key={i} className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 flex flex-col border-0 shadow-md group hover:-translate-y-1 transition-all duration-300 snap-center">
+                      <div className="h-32 overflow-hidden relative">
+                        <img src={story.thumbnail_url || "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80"} alt={story.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2.5 py-0.5 rounded-full text-[10px] font-bold text-[#D50032]">
+                          Blog
+                        </div>
                       </div>
-                    </div>
-                    <div className="p-4 flex flex-col flex-1">
-                      <div className="flex items-center justify-between text-[11px] text-gray-500 mb-1.5">
-                        <span className="flex items-center gap-1"><FileText size={12} />Read</span>
-                        <span>5 min read</span>
+                      <div className="p-4 flex flex-col flex-1">
+                        <div className="flex items-center justify-between text-[11px] text-gray-500 mb-1.5">
+                          <span className="flex items-center gap-1"><FileText size={12} />Read</span>
+                          <span>5 min read</span>
+                        </div>
+                        <h3 className="font-bold text-sm mb-1 line-clamp-2 hover:text-[#D50032] transition-colors cursor-pointer" style={{ color: "#121212" }}>{story.title}</h3>
+                        <p className="text-xs text-gray-500 mb-2 line-clamp-2 flex-1">{story.content}</p>
+                        <Link to="/blog" className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all">
+                          Read Story <ChevronRight size={14} />
+                        </Link>
                       </div>
-                      <h3 className="font-bold text-sm mb-1 line-clamp-2 hover:text-[#D50032] transition-colors cursor-pointer" style={{ color: "#121212" }}>{story.title}</h3>
-                      <p className="text-xs text-gray-500 mb-2 line-clamp-2 flex-1">{story.content}</p>
-                      <Link to="/blog" className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all">
-                        Read Story <ChevronRight size={14} />
-                      </Link>
-                    </div>
-                  </Card>
-                )) : [
-                  {
-                    title: "How to Start Option Trading in India",
-                    category: "Options",
-                    readTime: "8 min read",
-                    img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80",
-                    desc: "A comprehensive guide for beginners looking to enter the derivative markets safely."
-                  },
-                  {
-                    title: "Top 5 Mistakes Day Traders Make",
-                    category: "Psychology",
-                    readTime: "5 min read",
-                    img: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=800&q=80",
-                    desc: "Avoid these common psychological traps that destroy trading accounts."
-                  },
-                  {
-                    title: "Understanding Institutional Order Flow",
-                    category: "Advanced",
-                    readTime: "12 min read",
-                    img: "https://images.unsplash.com/photo-1535320903710-d993d3d77d29?auto=format&fit=crop&w=800&q=80",
-                    desc: "Learn to read the market like smart money and trade alongside the institutions."
-                  },
-                  {
-                    title: "Building a Winning Trading System",
-                    category: "Strategy",
-                    readTime: "10 min read",
-                    img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
-                    desc: "Step-by-step process to backtest and deploy your own profitable strategy."
-                  }
-                ].map((post, i) => (
-                  <Card key={i} className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 flex flex-col border-0 shadow-md group hover:-translate-y-1 transition-all duration-300 snap-center">
-                    <div className="h-32 overflow-hidden relative">
-                      <img src={post.img} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2.5 py-0.5 rounded-full text-[10px] font-bold text-[#D50032]">
-                        {post.category}
+                    </Card>
+                  )) : [
+                    {
+                      title: "How to Start Option Trading in India",
+                      category: "Options",
+                      readTime: "8 min read",
+                      img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80",
+                      desc: "A comprehensive guide for beginners looking to enter the derivative markets safely."
+                    },
+                    {
+                      title: "Top 5 Mistakes Day Traders Make",
+                      category: "Psychology",
+                      readTime: "5 min read",
+                      img: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=800&q=80",
+                      desc: "Avoid these common psychological traps that destroy trading accounts."
+                    },
+                    {
+                      title: "Understanding Institutional Order Flow",
+                      category: "Advanced",
+                      readTime: "12 min read",
+                      img: "https://images.unsplash.com/photo-1535320903710-d993d3d77d29?auto=format&fit=crop&w=800&q=80",
+                      desc: "Learn to read the market like smart money and trade alongside the institutions."
+                    },
+                    {
+                      title: "Building a Winning Trading System",
+                      category: "Strategy",
+                      readTime: "10 min read",
+                      img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+                      desc: "Step-by-step process to backtest and deploy your own profitable strategy."
+                    }
+                  ].map((post, i) => (
+                    <Card key={i} className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 flex flex-col border-0 shadow-md group hover:-translate-y-1 transition-all duration-300 snap-center">
+                      <div className="h-32 overflow-hidden relative">
+                        <img src={post.img} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2.5 py-0.5 rounded-full text-[10px] font-bold text-[#D50032]">
+                          {post.category}
+                        </div>
                       </div>
-                    </div>
-                    <div className="p-4 flex flex-col flex-1">
-                      <div className="flex items-center justify-between text-[11px] text-gray-500 mb-1.5">
-                        <span className="flex items-center gap-1"><FileText size={12} /> Article</span>
-                        <span>{post.readTime}</span>
+                      <div className="p-4 flex flex-col flex-1">
+                        <div className="flex items-center justify-between text-[11px] text-gray-500 mb-1.5">
+                          <span className="flex items-center gap-1"><FileText size={12} /> Article</span>
+                          <span>{post.readTime}</span>
+                        </div>
+                        <h3 className="font-bold text-sm mb-1 line-clamp-2 hover:text-[#D50032] transition-colors cursor-pointer" style={{ color: "#121212" }}>{post.title}</h3>
+                        <p className="text-xs text-gray-500 mb-2 line-clamp-2 flex-1">{post.desc}</p>
+                        <button className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all mt-auto self-start">
+                          Read Full Article <ChevronRight size={16} />
+                        </button>
                       </div>
-                      <h3 className="font-bold text-sm mb-1 line-clamp-2 hover:text-[#D50032] transition-colors cursor-pointer" style={{ color: "#121212" }}>{post.title}</h3>
-                      <p className="text-xs text-gray-500 mb-2 line-clamp-2 flex-1">{post.desc}</p>
-                      <button className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all mt-auto self-start">
-                        Read Full Article <ChevronRight size={16} />
-                      </button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
+                    </Card>
+                  ))}
+                </div>
 
-              {/* Mobile Dot Indicators for Blog Section */}
-              <div className="flex md:hidden gap-1.5 justify-center items-center mt-1 w-full">
-                {Array.from({ length: blogStoriesCount }).map((_, idx) => {
-                  const isActive = idx === blogActiveIndex;
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setIsBlogPaused(true);
-                        setBlogActiveIndex(idx);
-                        const container = blogScrollRef.current;
-                        if (container) {
-                          const cardWidth = container.firstElementChild?.getBoundingClientRect().width || 0;
-                          const gap = 16;
-                          container.scrollTo({
-                            left: idx * (cardWidth + gap),
-                            behavior: "smooth"
-                          });
-                        }
-                        if (blogTouchTimeoutRef.current) clearTimeout(blogTouchTimeoutRef.current);
-                        blogTouchTimeoutRef.current = setTimeout(() => {
-                          setIsBlogPaused(false);
-                        }, 8000);
-                      }}
-                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${isActive ? "w-5 bg-[#D50032]" : "w-1.5 bg-gray-300 hover:bg-gray-400"
-                        }`}
-                    />
-                  );
-                })}
+                {/* Mobile Dot Indicators for Blog Section */}
+                <div className="flex md:hidden gap-1.5 justify-center items-center mt-1 w-full">
+                  {Array.from({ length: blogStoriesCount }).map((_, idx) => {
+                    const isActive = idx === blogActiveIndex;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setIsBlogPaused(true);
+                          setBlogActiveIndex(idx);
+                          const container = blogScrollRef.current;
+                          if (container) {
+                            const cardWidth = container.firstElementChild?.getBoundingClientRect().width || 0;
+                            const gap = 16;
+                            container.scrollTo({
+                              left: idx * (cardWidth + gap),
+                              behavior: "smooth"
+                            });
+                          }
+                          if (blogTouchTimeoutRef.current) clearTimeout(blogTouchTimeoutRef.current);
+                          blogTouchTimeoutRef.current = setTimeout(() => {
+                            setIsBlogPaused(false);
+                          }, 8000);
+                        }}
+                        className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${isActive ? "w-5 bg-[#D50032]" : "w-1.5 bg-gray-300 hover:bg-gray-400"
+                          }`}
+                      />
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            </ScrollReveal>
           </div>
         </section>
 
         {/* 6.5 Certification Section (Moved below Modules) */}
         <CertificatePreview />
+
+        {/* EMI & Payment Plans Section */}
+        <EMIHighlight />
 
         {/* Placement & Career Opportunities Orbit Section */}
         <CareerPathways />
@@ -1846,104 +1922,104 @@ export default function MarketingHome() {
         <section id="about" className="py-6 md:py-8 bg-white relative z-10 overflow-hidden">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-            {/* Section Header */}
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-1.5 px-4.5 py-1.5 rounded-full mb-3 border border-[#D50032]/25 bg-[#D50032]/5">
-                <span className="text-[#D50032] font-extrabold text-xs tracking-wider uppercase">💡 Our Edge</span>
-              </div>
-              <h2 className="text-3xl md:text-4.5xl font-black mb-3 text-gray-900 tracking-tight">
-                Why Choose <span className="text-[#D50032]">FinTrade</span>
-              </h2>
-              <p className="text-base sm:text-lg text-gray-500 max-w-xl mx-auto leading-relaxed">
-                Everything you need to become a successful trader
-              </p>
-            </div>
-
-            {/* Cards Grid / Carousel */}
-            <div
-              ref={whyChooseScrollRef}
-              onScroll={handleWhyChooseScroll}
-              onTouchStart={() => {
-                setIsWhyChoosePaused(true);
-                if (whyChooseTouchTimeoutRef.current) clearTimeout(whyChooseTouchTimeoutRef.current);
-              }}
-              onTouchEnd={() => {
-                if (whyChooseTouchTimeoutRef.current) clearTimeout(whyChooseTouchTimeoutRef.current);
-                whyChooseTouchTimeoutRef.current = setTimeout(() => {
-                  setIsWhyChoosePaused(false);
-                }, 8000);
-              }}
-              className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 overflow-x-auto md:overflow-x-visible pb-6 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-            >
-              {[
-                { icon: Brain, title: "AI Tutor Support", description: "Get personalized AI-powered guidance throughout your learning journey with real-time doubt resolution.", num: "01" },
-                { icon: BookOpen, title: "Structured Curriculum", description: "Follow a proven step-by-step curriculum designed by industry professionals and expert traders.", num: "02" },
-                { icon: LineChart, title: "Real Trading Simulation", description: "Practice with our advanced trading simulator using virtual capital in real market conditions.", num: "03" },
-                { icon: Trophy, title: "Placement Opportunities", description: "Get access to placement support with leading prop trading firms and financial institutions.", num: "04" },
-              ].map((feature, i) => (
-                <div key={i} className="flex-shrink-0 w-[270px] sm:w-[320px] md:w-full md:flex-shrink snap-center flex">
-                  <div className="w-full flex flex-col justify-between overflow-hidden rounded-[28px] border border-gray-100/90 bg-white p-7 shadow-[0_12px_40px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)] hover:border-[#D50032]/10 transition-all duration-300 group select-none">
-                    <div>
-                      {/* Top Row */}
-                      <div className="flex justify-between items-center w-full">
-                        {/* Circular pink icon container */}
-                        <div className="w-12 h-12 rounded-full bg-[#FFF0F2] flex items-center justify-center flex-shrink-0">
-                          <feature.icon className="h-6 w-6 text-[#D50032]" />
-                        </div>
-
-                        {/* Large translucent numbers */}
-                        <span className="text-5xl font-black text-gray-100/80 tracking-tighter leading-none font-sans">
-                          {feature.num}
-                        </span>
-                      </div>
-
-                      {/* Title */}
-                      <h3 className="text-lg font-black text-gray-950 mt-6 tracking-tight text-left">
-                        {feature.title}
-                      </h3>
-
-                      {/* Description */}
-                      <p className="text-gray-500 text-sm leading-relaxed mt-2.5 text-left">
-                        {feature.description}
-                      </p>
-                    </div>
-                  </div>
+            <ScrollReveal>
+              {/* Section Header */}
+              <div className="text-center mb-12">
+                <div className="inline-flex items-center gap-1.5 px-4.5 py-1.5 rounded-full mb-3 border border-[#D50032]/25 bg-[#D50032]/5">
+                  <span className="text-[#D50032] font-extrabold text-xs tracking-wider uppercase">💡 Our Edge</span>
                 </div>
-              ))}
-            </div>
+                <h2 className="text-3xl md:text-4.5xl font-black mb-3 text-gray-900 tracking-tight">
+                  Why Choose <span className="text-[#D50032]">FinTrade</span>
+                </h2>
+                <p className="text-base sm:text-lg text-gray-500 max-w-xl mx-auto leading-relaxed">
+                  Everything you need to become a successful trader
+                </p>
+              </div>
 
-            {/* Mobile Dot Indicators for Why Choose Section */}
-            <div className="flex md:hidden gap-1.5 justify-center items-center mt-4 w-full">
-              {Array.from({ length: whyChooseCardsCount }).map((_, idx) => {
-                const isActive = idx === whyChooseActiveIndex;
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      setIsWhyChoosePaused(true);
-                      setWhyChooseActiveIndex(idx);
-                      const container = whyChooseScrollRef.current;
-                      if (container) {
-                        const cardWidth = container.firstElementChild?.getBoundingClientRect().width || 0;
-                        const gap = 24;
-                        container.scrollTo({
-                          left: idx * (cardWidth + gap),
-                          behavior: "smooth"
-                        });
-                      }
-                      if (whyChooseTouchTimeoutRef.current) clearTimeout(whyChooseTouchTimeoutRef.current);
-                      whyChooseTouchTimeoutRef.current = setTimeout(() => {
-                        setIsWhyChoosePaused(false);
-                      }, 8000);
-                    }}
-                    className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                      isActive ? "w-5 bg-[#D50032]" : "w-1.5 bg-gray-300 hover:bg-gray-400"
-                    }`}
-                  />
-                );
-              })}
-            </div>
+              {/* Cards Grid / Carousel */}
+              <div
+                ref={whyChooseScrollRef}
+                onScroll={handleWhyChooseScroll}
+                onTouchStart={() => {
+                  setIsWhyChoosePaused(true);
+                  if (whyChooseTouchTimeoutRef.current) clearTimeout(whyChooseTouchTimeoutRef.current);
+                }}
+                onTouchEnd={() => {
+                  if (whyChooseTouchTimeoutRef.current) clearTimeout(whyChooseTouchTimeoutRef.current);
+                  whyChooseTouchTimeoutRef.current = setTimeout(() => {
+                    setIsWhyChoosePaused(false);
+                  }, 8000);
+                }}
+                className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 overflow-x-auto md:overflow-x-visible pb-6 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              >
+                {whyChooseList.map((feature, i) => {
+                  const IconComponent = typeof feature.icon === 'function' ? feature.icon : (iconMap[feature.icon] || Brain);
+                  return (
+                    <div key={i} className="flex-shrink-0 w-[270px] sm:w-[320px] md:w-full md:flex-shrink snap-center flex">
+                      <div className="w-full flex flex-col justify-between overflow-hidden rounded-[28px] border border-gray-100/90 bg-white p-7 shadow-[0_12px_40px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)] hover:border-[#D50032]/10 transition-all duration-300 group select-none">
+                        <div>
+                          {/* Top Row */}
+                          <div className="flex justify-between items-center w-full">
+                            {/* Circular pink icon container */}
+                            <div className="w-12 h-12 rounded-full bg-[#FFF0F2] flex items-center justify-center flex-shrink-0">
+                              <IconComponent className="h-6 w-6 text-[#D50032]" />
+                            </div>
+
+                            {/* Large translucent numbers */}
+                            <span className="text-5xl font-black text-gray-100/80 tracking-tighter leading-none font-sans">
+                              {feature.num}
+                            </span>
+                          </div>
+
+                          {/* Title */}
+                          <h3 className="text-lg font-black text-gray-950 mt-6 tracking-tight text-left">
+                            {feature.title}
+                          </h3>
+
+                          {/* Description */}
+                          <p className="text-gray-500 text-sm leading-relaxed mt-2.5 text-left">
+                            {feature.desc || feature.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Mobile Dot Indicators for Why Choose Section */}
+              <div className="flex md:hidden gap-1.5 justify-center items-center mt-4 w-full">
+                {Array.from({ length: whyChooseCardsCount }).map((_, idx) => {
+                  const isActive = idx === whyChooseActiveIndex;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setIsWhyChoosePaused(true);
+                        setWhyChooseActiveIndex(idx);
+                        const container = whyChooseScrollRef.current;
+                        if (container) {
+                          const cardWidth = container.firstElementChild?.getBoundingClientRect().width || 0;
+                          const gap = 24;
+                          container.scrollTo({
+                            left: idx * (cardWidth + gap),
+                            behavior: "smooth"
+                          });
+                        }
+                        if (whyChooseTouchTimeoutRef.current) clearTimeout(whyChooseTouchTimeoutRef.current);
+                        whyChooseTouchTimeoutRef.current = setTimeout(() => {
+                          setIsWhyChoosePaused(false);
+                        }, 8000);
+                      }}
+                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                        isActive ? "w-5 bg-[#D50032]" : "w-1.5 bg-gray-300 hover:bg-gray-400"
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+            </ScrollReveal>
 
           </div>
         </section>
@@ -1951,49 +2027,53 @@ export default function MarketingHome() {
         {/* Leadership Section */}
         <section className="py-12 bg-white relative z-10 border-t border-gray-100">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <ExpertProfile />
+            <ScrollReveal>
+              <ExpertProfile leaders={apiLeadership} />
+            </ScrollReveal>
           </div>
         </section>
 
         {/* CTA Section */}
         <section className="py-6 md:py-8 bg-white relative z-10 overflow-hidden">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="relative bg-white border border-[#D50032]/8 rounded-[32px] p-8 md:p-12 text-center shadow-[0_15px_40px_rgba(213,0,50,0.02)] overflow-hidden select-none">
+            <ScrollReveal>
+              <div className="relative bg-white border border-[#D50032]/8 rounded-[32px] p-8 md:p-12 text-center shadow-[0_15px_40px_rgba(213,0,50,0.02)] overflow-hidden select-none">
 
-              {/* Top glowing red gradient bar */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 md:w-44 h-1.5 bg-gradient-to-r from-[#D50032] via-[#FF4D6D] to-[#D50032] rounded-b-full shadow-[0_2px_10px_rgba(213,0,50,0.4)]" />
+                {/* Top glowing red gradient bar */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 md:w-44 h-1.5 bg-gradient-to-r from-[#D50032] via-[#FF4D6D] to-[#D50032] rounded-b-full shadow-[0_2px_10px_rgba(213,0,50,0.4)]" />
 
-              {/* Heading */}
-              <h2 className="text-3xl md:text-5xl font-black tracking-tight text-gray-950 leading-tight font-sans">
-                THE MARKET'S MOVING,<br />
-                <span className="text-[#D50032]">ARE YOU?</span>
-              </h2>
+                {/* Heading */}
+                <h2 className="text-3xl md:text-5xl font-black tracking-tight text-gray-950 leading-tight font-sans">
+                  THE MARKET'S MOVING,<br />
+                  <span className="text-[#D50032]">ARE YOU?</span>
+                </h2>
 
-              {/* Subtitle */}
-              <p className="text-gray-600 font-semibold text-sm sm:text-base max-w-xl mx-auto leading-relaxed mt-4.5 mb-8">
-                Join hundreds of traders who have transformed their financial future with The FinTrade Academy.
-              </p>
+                {/* Subtitle */}
+                <p className="text-gray-600 font-semibold text-sm sm:text-base max-w-xl mx-auto leading-relaxed mt-4.5 mb-8">
+                  Join hundreds of traders who have transformed their financial future with The FinTrade Academy.
+                </p>
 
-              {/* Buttons */}
-              <div className="flex flex-col sm:flex-row justify-center items-center gap-4.5">
-                <Link to="/courses" className="w-full sm:w-auto">
-                  <button className="w-full sm:w-auto py-3.5 px-8 rounded-2xl bg-gradient-to-r from-[#D50032] to-[#FF3D00] text-white font-extrabold text-sm hover:shadow-[0_8px_25px_rgba(213,0,50,0.35)] transition-all duration-300 transform active:scale-98 cursor-pointer flex items-center justify-center gap-1">
-                    Apply Now <span>→</span>
-                  </button>
-                </Link>
+                {/* Buttons */}
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-4.5">
+                  <Link to="/courses" className="w-full sm:w-auto">
+                    <button className="w-full sm:w-auto py-3.5 px-8 rounded-2xl bg-gradient-to-r from-[#D50032] to-[#FF3D00] text-white font-extrabold text-sm hover:shadow-[0_8px_25px_rgba(213,0,50,0.35)] transition-all duration-300 transform active:scale-98 cursor-pointer flex items-center justify-center gap-1">
+                      Apply Now <span>→</span>
+                    </button>
+                  </Link>
 
-                <a href="#" onClick={handleDownloadClick} className="w-full sm:w-auto">
-                  <button className="w-full sm:w-auto py-3.5 px-8 rounded-2xl border border-[#D50032] text-[#D50032] font-extrabold text-sm bg-white hover:bg-[#D50032]/5 transition-all duration-300 transform active:scale-98 cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.01)] border-solid">
-                    <Download className="w-4.5 h-4.5 stroke-[2.5]" />
-                    Download Brochure
-                  </button>
-                </a>
+                  <a href="#" onClick={handleDownloadClick} className="w-full sm:w-auto">
+                    <button className="w-full sm:w-auto py-3.5 px-8 rounded-2xl border border-[#D50032] text-[#D50032] font-extrabold text-sm bg-white hover:bg-[#D50032]/5 transition-all duration-300 transform active:scale-98 cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.01)] border-solid">
+                      <Download className="w-4.5 h-4.5 stroke-[2.5]" />
+                      Download Brochure
+                    </button>
+                  </a>
+                </div>
+
+                {/* Bottom glowing red gradient bar */}
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 md:w-44 h-1.5 bg-gradient-to-r from-[#D50032] via-[#FF4D6D] to-[#D50032] rounded-t-full shadow-[0_-2px_10px_rgba(213,0,50,0.4)]" />
+
               </div>
-
-              {/* Bottom glowing red gradient bar */}
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 md:w-44 h-1.5 bg-gradient-to-r from-[#D50032] via-[#FF4D6D] to-[#D50032] rounded-t-full shadow-[0_-2px_10px_rgba(213,0,50,0.4)]" />
-
-            </div>
+            </ScrollReveal>
           </div>
         </section>
 

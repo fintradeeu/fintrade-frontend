@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Base API configuration
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.thefintrade.com';
 
 export const api = axios.create({
   baseURL: API_URL,

@@ -47,7 +47,7 @@ export default function AdminCourses() {
   const [draggedLesson, setDraggedLesson] = useState<number | null>(null);
 
   const fetchCourses = async () => {
-    try { const res = await api.get("/admin/courses"); setCourses(res.data); }
+    try { const res = await api.get("/courses"); setCourses(res.data); }
     catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
@@ -102,9 +102,9 @@ export default function AdminCourses() {
       delete (payload as any).duration_days;
       
       if (editCourseId) {
-        await api.put(`/admin/courses/${editCourseId}`, payload);
+        await api.put(`/courses/${editCourseId}`, payload);
       } else {
-        await api.post("/admin/courses", payload);
+        await api.post("/courses", payload);
       }
       
       setShowCourseModal(false);
@@ -171,7 +171,7 @@ export default function AdminCourses() {
 
   const togglePublish = async (courseId: number, currentState: boolean) => {
     try {
-      await api.put(`/admin/courses/${courseId}`, { is_published: !currentState });
+      await api.put(`/courses/${courseId}`, { is_published: !currentState });
       fetchCourses();
     } catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
   };
@@ -180,7 +180,7 @@ export default function AdminCourses() {
   const handleDeleteCourse = async (courseId: number, courseTitle: string) => {
     if (!confirm(`Delete course "${courseTitle}" and all its modules and lessons? This cannot be undone.`)) return;
     try {
-      await api.delete(`/admin/courses/${courseId}`);
+      await api.delete(`/courses/${courseId}`);
       fetchCourses();
     } catch (err: any) { alert("Error deleting course: " + (err.response?.data?.detail || err.message)); }
   };
@@ -267,7 +267,7 @@ export default function AdminCourses() {
     setCourses(courses.map(c => c.id === targetCourseId ? { ...c, modules: newModules } : c));
 
     const moduleIds = newModules.map((m: any) => m.id);
-    api.put(`/admin/courses/${targetCourseId}/modules/reorder`, { module_ids: moduleIds })
+    api.put(`/courses/${targetCourseId}/modules/reorder`, { module_ids: moduleIds })
       .then(() => fetchCourseDetail(targetCourseId))
       .catch(console.error);
     setDraggedModule(null);

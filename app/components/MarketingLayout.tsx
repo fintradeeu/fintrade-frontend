@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router";
-import { Search, Phone, Instagram, Facebook, Youtube, Linkedin, X, Download, UserCircle, Save, Mail, Smartphone } from "lucide-react";
+import { Search, Phone, Instagram, Facebook, Youtube, Linkedin, X, Download, UserCircle, Save, Mail, Smartphone, AlertTriangle, Menu, LogIn } from "lucide-react";
 import { Button } from "./ui/button";
+import { Card } from "./ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -12,7 +13,53 @@ export default function MarketingLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
+  const [showViolationModal, setShowViolationModal] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+
+  // Premium Preloader States & Hook
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [shouldRenderLoader, setShouldRenderLoader] = useState(true);
+
+  useEffect(() => {
+    const preloaded = sessionStorage.getItem("website_preloaded");
+    if (preloaded === "true") {
+      setIsLoading(false);
+      setShouldRenderLoader(false);
+      return;
+    }
+
+    let progress = 0;
+    const startTime = Date.now();
+    const duration = 4000; // 3 seconds strictly
+
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      progress = Math.min(100, Math.floor((elapsed / duration) * 100));
+      setLoadingProgress(progress);
+
+      if (progress >= 100) {
+        clearInterval(interval);
+        setTimeout(() => {
+          setIsLoading(false);
+          sessionStorage.setItem("website_preloaded", "true");
+          setTimeout(() => {
+            setShouldRenderLoader(false);
+          }, 800);
+        }, 300);
+      }
+    }, 30); // frequent updates for perfectly smooth bar flow
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (localStorage.getItem("entrance_violation_popup") === "true") {
+      setShowViolationModal(true);
+      localStorage.removeItem("entrance_violation_popup");
+    }
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -68,7 +115,7 @@ export default function MarketingLayout() {
     try {
       // Call backend API to update the profile in the database
       const res = await api.put("/auth/my-profile", profileForm);
-      
+
       // Update localStorage with the latest server data
       localStorage.setItem("user", JSON.stringify(res.data));
       setProfileOpen(false);
@@ -93,8 +140,38 @@ export default function MarketingLayout() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col font-sans" style={{ background: "radial-gradient(circle at 50% 50%, #FFFFFF 0%, #F8F8F8 50%, #F4F4F4 100%)" }}>
-      
+    <div className="min-h-screen flex flex-col font-sans overflow-x-hidden" style={{ background: "radial-gradient(circle at 50% 50%, #FFFFFF 0%, #F8F8F8 50%, #F4F4F4 100%)" }}>
+
+      {/* Premium Preloader Intro Screen */}
+      {shouldRenderLoader && (
+        <div
+          className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#0b0f19] select-none transition-opacity duration-700 ease-in-out ${isLoading ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+        >
+          {/* Subtle Ambient Radial Glows */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-[#D50032]/10 blur-[120px] pointer-events-none" />
+          <div className="absolute -top-40 -left-40 w-[400px] h-[400px] rounded-full border border-white/5 opacity-20 pointer-events-none" />
+          <div className="absolute -bottom-40 -right-40 w-[400px] h-[400px] rounded-full border border-[#D50032]/5 opacity-25 pointer-events-none" />
+
+          {/* Logo & Brand Wrapper */}
+          <div className="relative flex flex-col items-center z-10">
+            {/* Glowing Logo Circle */}
+            <div className="relative flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full bg-[#D50032]/25 blur-3xl animate-pulse w-40 h-40" />
+              <div className="w-28 h-28 flex items-center justify-center relative">
+                <img
+                  src="/F-LOGO--RED.png"
+                  alt="FinTrade logo"
+                  className="h-24 w-24 object-contain animate-spin"
+                  style={{ animationDuration: "2.5s" }}
+                />
+              </div>
+            </div>
+          </div>
+
+        </div>
+      )}
+
       {/* Search Overlay */}
       {searchOpen && (
         <div className="fixed inset-0 z-[9998] flex items-start justify-center pt-32" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} onClick={() => setSearchOpen(false)}>
@@ -122,7 +199,7 @@ export default function MarketingLayout() {
           <div className="flex items-center justify-between h-12 text-sm">
             <div className="flex items-center gap-4">
               <a href="tel:+919876543210" className="flex items-center gap-2 text-white bg-[#D50032] px-3.5 py-1.5 rounded-full font-bold shadow-[0_0_15px_rgba(213,0,50,0.45)] hover:bg-[#FF0000] hover:scale-105 transition-all duration-300">
-                <Phone className="h-3.5 w-3.5 fill-current" /> <span className="hidden sm:inline">+91 98765 43210</span><span className="sm:hidden">Call</span>
+                <Phone className="h-3.5 w-3.5 fill-current" /> <span className="hidden sm:inline">+91 92746 75947</span><span className="sm:hidden">Call</span>
               </a>
               <span className="text-gray-600 hidden sm:inline">|</span>
               <span className="text-gray-400 hidden sm:inline">Support & Info</span>
@@ -153,8 +230,8 @@ export default function MarketingLayout() {
       {/* Navbar */}
       <nav className="sticky top-0 z-[100] bg-white/90 border-b border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.05)] backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20 -translate-x-4 md:-translate-x-8">
-            <div className="flex-shrink-0 flex items-center h-[50px] w-[140px] md:h-[60px] md:w-[220px]">
+          <div className="flex items-center justify-between h-20">
+            <div className="flex-shrink-0 flex items-center h-[50px] w-[140px] md:h-[60px] md:w-[220px] -translate-x-4 md:-translate-x-8">
               <Link to="/" className="flex items-center justify-center h-full w-full overflow-hidden">
                 <img
                   src={logo}
@@ -191,16 +268,107 @@ export default function MarketingLayout() {
                   <UserCircle className="h-8 w-8" />
                 </button>
               ) : (
-                <Link to="/login">
-                  <Button variant="ghost" className="text-gray-700 hover:text-[#D50032] hover:bg-[#D50032]/10" size="lg">Login</Button>
+                <Link to="/login" className="inline-block select-none">
+                  <button
+                    className="h-10 px-5 rounded-full bg-[#D50032] hover:bg-[#b00029] text-white font-extrabold text-xs sm:text-sm tracking-wide flex items-center gap-2 transition-all duration-300 shadow-[0_4px_12px_rgba(213,0,50,0.22)] hover:shadow-[0_6px_18px_rgba(213,0,50,0.32)] hover:scale-105 active:scale-95 border-0 cursor-pointer"
+                  >
+                    <LogIn className="h-3.5 w-3.5 sm:h-4 sm:w-4 stroke-[3]" />
+                    <span>Login</span>
+                  </button>
                 </Link>
               )}
+              {/* Mobile menu trigger */}
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:text-[#D50032] hover:bg-[#D50032]/10 transition-all active:scale-95"
+                title="Menu"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
             </div>
           </div>
         </div>
       </nav>
 
-      <main className="flex-1 flex flex-col">
+      {/* Mobile Navigation Drawer */}
+      <div
+        className={`fixed inset-0 z-[1000] transition-opacity duration-300 ${isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+      >
+        {/* Backdrop overlay */}
+        <div
+          className="absolute inset-0 bg-black/55 backdrop-blur-sm"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+        {/* Drawer Panel */}
+        <aside
+          className={`absolute top-0 left-0 bottom-0 w-64 bg-white shadow-2xl z-10 flex flex-col transition-transform duration-300 ease-out transform ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
+        >
+          {/* Drawer Header */}
+          <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+            <div className="h-[40px] w-[100px] overflow-hidden flex items-center justify-start">
+              <img
+                src={logo}
+                alt="FinTrade"
+                className="h-full w-full object-contain scale-[2.2] -translate-x-2 -translate-y-0.5"
+                style={{ transformOrigin: "left center" }}
+              />
+            </div>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Drawer Links */}
+          <nav className="flex-1 p-5 overflow-y-auto space-y-2">
+            {[
+              { label: "Home", path: "/" },
+              { label: "Courses", path: "/courses" },
+              { label: "Markets", path: "/markets" },
+              { label: "Categories", path: "/category/all" },
+              { label: "Update", path: "/updates" },
+              { label: "Blog", path: "/blog" },
+              { label: "About", path: "/about" },
+            ].map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center px-4 py-3 rounded-xl font-bold text-sm text-gray-700 hover:text-[#D50032] hover:bg-[#D50032]/5 transition-all"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Drawer Footer */}
+          <div className="p-5 border-t border-gray-100 bg-gray-50/50">
+            {isAuthenticated ? (
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setProfileOpen(true);
+                }}
+                className="w-full flex items-center gap-2.5 px-4 py-3 bg-[#FFF0F2] text-[#D50032] font-extrabold text-xs tracking-wider uppercase rounded-xl transition-all hover:bg-[#D50032] hover:text-white"
+              >
+                <UserCircle className="h-5 w-5" />
+                View Profile
+              </button>
+            ) : (
+              <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
+                <Button className="w-full bg-[#D50032] hover:bg-[#b00029] text-white font-extrabold py-3 rounded-xl text-xs tracking-wider uppercase shadow-md shadow-[#D50032]/10 transition-all hover:scale-[1.02]">
+                  Login / Register
+                </Button>
+              </Link>
+            )}
+          </div>
+        </aside>
+      </div>
+
+      <main className="flex-1 flex flex-col overflow-x-hidden">
         <Outlet />
       </main>
 
@@ -330,6 +498,58 @@ export default function MarketingLayout() {
           </div>
         </div>
       </footer>
+      {/* Proctoring Violation Warning Modal */}
+      {showViolationModal && (
+        <div className="fixed inset-0 z-[99999] bg-[#121212]/95 backdrop-blur-md flex items-center justify-center p-4">
+          <Card className="max-w-xl w-full p-8 bg-white border-t-4 border-red-500 shadow-2xl relative">
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center animate-bounce">
+                <AlertTriangle size={36} className="text-red-500" />
+              </div>
+            </div>
+
+            <h2 className="text-2xl font-bold text-center text-[#0B2A5B] mb-2">Proctored Exam Warning</h2>
+            <p className="text-center text-red-600 font-semibold mb-6">
+              System detected tab switching or application switching during your entrance exam!
+            </p>
+
+            <div className="bg-gray-50 rounded-xl p-5 border border-gray-100 mb-8 space-y-3">
+              <h3 className="font-bold text-[#0B2A5B] text-sm uppercase tracking-wider mb-2">Rules & Regulations:</h3>
+              <p className="text-xs text-gray-600 leading-relaxed flex items-start gap-2">
+                <span className="text-red-500 font-bold">•</span>
+                <span>Opening another tab, browser window, or minimizing the screen is strictly prohibited.</span>
+              </p>
+              <p className="text-xs text-gray-600 leading-relaxed flex items-start gap-2">
+                <span className="text-red-500 font-bold">•</span>
+                <span>Your exam attempt has been terminated, and all progress up to the point of violation has been auto-submitted.</span>
+              </p>
+              <p className="text-xs text-gray-600 leading-relaxed flex items-start gap-2">
+                <span className="text-red-500 font-bold">•</span>
+                <span>You can review your attempt status and start another attempt by clicking below.</span>
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={() => {
+                  setShowViolationModal(false);
+                  navigate("/student/entrance-exam");
+                }}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold h-12 text-md shadow-lg shadow-green-600/20"
+              >
+                Start Same Exam
+              </Button>
+              <Button
+                onClick={() => setShowViolationModal(false)}
+                variant="outline"
+                className="flex-1 border-2 border-red-200 text-red-600 hover:bg-red-50 font-bold h-12 text-md"
+              >
+                Close
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

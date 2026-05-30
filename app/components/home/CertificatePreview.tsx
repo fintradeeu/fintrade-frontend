@@ -76,9 +76,9 @@ export default function CertificatePreview() {
                   height: "480px"
                 }}
               >
-                {/* Slide 1 - Research Analyst Certificate */}
+                {/* Slide 1 - Certification 1 */}
                 <div 
-                  className="absolute inset-0 transition-all duration-700 ease-in-out flex bg-white"
+                  className="absolute inset-0 transition-all duration-700 ease-in-out bg-white overflow-hidden flex items-center justify-center p-2"
                   style={{ 
                     opacity: activeSlide === 0 ? 1 : 0,
                     transform: `translateX(${activeSlide === 0 ? "0px" : "-30px"})`,
@@ -87,84 +87,16 @@ export default function CertificatePreview() {
                     height: "480px"
                   }}
                 >
-                  {/* Left Side (Red Stripe) */}
-                  <div className="w-[15%] bg-[#C62828] flex flex-col items-center pt-6 relative h-full">
-                     <div className="w-full px-2">
-                       <img src={logo} alt="FinTrade Logo" className="w-full invert brightness-0" style={{ filter: "brightness(0) invert(1)" }} />
-                     </div>
-                     <div className="absolute bottom-0 left-0 right-0 h-2 bg-[#FFD700]/80" />
-                  </div>
-                  
-                  {/* Main Certificate Body */}
-                  <div className="flex-1 p-8 flex flex-col items-center text-center relative h-full bg-white">
-                     <div className="text-[#C62828] font-serif text-5xl font-light tracking-[0.15em] mb-1">CERTIFICATE</div>
-                     <div className="text-gray-800 font-bold tracking-[0.2em] text-sm border-t border-[#C62828]/30 pt-1 mb-6 uppercase">Of Completion</div>
-                     
-                     <div className="text-2xl font-bold text-gray-800 mb-6 px-2">Professional Research Analyst Program</div>
-                     
-                     <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-4">This certificate is proudly presented to</div>
-                     
-                     <div className="text-5xl mb-6 text-[#C62828]" style={{ fontFamily: "'Dancing Script', cursive, serif" }}>Rohan Singh</div>
-                     <div className="w-[60%] h-[1px] bg-gray-300 mb-6" />
-                     
-                     <p className="text-[10px] text-gray-600 max-w-md mb-10 leading-relaxed px-4">
-                       For successfully completing the course and gaining practical knowledge in global trade operations, financial instruments, and risk mitigation strategies.
-                     </p>
-                     
-                     {/* Bottom Details Section */}
-                     <div className="grid grid-cols-3 w-full items-end mt-auto gap-4 pb-2">
-                        {/* Signature 1 */}
-                        <div className="flex flex-col items-center">
-                           <div className="w-24 h-8 mb-1 flex items-center justify-center opacity-80 italic text-gray-700 text-lg">H. Vyas</div>
-                           <div className="w-full h-[1px] bg-gray-300 mb-1" />
-                           <div className="text-[8px] font-bold text-[#C62828]">HET VYAS</div>
-                           <div className="text-[6px] text-gray-500 uppercase">(Founder/COO)</div>
-                        </div>
-                        
-                        {/* Gold Seal */}
-                        <div className="flex flex-col items-center justify-center">
-                           <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#D4AF37] via-[#FFD700] to-[#F9E272] flex flex-col items-center justify-center shadow-lg border-4 border-white">
-                              <div className="text-[6px] font-black text-[#8B7355] border-b border-[#8B7355]/30">CERTIFIED</div>
-                              <div className="flex gap-0.5 mt-0.5">
-                                 <span className="text-[6px]">★</span>
-                                 <span className="text-[8px]">★</span>
-                                 <span className="text-[6px]">★</span>
-                              </div>
-                           </div>
-                        </div>
-                        
-                        {/* Signature 2 */}
-                        <div className="flex flex-col items-center">
-                           <div className="w-24 h-8 mb-1 flex items-center justify-center opacity-80 italic text-gray-700 text-lg">C. Panchal</div>
-                           <div className="w-full h-[1px] bg-gray-300 mb-1" />
-                           <div className="text-[8px] font-bold text-[#C62828]">CHIRAG PANCHAL</div>
-                           <div className="text-[6px] text-gray-500 uppercase">(MD/CEO)</div>
-                        </div>
-                     </div>
-                     
-                     {/* Bottom Footer Details */}
-                     <div className="flex justify-between w-full mt-6 text-[8px] text-gray-500">
-                        <div className="flex items-center gap-1">
-                           <Calendar className="h-3 w-3 text-[#C62828]" />
-                           <div className="text-left">
-                              <div className="font-bold">DATE OF COMPLETION</div>
-                              <div className="text-[#C62828]">24TH JANUARY, 2025</div>
-                           </div>
-                        </div>
-                        <div className="flex items-center gap-1">
-                           <CreditCard className="h-3 w-3 text-[#C62828]" />
-                           <div className="text-right">
-                              <div className="font-bold uppercase">Certificate Number</div>
-                              <div className="text-[#C62828]">FT-CPRA-250124</div>
-                           </div>
-                        </div>
-                     </div>
-                  </div>
+                  <img 
+                    src="/certificate-1.png" 
+                    alt="FinTrade Certified Trading Program Certificate" 
+                    className="w-full h-full object-contain drop-shadow-md rounded-lg"
+                  />
                 </div>
 
-                {/* Slide 2 - Professional Trading Certificate */}
+                {/* Slide 2 - Certification 2 */}
                 <div 
-                  className="absolute inset-0 transition-all duration-700 ease-in-out bg-white overflow-hidden flex items-center justify-center"
+                  className="absolute inset-0 transition-all duration-700 ease-in-out bg-white overflow-hidden flex items-center justify-center p-2"
                   style={{ 
                     opacity: activeSlide === 1 ? 1 : 0,
                     transform: `translateX(${activeSlide === 1 ? "0px" : "30px"})`,
@@ -174,9 +106,9 @@ export default function CertificatePreview() {
                   }}
                 >
                   <img 
-                    src="/CERTIFICATE 02 (1) (1)_page-0001.jpg" 
-                    alt="Professional Trading Program Certificate" 
-                    className="w-full h-full object-cover"
+                    src="/certificate-2.png" 
+                    alt="FinTrade Certified Professional Program Certificate" 
+                    className="w-full h-full object-contain drop-shadow-md rounded-lg"
                   />
                 </div>
               </div>
