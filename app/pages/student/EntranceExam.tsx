@@ -4,7 +4,7 @@ import { useNavigate, Link } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { Progress } from "../../components/ui/progress";
-import { ArrowLeft, Clock, Camera, AlertTriangle, ChevronLeft, ChevronRight, Flag } from "lucide-react";
+import { ArrowLeft, Clock, Camera, AlertTriangle, ChevronLeft, ChevronRight, Flag, CheckCircle, ArrowRight } from "lucide-react";
 
 const examQuestions = [
   {
@@ -66,6 +66,9 @@ export default function EntranceExam() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [errorMsg, setErrorMsg] = useState("");
   const [pastAttempts, setPastAttempts] = useState<any[]>([]);
+  const [showKycPopup, setShowKycPopup] = useState(false);
+  const [examScore, setExamScore] = useState(0);
+  const [passedCourseId, setPassedCourseId] = useState("");
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const timerRef = useRef<number | null>(null);
   const navigate = useNavigate();
@@ -356,10 +359,11 @@ export default function EntranceExam() {
 
       if (passed) {
         stopCamera();
-        alert(`Congratulations! You passed with a score of ${score}%.`);
         const searchParams = new URLSearchParams(window.location.search);
         const urlCourseId = searchParams.get("course_id") || "";
-        navigate(`/student/contract-kyc?course_id=${urlCourseId}`);
+        setExamScore(score);
+        setPassedCourseId(urlCourseId);
+        setShowKycPopup(true);
       } else {
         stopCamera();
         alert(`Score: ${score}%. You need 60% to pass. Please try again after 30 days.`);
@@ -828,6 +832,69 @@ export default function EntranceExam() {
           </Card>
         </div>
       </div>
+
+      {/* KYC Redirect Popup — shown when student passes */}
+      {showKycPopup && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in fade-in zoom-in duration-300">
+            {/* Top accent strip */}
+            <div className="h-2 w-full bg-gradient-to-r from-[#0B2A5B] to-[#C2A86A]" />
+
+            <div className="p-8">
+              {/* Icon */}
+              <div className="flex flex-col items-center text-center mb-6">
+                <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-4 shadow-lg shadow-green-100">
+                  <CheckCircle className="text-green-600" size={44} />
+                </div>
+                <h2 className="text-2xl font-bold text-[#0B2A5B]">Congratulations! 🎉</h2>
+                <p className="text-[#0B2A5B]/60 mt-1 text-sm">You have passed the Entrance Exam</p>
+              </div>
+
+              {/* Score badge */}
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <div className="px-6 py-3 rounded-xl bg-[#0B2A5B] text-white text-center">
+                  <p className="text-xs uppercase tracking-widest opacity-70 mb-1">Your Score</p>
+                  <p className="text-3xl font-bold text-[#C2A86A]">{examScore}%</p>
+                </div>
+                <div className="px-6 py-3 rounded-xl bg-green-50 border border-green-200 text-center">
+                  <p className="text-xs uppercase tracking-widest text-green-600 mb-1">Status</p>
+                  <p className="text-lg font-bold text-green-700">PASSED ✓</p>
+                </div>
+              </div>
+
+              {/* Info text */}
+              <div className="bg-[#F4F1EA] rounded-xl p-4 mb-6 text-sm text-[#0B2A5B]/80 text-center">
+                <p>Next step: Complete your <strong>KYC verification</strong> to proceed with course enrollment and payment.</p>
+                <p className="text-xs mt-1 text-[#0B2A5B]/50">KYC is a one-time process — you won't need to redo it.</p>
+              </div>
+
+              {/* Action buttons */}
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  className="border-2 border-[#0B2A5B]/20 text-[#0B2A5B]/60 hover:bg-gray-50"
+                  onClick={() => {
+                    setShowKycPopup(false);
+                    navigate("/");
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] font-semibold shadow-lg shadow-[#0B2A5B]/20"
+                  onClick={() => {
+                    setShowKycPopup(false);
+                    navigate(`/student/contract-kyc?course_id=${passedCourseId}`);
+                  }}
+                >
+                  Go to KYC
+                  <ArrowRight size={18} className="ml-2" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

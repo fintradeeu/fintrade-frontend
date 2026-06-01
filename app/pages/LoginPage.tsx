@@ -412,13 +412,13 @@ export default function LoginPage() {
 
               <form onSubmit={handleLogin} className="space-y-6">
                 <div>
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email">Email or Mobile Number</Label>
                   <Input
                     id="email"
                     name="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="rahul.sharma@example.com"
+                    type="text"
+                    autoComplete="username"
+                    placeholder="e.g., rahul.sharma@example.com or +919408534684"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="mt-2 bg-gray-50 border-gray-300 focus:border-[#E53935] focus:ring-[#E53935]"
@@ -531,7 +531,7 @@ export default function LoginPage() {
                   {channels.includes("sms") && (
                     <div className="inline-flex items-center gap-2 text-sm text-gray-700 bg-gray-50 px-3 py-1.5 rounded-full ml-2">
                       <Smartphone size={14} style={{ color: '#E53935' }} />
-                      <span>Phone</span>
+                      <span>{email.includes("@") ? "Registered Phone" : email}</span>
                     </div>
                   )}
                 </div>

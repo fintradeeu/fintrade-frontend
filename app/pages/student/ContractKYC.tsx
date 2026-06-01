@@ -85,6 +85,7 @@ export default function ContractKYC() {
   // Target course state for checkouts
   const [course, setCourse] = useState<any>(null);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [kycAlreadyDone, setKycAlreadyDone] = useState(false);
 
   // Load existing KYC & target course contexts
   useEffect(() => {
@@ -117,7 +118,12 @@ export default function ContractKYC() {
           if (res.data.photo_url) setPhotoUploaded(true);
           if (res.data.signature_url) setSigned(true);
           if (res.data.biometric_selfie_url) setBiometricDone(true);
-          if (res.data.status === "verified" || res.data.status === "approved") setVerified(true);
+          if (res.data.status === "verified" || res.data.status === "approved") {
+            setVerified(true);
+            // KYC already completed — skip to contract step
+            setStep(6);
+            setKycAlreadyDone(true);
+          }
         }
       })
       .catch((err) => console.error("Error loading KYC status", err));
@@ -151,6 +157,15 @@ export default function ContractKYC() {
   
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
+  const handleResendMobileOtp = async () => {
+    try {
+      await api.post("/kyc/send-mobile-otp");
+      toast.success("A verification OTP code has been sent to your mobile number.");
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "Failed to send SMS OTP. Please try again.");
+    }
+  };
+
   const handleContinue = async () => {
     if (step === 0) {
       // Save personal details to backend
@@ -164,6 +179,14 @@ export default function ContractKYC() {
           aadhaar_number: aadhaar,
           pan_number: pan
         });
+        
+        // Trigger Twilio SMS OTP immediately
+        try {
+          await api.post("/kyc/send-mobile-otp");
+          toast.success("A verification OTP code has been sent to your mobile number.");
+        } catch (e: any) {
+          toast.error(e.response?.data?.detail || "Failed to send SMS OTP. Please try again from the verification screen.");
+        }
       } catch (err: any) {
         toast.error("Failed to save KYC details to database.");
         return;
@@ -173,14 +196,17 @@ export default function ContractKYC() {
     }
     
     if (step === 1) {
-      if (mobileOtp !== "123456") {
-        toast.error("Invalid mobile OTP");
+      if (!mobileOtp || mobileOtp.length < 4) {
+        toast.error("Please enter a valid OTP code.");
         return;
       }
       try {
         await api.post("/kyc/verify-mobile-otp", { otp: mobileOtp });
-      } catch (e) {}
-      next();
+        toast.success("Mobile OTP verified successfully!");
+        next();
+      } catch (err: any) {
+        toast.error(err.response?.data?.detail || "Invalid mobile OTP code. Please try again.");
+      }
       return;
     }
 
@@ -270,7 +296,7 @@ FINTRADE TRADING EDUCATION AGREEMENT
 ======================================
 Student Name   : ${fullName}
 Mobile         : ${mobile}
-Email          : ${dummyData.email}
+Email          : ${email}
 Aadhaar        : ${aadhaar}
 PAN            : ${pan}
 Date of Birth  : ${dob}
@@ -326,6 +352,15 @@ Date: ${new Date().toLocaleDateString("en-IN")}
         </div>
 
         <Card className="p-8 shadow-2xl border border-gray-200 bg-white" style={{ boxShadow: "0 20px 60px rgba(213,0,50,0.08), 0 4px 20px rgba(0,0,0,0.06)" }}>
+          {kycAlreadyDone && (
+            <div className="mb-6 flex items-start gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
+              <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-green-800 text-sm">KYC Already Verified</p>
+                <p className="text-xs text-green-700 mt-0.5">Your KYC is already completed. You can download your contract and proceed to payment directly.</p>
+              </div>
+            </div>
+          )}
           <StepBar current={step} />
 
           {/* Step 0: Personal Details */}
@@ -382,15 +417,15 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                 </div>
                 <div>
                   <h2 className="text-xl font-bold" style={{ color: "#121212" }}>Mobile Verification</h2>
-                  <p className="text-sm text-gray-500">OTP sent to {mobile}</p>
+                  <p className="text-sm text-gray-500">Verification code sent to {mobile}</p>
                 </div>
               </div>
               <div>
                 <Label>Mobile Number</Label>
-                <Input value={mobile} onChange={(e) => setMobile(e.target.value)} className="mt-2 bg-gray-50" />
+                <Input value={mobile} readOnly className="mt-2 bg-gray-100 cursor-not-allowed" />
               </div>
               <div>
-                <Label>Enter OTP</Label>
+                <Label>Enter Verification Code</Label>
                 <div className="flex gap-3 mt-2">
                   <Input
                     value={mobileOtp}
@@ -400,17 +435,12 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                     className="text-center text-xl tracking-widest font-bold"
                     style={{ letterSpacing: "0.5em" }}
                   />
-                  <Button variant="outline" className="whitespace-nowrap border-[#D50032] text-[#D50032]" onClick={() => setMobileOtp("123456")}>
-                    Auto-fill Demo
+                  <Button variant="outline" type="button" className="whitespace-nowrap border-[#D50032] text-[#D50032]" onClick={handleResendMobileOtp}>
+                    Resend SMS OTP
                   </Button>
                 </div>
-                {mobileOtp === "123456" && (
-                  <div className="flex items-center gap-2 mt-3 text-green-600 text-sm">
-                    <CheckCircle className="h-4 w-4" /> OTP verified successfully!
-                  </div>
-                )}
               </div>
-              <p className="text-xs text-gray-400">Demo OTP: <span className="font-bold text-gray-600">123456</span>. Resend OTP in 30s.</p>
+              <p className="text-xs text-gray-400">Please enter the 6-digit verification code sent via Twilio SMS. (Dev fallback code: <span className="font-bold text-gray-600">123456</span>)</p>
             </div>
           )}
 
