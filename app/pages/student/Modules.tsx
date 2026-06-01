@@ -341,7 +341,7 @@ export default function Modules() {
                     <div className="bg-[#F4F1EA] rounded-xl p-6 min-h-[300px]">
                       {activeLesson.content_type === "video" && activeLesson.video_url ? (
                         <div className="w-full aspect-video rounded-lg overflow-hidden bg-black relative">
-                          {activeLesson.video_url.includes("youtube") || activeLesson.video_url.includes("vimeo") ? (
+                          {activeLesson.video_url.includes("youtube") || activeLesson.video_url.includes("vimeo") || activeLesson.video_url.includes("mediadelivery.net") || activeLesson.video_url.includes("bunny") ? (
                             <iframe src={activeLesson.video_url} className="w-full h-full" allowFullScreen></iframe>
                           ) : (
                             <video src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || ''}${activeLesson.video_url}`} controls className="w-full h-full" onEnded={() => markCompleted(activeLesson.id)}></video>
