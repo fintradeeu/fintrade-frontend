@@ -1,13 +1,62 @@
 import { useState, useEffect, useRef } from "react";
-import { Award, CheckCircle, Shield, Calendar, CreditCard, ChevronLeft, ChevronRight } from "lucide-react";
-import { Card } from "../ui/card";
-import logo from "../../../imports/fintrade_logo.png";
+import { Award, CheckCircle, Shield, ChevronLeft, ChevronRight } from "lucide-react";
+import api from "../../services/api";
 
-export default function CertificatePreview() {
+interface CertificateConfig {
+  heading: string;
+  subheading: string;
+  cert1_image?: string;
+  cert2_image?: string;
+  benefit1_title?: string;
+  benefit1_desc?: string;
+  benefit2_title?: string;
+  benefit2_desc?: string;
+  benefit3_title?: string;
+  benefit3_desc?: string;
+}
+
+interface CertificatePreviewProps {
+  certConfig?: CertificateConfig;
+}
+
+const getImageUrl = (path?: string) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
+  const base = api.defaults.baseURL || "";
+  const cleanBase = base.endsWith("/") ? base.slice(0, -1) : base;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `${cleanBase}${cleanPath}`;
+};
+
+export default function CertificatePreview({ certConfig }: CertificatePreviewProps) {
   const [activeSlide, setActiveSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [scale, setScale] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const heading = certConfig?.heading || "Industry-Recognized Certificate";
+  const subheading = certConfig?.subheading || "Earn a verified certificate upon course completion";
+
+  const cert1 = certConfig?.cert1_image ? getImageUrl(certConfig.cert1_image) : "/certificate-1.png";
+  const cert2 = certConfig?.cert2_image ? getImageUrl(certConfig.cert2_image) : "/certificate-2.png";
+
+  const benefits = [
+    {
+      icon: Award,
+      title: certConfig?.benefit1_title || "Industry-Recognized",
+      desc: certConfig?.benefit1_desc || "Our certificates are recognized by leading prop trading firms and financial institutions across India.",
+    },
+    {
+      icon: Shield,
+      title: certConfig?.benefit2_title || "Verified & Tamper-Proof",
+      desc: certConfig?.benefit2_desc || "Each certificate comes with a unique verification ID. Employers can verify authenticity instantly.",
+    },
+    {
+      icon: CheckCircle,
+      title: certConfig?.benefit3_title || "Skill-Based Assessment",
+      desc: certConfig?.benefit3_desc || "Certificates are awarded based on exam performance, project work, and trading simulator results.",
+    },
+  ];
 
   useEffect(() => {
     const handleResize = () => {
@@ -53,8 +102,8 @@ export default function CertificatePreview() {
           <div className="inline-block px-4 py-2 rounded-full mb-2 border border-[#D50032]/30" style={{ background: "rgba(213,0,50,0.08)" }}>
             <span className="text-[#D50032] font-semibold text-sm">🏅 Certification</span>
           </div>
-          <h2 className="text-4xl font-bold mb-2" style={{ color: "#121212" }}>Industry-Recognized Certificate</h2>
-          <p className="text-xl text-gray-600">Earn a verified certificate upon course completion</p>
+          <h2 className="text-4xl font-bold mb-2" style={{ color: "#121212" }}>{heading}</h2>
+          <p className="text-xl text-gray-600">{subheading}</p>
         </div>
         <div className="grid lg:grid-cols-12 gap-8 items-center">
           {/* Certificate Preview Card Slider */}
@@ -88,7 +137,7 @@ export default function CertificatePreview() {
                   }}
                 >
                   <img 
-                    src="/certificate-1.png" 
+                    src={cert1} 
                     alt="FinTrade Certified Trading Program Certificate" 
                     className="w-full h-full object-contain drop-shadow-md rounded-lg"
                   />
@@ -106,14 +155,14 @@ export default function CertificatePreview() {
                   }}
                 >
                   <img 
-                    src="/certificate-2.png" 
+                    src={cert2} 
                     alt="FinTrade Certified Professional Program Certificate" 
                     className="w-full h-full object-contain drop-shadow-md rounded-lg"
                   />
                 </div>
               </div>
 
-              {/* Slider Arrows (Only show on hover) */}
+              {/* Slider Arrows */}
               <button 
                 onClick={handlePrev}
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-gray-800 flex items-center justify-center shadow-md transition-all duration-300 opacity-0 group-hover/slider:opacity-100 z-20"
@@ -147,23 +196,7 @@ export default function CertificatePreview() {
 
           {/* Certificate Info */}
           <div className="lg:col-span-5 space-y-6">
-            {[
-              {
-                icon: Award,
-                title: "Industry-Recognized",
-                desc: "Our certificates are recognized by leading prop trading firms and financial institutions across India.",
-              },
-              {
-                icon: Shield,
-                title: "Verified & Tamper-Proof",
-                desc: "Each certificate comes with a unique verification ID. Employers can verify authenticity instantly.",
-              },
-              {
-                icon: CheckCircle,
-                title: "Skill-Based Assessment",
-                desc: "Certificates are awarded based on exam performance, project work, and trading simulator results.",
-              },
-            ].map((item, i) => (
+            {benefits.map((item, i) => (
               <div key={i} className="flex gap-4 items-start p-4 rounded-xl hover:bg-[#D50032]/5 transition-colors">
                 <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(213,0,50,0.1)" }}>
                   <item.icon className="h-6 w-6" style={{ color: "#D50032" }} />
@@ -181,4 +214,3 @@ export default function CertificatePreview() {
     </section>
   );
 }
-

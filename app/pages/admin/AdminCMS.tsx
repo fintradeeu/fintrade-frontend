@@ -7,9 +7,18 @@ import { Label } from "../../components/ui/label";
 import {
   Megaphone, Trash2, Plus, Save, RefreshCw, Globe, Phone, Video,
   Star, BookOpen, CheckCircle2, XCircle, LayoutTemplate, Link as LinkIcon,
-  AlertTriangle, Info, Users
+  AlertTriangle, Info, Users, Award, TrendingUp
 } from "lucide-react";
 import api from "../../services/api";
+
+const getImageUrl = (path?: string) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
+  const base = api.defaults.baseURL || "";
+  const cleanBase = base.endsWith("/") ? base.slice(0, -1) : base;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `${cleanBase}${cleanPath}`;
+};
 
 // ── Types ─────────────────────────────────────────────────────────────
 interface Announcement {
@@ -85,6 +94,7 @@ interface LeadershipItem {
   stats: StatItem[];
   bio: string;
   tags: string[];
+  profile_image?: string;
 }
 
 interface HeroButtonsConfig {
@@ -102,6 +112,65 @@ interface CarouselSlideItem {
   link: string;
 }
 
+interface LiveClassItem {
+  title: string;
+  instructor: string;
+  date: string;
+  time: string;
+  status: "live" | "upcoming";
+  students: number;
+  thumbnail: string;
+  is_visible: boolean;
+}
+
+interface SectionVisibilityConfig {
+  show_announcements: boolean;
+  show_hero_slider: boolean;
+  show_courses: boolean;
+  show_live_classes: boolean;
+  show_timeline: boolean;
+  show_benefits: boolean;
+  show_services: boolean;
+  show_quick_tips: boolean;
+  show_why_choose: boolean;
+  show_leadership: boolean;
+  show_certificate: boolean;
+  show_emi: boolean;
+  show_showcase_videos: boolean;
+  show_blog: boolean;
+  show_modules: boolean;
+  show_roadmap: boolean;
+  show_career_pathways: boolean;
+  show_cta: boolean;
+}
+
+interface EMIPaymentItem {
+  title: string;
+  tagline: string;
+  color: string;
+  bullets: string[];
+  btnText: string;
+}
+
+interface EMIConfig {
+  heading: string;
+  subheading: string;
+  plans?: EMIPaymentItem[];
+}
+
+interface CertificateConfig {
+  heading: string;
+  subheading: string;
+  cert1_image?: string;
+  cert2_image?: string;
+  benefit1_title?: string;
+  benefit1_desc?: string;
+  benefit2_title?: string;
+  benefit2_desc?: string;
+  benefit3_title?: string;
+  benefit3_desc?: string;
+}
+
 interface LandingConfig {
   hero?: { title: string; highlight: string; subtitle: string; badge: string };
   contact?: { phone: string; phone_href: string };
@@ -114,6 +183,10 @@ interface LandingConfig {
   leadership?: LeadershipItem[];
   hero_buttons?: HeroButtonsConfig;
   carousel_slides?: CarouselSlideItem[];
+  live_classes?: LiveClassItem[];
+  section_visibility?: SectionVisibilityConfig;
+  emi?: EMIConfig;
+  certificate?: CertificateConfig;
 }
 
 // ── Sub-components ────────────────────────────────────────────────────
@@ -145,7 +218,7 @@ function Toast({ message, type }: { message: string; type: "success" | "error" }
 // ── Main Component ────────────────────────────────────────────────────
 
 export default function AdminCMS() {
-  const [activeTab, setActiveTab] = useState<"announcements" | "courses" | "settings" | "videos" | "benefits" | "services" | "quick_tips" | "why_choose" | "leadership" | "hero_slider">("announcements");
+  const [activeTab, setActiveTab] = useState<"announcements" | "courses" | "settings" | "videos" | "benefits" | "services" | "quick_tips" | "why_choose" | "leadership" | "hero_slider" | "live_classes">("announcements");
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   // Announcements state
@@ -274,15 +347,16 @@ export default function AdminCMS() {
       {/* Tab Navigation */}
       <div className="flex gap-2 mb-6 flex-wrap">
         <TabBtn active={activeTab === "announcements"} onClick={() => setActiveTab("announcements")} icon={<Megaphone size={16} />} label="Announcements" />
-        <TabBtn active={activeTab === "courses"} onClick={() => setActiveTab("courses")} icon={<BookOpen size={16} />} label="Featured Courses" />
+        <TabBtn active={activeTab === "hero_slider"} onClick={() => setActiveTab("hero_slider")} icon={<LayoutTemplate size={16} />} label="Section 1: Hero & Carousel" />
+        <TabBtn active={activeTab === "courses"} onClick={() => setActiveTab("courses")} icon={<BookOpen size={16} />} label="Section 2: Professional Programs" />
+        <TabBtn active={activeTab === "live_classes"} onClick={() => setActiveTab("live_classes")} icon={<Video size={16} />} label="Section 3: Live Classes" />
+        <TabBtn active={activeTab === "videos"} onClick={() => setActiveTab("videos")} icon={<Video size={16} />} label="Section 4: Showcase Videos" />
+        <TabBtn active={activeTab === "benefits"} onClick={() => setActiveTab("benefits")} icon={<LayoutTemplate size={16} />} label="Section 5: Program Benefits" />
+        <TabBtn active={activeTab === "services"} onClick={() => setActiveTab("services")} icon={<Globe size={16} />} label="Section 6: Our Services" />
+        <TabBtn active={activeTab === "quick_tips"} onClick={() => setActiveTab("quick_tips")} icon={<Video size={16} />} label="Section 7: Quick Tips" />
+        <TabBtn active={activeTab === "why_choose"} onClick={() => setActiveTab("why_choose")} icon={<LayoutTemplate size={16} />} label="Section 8: Why Choose Us" />
+        <TabBtn active={activeTab === "leadership"} onClick={() => setActiveTab("leadership")} icon={<Users size={16} />} label="Section 9: Leadership Team" />
         <TabBtn active={activeTab === "settings"} onClick={() => setActiveTab("settings")} icon={<Globe size={16} />} label="Site Settings" />
-        <TabBtn active={activeTab === "videos"} onClick={() => setActiveTab("videos")} icon={<Video size={16} />} label="Showcase Videos" />
-        <TabBtn active={activeTab === "benefits"} onClick={() => setActiveTab("benefits")} icon={<LayoutTemplate size={16} />} label="Program Benefits" />
-        <TabBtn active={activeTab === "services"} onClick={() => setActiveTab("services")} icon={<Globe size={16} />} label="Our Services" />
-        <TabBtn active={activeTab === "quick_tips"} onClick={() => setActiveTab("quick_tips")} icon={<Video size={16} />} label="Quick Tips" />
-        <TabBtn active={activeTab === "why_choose"} onClick={() => setActiveTab("why_choose")} icon={<LayoutTemplate size={16} />} label="Why Choose Us" />
-        <TabBtn active={activeTab === "leadership"} onClick={() => setActiveTab("leadership")} icon={<Users size={16} />} label="Leadership Team" />
-        <TabBtn active={activeTab === "hero_slider"} onClick={() => setActiveTab("hero_slider")} icon={<LayoutTemplate size={16} />} label="Hero & Carousel" />
       </div>
 
       {/* ── TAB: Announcements ─────────────────────────────────────── */}
@@ -478,9 +552,304 @@ export default function AdminCMS() {
         </div>
       )}
 
+      {/* ── TAB: Live Classes ───────────────────────────────────────── */}
+      {activeTab === "live_classes" && !configLoading && (
+        <div className="space-y-6">
+          <Card className="p-4 border border-blue-100 bg-blue-50/50">
+            <div className="flex items-start gap-3">
+              <Info size={18} className="text-blue-500 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-blue-700">
+                Manage the schedule and details for <strong>Live Classes Section</strong> on the landing page. You can add, edit, or delete live classes. Toggle which classes are visible on the website and upload custom image thumbnails!
+              </p>
+            </div>
+          </Card>
+
+          <div className="space-y-6">
+            {(config.live_classes || []).map((lecture, idx) => (
+              <Card key={idx} className="p-6 border border-gray-100 shadow-sm relative group hover:border-[#E53935]/30 transition-all duration-300">
+                <div className="absolute top-4 right-4 flex items-center gap-2">
+                  <span className="text-xs font-semibold text-gray-400">Class #{idx + 1}</span>
+                  <button
+                    onClick={() => {
+                      if (!confirm("Remove this live class?")) return;
+                      const list = [...(config.live_classes || [])];
+                      list.splice(idx, 1);
+                      setConfig(p => ({ ...p, live_classes: list }));
+                    }}
+                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                    title="Remove this class"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+
+                <div className="grid md:grid-cols-12 gap-5">
+                  {/* Title */}
+                  <div className="md:col-span-6">
+                    <Label htmlFor={`lc-title-${idx}`}>Lecture Title</Label>
+                    <Input
+                      id={`lc-title-${idx}`}
+                      value={lecture.title}
+                      onChange={e => {
+                        const list = [...(config.live_classes || [])];
+                        list[idx] = { ...list[idx], title: e.target.value };
+                        setConfig(p => ({ ...p, live_classes: list }));
+                      }}
+                      placeholder="e.g. Technical Analysis Masterclass"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  {/* Instructor */}
+                  <div className="md:col-span-4">
+                    <Label htmlFor={`lc-instructor-${idx}`}>Instructor Name</Label>
+                    <Input
+                      id={`lc-instructor-${idx}`}
+                      value={lecture.instructor}
+                      onChange={e => {
+                        const list = [...(config.live_classes || [])];
+                        list[idx] = { ...list[idx], instructor: e.target.value };
+                        setConfig(p => ({ ...p, live_classes: list }));
+                      }}
+                      placeholder="e.g. Amit Desai"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  {/* Status Selection */}
+                  <div className="md:col-span-2">
+                    <Label htmlFor={`lc-status-${idx}`}>Status</Label>
+                    <select
+                      id={`lc-status-${idx}`}
+                      value={lecture.status}
+                      onChange={e => {
+                        const list = [...(config.live_classes || [])];
+                        list[idx] = { ...list[idx], status: e.target.value as "live" | "upcoming" };
+                        setConfig(p => ({ ...p, live_classes: list }));
+                      }}
+                      className="mt-1 flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="live">Live</option>
+                      <option value="upcoming">Upcoming</option>
+                    </select>
+                  </div>
+
+                  {/* Date */}
+                  <div className="md:col-span-4">
+                    <Label htmlFor={`lc-date-${idx}`}>Date Label</Label>
+                    <Input
+                      id={`lc-date-${idx}`}
+                      value={lecture.date}
+                      onChange={e => {
+                        const list = [...(config.live_classes || [])];
+                        list[idx] = { ...list[idx], date: e.target.value };
+                        setConfig(p => ({ ...p, live_classes: list }));
+                      }}
+                      placeholder="e.g. April 18, 2026"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  {/* Time */}
+                  <div className="md:col-span-4">
+                    <Label htmlFor={`lc-time-${idx}`}>Time Label</Label>
+                    <Input
+                      id={`lc-time-${idx}`}
+                      value={lecture.time}
+                      onChange={e => {
+                        const list = [...(config.live_classes || [])];
+                        list[idx] = { ...list[idx], time: e.target.value };
+                        setConfig(p => ({ ...p, live_classes: list }));
+                      }}
+                      placeholder="e.g. 10:00 AM IST"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  {/* Students Enrolled */}
+                  <div className="md:col-span-2">
+                    <Label htmlFor={`lc-students-${idx}`}>Students Count</Label>
+                    <Input
+                      id={`lc-students-${idx}`}
+                      type="number"
+                      value={lecture.students}
+                      onChange={e => {
+                        const list = [...(config.live_classes || [])];
+                        list[idx] = { ...list[idx], students: Number(e.target.value) };
+                        setConfig(p => ({ ...p, live_classes: list }));
+                      }}
+                      placeholder="145"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  {/* Show on Site Select checkbox */}
+                  <div className="md:col-span-2 flex items-center gap-2 pt-6">
+                    <input
+                      id={`lc-visible-${idx}`}
+                      type="checkbox"
+                      checked={lecture.is_visible}
+                      onChange={e => {
+                        const list = [...(config.live_classes || [])];
+                        list[idx] = { ...list[idx], is_visible: e.target.checked };
+                        setConfig(p => ({ ...p, live_classes: list }));
+                      }}
+                      className="w-4 h-4 rounded text-[#E53935] focus:ring-[#E53935]"
+                    />
+                    <Label htmlFor={`lc-visible-${idx}`} className="cursor-pointer">Show on site</Label>
+                  </div>
+
+                  {/* Custom Thumbnail Image Uploader */}
+                  <div className="md:col-span-12">
+                    <Label className="text-gray-700 font-bold">Class Thumbnail Image</Label>
+                    <div className="flex items-center gap-3 mt-2">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          if (!e.target.files || e.target.files.length === 0) return;
+                          const file = e.target.files[0];
+                          const formData = new FormData();
+                          formData.append("file", file);
+
+                          try {
+                            showToast("Uploading class thumbnail...", "success");
+                            const res = await api.post("/admin/upload", formData, {
+                              headers: { "Content-Type": "multipart/form-data" }
+                            });
+                            if (res.data && res.data.url) {
+                              const list = [...(config.live_classes || [])];
+                              list[idx] = { ...list[idx], thumbnail: res.data.url };
+                              setConfig(p => ({ ...p, live_classes: list }));
+                              showToast("Thumbnail uploaded!", "success");
+                            }
+                          } catch {
+                            showToast("Upload failed.", "error");
+                          }
+                        }}
+                        className="cursor-pointer h-10 py-1.5 text-xs flex-1 max-w-sm"
+                      />
+                      {lecture.thumbnail && (
+                        <div className="relative w-20 h-12 rounded border border-gray-200 overflow-hidden flex-shrink-0">
+                          <img src={getImageUrl(lecture.thumbnail)} alt="preview" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <div className="flex gap-4">
+            <Button
+              onClick={() => {
+                const list = [...(config.live_classes || [])];
+                list.push({
+                  title: "",
+                  instructor: "",
+                  date: "",
+                  time: "",
+                  status: "upcoming",
+                  students: 100,
+                  thumbnail: "",
+                  is_visible: true
+                });
+                setConfig(p => ({ ...p, live_classes: list }));
+              }}
+              variant="outline"
+              className="border border-[#E53935] text-[#E53935] hover:bg-[#E53935]/5"
+            >
+              <Plus size={16} className="mr-2" /> Add Live Class Card
+            </Button>
+
+            <Button
+              onClick={() => saveConfig({ live_classes: config.live_classes })}
+              className="bg-[#E53935] text-white hover:bg-[#b71c1c]"
+            >
+              <Save size={16} className="mr-2" /> Save Live Classes
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* ── TAB: Site Settings ────────────────────────────────────── */}
       {activeTab === "settings" && !configLoading && (
         <div className="grid md:grid-cols-2 gap-6">
+          {/* Section Visibility Toggles */}
+          <Card className="p-6 border border-gray-100 shadow-sm md:col-span-2">
+            <h2 className="text-base font-bold mb-2 flex items-center gap-2" style={{ color: "#121212" }}>
+              <Globe size={16} className="text-[#E53935]" /> Section Visibility Toggles
+            </h2>
+            <p className="text-xs text-gray-500 mb-4 font-semibold">Enable or disable specific sections on the landing page</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              {[
+                { key: "show_announcements", label: "Ticker Announcements" },
+                { key: "show_hero_slider", label: "Hero & Carousel" },
+                { key: "show_courses", label: "Professional Programs" },
+                { key: "show_live_classes", label: "Live Classes" },
+                { key: "show_modules", label: "Program Modules" },
+                { key: "show_timeline", label: "Course Acronym T-I-N-T-R-A-D-E" },
+                { key: "show_roadmap", label: "Learning Path (Roadmap)" },
+                { key: "show_benefits", label: "Program Benefits" },
+                { key: "show_services", label: "Our Services" },
+                { key: "show_quick_tips", label: "Quick Tips (Videos)" },
+                { key: "show_why_choose", label: "Why Choose Us" },
+                { key: "show_leadership", label: "Leadership Team" },
+                { key: "show_certificate", label: "Certificate Showcase" },
+                { key: "show_emi", label: "EMI & Payment Plans" },
+                { key: "show_career_pathways", label: "Placement & Career Pathways" },
+                { key: "show_cta", label: "CTA (Enrollment Banner)" },
+                { key: "show_showcase_videos", label: "Watch Our Students" },
+                { key: "show_blog", label: "Market Insights (Blog)" },
+              ].map(item => {
+                const checked = config.section_visibility?.[item.key as keyof SectionVisibilityConfig] !== false;
+                return (
+                  <div key={item.key} className="flex items-center gap-2.5 p-3 rounded-xl bg-gray-50 border border-gray-100 hover:border-[#E53935]/25 transition-all">
+                    <input
+                      id={`vis-${item.key}`}
+                      type="checkbox"
+                      checked={checked}
+                      onChange={e => {
+                        setConfig(p => ({
+                          ...p,
+                          section_visibility: {
+                            ...(p.section_visibility || {
+                              show_announcements: true,
+                              show_hero_slider: true,
+                              show_courses: true,
+                              show_live_classes: true,
+                              show_modules: true,
+                              show_timeline: true,
+                              show_roadmap: true,
+                              show_benefits: true,
+                              show_services: true,
+                              show_quick_tips: true,
+                              show_why_choose: true,
+                              show_leadership: true,
+                              show_certificate: true,
+                              show_emi: true,
+                              show_career_pathways: true,
+                              show_cta: true,
+                              show_showcase_videos: true,
+                              show_blog: true,
+                            }),
+                            [item.key]: e.target.checked
+                          }
+                        }));
+                      }}
+                      className="w-4 h-4 rounded text-[#E53935] focus:ring-[#E53935]"
+                    />
+                    <Label htmlFor={`vis-${item.key}`} className="cursor-pointer text-xs font-semibold text-gray-700">{item.label}</Label>
+                  </div>
+                );
+              })}
+            </div>
+            <Button size="sm" onClick={() => saveConfig({ section_visibility: config.section_visibility })} className="bg-[#E53935] text-white hover:bg-[#b71c1c] w-full">
+              <Save size={14} className="mr-1" /> Save Section Visibility
+            </Button>
+          </Card>
+
           {/* Hero Section */}
           <Card className="p-6 border border-gray-100 shadow-sm">
             <h2 className="text-base font-bold mb-4 flex items-center gap-2" style={{ color: "#121212" }}>
@@ -585,6 +954,289 @@ export default function AdminCMS() {
               </div>
             </Card>
           </div>
+
+          {/* Certificate Configuration */}
+          <Card className="p-6 border border-gray-100 shadow-sm md:col-span-2">
+            <h2 className="text-base font-bold mb-2 flex items-center gap-2" style={{ color: "#121212" }}>
+              <Award size={16} className="text-[#E53935]" /> Industry-Recognized Certificate Config
+            </h2>
+            <p className="text-xs text-gray-500 mb-4 font-semibold">Customize headings, sample certificates, and benefit cards for the certification block</p>
+            <div className="grid md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <Label htmlFor="cert-heading">Section Heading</Label>
+                <Input
+                  id="cert-heading"
+                  value={config.certificate?.heading || ""}
+                  onChange={e => setConfig(p => ({ ...p, certificate: { ...(p.certificate || { heading: "", subheading: "" }), heading: e.target.value } }))}
+                  placeholder="e.g. Industry-Recognized Certificate"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="cert-subheading">Section Subheading</Label>
+                <Input
+                  id="cert-subheading"
+                  value={config.certificate?.subheading || ""}
+                  onChange={e => setConfig(p => ({ ...p, certificate: { ...(p.certificate || { heading: "", subheading: "" }), subheading: e.target.value } }))}
+                  placeholder="e.g. Boost your profile with dual certifications..."
+                  className="mt-1"
+                />
+              </div>
+
+              {/* Uploader Cert 1 */}
+              <div>
+                <Label className="text-gray-700 font-bold">Certificate 1 Image</Label>
+                <div className="flex items-center gap-3 mt-1">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      if (!e.target.files || e.target.files.length === 0) return;
+                      const file = e.target.files[0];
+                      const formData = new FormData();
+                      formData.append("file", file);
+                      try {
+                        showToast("Uploading certificate 1...", "success");
+                        const res = await api.post("/admin/upload", formData, {
+                          headers: { "Content-Type": "multipart/form-data" }
+                        });
+                        if (res.data && res.data.url) {
+                          setConfig(p => ({ ...p, certificate: { ...(p.certificate || { heading: "", subheading: "" }), cert1_image: res.data.url } }));
+                          showToast("Certificate 1 image uploaded!", "success");
+                        }
+                      } catch {
+                        showToast("Upload failed.", "error");
+                      }
+                    }}
+                    className="cursor-pointer h-10 py-1.5 text-xs flex-1"
+                  />
+                  {config.certificate?.cert1_image && (
+                    <div className="relative w-16 h-10 rounded border border-gray-200 overflow-hidden flex-shrink-0">
+                      <img src={getImageUrl(config.certificate.cert1_image)} alt="preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Uploader Cert 2 */}
+              <div>
+                <Label className="text-gray-700 font-bold">Certificate 2 Image</Label>
+                <div className="flex items-center gap-3 mt-1">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      if (!e.target.files || e.target.files.length === 0) return;
+                      const file = e.target.files[0];
+                      const formData = new FormData();
+                      formData.append("file", file);
+                      try {
+                        showToast("Uploading certificate 2...", "success");
+                        const res = await api.post("/admin/upload", formData, {
+                          headers: { "Content-Type": "multipart/form-data" }
+                        });
+                        if (res.data && res.data.url) {
+                          setConfig(p => ({ ...p, certificate: { ...(p.certificate || { heading: "", subheading: "" }), cert2_image: res.data.url } }));
+                          showToast("Certificate 2 image uploaded!", "success");
+                        }
+                      } catch {
+                        showToast("Upload failed.", "error");
+                      }
+                    }}
+                    className="cursor-pointer h-10 py-1.5 text-xs flex-1"
+                  />
+                  {config.certificate?.cert2_image && (
+                    <div className="relative w-16 h-10 rounded border border-gray-200 overflow-hidden flex-shrink-0">
+                      <img src={getImageUrl(config.certificate.cert2_image)} alt="preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Three Benefits Cards inside Certificate showcase */}
+            <div className="border-t border-gray-100 pt-4 mt-4">
+              <h3 className="text-xs font-black text-gray-400 uppercase tracking-wider mb-3">Certificate Features (Exactly 3 Benefit Cards)</h3>
+              <div className="grid md:grid-cols-3 gap-4 mb-4">
+                {[1, 2, 3].map(i => {
+                  const titleKey = `benefit${i}_title` as keyof CertificateConfig;
+                  const descKey = `benefit${i}_desc` as keyof CertificateConfig;
+                  return (
+                    <div key={i} className="p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-2">
+                      <Label className="text-[10px] text-gray-400 font-bold uppercase">Benefit #{i}</Label>
+                      <div>
+                        <Label className="text-xs">Title</Label>
+                        <Input
+                          value={String(config.certificate?.[titleKey] || "")}
+                          onChange={e => setConfig(p => ({
+                            ...p,
+                            certificate: {
+                              ...(p.certificate || { heading: "", subheading: "" }),
+                              [titleKey]: e.target.value
+                            }
+                          }))}
+                          placeholder={`e.g. Shareable Certificate`}
+                          className="mt-1 h-8 text-xs bg-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Description</Label>
+                        <Input
+                          value={String(config.certificate?.[descKey] || "")}
+                          onChange={e => setConfig(p => ({
+                            ...p,
+                            certificate: {
+                              ...(p.certificate || { heading: "", subheading: "" }),
+                              [descKey]: e.target.value
+                            }
+                          }))}
+                          placeholder={`e.g. Share on LinkedIn and Resume`}
+                          className="mt-1 h-8 text-xs bg-white"
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Button size="sm" onClick={() => saveConfig({ certificate: config.certificate })} className="bg-[#E53935] text-white hover:bg-[#b71c1c] w-full">
+              <Save size={14} className="mr-1" /> Save Certificate Settings
+            </Button>
+          </Card>
+
+          {/* EMI & Payment Plans Configuration */}
+          <Card className="p-6 border border-gray-100 shadow-sm md:col-span-2">
+            <h2 className="text-base font-bold mb-2 flex items-center gap-2" style={{ color: "#121212" }}>
+              <TrendingUp size={16} className="text-[#E53935]" /> EMI & Payment Plans Config
+            </h2>
+            <p className="text-xs text-gray-500 mb-4 font-semibold">Customize EMI headings, and configure details for all 3 flexible payment plans</p>
+            <div className="grid md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <Label htmlFor="emi-heading">Section Heading</Label>
+                <Input
+                  id="emi-heading"
+                  value={config.emi?.heading || ""}
+                  onChange={e => setConfig(p => ({ ...p, emi: { ...(p.emi || { heading: "", subheading: "" }), heading: e.target.value } }))}
+                  placeholder="e.g. Affordable EMI Options & Flexible Payment Plans"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="emi-subheading">Section Subheading</Label>
+                <Input
+                  id="emi-subheading"
+                  value={config.emi?.subheading || ""}
+                  onChange={e => setConfig(p => ({ ...p, emi: { ...(p.emi || { heading: "", subheading: "" }), subheading: e.target.value } }))}
+                  placeholder="e.g. Learn today, pay in easy monthly installments..."
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            {/* Plans Array loop */}
+            <div className="border-t border-gray-100 pt-4 mt-4">
+              <h3 className="text-xs font-black text-gray-400 uppercase tracking-wider mb-3">Payment Plans (Exactly 3 Cards)</h3>
+              <div className="space-y-4 mb-4">
+                {[0, 1, 2].map(idx => {
+                  const plansList = config.emi?.plans || [
+                    { title: "Standard Plan", tagline: "Start learning now", color: "#D50032", btnText: "Apply Standard", bullets: ["Benefit 1", "Benefit 2", "Benefit 3"] },
+                    { title: "Pro Plan", tagline: "For serious traders", color: "#121212", btnText: "Apply Pro", bullets: ["Benefit 1", "Benefit 2", "Benefit 3"] },
+                    { title: "Elite Plan", tagline: "1-on-1 VIP access", color: "#FF3D00", btnText: "Apply Elite", bullets: ["Benefit 1", "Benefit 2", "Benefit 3"] },
+                  ];
+                  const plan = plansList[idx] || { title: "", tagline: "", color: "#D50032", btnText: "", bullets: ["", "", ""] };
+                  return (
+                    <div key={idx} className="p-5 rounded-2xl bg-gray-50 border border-gray-100 grid md:grid-cols-12 gap-4 relative">
+                      <span className="absolute top-4 right-4 bg-gray-200 text-gray-600 px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-wider">Plan #{idx + 1}</span>
+                      
+                      <div className="md:col-span-4 space-y-3">
+                        <div>
+                          <Label className="text-xs">Plan Title</Label>
+                          <Input
+                            value={plan.title}
+                            onChange={e => {
+                              const list = [...plansList];
+                              list[idx] = { ...list[idx], title: e.target.value };
+                              setConfig(p => ({ ...p, emi: { ...(p.emi || { heading: "", subheading: "" }), plans: list } }));
+                            }}
+                            className="bg-white mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Tagline</Label>
+                          <Input
+                            value={plan.tagline}
+                            onChange={e => {
+                              const list = [...plansList];
+                              list[idx] = { ...list[idx], tagline: e.target.value };
+                              setConfig(p => ({ ...p, emi: { ...(p.emi || { heading: "", subheading: "" }), plans: list } }));
+                            }}
+                            className="bg-white mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Theme Color (Hex, e.g. #D50032)</Label>
+                          <div className="flex gap-2 mt-1">
+                            <Input
+                              value={plan.color}
+                              onChange={e => {
+                                const list = [...plansList];
+                                list[idx] = { ...list[idx], color: e.target.value };
+                                setConfig(p => ({ ...p, emi: { ...(p.emi || { heading: "", subheading: "" }), plans: list } }));
+                              }}
+                              className="bg-white flex-1"
+                            />
+                            <div className="w-10 h-10 rounded border border-gray-200 animate-pulse" style={{ backgroundColor: plan.color || "#D50032" }} />
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-xs">Button Text</Label>
+                          <Input
+                            value={plan.btnText}
+                            onChange={e => {
+                              const list = [...plansList];
+                              list[idx] = { ...list[idx], btnText: e.target.value };
+                              setConfig(p => ({ ...p, emi: { ...(p.emi || { heading: "", subheading: "" }), plans: list } }));
+                            }}
+                            className="bg-white mt-1"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="md:col-span-8 space-y-3">
+                        <Label className="text-xs font-bold text-gray-700">Plan Bullet Points (Exactly 3)</Label>
+                        {[0, 1, 2].map(bIdx => {
+                          const currentBullets = plan.bullets || ["", "", ""];
+                          return (
+                            <div key={bIdx} className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-gray-400">Bullet #{bIdx + 1}:</span>
+                              <Input
+                                value={currentBullets[bIdx] || ""}
+                                onChange={e => {
+                                  const list = [...plansList];
+                                  const bulletsCopy = [...currentBullets];
+                                  bulletsCopy[bIdx] = e.target.value;
+                                  list[idx] = { ...list[idx], bullets: bulletsCopy };
+                                  setConfig(p => ({ ...p, emi: { ...(p.emi || { heading: "", subheading: "" }), plans: list } }));
+                                }}
+                                placeholder={`e.g. Interest-free payments`}
+                                className="bg-white flex-1"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Button size="sm" onClick={() => saveConfig({ emi: config.emi })} className="bg-[#E53935] text-white hover:bg-[#b71c1c] w-full">
+              <Save size={14} className="mr-1" /> Save EMI Settings
+            </Button>
+          </Card>
         </div>
       )}
 
@@ -750,43 +1402,85 @@ export default function AdminCMS() {
                     />
                   </div>
 
-                  {/* Icon selector/input */}
-                  <div className="md:col-span-4">
-                    <Label htmlFor={`b-icon-${idx}`}>Icon Name (Lucide)</Label>
-                    <div className="flex gap-2 mt-1">
-                      <select
-                        value={["BookOpen", "TrendingUp", "FileText", "BarChart3", "Shield", "Award", "Target", "Trophy", "Brain"].includes(benefit.icon) ? benefit.icon : "Custom"}
-                        onChange={e => {
-                          const val = e.target.value;
-                          if (val !== "Custom") {
-                            const list = [...(config.benefits || [])];
-                            list[idx] = { ...list[idx], icon: val };
-                            setConfig(p => ({ ...p, benefits: list }));
-                          }
-                        }}
-                        className="flex h-10 w-1/2 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      >
-                        <option value="BookOpen">BookOpen</option>
-                        <option value="TrendingUp">TrendingUp</option>
-                        <option value="FileText">FileText</option>
-                        <option value="BarChart3">BarChart3</option>
-                        <option value="Shield">Shield</option>
-                        <option value="Award">Award</option>
-                        <option value="Target">Target</option>
-                        <option value="Trophy">Trophy</option>
-                        <option value="Brain">Brain</option>
-                        <option value="Custom">Custom / Other</option>
-                      </select>
-                      <Input
-                        value={benefit.icon}
-                        onChange={e => {
-                          const list = [...(config.benefits || [])];
-                          list[idx] = { ...list[idx], icon: e.target.value };
-                          setConfig(p => ({ ...p, benefits: list }));
-                        }}
-                        placeholder="Icon name"
-                        className="flex-1"
-                      />
+                  {/* Logo Upload / Icon selector */}
+                  <div className="md:col-span-12">
+                    <Label className="text-gray-700 font-bold">Benefit Custom Logo (PNG/SVG) — Or Custom Lucide Icon</Label>
+                    <div className="grid md:grid-cols-2 gap-4 mt-2">
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-xs text-gray-500 font-bold">Lucide Icon Selection</Label>
+                        <div className="flex gap-2">
+                          <select
+                            value={["BookOpen", "TrendingUp", "FileText", "BarChart3", "Shield", "Award", "Target", "Trophy", "Brain"].includes(benefit.icon) ? benefit.icon : "Custom"}
+                            onChange={e => {
+                              const val = e.target.value;
+                              if (val !== "Custom") {
+                                const list = [...(config.benefits || [])];
+                                list[idx] = { ...list[idx], icon: val };
+                                setConfig(p => ({ ...p, benefits: list }));
+                              }
+                            }}
+                            className="flex h-10 w-1/2 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          >
+                            <option value="BookOpen">BookOpen</option>
+                            <option value="TrendingUp">TrendingUp</option>
+                            <option value="FileText">FileText</option>
+                            <option value="BarChart3">BarChart3</option>
+                            <option value="Shield">Shield</option>
+                            <option value="Award">Award</option>
+                            <option value="Target">Target</option>
+                            <option value="Trophy">Trophy</option>
+                            <option value="Brain">Brain</option>
+                            <option value="Custom">Custom / Other</option>
+                          </select>
+                          <Input
+                            value={benefit.icon.startsWith("/uploads") ? "" : benefit.icon}
+                            onChange={e => {
+                              const list = [...(config.benefits || [])];
+                              list[idx] = { ...list[idx], icon: e.target.value };
+                              setConfig(p => ({ ...p, benefits: list }));
+                            }}
+                            placeholder="Or type Lucide icon name..."
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-xs text-gray-500 font-bold">Custom Image Upload</Label>
+                        <div className="flex items-center gap-3">
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={async (e) => {
+                              if (!e.target.files || e.target.files.length === 0) return;
+                              const file = e.target.files[0];
+                              const formData = new FormData();
+                              formData.append("file", file);
+
+                              try {
+                                showToast("Uploading benefit logo...", "success");
+                                const res = await api.post("/admin/upload", formData, {
+                                  headers: { "Content-Type": "multipart/form-data" }
+                                });
+                                if (res.data && res.data.url) {
+                                  const list = [...(config.benefits || [])];
+                                  list[idx] = { ...list[idx], icon: res.data.url };
+                                  setConfig(p => ({ ...p, benefits: list }));
+                                  showToast("Benefit logo uploaded!", "success");
+                                }
+                              } catch {
+                                showToast("Upload failed.", "error");
+                              }
+                            }}
+                            className="flex-1 cursor-pointer h-10 py-1.5"
+                          />
+                          {benefit.icon.startsWith("/uploads") && (
+                            <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-gray-200">
+                              <img src={getImageUrl(benefit.icon)} alt="icon preview" className="w-full h-full object-cover" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -888,44 +1582,86 @@ export default function AdminCMS() {
                     />
                   </div>
 
-                  {/* Icon selector/input */}
-                  <div className="md:col-span-4">
-                    <Label htmlFor={`s-icon-${idx}`}>Icon Name (Lucide)</Label>
-                    <div className="flex gap-2 mt-1">
-                      <select
-                        value={["UserCheck", "Monitor", "Wifi", "Activity", "ClipboardCheck", "GitBranch", "Cpu", "LineChart", "BookOpen", "Trophy"].includes(service.icon) ? service.icon : "Custom"}
-                        onChange={e => {
-                          const val = e.target.value;
-                          if (val !== "Custom") {
-                            const list = [...(config.services || [])];
-                            list[idx] = { ...list[idx], icon: val };
-                            setConfig(p => ({ ...p, services: list }));
-                          }
-                        }}
-                        className="flex h-10 w-1/2 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      >
-                        <option value="UserCheck">UserCheck</option>
-                        <option value="Monitor">Monitor</option>
-                        <option value="Wifi">Wifi</option>
-                        <option value="Activity">Activity</option>
-                        <option value="ClipboardCheck">ClipboardCheck</option>
-                        <option value="GitBranch">GitBranch</option>
-                        <option value="Cpu">Cpu</option>
-                        <option value="LineChart">LineChart</option>
-                        <option value="BookOpen">BookOpen</option>
-                        <option value="Trophy">Trophy</option>
-                        <option value="Custom">Custom / Other</option>
-                      </select>
-                      <Input
-                        value={service.icon}
-                        onChange={e => {
-                          const list = [...(config.services || [])];
-                          list[idx] = { ...list[idx], icon: e.target.value };
-                          setConfig(p => ({ ...p, services: list }));
-                        }}
-                        placeholder="Icon name"
-                        className="flex-1"
-                      />
+                  {/* Logo Upload / Icon selector */}
+                  <div className="md:col-span-12">
+                    <Label className="text-gray-700 font-bold">Service Custom Logo (PNG/SVG) — Or Custom Lucide Icon</Label>
+                    <div className="grid md:grid-cols-2 gap-4 mt-2">
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-xs text-gray-500 font-bold">Lucide Icon Selection</Label>
+                        <div className="flex gap-2">
+                          <select
+                            value={["UserCheck", "Monitor", "Wifi", "Activity", "ClipboardCheck", "GitBranch", "Cpu", "LineChart", "BookOpen", "Trophy"].includes(service.icon) ? service.icon : "Custom"}
+                            onChange={e => {
+                              const val = e.target.value;
+                              if (val !== "Custom") {
+                                const list = [...(config.services || [])];
+                                list[idx] = { ...list[idx], icon: val };
+                                setConfig(p => ({ ...p, services: list }));
+                              }
+                            }}
+                            className="flex h-10 w-1/2 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          >
+                            <option value="UserCheck">UserCheck</option>
+                            <option value="Monitor">Monitor</option>
+                            <option value="Wifi">Wifi</option>
+                            <option value="Activity">Activity</option>
+                            <option value="ClipboardCheck">ClipboardCheck</option>
+                            <option value="GitBranch">GitBranch</option>
+                            <option value="Cpu">Cpu</option>
+                            <option value="LineChart">LineChart</option>
+                            <option value="BookOpen">BookOpen</option>
+                            <option value="Trophy">Trophy</option>
+                            <option value="Custom">Custom / Other</option>
+                          </select>
+                          <Input
+                            value={service.icon.startsWith("/uploads") ? "" : service.icon}
+                            onChange={e => {
+                              const list = [...(config.services || [])];
+                              list[idx] = { ...list[idx], icon: e.target.value };
+                              setConfig(p => ({ ...p, services: list }));
+                            }}
+                            placeholder="Or type Lucide icon name..."
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-xs text-gray-500 font-bold">Custom Image Upload</Label>
+                        <div className="flex items-center gap-3">
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={async (e) => {
+                              if (!e.target.files || e.target.files.length === 0) return;
+                              const file = e.target.files[0];
+                              const formData = new FormData();
+                              formData.append("file", file);
+
+                              try {
+                                showToast("Uploading service logo...", "success");
+                                const res = await api.post("/admin/upload", formData, {
+                                  headers: { "Content-Type": "multipart/form-data" }
+                                });
+                                if (res.data && res.data.url) {
+                                  const list = [...(config.services || [])];
+                                  list[idx] = { ...list[idx], icon: res.data.url };
+                                  setConfig(p => ({ ...p, services: list }));
+                                  showToast("Service logo uploaded!", "success");
+                                }
+                              } catch {
+                                showToast("Upload failed.", "error");
+                              }
+                            }}
+                            className="flex-1 cursor-pointer h-10 py-1.5"
+                          />
+                          {service.icon.startsWith("/uploads") && (
+                            <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-gray-200">
+                              <img src={getImageUrl(service.icon)} alt="icon preview" className="w-full h-full object-cover" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -1215,43 +1951,85 @@ export default function AdminCMS() {
                     />
                   </div>
 
-                  {/* Icon Selector / input */}
-                  <div className="md:col-span-4">
-                    <Label htmlFor={`wc-icon-${idx}`}>Icon Name (Lucide)</Label>
-                    <div className="flex gap-2 mt-1">
-                      <select
-                        value={["Brain", "BookOpen", "LineChart", "Trophy", "TrendingUp", "Award", "Target", "Shield", "Cpu"].includes(item.icon) ? item.icon : "Custom"}
-                        onChange={e => {
-                          const val = e.target.value;
-                          if (val !== "Custom") {
-                            const list = [...(config.why_choose || [])];
-                            list[idx] = { ...list[idx], icon: val };
-                            setConfig(p => ({ ...p, why_choose: list }));
-                          }
-                        }}
-                        className="flex h-10 w-1/2 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      >
-                        <option value="Brain">Brain</option>
-                        <option value="BookOpen">BookOpen</option>
-                        <option value="LineChart">LineChart</option>
-                        <option value="Trophy">Trophy</option>
-                        <option value="TrendingUp">TrendingUp</option>
-                        <option value="Award">Award</option>
-                        <option value="Target">Target</option>
-                        <option value="Shield">Shield</option>
-                        <option value="Cpu">Cpu</option>
-                        <option value="Custom">Custom / Other</option>
-                      </select>
-                      <Input
-                        value={item.icon}
-                        onChange={e => {
-                          const list = [...(config.why_choose || [])];
-                          list[idx] = { ...list[idx], icon: e.target.value };
-                          setConfig(p => ({ ...p, why_choose: list }));
-                        }}
-                        placeholder="Icon name"
-                        className="flex-1"
-                      />
+                  {/* Logo Upload / Icon selector */}
+                  <div className="md:col-span-12">
+                    <Label className="text-gray-700 font-bold">Why Choose Us Custom Logo (PNG/SVG) — Or Custom Lucide Icon</Label>
+                    <div className="grid md:grid-cols-2 gap-4 mt-2">
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-xs text-gray-500 font-bold">Lucide Icon Selection</Label>
+                        <div className="flex gap-2">
+                          <select
+                            value={["Brain", "BookOpen", "LineChart", "Trophy", "TrendingUp", "Award", "Target", "Shield", "Cpu"].includes(item.icon) ? item.icon : "Custom"}
+                            onChange={e => {
+                              const val = e.target.value;
+                              if (val !== "Custom") {
+                                const list = [...(config.why_choose || [])];
+                                list[idx] = { ...list[idx], icon: val };
+                                setConfig(p => ({ ...p, why_choose: list }));
+                              }
+                            }}
+                            className="flex h-10 w-1/2 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          >
+                            <option value="Brain">Brain</option>
+                            <option value="BookOpen">BookOpen</option>
+                            <option value="LineChart">LineChart</option>
+                            <option value="Trophy">Trophy</option>
+                            <option value="TrendingUp">TrendingUp</option>
+                            <option value="Award">Award</option>
+                            <option value="Target">Target</option>
+                            <option value="Shield">Shield</option>
+                            <option value="Cpu">Cpu</option>
+                            <option value="Custom">Custom / Other</option>
+                          </select>
+                          <Input
+                            value={item.icon.startsWith("/uploads") ? "" : item.icon}
+                            onChange={e => {
+                              const list = [...(config.why_choose || [])];
+                              list[idx] = { ...list[idx], icon: e.target.value };
+                              setConfig(p => ({ ...p, why_choose: list }));
+                            }}
+                            placeholder="Or type Lucide icon name..."
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-xs text-gray-500 font-bold">Custom Image Upload</Label>
+                        <div className="flex items-center gap-3">
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={async (e) => {
+                              if (!e.target.files || e.target.files.length === 0) return;
+                              const file = e.target.files[0];
+                              const formData = new FormData();
+                              formData.append("file", file);
+
+                              try {
+                                showToast("Uploading why choose us logo...", "success");
+                                const res = await api.post("/admin/upload", formData, {
+                                  headers: { "Content-Type": "multipart/form-data" }
+                                });
+                                if (res.data && res.data.url) {
+                                  const list = [...(config.why_choose || [])];
+                                  list[idx] = { ...list[idx], icon: res.data.url };
+                                  setConfig(p => ({ ...p, why_choose: list }));
+                                  showToast("Why Choose Us logo uploaded!", "success");
+                                }
+                              } catch {
+                                showToast("Upload failed.", "error");
+                              }
+                            }}
+                            className="flex-1 cursor-pointer h-10 py-1.5"
+                          />
+                          {item.icon.startsWith("/uploads") && (
+                            <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-gray-200">
+                              <img src={getImageUrl(item.icon)} alt="icon preview" className="w-full h-full object-cover" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -1384,6 +2162,43 @@ export default function AdminCMS() {
                     />
                   </div>
 
+                  {/* Profile Image Uploader */}
+                  <div className="md:col-span-2">
+                    <Label>Profile Portrait</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          if (!e.target.files || e.target.files.length === 0) return;
+                          const file = e.target.files[0];
+                          const formData = new FormData();
+                          formData.append("file", file);
+                          try {
+                            showToast("Uploading portrait...", "success");
+                            const res = await api.post("/admin/upload", formData, {
+                              headers: { "Content-Type": "multipart/form-data" }
+                            });
+                            if (res.data && res.data.url) {
+                              const list = [...(config.leadership || [])];
+                              list[idx] = { ...list[idx], profile_image: res.data.url };
+                              setConfig(p => ({ ...p, leadership: list }));
+                              showToast("Portrait uploaded!", "success");
+                            }
+                          } catch {
+                            showToast("Upload failed.", "error");
+                          }
+                        }}
+                        className="cursor-pointer h-10 py-1.5 text-xs flex-1"
+                      />
+                      {leader.profile_image && (
+                        <div className="relative w-10 h-10 rounded-full overflow-hidden border border-gray-200 flex-shrink-0">
+                          <img src={getImageUrl(leader.profile_image)} alt="preview" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Header Detail */}
                   <div className="md:col-span-12">
                     <Label htmlFor={`ld-header-${idx}`}>Header Detail (Icon + Text)</Label>
@@ -1505,7 +2320,8 @@ export default function AdminCMS() {
                     { value: "", label: "" }
                   ],
                   bio: "",
-                  tags: []
+                  tags: [],
+                  profile_image: ""
                 });
                 setConfig(p => ({ ...p, leadership: list }));
               }}

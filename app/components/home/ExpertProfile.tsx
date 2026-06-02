@@ -1,5 +1,15 @@
 import { useState } from "react";
 import { X } from "lucide-react";
+import api from "../../services/api";
+
+const getImageUrl = (path?: string) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
+  const base = api.defaults.baseURL || "";
+  const cleanBase = base.endsWith("/") ? base.slice(0, -1) : base;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `${cleanBase}${cleanPath}`;
+};
 
 interface StatItem {
   value: string;
@@ -14,6 +24,7 @@ interface LeaderModalData {
   stats: StatItem[];
   bio: string;
   tags: string[];
+  profile_image?: string;
 }
 
 export default function ExpertProfile({ leaders: leadersProp }: { leaders?: LeaderModalData[] }) {
@@ -109,8 +120,12 @@ export default function ExpertProfile({ leaders: leadersProp }: { leaders?: Lead
                   {/* Header Profile Info */}
                   <div className="flex items-center gap-4.5">
                     {/* Large Circular Avatar Monogram */}
-                    <div className="w-18 h-18 rounded-full bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-xl font-extrabold text-[#D50032] tracking-tighter">{leadersData[0].monogram}</span>
+                    <div className="w-18 h-18 rounded-full bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {leadersData[0].profile_image ? (
+                        <img src={getImageUrl(leadersData[0].profile_image)} alt={leadersData[0].name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-xl font-extrabold text-[#D50032] tracking-tighter">{leadersData[0].monogram}</span>
+                      )}
                     </div>
                     
                     {/* Name & Title */}
@@ -170,8 +185,12 @@ export default function ExpertProfile({ leaders: leadersProp }: { leaders?: Lead
                     {/* Header Profile Info */}
                     <div className="flex items-center gap-4">
                       {/* Circular Avatar Monogram */}
-                      <div className="w-14 h-14 rounded-full bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0">
-                        <span className="text-base font-extrabold text-[#D50032] tracking-tighter">{leader.monogram}</span>
+                      <div className="w-14 h-14 rounded-full bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {leader.profile_image ? (
+                          <img src={getImageUrl(leader.profile_image)} alt={leader.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-base font-extrabold text-[#D50032] tracking-tighter">{leader.monogram}</span>
+                        )}
                       </div>
                       
                       {/* Name & Title */}
@@ -231,10 +250,14 @@ export default function ExpertProfile({ leaders: leadersProp }: { leaders?: Lead
 
             {/* Modal Header */}
             <div className="flex items-center gap-3 md:gap-4.5 text-left">
-              <div className="w-12 h-12 md:w-18 md:h-18 rounded-full bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-base md:text-xl font-black text-[#D50032] tracking-tighter">
-                  {leadersData[activeLeader].monogram}
-                </span>
+              <div className="w-12 h-12 md:w-18 md:h-18 rounded-full bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {leadersData[activeLeader].profile_image ? (
+                  <img src={getImageUrl(leadersData[activeLeader].profile_image)} alt={leadersData[activeLeader].name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-base md:text-xl font-black text-[#D50032] tracking-tighter">
+                    {leadersData[activeLeader].monogram}
+                  </span>
+                )}
               </div>
               <div className="space-y-1">
                 <h3 className="text-lg md:text-2xl font-black text-gray-950 tracking-tight leading-none">

@@ -13,6 +13,15 @@ import { toast } from "sonner";
 import api from "../../services/api";
 import { useNavigate } from "react-router";
 
+const getImageUrl = (path?: string) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
+  const base = api.defaults.baseURL || "";
+  const cleanBase = base.endsWith("/") ? base.slice(0, -1) : base;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `${cleanBase}${cleanPath}`;
+};
+
 export default function AdminNews() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("news");
@@ -335,12 +344,45 @@ export default function AdminNews() {
             )}
             
             <div className="grid gap-2">
-              <Label>Thumbnail URL (Optional)</Label>
-              <Input 
-                value={formData.thumbnail_url} 
-                onChange={e => setFormData({...formData, thumbnail_url: e.target.value})} 
-                placeholder="https://..."
-              />
+              <Label>Thumbnail URL / Custom Image Upload (Optional)</Label>
+              <div className="flex gap-2">
+                <Input 
+                  value={formData.thumbnail_url} 
+                  onChange={e => setFormData({...formData, thumbnail_url: e.target.value})} 
+                  placeholder="https://..."
+                  className="flex-1"
+                />
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    if (!e.target.files || e.target.files.length === 0) return;
+                    const file = e.target.files[0];
+                    const uploadData = new FormData();
+                    uploadData.append("file", file);
+                    try {
+                      toast.loading("Uploading thumbnail...", { id: "upload-thumb" });
+                      const res = await api.post("/admin/upload", uploadData, {
+                        headers: { "Content-Type": "multipart/form-data" }
+                      });
+                      if (res.data && res.data.url) {
+                        setFormData(p => ({ ...p, thumbnail_url: res.data.url }));
+                        toast.success("Thumbnail uploaded!", { id: "upload-thumb" });
+                      } else {
+                        toast.error("Upload failed.", { id: "upload-thumb" });
+                      }
+                    } catch {
+                      toast.error("Upload failed.", { id: "upload-thumb" });
+                    }
+                  }}
+                  className="w-1/3 cursor-pointer file:cursor-pointer"
+                />
+              </div>
+              {formData.thumbnail_url && (
+                <div className="mt-1 relative w-20 h-20 rounded border border-gray-200 overflow-hidden">
+                  <img src={getImageUrl(formData.thumbnail_url)} alt="thumbnail preview" className="w-full h-full object-cover" />
+                </div>
+              )}
             </div>
             
             <div className="grid gap-2">

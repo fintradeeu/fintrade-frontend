@@ -2,54 +2,87 @@ import { useState, useEffect } from "react";
 import { Check, CreditCard, ShieldCheck, Percent } from "lucide-react";
 import { motion } from "motion/react";
 
-export default function EMIHighlight() {
-  const paymentDetails = [
+interface EMIPaymentItem {
+  title: string;
+  tagline: string;
+  color: string;
+  bullets: string[];
+  btnText: string;
+}
+
+interface EMIConfig {
+  heading?: string;
+  subheading?: string;
+  plans?: EMIPaymentItem[];
+}
+
+interface EMIHighlightProps {
+  emiConfig?: EMIConfig;
+}
+
+function hexToRgb(hex?: string) {
+  if (!hex) return "213, 0, 50";
+  const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+  const fullHex = hex.replace(shorthandRegex, (m, r, g, b) => r + r + g + g + b + b);
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(fullHex);
+  return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : "213, 0, 50";
+}
+
+export default function EMIHighlight({ emiConfig }: EMIHighlightProps) {
+  const heading = emiConfig?.heading || "Flexible EMI & Payment Plans";
+  const subheading = emiConfig?.subheading || "Invest in your trading career with our convenient payment options and banking rewards";
+
+  const defaultPlans = [
     {
-      icon: CreditCard,
       title: "Flexible EMI Options",
       tagline: "No Cost & Low-Interest Plans",
       color: "#D50032",
-      hoverColor: "#b00029",
-      bgColor: "rgba(213, 0, 50, 0.03)",
-      borderColor: "rgba(213, 0, 50, 0.12)",
       btnText: "Choose Plan",
       bullets: [
-        <>EMI tenures available for <strong>6 Months</strong> and <strong>12 Months</strong>.</>,
-        <><strong>6-Month Tenure:</strong> 100% <strong>No-Cost EMI</strong> (0% interest).</>,
-        <><strong>12-Month Tenure:</strong> Competitive rate of <strong>15% Interest P.A.</strong></>,
-      ],
+        "EMI tenures available for 6 Months and 12 Months.",
+        "6-Month Tenure: 100% No-Cost EMI (0% interest).",
+        "12-Month Tenure: Competitive rate of 15% Interest P.A."
+      ]
     },
     {
-      icon: ShieldCheck,
       title: "Eligibility & Cashbacks",
       tagline: "CIBIL Check & Credit Rewards",
       color: "#16a34a",
-      hoverColor: "#15803d",
-      bgColor: "rgba(22, 163, 74, 0.03)",
-      borderColor: "rgba(22, 163, 74, 0.12)",
       btnText: "Check Eligibility",
       bullets: [
-        <>EMI loans offered exclusively for customers with <strong>730 & above CIBIL</strong> score.</>,
-        <>Get <strong>up to 5% Cashback</strong> instantly on your tuition payment.</>,
-        <>Cashback is applicable on payments made with <strong>any Credit Card</strong>.</>,
-      ],
+        "EMI loans offered exclusively for customers with 730 & above CIBIL score.",
+        "Get up to 5% Cashback instantly on your tuition payment.",
+        "Cashback is applicable on payments made with any Credit Card."
+      ]
     },
     {
-      icon: Percent,
       title: "Special Gateway Discount",
       tagline: "Upcoming Gateway Offer",
       color: "#2563eb",
-      hoverColor: "#1d4ed8",
-      bgColor: "rgba(37, 99, 235, 0.03)",
-      borderColor: "rgba(37, 99, 235, 0.12)",
       btnText: "Explore Discount",
       bullets: [
-        <>Enjoy a flat <strong>5% Discount</strong> on the total course fee.</>,
-        <>Discount launches <strong>after 3 months of installing our payment gateway</strong>.</>,
-        <>Automatic early-bird reward directly at the checkout terminal.</>,
-      ],
-    },
+        "Enjoy a flat 5% Discount on the total course fee.",
+        "Discount launches after 3 months of installing our payment gateway.",
+        "Automatic early-bird reward directly at the checkout terminal."
+      ]
+    }
   ];
+
+  const plans = (emiConfig?.plans && emiConfig.plans.length > 0) ? emiConfig.plans : defaultPlans;
+
+  const paymentDetails = plans.map((plan, i) => {
+    const color = plan.color || (i === 0 ? "#D50032" : i === 1 ? "#16a34a" : "#2563eb");
+    return {
+      icon: i === 0 ? CreditCard : i === 1 ? ShieldCheck : Percent,
+      title: plan.title || `Plan ${i + 1}`,
+      tagline: plan.tagline || "Easy payment option",
+      color: color,
+      bgColor: `rgba(${hexToRgb(color)}, 0.03)`,
+      borderColor: `rgba(${hexToRgb(color)}, 0.12)`,
+      btnText: plan.btnText || "Choose Plan",
+      bullets: plan.bullets || []
+    };
+  });
 
   const [activeSlide, setActiveSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -83,14 +116,22 @@ export default function EMIHighlight() {
             </span>
           </div>
           <h2 className="text-3xl md:text-5xl font-black mb-3 text-gray-900 tracking-tight">
-            Flexible <span className="text-[#D50032]">EMI & Payment Plans</span>
+            {heading.split(" ").map((w, idx) => (
+              <span key={idx}>
+                {idx === heading.split(" ").length - 1 ? (
+                  <span className="text-[#D50032]">{w}</span>
+                ) : (
+                  w + " "
+                )}
+              </span>
+            ))}
           </h2>
           <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
-            Invest in your trading career with our convenient payment options and banking rewards
+            {subheading}
           </p>
         </div>
 
-        {/* Premium Payment Details Grid - Desktop (Visible only on medium screens and up) */}
+        {/* Premium Payment Details Grid - Desktop */}
         <div className="hidden md:grid md:grid-cols-3 gap-8 md:gap-6 items-stretch max-w-6xl mx-auto">
           {paymentDetails.map((detail, idx) => {
             const IconComponent = detail.icon;
@@ -158,14 +199,14 @@ export default function EMIHighlight() {
                   <button
                     className="w-full py-4 rounded-2xl font-extrabold text-sm text-white transition-all duration-300 transform active:scale-98 cursor-pointer flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg border-0"
                     style={{
-                      backgroundColor: "#D50032",
+                      backgroundColor: detail.color,
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = "#b00029";
-                      e.currentTarget.style.boxShadow = "0 8px 25px rgba(213, 0, 50, 0.25)";
+                      e.currentTarget.style.opacity = "0.9";
+                      e.currentTarget.style.boxShadow = `0 8px 25px rgba(${hexToRgb(detail.color)}, 0.25)`;
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "#D50032";
+                      e.currentTarget.style.opacity = "1";
                       e.currentTarget.style.boxShadow = "none";
                     }}
                   >
@@ -178,7 +219,7 @@ export default function EMIHighlight() {
           })}
         </div>
 
-        {/* Premium Payment Details Auto-Slider - Mobile (Visible only on screens below 768px) */}
+        {/* Premium Payment Details Auto-Slider - Mobile */}
         <div 
           className="md:hidden relative max-w-sm mx-auto"
           onMouseEnter={() => setIsHovered(true)}
@@ -265,13 +306,7 @@ export default function EMIHighlight() {
                         <button
                           className="w-full py-3.5 rounded-2xl font-extrabold text-xs text-white transition-all duration-300 transform active:scale-98 cursor-pointer flex items-center justify-center gap-1.5 shadow-md border-0"
                           style={{
-                            backgroundColor: "#D50032",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = "#b00029";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "#D50032";
+                            backgroundColor: detail.color,
                           }}
                         >
                           {detail.btnText}
