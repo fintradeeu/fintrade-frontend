@@ -16,3 +16,4 @@ content = content.replace('<Button onClick={() => toggleSimulator(false)} varian
 with open('c:/work/fintrade/fintrade-frontend/app/pages/admin/AdminSimulator.tsx', 'w', encoding='utf-8') as f:
     f.write(content)
 print("Admin sim buttons fixed")
+# hhh
