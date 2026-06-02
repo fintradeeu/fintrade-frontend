@@ -1,6 +1,16 @@
 import { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Play, Music, Eye, X, Maximize2 } from "lucide-react";
 import { Card } from "../ui/card";
+import api from "../../services/api";
+
+const getImageUrl = (path?: string) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
+  const base = api.defaults.baseURL || "";
+  const cleanBase = base.endsWith("/") ? base.slice(0, -1) : base;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `${cleanBase}${cleanPath}`;
+};
 
 const verticalVideos = [
   {
@@ -235,7 +245,7 @@ export default function VerticalVideoSection({ videos: videosProp }: { videos?: 
                   {/* Background Thumbnail Image with dark overlay */}
                   <div className="absolute inset-0 z-0">
                     <img 
-                      src={vid.thumbnail} 
+                      src={getImageUrl(vid.thumbnail)} 
                       alt={vid.title} 
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />

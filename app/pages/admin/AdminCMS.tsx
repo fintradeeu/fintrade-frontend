@@ -218,7 +218,7 @@ function Toast({ message, type }: { message: string; type: "success" | "error" }
 // ── Main Component ────────────────────────────────────────────────────
 
 export default function AdminCMS() {
-  const [activeTab, setActiveTab] = useState<"announcements" | "courses" | "settings" | "videos" | "benefits" | "services" | "quick_tips" | "why_choose" | "leadership" | "hero_slider" | "live_classes">("announcements");
+  const [activeTab, setActiveTab] = useState<"announcements" | "courses" | "settings" | "videos" | "benefits" | "services" | "quick_tips" | "why_choose" | "leadership" | "hero_slider" | "live_classes" | "certificate" | "emi">("announcements");
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   // Announcements state
@@ -356,6 +356,8 @@ export default function AdminCMS() {
         <TabBtn active={activeTab === "quick_tips"} onClick={() => setActiveTab("quick_tips")} icon={<Video size={16} />} label="Section 7: Quick Tips" />
         <TabBtn active={activeTab === "why_choose"} onClick={() => setActiveTab("why_choose")} icon={<LayoutTemplate size={16} />} label="Section 8: Why Choose Us" />
         <TabBtn active={activeTab === "leadership"} onClick={() => setActiveTab("leadership")} icon={<Users size={16} />} label="Section 9: Leadership Team" />
+        <TabBtn active={activeTab === "certificate"} onClick={() => setActiveTab("certificate")} icon={<Award size={16} />} label="Section 10: Certificate Showcase" />
+        <TabBtn active={activeTab === "emi"} onClick={() => setActiveTab("emi")} icon={<TrendingUp size={16} />} label="Section 11: EMI & Payment Plans" />
         <TabBtn active={activeTab === "settings"} onClick={() => setActiveTab("settings")} icon={<Globe size={16} />} label="Site Settings" />
       </div>
 
@@ -954,9 +956,23 @@ export default function AdminCMS() {
               </div>
             </Card>
           </div>
+        </div>
+      )}
+
+      {/* ── TAB: Section 10: Certificate Showcase ──────────────────── */}
+      {activeTab === "certificate" && !configLoading && (
+        <div className="space-y-6">
+          <Card className="p-4 border border-blue-100 bg-blue-50/50">
+            <div className="flex items-start gap-3">
+              <Info size={18} className="text-blue-500 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-blue-700">
+                Configure headings, sample dual certificates, and exactly 3 benefit cards (such as Shareability or Verification details) to showcase the certification value.
+              </p>
+            </div>
+          </Card>
 
           {/* Certificate Configuration */}
-          <Card className="p-6 border border-gray-100 shadow-sm md:col-span-2">
+          <Card className="p-6 border border-gray-100 shadow-sm">
             <h2 className="text-base font-bold mb-2 flex items-center gap-2" style={{ color: "#121212" }}>
               <Award size={16} className="text-[#E53935]" /> Industry-Recognized Certificate Config
             </h2>
@@ -1104,9 +1120,23 @@ export default function AdminCMS() {
               <Save size={14} className="mr-1" /> Save Certificate Settings
             </Button>
           </Card>
+        </div>
+      )}
+
+      {/* ── TAB: Section 11: EMI & Payment Plans ────────────────────── */}
+      {activeTab === "emi" && !configLoading && (
+        <div className="space-y-6">
+          <Card className="p-4 border border-blue-100 bg-blue-50/50">
+            <div className="flex items-start gap-3">
+              <Info size={18} className="text-blue-500 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-blue-700">
+                Configure headings, taglines, button labels, bullet items, and custom Hex theme colors (with real-time square previews) for exactly three payment plans to showcase in the EMI section.
+              </p>
+            </div>
+          </Card>
 
           {/* EMI & Payment Plans Configuration */}
-          <Card className="p-6 border border-gray-100 shadow-sm md:col-span-2">
+          <Card className="p-6 border border-gray-100 shadow-sm">
             <h2 className="text-base font-bold mb-2 flex items-center gap-2" style={{ color: "#121212" }}>
               <TrendingUp size={16} className="text-[#E53935]" /> EMI & Payment Plans Config
             </h2>
@@ -1826,28 +1856,49 @@ export default function AdminCMS() {
                     />
                   </div>
 
-                  {/* Thumbnail URL */}
+                  {/* Thumbnail Uploader */}
                   <div className="md:col-span-6">
-                    <Label htmlFor={`qt-thumb-${idx}`}>Thumbnail Image URL</Label>
+                    <Label htmlFor={`qt-thumb-${idx}`}>Thumbnail Image</Label>
                     <Input
                       id={`qt-thumb-${idx}`}
-                      value={tip.thumbnail}
-                      onChange={e => {
-                        const list = [...(config.quick_tips || [])];
-                        list[idx] = { ...list[idx], thumbnail: e.target.value };
-                        setConfig(p => ({ ...p, quick_tips: list }));
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        if (!e.target.files || e.target.files.length === 0) return;
+                        const file = e.target.files[0];
+                        const formData = new FormData();
+                        formData.append("file", file);
+
+                        try {
+                          showToast("Uploading thumbnail...", "success");
+                          const res = await api.post("/admin/upload", formData, {
+                            headers: { "Content-Type": "multipart/form-data" }
+                          });
+                          if (res.data && res.data.url) {
+                            const list = [...(config.quick_tips || [])];
+                            list[idx] = { ...list[idx], thumbnail: res.data.url };
+                            setConfig(p => ({ ...p, quick_tips: list }));
+                            showToast("Thumbnail uploaded successfully!", "success");
+                          }
+                        } catch {
+                          showToast("Upload failed.", "error");
+                        }
                       }}
-                      placeholder="https://images.unsplash.com/..."
-                      className="mt-1"
+                      className="mt-1 text-sm file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#E53935]/10 file:text-[#E53935] hover:file:bg-[#E53935]/20 cursor-pointer"
                     />
                     {tip.thumbnail && (
-                      <img
-                        src={tip.thumbnail}
-                        alt="preview"
-                        className="mt-2 h-20 w-12 object-cover rounded-lg border border-gray-200"
-                        style={{ aspectRatio: "9/16" }}
-                        onError={e => (e.currentTarget.style.display = "none")}
-                      />
+                      <div className="mt-2 flex items-center gap-3">
+                        <img
+                          src={getImageUrl(tip.thumbnail)}
+                          alt="preview"
+                          className="h-20 w-12 object-cover rounded-lg border border-gray-200"
+                          style={{ aspectRatio: "9/16" }}
+                          onError={e => (e.currentTarget.style.display = "none")}
+                        />
+                        <span className="text-xs text-gray-500 truncate max-w-[200px]" title={tip.thumbnail}>
+                          {tip.thumbnail}
+                        </span>
+                      </div>
                     )}
                   </div>
                 </div>
