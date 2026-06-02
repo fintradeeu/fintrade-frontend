@@ -87,6 +87,21 @@ interface LeadershipItem {
   tags: string[];
 }
 
+interface HeroButtonsConfig {
+  btn1_name: string;
+  btn2_name: string;
+  btn2_youtube_url: string;
+  btn3_name: string;
+  btn3_file_url: string;
+}
+
+interface CarouselSlideItem {
+  title: string;
+  subtitle: string;
+  buttonText: string;
+  link: string;
+}
+
 interface LandingConfig {
   hero?: { title: string; highlight: string; subtitle: string; badge: string };
   contact?: { phone: string; phone_href: string };
@@ -97,6 +112,8 @@ interface LandingConfig {
   quick_tips?: QuickTipItem[];
   why_choose?: WhyChooseItem[];
   leadership?: LeadershipItem[];
+  hero_buttons?: HeroButtonsConfig;
+  carousel_slides?: CarouselSlideItem[];
 }
 
 // ── Sub-components ────────────────────────────────────────────────────
@@ -128,7 +145,7 @@ function Toast({ message, type }: { message: string; type: "success" | "error" }
 // ── Main Component ────────────────────────────────────────────────────
 
 export default function AdminCMS() {
-  const [activeTab, setActiveTab] = useState<"announcements" | "courses" | "settings" | "videos" | "benefits" | "services" | "quick_tips" | "why_choose" | "leadership">("announcements");
+  const [activeTab, setActiveTab] = useState<"announcements" | "courses" | "settings" | "videos" | "benefits" | "services" | "quick_tips" | "why_choose" | "leadership" | "hero_slider">("announcements");
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   // Announcements state
@@ -265,6 +282,7 @@ export default function AdminCMS() {
         <TabBtn active={activeTab === "quick_tips"} onClick={() => setActiveTab("quick_tips")} icon={<Video size={16} />} label="Quick Tips" />
         <TabBtn active={activeTab === "why_choose"} onClick={() => setActiveTab("why_choose")} icon={<LayoutTemplate size={16} />} label="Why Choose Us" />
         <TabBtn active={activeTab === "leadership"} onClick={() => setActiveTab("leadership")} icon={<Users size={16} />} label="Leadership Team" />
+        <TabBtn active={activeTab === "hero_slider"} onClick={() => setActiveTab("hero_slider")} icon={<LayoutTemplate size={16} />} label="Hero & Carousel" />
       </div>
 
       {/* ── TAB: Announcements ─────────────────────────────────────── */}
@@ -1504,6 +1522,251 @@ export default function AdminCMS() {
               <Save size={16} className="mr-2" /> Save Leadership Team
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* ── TAB: Hero & Carousel ──────────────────────────────────── */}
+      {activeTab === "hero_slider" && !configLoading && (
+        <div className="space-y-6">
+          <Card className="p-4 border border-blue-100 bg-blue-50/50">
+            <div className="flex items-start gap-3">
+              <Info size={18} className="text-blue-500 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-blue-700">
+                Configure the primary Hero Section buttons and the three slides in the landing page Carousel. You can customize action button names, link them to specific pages, attach YouTube videos, or upload brochure PDF files.
+              </p>
+            </div>
+          </Card>
+
+          {/* Hero Action Buttons */}
+          <Card className="p-6 border border-gray-100 shadow-sm">
+            <h2 className="text-lg font-bold mb-5 flex items-center gap-2" style={{ color: "#121212" }}>
+              <LayoutTemplate size={18} className="text-[#E53935]" /> Hero Section Action Buttons
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Button 1 */}
+              <div className="p-5 rounded-2xl bg-gray-50 border border-gray-100 space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                  <span className="w-5.5 h-5.5 rounded-full bg-[#E53935]/10 text-[#E53935] flex items-center justify-center font-bold text-xs">1</span>
+                  <span className="font-bold text-sm text-gray-800">Primary Button</span>
+                </div>
+                <div>
+                  <Label htmlFor="btn1-name">Button Label</Label>
+                  <Input
+                    id="btn1-name"
+                    value={config.hero_buttons?.btn1_name || ""}
+                    onChange={e => setConfig(p => ({
+                      ...p,
+                      hero_buttons: {
+                        ...(p.hero_buttons || { btn1_name: "", btn2_name: "", btn2_youtube_url: "", btn3_name: "", btn3_file_url: "" }),
+                        btn1_name: e.target.value
+                      }
+                    }))}
+                    placeholder="e.g. Apply Now"
+                    className="mt-1 bg-white"
+                  />
+                </div>
+                <div>
+                  <Label>Redirect Destination</Label>
+                  <p className="text-xs text-gray-400 font-semibold mt-1.5">Fixed redirection to <code className="bg-gray-200 px-1 py-0.5 rounded">/courses</code></p>
+                </div>
+              </div>
+
+              {/* Button 2 */}
+              <div className="p-5 rounded-2xl bg-gray-50 border border-gray-100 space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                  <span className="w-5.5 h-5.5 rounded-full bg-[#E53935]/10 text-[#E53935] flex items-center justify-center font-bold text-xs">2</span>
+                  <span className="font-bold text-sm text-gray-800">Secondary Video Button</span>
+                </div>
+                <div>
+                  <Label htmlFor="btn2-name">Button Label</Label>
+                  <Input
+                    id="btn2-name"
+                    value={config.hero_buttons?.btn2_name || ""}
+                    onChange={e => setConfig(p => ({
+                      ...p,
+                      hero_buttons: {
+                        ...(p.hero_buttons || { btn1_name: "", btn2_name: "", btn2_youtube_url: "", btn3_name: "", btn3_file_url: "" }),
+                        btn2_name: e.target.value
+                      }
+                    }))}
+                    placeholder="e.g. Watch: The FinTrade Story"
+                    className="mt-1 bg-white"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="btn2-url">YouTube Video URL</Label>
+                  <Input
+                    id="btn2-url"
+                    value={config.hero_buttons?.btn2_youtube_url || ""}
+                    onChange={e => setConfig(p => ({
+                      ...p,
+                      hero_buttons: {
+                        ...(p.hero_buttons || { btn1_name: "", btn2_name: "", btn2_youtube_url: "", btn3_name: "", btn3_file_url: "" }),
+                        btn2_youtube_url: e.target.value
+                      }
+                    }))}
+                    placeholder="e.g. https://www.youtube.com/watch?v=..."
+                    className="mt-1 bg-white text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Button 3 */}
+              <div className="p-5 rounded-2xl bg-gray-50 border border-gray-100 space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                  <span className="w-5.5 h-5.5 rounded-full bg-[#E53935]/10 text-[#E53935] flex items-center justify-center font-bold text-xs">3</span>
+                  <span className="font-bold text-sm text-gray-800">Brochure Button</span>
+                </div>
+                <div>
+                  <Label htmlFor="btn3-name">Button Label</Label>
+                  <Input
+                    id="btn3-name"
+                    value={config.hero_buttons?.btn3_name || ""}
+                    onChange={e => setConfig(p => ({
+                      ...p,
+                      hero_buttons: {
+                        ...(p.hero_buttons || { btn1_name: "", btn2_name: "", btn2_youtube_url: "", btn3_name: "", btn3_file_url: "" }),
+                        btn3_name: e.target.value
+                      }
+                    }))}
+                    placeholder="e.g. Download Brochure"
+                    className="mt-1 bg-white"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="brochure-file">Brochure File (PDF)</Label>
+                  <Input
+                    id="brochure-file"
+                    type="file"
+                    accept=".pdf"
+                    onChange={async (e) => {
+                      if (!e.target.files || e.target.files.length === 0) return;
+                      const file = e.target.files[0];
+                      const formData = new FormData();
+                      formData.append("file", file);
+
+                      try {
+                        showToast("Uploading brochure PDF...", "success");
+                        const res = await api.post("/admin/upload", formData, {
+                          headers: { "Content-Type": "multipart/form-data" }
+                        });
+                        if (res.data && res.data.url) {
+                          setConfig(p => ({
+                            ...p,
+                            hero_buttons: {
+                              ...(p.hero_buttons || { btn1_name: "", btn2_name: "", btn2_youtube_url: "", btn3_name: "", btn3_file_url: "" }),
+                              btn3_file_url: res.data.url
+                            }
+                          }));
+                          showToast("Brochure PDF uploaded successfully!", "success");
+                        }
+                      } catch {
+                        showToast("Failed to upload PDF brochure.", "error");
+                      }
+                    }}
+                    className="mt-1 bg-white text-xs cursor-pointer h-10 py-1.5"
+                  />
+                  {config.hero_buttons?.btn3_file_url && (
+                    <div className="mt-2.5 flex items-center justify-between text-xs bg-white px-3 py-2 rounded-lg border border-gray-200">
+                      <span className="truncate text-gray-500 font-semibold max-w-[150px]">{config.hero_buttons.btn3_file_url}</span>
+                      <a href={config.hero_buttons.btn3_file_url} target="_blank" rel="noreferrer" className="text-[#E53935] hover:underline font-bold flex-shrink-0">View File</a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Carousel slides */}
+          <Card className="p-6 border border-gray-100 shadow-sm">
+            <h2 className="text-lg font-bold mb-5 flex items-center gap-2" style={{ color: "#121212" }}>
+              <LayoutTemplate size={18} className="text-[#E53935]" /> Carousel Slides (3 Slides)
+            </h2>
+
+            <div className="space-y-6">
+              {[0, 1, 2].map((idx) => {
+                const slide = (config.carousel_slides || [])[idx] || { title: "", subtitle: "", buttonText: "", link: "/" };
+                return (
+                  <div key={idx} className="p-6 rounded-2xl bg-gray-50 border border-gray-100 relative">
+                    <span className="absolute top-4 right-4 bg-gray-200 text-gray-600 px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-wider">Slide #{idx + 1}</span>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor={`slide-title-${idx}`}>Slide Title</Label>
+                        <Input
+                          id={`slide-title-${idx}`}
+                          value={slide.title}
+                          onChange={e => {
+                            const list = [...(config.carousel_slides || [{ title: "", subtitle: "", buttonText: "", link: "/" }, { title: "", subtitle: "", buttonText: "", link: "/" }, { title: "", subtitle: "", buttonText: "", link: "/" }])];
+                            list[idx] = { ...list[idx], title: e.target.value };
+                            setConfig(p => ({ ...p, carousel_slides: list }));
+                          }}
+                          placeholder="e.g. Learn from the Best"
+                          className="mt-1 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor={`slide-subtitle-${idx}`}>Slide Subtitle</Label>
+                        <Input
+                          id={`slide-subtitle-${idx}`}
+                          value={slide.subtitle}
+                          onChange={e => {
+                            const list = [...(config.carousel_slides || [{ title: "", subtitle: "", buttonText: "", link: "/" }, { title: "", subtitle: "", buttonText: "", link: "/" }, { title: "", subtitle: "", buttonText: "", link: "/" }])];
+                            list[idx] = { ...list[idx], subtitle: e.target.value };
+                            setConfig(p => ({ ...p, carousel_slides: list }));
+                          }}
+                          placeholder="e.g. Get 1-on-1 mentorship..."
+                          className="mt-1 bg-white text-xs sm:text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor={`slide-btn-text-${idx}`}>Button Text</Label>
+                        <Input
+                          id={`slide-btn-text-${idx}`}
+                          value={slide.buttonText}
+                          onChange={e => {
+                            const list = [...(config.carousel_slides || [{ title: "", subtitle: "", buttonText: "", link: "/" }, { title: "", subtitle: "", buttonText: "", link: "/" }, { title: "", subtitle: "", buttonText: "", link: "/" }])];
+                            list[idx] = { ...list[idx], buttonText: e.target.value };
+                            setConfig(p => ({ ...p, carousel_slides: list }));
+                          }}
+                          placeholder="e.g. Meet Mentors"
+                          className="mt-1 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor={`slide-link-${idx}`}>Redirect Destination</Label>
+                        <select
+                          id={`slide-link-${idx}`}
+                          value={slide.link}
+                          onChange={e => {
+                            const list = [...(config.carousel_slides || [{ title: "", subtitle: "", buttonText: "", link: "/" }, { title: "", subtitle: "", buttonText: "", link: "/" }, { title: "", subtitle: "", buttonText: "", link: "/" }])];
+                            list[idx] = { ...list[idx], link: e.target.value };
+                            setConfig(p => ({ ...p, carousel_slides: list }));
+                          }}
+                          className="mt-1 flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                          <option value="/">Home (/)</option>
+                          <option value="/courses">Courses (/courses)</option>
+                          <option value="/markets">Markets (/markets)</option>
+                          <option value="/category/advanced">Categories (/category/advanced)</option>
+                          <option value="/updates">Updates (/updates)</option>
+                          <option value="/blog">Blog (/blog)</option>
+                          <option value="/about">About (/about)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+
+          <Button
+            onClick={() => saveConfig({ hero_buttons: config.hero_buttons, carousel_slides: config.carousel_slides })}
+            className="bg-[#E53935] text-white hover:bg-[#b71c1c]"
+          >
+            <Save size={16} className="mr-2" /> Save Hero & Carousel Settings
+          </Button>
         </div>
       )}
     </DashboardLayout>

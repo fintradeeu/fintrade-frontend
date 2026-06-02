@@ -535,7 +535,7 @@ export default function MarketingHome() {
     return () => clearInterval(bgTimer);
   }, []);
 
-  const slides = [
+  const [slides, setSlides] = useState<any[]>([
     {
       title: "Start Your Trading Career",
       subtitle: "From beginner to funded professional in 90 days",
@@ -554,7 +554,15 @@ export default function MarketingHome() {
       buttonText: "Learn More",
       link: "#courses"
     }
-  ];
+  ]);
+
+  const [heroButtons, setHeroButtons] = useState<any>({
+    btn1_name: "Apply Now",
+    btn2_name: "Watch: The FinTrade Story",
+    btn2_youtube_url: "",
+    btn3_name: "Download Brochure",
+    btn3_file_url: "/brochure.pdf"
+  });
 
   const [apiCourses, setApiCourses] = useState<any[]>([]);
   const [isCoursesExpanded, setIsCoursesExpanded] = useState(false);
@@ -567,6 +575,7 @@ export default function MarketingHome() {
   const [blogStories, setBlogStories] = useState<any[]>([]);
   const [marketUpdates, setMarketUpdates] = useState<any[]>([]);
   const [selectedCourseForCheckout, setSelectedCourseForCheckout] = useState<any | null>(null);
+  const [customVideoUrl, setCustomVideoUrl] = useState<string>("");
 
   // States and refs for premium mobile autoslide behavior
   const coursesContainerRef = useRef<HTMLDivElement>(null);
@@ -739,6 +748,8 @@ export default function MarketingHome() {
           if (res.data.quick_tips) setApiQuickTips(res.data.quick_tips);
           if (res.data.why_choose) setApiWhyChoose(res.data.why_choose);
           if (res.data.leadership) setApiLeadership(res.data.leadership);
+          if (res.data.hero_buttons) setHeroButtons(res.data.hero_buttons);
+          if (res.data.carousel_slides) setSlides(res.data.carousel_slides);
         }
       } catch (err) { console.error("Landing page fetch failed", err); }
 
@@ -815,7 +826,7 @@ export default function MarketingHome() {
 
   const triggerBrochureDownload = () => {
     const link = document.createElement("a");
-    link.href = "/brochure.pdf";
+    link.href = heroButtons.btn3_file_url || "/brochure.pdf";
     link.download = "brochure.pdf";
     document.body.appendChild(link);
     link.click();
@@ -891,18 +902,47 @@ export default function MarketingHome() {
       {videoOpen && (
         <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="relative w-full max-w-5xl aspect-video rounded-2xl overflow-hidden shadow-2xl bg-black">
-            <button onClick={() => { setVideoOpen(false); setActiveVideoIdx(null); }} className="absolute top-4 right-4 z-10 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 rounded-full p-2 transition-all">
+            <button onClick={() => { setVideoOpen(false); setActiveVideoIdx(null); setCustomVideoUrl(""); }} className="absolute top-4 right-4 z-10 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 rounded-full p-2 transition-all">
               <X size={24} />
             </button>
-            <video
-              src={activeVideoIdx !== null && showcaseVideos[activeVideoIdx]?.videoUrl ? showcaseVideos[activeVideoIdx].videoUrl : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"}
-              autoPlay
-              muted
-              controls
-              loop
-              playsInline
-              className="w-full h-full object-contain"
-            />
+            {customVideoUrl && (customVideoUrl.includes("youtube.com") || customVideoUrl.includes("youtu.be")) ? (
+              <iframe
+                src={(() => {
+                  if (!customVideoUrl) return "";
+                  if (customVideoUrl.includes("youtube.com/embed/")) return customVideoUrl;
+                  if (customVideoUrl.includes("youtube.com/watch")) {
+                    try {
+                      const urlObj = new URL(customVideoUrl);
+                      const v = urlObj.searchParams.get("v");
+                      if (v) return `https://www.youtube.com/embed/${v}`;
+                    } catch (e) {}
+                  }
+                  if (customVideoUrl.includes("youtu.be/")) {
+                    try {
+                      const parts = customVideoUrl.split("youtu.be/");
+                      if (parts[1]) {
+                        const id = parts[1].split("?")[0];
+                        return `https://www.youtube.com/embed/${id}`;
+                      }
+                    } catch (e) {}
+                  }
+                  return customVideoUrl;
+                })()}
+                className="w-full h-full object-contain"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <video
+                src={customVideoUrl || (activeVideoIdx !== null && showcaseVideos[activeVideoIdx]?.videoUrl ? showcaseVideos[activeVideoIdx].videoUrl : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4")}
+                autoPlay
+                muted
+                controls
+                loop
+                playsInline
+                className="w-full h-full object-contain"
+              />
+            )}
           </div>
         </div>
       )}
@@ -965,19 +1005,29 @@ export default function MarketingHome() {
                     size="lg"
                     className="w-full sm:w-auto bg-[#D50032] hover:bg-[#FF3D00] text-white rounded-2xl px-8 py-5 h-auto text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all hover:scale-105"
                   >
-                    Apply Now
+                    {heroButtons.btn1_name || "Apply Now"}
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
 
                 <button
-                  onClick={() => { setActiveVideoIdx(0); setVideoOpen(true); }}
+                  onClick={() => {
+                    if (heroButtons.btn2_youtube_url) {
+                      setCustomVideoUrl(heroButtons.btn2_youtube_url);
+                      setActiveVideoIdx(null);
+                      setVideoOpen(true);
+                    } else {
+                      setCustomVideoUrl("");
+                      setActiveVideoIdx(0);
+                      setVideoOpen(true);
+                    }
+                  }}
                   className="w-full sm:w-auto bg-white/5 hover:bg-white/10 text-white border border-white/15 rounded-2xl px-6 py-5 h-auto text-base font-bold transition-all inline-flex items-center justify-center gap-2.5"
                 >
                   <span className="w-6 h-6 rounded-full bg-[#D50032] flex items-center justify-center shadow-sm">
                     <Play className="h-2.5 w-2.5 text-white ml-0.5 fill-white" />
                   </span>
-                  Watch: The FinTrade Story
+                  {heroButtons.btn2_name || "Watch: The FinTrade Story"}
                 </button>
 
                 <a
@@ -986,7 +1036,7 @@ export default function MarketingHome() {
                   className="w-full sm:w-auto bg-white/5 hover:bg-white/10 text-white border border-white/15 rounded-2xl px-6 py-5 h-auto text-base font-bold transition-all inline-flex items-center justify-center gap-2.5"
                 >
                   <Download className="h-4.5 w-4.5 text-white" />
-                  Download Brochure
+                  {heroButtons.btn3_name || "Download Brochure"}
                 </a>
               </div>
 
