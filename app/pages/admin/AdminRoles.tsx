@@ -28,6 +28,15 @@ interface AdminUser {
     manageExams: boolean;
     manageAdmins: boolean;
     canViewRevenue: boolean;
+    viewDashboard: boolean;
+    viewModuleStudents: boolean;
+    viewLectures: boolean;
+    viewLoginDetails: boolean;
+    viewSiteContent: boolean;
+    viewAIChatbot: boolean;
+    viewSimulator: boolean;
+    viewContracts: boolean;
+    viewSettings: boolean;
   };
   lastActive: string;
 }
@@ -122,140 +131,316 @@ interface AdminUser {
       </div>
 
       <div>
-        <Label className="mb-4 block">Permissions</Label>
-        <Card className="p-4 border-2 border-gray-100">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Manage Courses</Label>
-                <div className="text-sm text-gray-500">Create, edit, and delete courses</div>
-              </div>
-              <Switch
-                checked={formData.permissions.manageCourses}
-                onCheckedChange={(checked) => 
-                  setFormData({ 
-                    ...formData, 
-                    permissions: { ...formData.permissions, manageCourses: checked } 
-                  })
-                }
-              />
-            </div>
+        <Label className="mb-4 block text-[#0B2A5B] font-bold">Permissions</Label>
+        <div className="space-y-6">
+          
+          {/* Group 1: Core Education */}
+          <Card className="p-4 border border-gray-100 bg-gray-50/50">
+            <h4 className="text-xs font-bold text-[#0B2A5B]/70 uppercase tracking-wider mb-4">Core Education</h4>
+            <div className="space-y-4">
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Manage Students</Label>
-                <div className="text-sm text-gray-500">View and manage student accounts</div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-semibold">Dashboard</Label>
+                  <div className="text-xs text-gray-500">Access administrative overview dashboard</div>
+                </div>
+                <Switch
+                  checked={formData.permissions.viewDashboard}
+                  onCheckedChange={(checked) => 
+                    setFormData({ 
+                      ...formData, 
+                      permissions: { ...formData.permissions, viewDashboard: checked } 
+                    })
+                  }
+                />
               </div>
-              <Switch
-                checked={formData.permissions.manageStudents}
-                onCheckedChange={(checked) => 
-                  setFormData({ 
-                    ...formData, 
-                    permissions: { ...formData.permissions, manageStudents: checked } 
-                  })
-                }
-              />
-            </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Manage Payments</Label>
-                <div className="text-sm text-gray-500">Handle payments and coupons</div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-semibold">Courses</Label>
+                  <div className="text-xs text-gray-500">Create, edit, and delete courses</div>
+                </div>
+                <Switch
+                  checked={formData.permissions.manageCourses}
+                  onCheckedChange={(checked) => 
+                    setFormData({ 
+                      ...formData, 
+                      permissions: { ...formData.permissions, manageCourses: checked } 
+                    })
+                  }
+                />
               </div>
-              <Switch
-                checked={formData.permissions.managePayments}
-                onCheckedChange={(checked) => 
-                  setFormData({ 
-                    ...formData, 
-                    permissions: { ...formData.permissions, managePayments: checked } 
-                  })
-                }
-              />
-            </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Manage Content</Label>
-                <div className="text-sm text-gray-500">Manage news and educational content</div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-semibold">Module Students</Label>
+                  <div className="text-xs text-gray-500">Track and manage student module enrollments</div>
+                </div>
+                <Switch
+                  checked={formData.permissions.viewModuleStudents}
+                  onCheckedChange={(checked) => 
+                    setFormData({ 
+                      ...formData, 
+                      permissions: { ...formData.permissions, viewModuleStudents: checked } 
+                    })
+                  }
+                />
               </div>
-              <Switch
-                checked={formData.permissions.manageContent}
-                onCheckedChange={(checked) => 
-                  setFormData({ 
-                    ...formData, 
-                    permissions: { ...formData.permissions, manageContent: checked } 
-                  })
-                }
-              />
-            </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Manage Exams</Label>
-                <div className="text-sm text-gray-500">Create and manage exams</div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-semibold">Lectures</Label>
+                  <div className="text-xs text-gray-500">Schedule and manage live lectures</div>
+                </div>
+                <Switch
+                  checked={formData.permissions.viewLectures}
+                  onCheckedChange={(checked) => 
+                    setFormData({ 
+                      ...formData, 
+                      permissions: { ...formData.permissions, viewLectures: checked } 
+                    })
+                  }
+                />
               </div>
-              <Switch
-                checked={formData.permissions.manageExams}
-                onCheckedChange={(checked) => 
-                  setFormData({ 
-                    ...formData, 
-                    permissions: { ...formData.permissions, manageExams: checked } 
-                  })
-                }
-              />
-            </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Manage Admins</Label>
-                <div className="text-sm text-gray-500">Add and remove admin users</div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-semibold">Exams</Label>
+                  <div className="text-xs text-gray-500">Create and manage exams</div>
+                </div>
+                <Switch
+                  checked={formData.permissions.manageExams}
+                  onCheckedChange={(checked) => 
+                    setFormData({ 
+                      ...formData, 
+                      permissions: { ...formData.permissions, manageExams: checked } 
+                    })
+                  }
+                />
               </div>
-              <Switch
-                checked={formData.permissions.manageAdmins}
-                onCheckedChange={(checked) => 
-                  setFormData({ 
-                    ...formData, 
-                    permissions: { ...formData.permissions, manageAdmins: checked } 
-                  })
-                }
-              />
-            </div>
 
-            {/* Revenue Access - Super Admin only */}
-            <div
-              className="flex items-center justify-between p-3 rounded-lg border-2"
-              style={{
-                borderColor: formData.role === "Super Admin" ? "rgba(213,0,50,0.3)" : "#e5e7eb",
-                background: formData.role === "Super Admin" ? "rgba(213,0,50,0.04)" : "#f9fafb",
-              }}
-            >
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <Label>View Revenue Data</Label>
-                  {formData.role !== "Super Admin" && formData.permissions.canViewRevenue === false && (
-                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "rgba(213,0,50,0.1)", color: "#D50032" }}>Super Admin Only</span>
+            </div>
+          </Card>
+
+          {/* Group 2: Student & Interactive */}
+          <Card className="p-4 border border-gray-100 bg-gray-50/50">
+            <h4 className="text-xs font-bold text-[#0B2A5B]/70 uppercase tracking-wider mb-4">Student & Interactive</h4>
+            <div className="space-y-4">
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-semibold">User Management</Label>
+                  <div className="text-xs text-gray-500">View and manage student accounts</div>
+                </div>
+                <Switch
+                  checked={formData.permissions.manageStudents}
+                  onCheckedChange={(checked) => 
+                    setFormData({ 
+                      ...formData, 
+                      permissions: { ...formData.permissions, manageStudents: checked } 
+                    })
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-semibold">Contracts</Label>
+                  <div className="text-xs text-gray-500">View and manage student contracts</div>
+                </div>
+                <Switch
+                  checked={formData.permissions.viewContracts}
+                  onCheckedChange={(checked) => 
+                    setFormData({ 
+                      ...formData, 
+                      permissions: { ...formData.permissions, viewContracts: checked } 
+                    })
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-semibold">AI Chatbot</Label>
+                  <div className="text-xs text-gray-500">Access and configure AI Chatbot settings</div>
+                </div>
+                <Switch
+                  checked={formData.permissions.viewAIChatbot}
+                  onCheckedChange={(checked) => 
+                    setFormData({ 
+                      ...formData, 
+                      permissions: { ...formData.permissions, viewAIChatbot: checked } 
+                    })
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-semibold">Simulator</Label>
+                  <div className="text-xs text-gray-500">Manage trading simulator settings</div>
+                </div>
+                <Switch
+                  checked={formData.permissions.viewSimulator}
+                  onCheckedChange={(checked) => 
+                    setFormData({ 
+                      ...formData, 
+                      permissions: { ...formData.permissions, viewSimulator: checked } 
+                    })
+                  }
+                />
+              </div>
+
+            </div>
+          </Card>
+
+          {/* Group 3: Financials & Content */}
+          <Card className="p-4 border border-gray-100 bg-gray-50/50">
+            <h4 className="text-xs font-bold text-[#0B2A5B]/70 uppercase tracking-wider mb-4">Financials & Content</h4>
+            <div className="space-y-4">
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-semibold">Payments & Coupons</Label>
+                  <div className="text-xs text-gray-500">Handle payments and coupons</div>
+                </div>
+                <Switch
+                  checked={formData.permissions.managePayments}
+                  onCheckedChange={(checked) => 
+                    setFormData({ 
+                      ...formData, 
+                      permissions: { ...formData.permissions, managePayments: checked } 
+                    })
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-semibold">Blog & CMS</Label>
+                  <div className="text-xs text-gray-500">Manage news and educational content</div>
+                </div>
+                <Switch
+                  checked={formData.permissions.manageContent}
+                  onCheckedChange={(checked) => 
+                    setFormData({ 
+                      ...formData, 
+                      permissions: { ...formData.permissions, manageContent: checked } 
+                    })
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-semibold">Site Content</Label>
+                  <div className="text-xs text-gray-500">Manage landing page and CMS configuration</div>
+                </div>
+                <Switch
+                  checked={formData.permissions.viewSiteContent}
+                  onCheckedChange={(checked) => 
+                    setFormData({ 
+                      ...formData, 
+                      permissions: { ...formData.permissions, viewSiteContent: checked } 
+                    })
+                  }
+                />
+              </div>
+
+              {/* Reports - Super Admin only */}
+              <div
+                className="flex items-center justify-between p-3 rounded-lg border-2"
+                style={{
+                  borderColor: formData.role === "Super Admin" ? "rgba(213,0,50,0.3)" : "#e5e7eb",
+                  background: formData.role === "Super Admin" ? "rgba(213,0,50,0.04)" : "#f9fafb",
+                }}
+              >
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-sm font-semibold">Reports</Label>
+                    {formData.role !== "Super Admin" && formData.permissions.canViewRevenue === false && (
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "rgba(213,0,50,0.1)", color: "#D50032" }}>Super Admin Only</span>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-500">Access total revenue and monthly earnings</div>
+                  {formData.role !== "Super Admin" && !formData.permissions.canViewRevenue && (
+                    <div className="flex items-center gap-1 text-[10px] text-orange-500 mt-1 font-semibold">
+                      <Lock className="h-3 w-3" /> Must be granted by Super Admin
+                    </div>
                   )}
                 </div>
-                <div className="text-sm text-gray-500">Access total revenue and monthly earnings</div>
-                {formData.role !== "Super Admin" && !formData.permissions.canViewRevenue && (
-                  <div className="flex items-center gap-1 text-xs text-orange-500 mt-1">
-                    <Lock className="h-3 w-3" /> Must be granted by Super Admin
-                  </div>
-                )}
+                <Switch
+                  checked={formData.permissions.canViewRevenue}
+                  onCheckedChange={(checked) =>
+                    setFormData({
+                      ...formData,
+                      permissions: { ...formData.permissions, canViewRevenue: checked },
+                    })
+                  }
+                  disabled={formData.role !== "Super Admin" && formData.role !== "Finance Admin"}
+                />
               </div>
-              <Switch
-                checked={formData.permissions.canViewRevenue}
-                onCheckedChange={(checked) =>
-                  setFormData({
-                    ...formData,
-                    permissions: { ...formData.permissions, canViewRevenue: checked },
-                  })
-                }
-                disabled={formData.role !== "Super Admin" && formData.role !== "Finance Admin"}
-              />
+
             </div>
-          </div>
-        </Card>
+          </Card>
+
+          {/* Group 4: Platform Administration */}
+          <Card className="p-4 border border-gray-100 bg-gray-50/50">
+            <h4 className="text-xs font-bold text-[#0B2A5B]/70 uppercase tracking-wider mb-4">Platform Administration</h4>
+            <div className="space-y-4">
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-semibold">Admin Roles</Label>
+                  <div className="text-xs text-gray-500">Add and remove admin users</div>
+                </div>
+                <Switch
+                  checked={formData.permissions.manageAdmins}
+                  onCheckedChange={(checked) => 
+                    setFormData({ 
+                      ...formData, 
+                      permissions: { ...formData.permissions, manageAdmins: checked } 
+                    })
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-semibold">Login Details</Label>
+                  <div className="text-xs text-gray-500">View admin activity and login logs</div>
+                </div>
+                <Switch
+                  checked={formData.permissions.viewLoginDetails}
+                  onCheckedChange={(checked) => 
+                    setFormData({ 
+                      ...formData, 
+                      permissions: { ...formData.permissions, viewLoginDetails: checked } 
+                    })
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-semibold">Settings</Label>
+                  <div className="text-xs text-gray-500">Access platform settings and configurations</div>
+                </div>
+                <Switch
+                  checked={formData.permissions.viewSettings}
+                  onCheckedChange={(checked) => 
+                    setFormData({ 
+                      ...formData, 
+                      permissions: { ...formData.permissions, viewSettings: checked } 
+                    })
+                  }
+                />
+              </div>
+
+            </div>
+          </Card>
+
+        </div>
       </div>
 
       <div className="flex gap-2 pt-4">
@@ -305,6 +490,15 @@ export default function AdminRoles() {
       manageExams: false,
       manageAdmins: false,
       canViewRevenue: false,
+      viewDashboard: true,
+      viewModuleStudents: false,
+      viewLectures: false,
+      viewLoginDetails: false,
+      viewSiteContent: false,
+      viewAIChatbot: false,
+      viewSimulator: false,
+      viewContracts: false,
+      viewSettings: false,
     }
   });
 
@@ -378,6 +572,15 @@ export default function AdminRoles() {
         manageExams: false,
         manageAdmins: false,
         canViewRevenue: false,
+        viewDashboard: true,
+        viewModuleStudents: false,
+        viewLectures: false,
+        viewLoginDetails: false,
+        viewSiteContent: false,
+        viewAIChatbot: false,
+        viewSimulator: false,
+        viewContracts: false,
+        viewSettings: false,
       }
     });
   };

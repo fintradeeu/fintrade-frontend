@@ -115,35 +115,38 @@ export function DashboardLayout({
   if (role === "admin" && userPermissions) {
     baseNavItems = baseNavItems.filter((item) => {
       switch (item.path) {
+        case "/admin/dashboard":
+          return userPermissions.viewDashboard !== false;
         case "/admin/students":
           return userPermissions.manageStudents !== false;
         case "/admin/courses":
           return userPermissions.manageCourses !== false;
         case "/admin/module-students":
-          return userPermissions.manageCourses !== false || userPermissions.manageStudents !== false;
+          return userPermissions.viewModuleStudents !== false;
         case "/admin/lectures":
-          return userPermissions.manageCourses !== false;
+          return userPermissions.viewLectures !== false;
         case "/admin/exams":
           return userPermissions.manageExams !== false;
         case "/admin/payments":
           return userPermissions.managePayments !== false;
         case "/admin/login-details":
-          return userPermissions.manageAdmins !== false;
+          return userPermissions.viewLoginDetails !== false;
         case "/admin/news":
-        case "/admin/cms":
           return userPermissions.manageContent !== false;
+        case "/admin/cms":
+          return userPermissions.viewSiteContent !== false;
         case "/admin/roles":
           return userPermissions.manageAdmins !== false;
         case "/admin/ai-chatbot":
-          return userPermissions.manageAdmins !== false;
+          return userPermissions.viewAIChatbot !== false;
         case "/admin/simulator":
-          return userPermissions.manageCourses !== false;
+          return userPermissions.viewSimulator !== false;
         case "/admin/reports":
           return userPermissions.canViewRevenue !== false;
         case "/admin/contracts":
-          return userPermissions.manageStudents !== false;
+          return userPermissions.viewContracts !== false;
         case "/admin/settings":
-          return userPermissions.manageAdmins !== false;
+          return userPermissions.viewSettings !== false;
         default:
           return true;
       }
