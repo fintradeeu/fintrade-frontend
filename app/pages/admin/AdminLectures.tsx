@@ -32,7 +32,7 @@ export default function AdminLectures() {
     try {
       const [lecturesRes, coursesRes] = await Promise.all([
         api.get("/lectures"),
-        api.get("/courses")
+        api.get("/admin/courses")
       ]);
       setLectures(lecturesRes.data);
       setCourses(coursesRes.data);
