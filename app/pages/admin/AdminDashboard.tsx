@@ -13,6 +13,17 @@ export default function AdminDashboard() {
     activeCoupons: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [userPermissions, setUserPermissions] = useState<any>(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setUserPermissions(parsed.permissions);
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -80,22 +91,27 @@ export default function AdminDashboard() {
           </h3>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { label: "Manage Roles", path: "/admin/roles" },
-              { label: "Market Updates", path: "/admin/news" },
-              { label: "Site Content", path: "/admin/cms" },
-              { label: "Platform Settings", path: "/admin/settings" },
-              { label: "Student List", path: "/admin/students" },
-              { label: "Manage Courses", path: "/admin/courses" },
-              { label: "Manage Lectures", path: "/admin/lectures" },
-              { label: "Payments & Coupons", path: "/admin/payments" },
-              { label: "View Reports", path: "/admin/reports" },
-            ].map((link, i) => (
-              <a key={i} href={link.path}>
-                <Button variant="outline" className="w-full text-xs h-10 border-gray-200 hover:border-[#D50032] hover:text-[#D50032] bg-white">
-                  {link.label}
-                </Button>
-              </a>
-            ))}
+              { label: "Manage Roles", path: "/admin/roles", permission: "manageAdmins" },
+              { label: "Market Updates", path: "/admin/news", permission: "manageContent" },
+              { label: "Site Content", path: "/admin/cms", permission: "manageContent" },
+              { label: "Platform Settings", path: "/admin/settings", permission: "manageAdmins" },
+              { label: "Student List", path: "/admin/students", permission: "manageStudents" },
+              { label: "Manage Courses", path: "/admin/courses", permission: "manageCourses" },
+              { label: "Manage Lectures", path: "/admin/lectures", permission: "manageCourses" },
+              { label: "Payments & Coupons", path: "/admin/payments", permission: "managePayments" },
+              { label: "View Reports", path: "/admin/reports", permission: "canViewRevenue" },
+            ]
+              .filter((link) => {
+                if (!userPermissions) return true;
+                return userPermissions[link.permission] !== false;
+              })
+              .map((link, i) => (
+                <a key={i} href={link.path}>
+                  <Button variant="outline" className="w-full text-xs h-10 border-gray-200 hover:border-[#D50032] hover:text-[#D50032] bg-white">
+                    {link.label}
+                  </Button>
+                </a>
+              ))}
           </div>
         </Card>
       </div>

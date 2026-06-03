@@ -255,21 +255,6 @@ export default function TeacherExams() {
                 placeholder="e.g. Month 1 Final"
               />
             </div>
-            {formData.type === "module_final" && (
-               <div className="grid gap-2">
-                 <Label>Course</Label>
-                 <select
-                   className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm"
-                   value={formData.course_id}
-                   onChange={(e) => setFormData({ ...formData, course_id: e.target.value })}
-                 >
-                   <option value="">Select a Course</option>
-                   {courses.map(c => (
-                     <option key={c.id} value={c.id}>{c.title}</option>
-                   ))}
-                 </select>
-               </div>
-             )}
             <div className="grid gap-2">
               <Label>Exam Type</Label>
               <select
@@ -282,10 +267,26 @@ export default function TeacherExams() {
                 <option value="monthly">Monthly Assessment</option>
                 <option value="module_final">Module Final</option>
               </select>
-              {formData.type === "module_final" && modules.length > 0 && (
+            </div>
+            <div className="grid gap-2">
+              <Label>Course</Label>
+              <select
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={formData.course_id}
+                onChange={(e) => setFormData({ ...formData, course_id: e.target.value, module_id: "" })}
+              >
+                <option value="">Select a Course</option>
+                {courses.map(c => (
+                  <option key={c.id} value={c.id}>{c.title}</option>
+                ))}
+              </select>
+            </div>
+            {formData.type === "module_final" && formData.course_id && modules.length > 0 && (
+              <div className="grid gap-2">
+                <Label>Module</Label>
                 <select
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm mt-2"
-                  value={formData.module_id}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={formData.module_id || ""}
                   onChange={(e) => setFormData({ ...formData, module_id: e.target.value })}
                 >
                   <option value="">Select a Module</option>
@@ -293,8 +294,8 @@ export default function TeacherExams() {
                     <option key={mod.id} value={mod.id}>{mod.title}</option>
                   ))}
                 </select>
-              )}
-            </div>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label>Duration (min)</Label>

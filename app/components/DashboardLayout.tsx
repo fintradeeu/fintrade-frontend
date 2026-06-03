@@ -109,7 +109,68 @@ export function DashboardLayout({
   const navigate = useNavigate();
 
   const role = roleProp || userRole || "student";
-  const navItems = customNavItems || getNavItemsByRole(role);
+  const [userPermissions, setUserPermissions] = useState<any>(null);
+  
+  let baseNavItems = customNavItems || getNavItemsByRole(role);
+  if (role === "admin" && userPermissions) {
+    baseNavItems = baseNavItems.filter((item) => {
+      switch (item.path) {
+        case "/admin/students":
+          return userPermissions.manageStudents !== false;
+        case "/admin/courses":
+          return userPermissions.manageCourses !== false;
+        case "/admin/module-students":
+          return userPermissions.manageCourses !== false || userPermissions.manageStudents !== false;
+        case "/admin/lectures":
+          return userPermissions.manageCourses !== false;
+        case "/admin/exams":
+          return userPermissions.manageExams !== false;
+        case "/admin/payments":
+          return userPermissions.managePayments !== false;
+        case "/admin/login-details":
+          return userPermissions.manageAdmins !== false;
+        case "/admin/news":
+        case "/admin/cms":
+          return userPermissions.manageContent !== false;
+        case "/admin/roles":
+          return userPermissions.manageAdmins !== false;
+        case "/admin/ai-chatbot":
+          return userPermissions.manageAdmins !== false;
+        case "/admin/simulator":
+          return userPermissions.manageCourses !== false;
+        case "/admin/reports":
+          return userPermissions.canViewRevenue !== false;
+        case "/admin/contracts":
+          return userPermissions.manageStudents !== false;
+        case "/admin/settings":
+          return userPermissions.manageAdmins !== false;
+        default:
+          return true;
+      }
+    });
+  } else if (role === "teacher" && userPermissions) {
+    baseNavItems = baseNavItems.filter((item) => {
+      switch (item.path) {
+        case "/teacher/courses":
+          return userPermissions.manageCourses !== false;
+        case "/teacher/students":
+          return userPermissions.manageStudents !== false;
+        case "/teacher/lectures":
+          return userPermissions.manageLectures !== false;
+        case "/teacher/doubt-sessions":
+          return userPermissions.manageDoubts !== false;
+        case "/teacher/assignments":
+          return userPermissions.manageAssignments !== false;
+        case "/teacher/exams":
+          return userPermissions.manageExams !== false;
+        case "/teacher/reports":
+          return userPermissions.viewReports !== false;
+        default:
+          return true;
+      }
+    });
+  }
+  const navItems = baseNavItems;
   const displayName = userNameProp || autoName || getFallbackName(role);
 
   // Load user data from localStorage
@@ -120,6 +181,7 @@ export function DashboardLayout({
         if (stored) {
           const parsed = JSON.parse(stored);
           setAutoName(parsed.full_name || getFallbackName(role));
+          setUserPermissions(parsed.permissions);
         }
       } catch { /* ignore */ }
     }
@@ -162,6 +224,28 @@ export function DashboardLayout({
         });
     }
   }, [role, navigate, location.pathname]);
+
+  // Guard teacher routes based on dynamic permissions
+  useEffect(() => {
+    if (role === "teacher" && userPermissions) {
+      const path = location.pathname;
+      if (path.startsWith("/teacher/courses") && userPermissions.manageCourses === false) {
+        navigate("/teacher/dashboard");
+      } else if (path.startsWith("/teacher/students") && userPermissions.manageStudents === false) {
+        navigate("/teacher/dashboard");
+      } else if (path.startsWith("/teacher/lectures") && userPermissions.manageLectures === false) {
+        navigate("/teacher/dashboard");
+      } else if (path.startsWith("/teacher/doubt-sessions") && userPermissions.manageDoubts === false) {
+        navigate("/teacher/dashboard");
+      } else if (path.startsWith("/teacher/assignments") && userPermissions.manageAssignments === false) {
+        navigate("/teacher/dashboard");
+      } else if (path.startsWith("/teacher/exams") && userPermissions.manageExams === false) {
+        navigate("/teacher/dashboard");
+      } else if (path.startsWith("/teacher/reports") && userPermissions.viewReports === false) {
+        navigate("/teacher/dashboard");
+      }
+    }
+  }, [role, userPermissions, location.pathname, navigate]);
 
   // Restore sidebar scroll position
   useEffect(() => {

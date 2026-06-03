@@ -10,10 +10,15 @@ export default function TeacherDashboard() {
   const [userName, setUserName] = useState("Teacher");
   const [lectures, setLectures] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
+  const [permissions, setPermissions] = useState<any>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
-    if (stored) setUserName(JSON.parse(stored).full_name || "Teacher");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      setUserName(parsed.full_name || "Teacher");
+      setPermissions(parsed.permissions || null);
+    }
 
     api.get("/lectures").then((r) => setLectures(r.data)).catch(console.error);
     api.get("/courses").then((r) => setCourses(r.data)).catch(console.error);
@@ -86,26 +91,34 @@ export default function TeacherDashboard() {
         <Card className="p-6 bg-gradient-to-br from-[#0B2A5B] to-[#1a3d7a] text-[#F4F1EA] shadow-xl">
           <h3 className="text-xl font-semibold mb-4">Quick Actions</h3>
           <div className="flex flex-col gap-4">
-            <Link to="/teacher/courses" className="block">
-              <Button className="w-full h-auto py-5 bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center">
-                <BookOpen size={20} className="mr-3" /><span className="font-semibold">Manage Courses</span>
-              </Button>
-            </Link>
-            <Link to="/teacher/lectures" className="block">
-              <Button className="w-full h-auto py-5 bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center">
-                <Video size={20} className="mr-3" /><span className="font-semibold">Schedule Lecture</span>
-              </Button>
-            </Link>
-            <Link to="/teacher/doubt-sessions" className="block">
-              <Button className="w-full h-auto py-5 bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center">
-                <MessageCircle size={20} className="mr-3" /><span className="font-semibold">Resolve Doubts</span>
-              </Button>
-            </Link>
-            <Link to="/teacher/exams" className="block">
-              <Button className="w-full h-auto py-5 bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center">
-                <FileQuestion size={20} className="mr-3" /><span className="font-semibold">Create Exam</span>
-              </Button>
-            </Link>
+            {(!permissions || permissions.manageCourses !== false) && (
+              <Link to="/teacher/courses" className="block">
+                <Button className="w-full h-auto py-5 bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center">
+                  <BookOpen size={20} className="mr-3" /><span className="font-semibold">Manage Courses</span>
+                </Button>
+              </Link>
+            )}
+            {(!permissions || permissions.manageLectures !== false) && (
+              <Link to="/teacher/lectures" className="block">
+                <Button className="w-full h-auto py-5 bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center">
+                  <Video size={20} className="mr-3" /><span className="font-semibold">Schedule Lecture</span>
+                </Button>
+              </Link>
+            )}
+            {(!permissions || permissions.manageDoubts !== false) && (
+              <Link to="/teacher/doubt-sessions" className="block">
+                <Button className="w-full h-auto py-5 bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center">
+                  <MessageCircle size={20} className="mr-3" /><span className="font-semibold">Resolve Doubts</span>
+                </Button>
+              </Link>
+            )}
+            {(!permissions || permissions.manageExams !== false) && (
+              <Link to="/teacher/exams" className="block">
+                <Button className="w-full h-auto py-5 bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center">
+                  <FileQuestion size={20} className="mr-3" /><span className="font-semibold">Create Exam</span>
+                </Button>
+              </Link>
+            )}
           </div>
         </Card>
       </div>

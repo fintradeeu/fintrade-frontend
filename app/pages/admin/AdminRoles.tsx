@@ -17,7 +17,8 @@ interface AdminUser {
   id: number;
   name: string;
   email: string;
-  role: "Super Admin" | "Content Admin" | "Finance Admin" | "Support Admin";
+  phone?: string;
+  role: string;
   status: "Active" | "Inactive";
   permissions: {
     manageCourses: boolean;
@@ -31,7 +32,19 @@ interface AdminUser {
   lastActive: string;
 }
 
-  const AdminForm = ({ onSubmit, submitLabel, formData, setFormData, handleRoleChange }: { onSubmit: () => void; submitLabel: string; formData: any; setFormData: any; handleRoleChange: any }) => (
+  const AdminForm = ({ 
+    onSubmit, 
+    submitLabel, 
+    formData, 
+    setFormData, 
+    isEdit = false 
+  }: { 
+    onSubmit: () => void; 
+    submitLabel: string; 
+    formData: any; 
+    setFormData: any; 
+    isEdit?: boolean;
+  }) => (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -58,21 +71,37 @@ interface AdminUser {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
+          <Label>Mobile Number *</Label>
+          <Input
+            type="tel"
+            value={formData.phone || ""}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            placeholder="e.g. 9876543210"
+            className="mt-2"
+          />
+        </div>
+
+        <div>
+          <Label>{isEdit ? "Password (leave blank to keep unchanged)" : "Password *"}</Label>
+          <Input
+            type="password"
+            value={formData.password || ""}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            placeholder={isEdit ? "••••••••" : "Min 8 characters"}
+            className="mt-2"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
           <Label>Role *</Label>
-          <Select 
-            value={formData.role} 
-            onValueChange={handleRoleChange}
-          >
-            <SelectTrigger className="mt-2">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Super Admin">Super Admin</SelectItem>
-              <SelectItem value="Content Admin">Content Admin</SelectItem>
-              <SelectItem value="Finance Admin">Finance Admin</SelectItem>
-              <SelectItem value="Support Admin">Support Admin</SelectItem>
-            </SelectContent>
-          </Select>
+          <Input
+            value={formData.role}
+            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+            placeholder="e.g. Support Admin, Manager"
+            className="mt-2"
+          />
         </div>
 
         <div>
@@ -264,7 +293,9 @@ export default function AdminRoles() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    role: "Support Admin" as "Super Admin" | "Content Admin" | "Finance Admin" | "Support Admin",
+    phone: "",
+    password: "",
+    role: "",
     status: "Active" as "Active" | "Inactive",
     permissions: {
       manageCourses: false,
@@ -277,7 +308,7 @@ export default function AdminRoles() {
     }
   });
 
-    const handleAddAdmin = async () => {
+  const handleAddAdmin = async () => {
     try {
         const newAdmin = { ...formData, lastActive: new Date().toISOString() };
         await api.post("/admin/roles", newAdmin);
@@ -290,7 +321,7 @@ export default function AdminRoles() {
     }
   };
 
-    const handleEditAdmin = async () => {
+  const handleEditAdmin = async () => {
     if (selectedAdmin) {
       try {
         await api.put(`/admin/roles/${selectedAdmin.id}`, formData);
@@ -305,7 +336,7 @@ export default function AdminRoles() {
     }
   };
 
-    const handleDeleteAdmin = async (id: number) => {
+  const handleDeleteAdmin = async (id: number) => {
     if (confirm("Are you sure you want to remove this admin?")) {
       try {
         await api.delete(`/admin/roles/${id}`);
@@ -322,6 +353,8 @@ export default function AdminRoles() {
     setFormData({
       name: admin.name,
       email: admin.email,
+      phone: admin.phone || "",
+      password: "",
       role: admin.role,
       status: admin.status,
       permissions: { ...admin.permissions }
@@ -333,7 +366,9 @@ export default function AdminRoles() {
     setFormData({
       name: "",
       email: "",
-      role: "Support Admin",
+      phone: "",
+      password: "",
+      role: "",
       status: "Active",
       permissions: {
         manageCourses: false,
@@ -347,60 +382,6 @@ export default function AdminRoles() {
     });
   };
 
-  const handleRoleChange = (role: "Super Admin" | "Content Admin" | "Finance Admin" | "Support Admin") => {
-    let permissions = { ...formData.permissions };
-    
-    // Set default permissions based on role
-    switch (role) {
-      case "Super Admin":
-        permissions = {
-          manageCourses: true,
-          manageStudents: true,
-          managePayments: true,
-          manageContent: true,
-          manageExams: true,
-          manageAdmins: true,
-          canViewRevenue: true,
-        };
-        break;
-      case "Content Admin":
-        permissions = {
-          manageCourses: true,
-          manageStudents: false,
-          managePayments: false,
-          manageContent: true,
-          manageExams: true,
-          manageAdmins: false,
-          canViewRevenue: false,
-        };
-        break;
-      case "Finance Admin":
-        permissions = {
-          manageCourses: false,
-          manageStudents: true,
-          managePayments: true,
-          manageContent: false,
-          manageExams: false,
-          manageAdmins: false,
-          canViewRevenue: true,
-        };
-        break;
-      case "Support Admin":
-        permissions = {
-          manageCourses: false,
-          manageStudents: true,
-          managePayments: false,
-          manageContent: false,
-          manageExams: false,
-          manageAdmins: false,
-          canViewRevenue: false,
-        };
-        break;
-    }
-    
-    setFormData({ ...formData, role, permissions });
-  };
-
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case "Super Admin":
@@ -412,7 +393,7 @@ export default function AdminRoles() {
       case "Support Admin":
         return { background: '#FF9800', color: 'white' };
       default:
-        return { background: '#gray', color: 'white' };
+        return { background: '#4d4d4d', color: 'white' };
     }
   };
 
@@ -440,7 +421,7 @@ export default function AdminRoles() {
               <DialogHeader>
                 <DialogTitle>Add New Admin</DialogTitle>
               </DialogHeader>
-              <AdminForm onSubmit={handleAddAdmin} submitLabel="Add Admin" formData={formData} setFormData={setFormData} handleRoleChange={handleRoleChange} />
+              <AdminForm onSubmit={handleAddAdmin} submitLabel="Add Admin" formData={formData} setFormData={setFormData} isEdit={false} />
             </DialogContent>
           </Dialog>
         </div>
@@ -603,7 +584,7 @@ export default function AdminRoles() {
             <DialogHeader>
               <DialogTitle>Edit Admin User</DialogTitle>
             </DialogHeader>
-            <AdminForm onSubmit={handleEditAdmin} submitLabel="Update Admin" />
+            <AdminForm onSubmit={handleEditAdmin} submitLabel="Update Admin" formData={formData} setFormData={setFormData} isEdit={true} />
           </DialogContent>
         </Dialog>
       </div>
