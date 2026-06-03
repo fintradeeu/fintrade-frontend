@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
 import { Card } from "../components/ui/card";
-import { BookOpen, Calendar, Clock, ChevronRight } from "lucide-react";
+import { BookOpen, Calendar, Clock, ChevronRight, X } from "lucide-react";
 
 export default function BlogPage() {
   const [blogs, setBlogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedBlog, setSelectedBlog] = useState<any | null>(null);
 
   useEffect(() => {
     const fetchBlogs = async () => {
@@ -21,6 +22,20 @@ export default function BlogPage() {
     };
     fetchBlogs();
   }, []);
+
+  const handleReadArticle = async (blog: any) => {
+    setSelectedBlog(blog); // Open modal immediately for instant feedback
+    try {
+      // Record view and fetch latest details (including updated views_count)
+      const res = await api.get(`/news/${blog.id}`);
+      setSelectedBlog(res.data);
+      
+      // Update the views count in the main list so it matches
+      setBlogs(prev => prev.map(b => b.id === blog.id ? { ...b, views_count: res.data.views_count } : b));
+    } catch (err) {
+      console.error("Failed to register view:", err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F4F1EA] py-20 px-6">
@@ -85,7 +100,10 @@ export default function BlogPage() {
                     {blog.description}
                   </p>
                   
-                  <div className="mt-auto flex items-center text-[#D50032] font-semibold text-sm cursor-pointer group/btn">
+                  <div 
+                    onClick={() => handleReadArticle(blog)}
+                    className="mt-auto flex items-center text-[#D50032] font-semibold text-sm cursor-pointer group/btn"
+                  >
                     Read Full Article 
                     <ChevronRight size={16} className="ml-1 group-hover/btn:translate-x-1 transition-transform" />
                   </div>
@@ -95,6 +113,104 @@ export default function BlogPage() {
           </div>
         )}
       </div>
+
+      {/* Article Detail Modal */}
+      {selectedBlog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
+            onClick={() => setSelectedBlog(null)}
+          />
+          
+          {/* Modal Content */}
+          <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col z-10 transform scale-100 transition-all duration-300">
+            {/* Close Button */}
+            <button 
+              onClick={() => setSelectedBlog(null)}
+              className="absolute top-4 right-4 z-30 bg-black/50 hover:bg-black/75 text-white p-2 rounded-full transition-colors backdrop-blur-sm"
+              aria-label="Close modal"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="overflow-y-auto flex-grow">
+              {/* Header Image */}
+              {selectedBlog.thumbnail_url ? (
+                <div className="w-full h-64 md:h-80 relative">
+                  <img 
+                    src={selectedBlog.thumbnail_url} 
+                    alt={selectedBlog.title} 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                  <div className="absolute bottom-6 left-6 right-6">
+                    <span className="bg-[#D50032] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
+                      Blog Story
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full h-32 bg-[#0B2A5B]/5 flex items-center justify-center relative">
+                  <BookOpen size={48} className="text-[#0B2A5B]/20" />
+                  <div className="absolute bottom-4 left-6">
+                    <span className="bg-[#D50032] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
+                      Blog Story
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Main Content */}
+              <div className="p-6 md:p-8">
+                <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
+                  <div className="flex items-center gap-1">
+                    <Calendar size={14} />
+                    {new Date(selectedBlog.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock size={14} />
+                    5 min read
+                  </div>
+                  {selectedBlog.views_count !== undefined && (
+                    <div className="flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded text-gray-600 font-medium">
+                      <span>{selectedBlog.views_count} views</span>
+                    </div>
+                  )}
+                </div>
+
+                <h2 className="text-2xl md:text-3xl font-extrabold text-[#0B2A5B] mb-6 leading-tight">
+                  {selectedBlog.title}
+                </h2>
+
+                <div className="border-t border-gray-100 pt-6">
+                  <div className="text-gray-700 text-base leading-relaxed space-y-4 font-medium whitespace-pre-wrap">
+                    {selectedBlog.description ? (
+                      selectedBlog.description.split('\n').map((para: string, idx: number) => {
+                        const trimmed = para.trim();
+                        if (!trimmed) return null;
+                        return <p key={idx} className="mb-4">{trimmed}</p>;
+                      })
+                    ) : (
+                      <p className="italic text-gray-400">No content available for this article.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Footer */}
+            <div className="border-t border-gray-100 p-4 bg-gray-50 flex justify-end">
+              <button 
+                onClick={() => setSelectedBlog(null)}
+                className="px-6 py-2.5 bg-[#0B2A5B] hover:bg-[#0B2A5B]/90 text-white font-semibold text-sm rounded-xl transition-colors shadow-sm cursor-pointer"
+              >
+                Close Article
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
