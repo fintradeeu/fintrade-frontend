@@ -8,7 +8,7 @@ interface Module {
   overview: string;
   lessons?: any[];
 }
-
+// dgdd
 interface ProgramSection {
   title: string;
   duration: string;
