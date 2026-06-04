@@ -75,7 +75,6 @@ export default function VerticalVideoSection({ videos: videosProp }: { videos?: 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(3); // Default playing card
   const [isPaused, setIsPaused] = useState(false);
-  const [inlinePlayingId, setInlinePlayingId] = useState<string | null>(null);
   const [fullscreenVideoId, setFullscreenVideoId] = useState<string | null>(null);
   const isReversingRef = useRef(false);
 
@@ -86,9 +85,21 @@ export default function VerticalVideoSection({ videos: videosProp }: { videos?: 
     isReversingRef.current = (dir === "left");
   };
 
+  // Lock body scroll when fullscreen modal is open
+  useEffect(() => {
+    if (fullscreenVideoId) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [fullscreenVideoId]);
+
   // Autoslide mechanism
   useEffect(() => {
-    if (isPaused || !!inlinePlayingId || !!fullscreenVideoId) return; // Pause auto-sliding while video is playing
+    if (isPaused || !!fullscreenVideoId) return; // Pause auto-sliding while video is playing
  
     const timer = setInterval(() => {
       setActiveIndex((prevIndex) => {
@@ -107,7 +118,7 @@ export default function VerticalVideoSection({ videos: videosProp }: { videos?: 
     }, 1500);
  
     return () => clearInterval(timer);
-  }, [isPaused, inlinePlayingId, fullscreenVideoId]);
+  }, [isPaused, fullscreenVideoId]);
 
   // Handle manual scroll update active index
   const handleScroll = () => {
@@ -175,7 +186,6 @@ export default function VerticalVideoSection({ videos: videosProp }: { videos?: 
       >
         {videos.map((vid, idx) => {
           const isCurrentActive = idx === activeIndex;
-          const isInlinePlaying = inlinePlayingId === vid.id;
           return (
             <Card
               key={vid.id}
@@ -189,6 +199,9 @@ export default function VerticalVideoSection({ videos: videosProp }: { videos?: 
                       behavior: "smooth"
                     });
                   }
+                } else {
+                  // If it's already active, clicking the card should play it in fullscreen lightbox!
+                  setFullscreenVideoId(vid.id);
                 }
               }}
               className={`flex-shrink-0 w-[240px] aspect-[9/16] overflow-hidden rounded-[32px] relative snap-center group transition-all duration-500 ease-out origin-center cursor-pointer ${
@@ -197,136 +210,91 @@ export default function VerticalVideoSection({ videos: videosProp }: { videos?: 
                   : "border border-gray-150 hover:border-[#D50032]/45 shadow-md scale-[0.94] hover:scale-[1.02] opacity-55 hover:opacity-100 grayscale-[20%] hover:grayscale-0 blur-[0.3px] hover:blur-0 z-10"
               }`}
             >
-              {isInlinePlaying ? (
-                <div className="absolute inset-0 z-0 bg-black flex flex-col">
-                  {/* Dedicated Header Bar for Custom Controls */}
-                  <div className="h-11 w-full bg-[#121212] border-b border-white/10 flex items-center justify-between px-4 z-30 shrink-0">
-                    <span className="text-[9px] font-black tracking-widest text-[#D50032] uppercase animate-pulse">
-                      Playing Tip
-                    </span>
-                    <div className="flex gap-2.5">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setFullscreenVideoId(vid.id);
-                          setInlinePlayingId(null);
-                        }}
-                        className="w-7 h-7 bg-white/10 hover:bg-[#D50032] border border-white/15 text-white rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                        title="Open in Big Screen"
-                      >
-                        <Maximize2 className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setInlinePlayingId(null);
-                        }}
-                        className="w-7 h-7 bg-white/10 hover:bg-white/20 border border-white/15 text-white rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                        title="Stop Playback"
-                      >
-                        <X className="w-3 w-3" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* YouTube Iframe Player below the header */}
-                  <div className="flex-1 bg-black w-full overflow-hidden">
-                    <iframe
-                      src={`${vid.embedUrl}?autoplay=1&mute=0&controls=1&rel=0&modestbranding=1`}
-                      title={vid.title}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                      className="w-full h-full bg-black border-0"
-                    />
-                  </div>
+              <>
+                {/* Background Thumbnail Image with dark overlay */}
+                <div className="absolute inset-0 z-0">
+                  <img 
+                    src={getImageUrl(vid.thumbnail)} 
+                    alt={vid.title} 
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/50" />
                 </div>
-              ) : (
-                <>
-                  {/* Background Thumbnail Image with dark overlay */}
-                  <div className="absolute inset-0 z-0">
-                    <img 
-                      src={getImageUrl(vid.thumbnail)} 
-                      alt={vid.title} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/50" />
-                  </div>
 
-                  {/* Top Bar with Badge, Fullscreen Maximize & Music Icon */}
-                  <div className="absolute top-4 inset-x-4 flex justify-between items-center z-10">
-                    {isCurrentActive ? (
-                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black text-white bg-[#D50032] animate-pulse">
-                        <span className="w-1.5 h-1.5 rounded-full bg-white inline-block animate-ping" />
-                        NOW PLAYING
-                      </div>
-                    ) : (
-                      <div className="px-2.5 py-1 rounded-full text-[9px] font-bold text-white bg-white/20 backdrop-blur-md border border-white/10">
-                        {vid.num}
-                      </div>
-                    )}
-                    <div className="flex gap-1.5 items-center">
-                      {/* Big Screen Maximizer Trigger Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setFullscreenVideoId(vid.id);
-                        }}
-                        className="w-7 h-7 rounded-full bg-white/20 hover:bg-[#D50032] backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
-                        title="Open in Big Screen"
-                      >
-                        <Maximize2 className="w-3.5 h-3.5" />
-                      </button>
-                      <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white">
-                        <Music className="w-3.5 h-3.5" />
-                      </div>
+                {/* Top Bar with Badge, Fullscreen Maximize & Music Icon */}
+                <div className="absolute top-4 inset-x-4 flex justify-between items-center z-10">
+                  {isCurrentActive ? (
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black text-white bg-[#D50032] animate-pulse">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white inline-block animate-ping" />
+                      NOW PLAYING
                     </div>
-                  </div>
-
-                  {/* Play Button Icon Overlay in the center */}
-                  <div className="absolute inset-0 flex items-center justify-center z-10">
+                  ) : (
+                    <div className="px-2.5 py-1 rounded-full text-[9px] font-bold text-white bg-white/20 backdrop-blur-md border border-white/10">
+                      {vid.num}
+                    </div>
+                  )}
+                  <div className="flex gap-1.5 items-center">
+                    {/* Big Screen Maximizer Trigger Button */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setActiveIndex(idx);
-                        setInlinePlayingId(vid.id);
-                        if (scrollRef.current) {
-                          const cardWidth = 240 + 20;
-                          scrollRef.current.scrollTo({
-                            left: idx * cardWidth,
-                            behavior: "smooth"
-                          });
-                        }
+                        setFullscreenVideoId(vid.id);
                       }}
-                      className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-350 cursor-pointer shadow-lg ${
-                        isCurrentActive 
-                          ? "bg-[#D50032] text-white hover:scale-110 shadow-[#D50032]/35" 
-                          : "bg-white/15 text-white backdrop-blur-sm border-2 border-white/30 hover:bg-[#D50032] hover:border-transparent group-hover:scale-105"
-                      }`}
-                      title="Play Inline"
+                      className="w-7 h-7 rounded-full bg-white/20 hover:bg-[#D50032] backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
+                      title="Open in Big Screen"
                     >
-                      <Play className="w-6 h-6 fill-current text-white ml-0.5" />
+                      <Maximize2 className="w-3.5 h-3.5" />
                     </button>
-                  </div>
-
-                  {/* Bottom Text Content & Views Count */}
-                  <div className="absolute bottom-5 inset-x-5 z-10 flex flex-col justify-end text-left select-none">
-                    <h3 className="font-extrabold text-white text-base leading-snug mb-2.5 drop-shadow-sm group-hover:text-[#D50032] transition-colors duration-300">
-                      {vid.title}
-                    </h3>
-                    <div className="flex items-center justify-between text-xs text-gray-300 font-medium">
-                      <span>{vid.author}</span>
-                      <span className="flex items-center gap-1">
-                        <Eye className="w-3.5 h-3.5 stroke-[2.5]" />
-                        {vid.views}
-                      </span>
+                    <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white">
+                      <Music className="w-3.5 h-3.5" />
                     </div>
                   </div>
-                </>
-              )}
+                </div>
+
+                {/* Play Button Icon Overlay in the center */}
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveIndex(idx);
+                      setFullscreenVideoId(vid.id);
+                      if (scrollRef.current) {
+                        const cardWidth = 240 + 20;
+                        scrollRef.current.scrollTo({
+                          left: idx * cardWidth,
+                          behavior: "smooth"
+                        });
+                      }
+                    }}
+                    className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-350 cursor-pointer shadow-lg ${
+                      isCurrentActive 
+                        ? "bg-[#D50032] text-white hover:scale-110 shadow-[#D50032]/35" 
+                        : "bg-white/15 text-white backdrop-blur-sm border-2 border-white/30 hover:bg-[#D50032] hover:border-transparent group-hover:scale-105"
+                    }`}
+                    title="Play Video"
+                  >
+                    <Play className="w-6 h-6 fill-current text-white ml-0.5" />
+                  </button>
+                </div>
+
+                {/* Bottom Text Content & Views Count */}
+                <div className="absolute bottom-5 inset-x-5 z-10 flex flex-col justify-end text-left select-none">
+                  <h3 className="font-extrabold text-white text-base leading-snug mb-2.5 drop-shadow-sm group-hover:text-[#D50032] transition-colors duration-300">
+                    {vid.title}
+                  </h3>
+                  <div className="flex items-center justify-between text-xs text-gray-300 font-medium">
+                    <span>{vid.author}</span>
+                    <span className="flex items-center gap-1">
+                      <Eye className="w-3.5 h-3.5 stroke-[2.5]" />
+                      {vid.views}
+                    </span>
+                  </div>
+                </div>
+              </>
             </Card>
           );
         })}
-      </div>      {/* Big Screen Video Modal / Lightbox Overlay */}
+      </div>      {/* Big Screen Video Modal / Lightbox Overlay */}
       {fullscreenVideoId && (() => {
         const activeVid = videos.find(v => v.id === fullscreenVideoId);
         if (!activeVid) return null;
@@ -335,6 +303,15 @@ export default function VerticalVideoSection({ videos: videosProp }: { videos?: 
             className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 md:p-8 animate-fade-in"
             onClick={() => setFullscreenVideoId(null)}
           >
+            {/* Top-right floating close button */}
+            <button
+              onClick={() => setFullscreenVideoId(null)}
+              className="absolute top-6 right-6 z-[10000] w-12 h-12 bg-white/10 hover:bg-[#D50032] border border-white/15 text-white rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-lg"
+              title="Close Video"
+            >
+              <X className="w-6 h-6 text-white stroke-[2.5]" />
+            </button>
+
             {/* Video Player & Cancel Button Container */}
             <div 
               className="flex flex-col items-center gap-5 animate-scale-up"

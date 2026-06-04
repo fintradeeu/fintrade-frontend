@@ -17,89 +17,55 @@ interface ProgramSection {
 
 const programSections: ProgramSection[] = [
   {
-    title: "Course 2",
-    duration: "10 Days",
+    title: "PROFESSIONAL TRADING MINDSET FOUNDATION",
+    duration: "2 Days",
     modules: [
-      {
-        num: 1,
-        title: "Introduction to Course 2",
-        overview: "Mastering the fundamentals and starting your trading journey in Course 2.",
-        lessons: [
-          { id: 1, title: "FinTrade Platform Tour", content_type: "video", duration_minutes: 12 },
-          { id: 2, title: "Setting Up Your Demat Account", content_type: "pdf", duration_minutes: 15 },
-          { id: 3, title: "Core Concepts of Financial Markets", content_type: "text", duration_minutes: 20 },
-          { id: 4, title: "Module 1 Assessment Quiz", content_type: "quiz", duration_minutes: 10 }
-        ]
-      }
+      { num: 1, title: "Trader’s Mindset & Market Psychology", overview: "Psychology foundation for retail and professional trading." },
+      { num: 2, title: "Professional Trading Mindset Foundation", overview: "Developing discipline and professional trading habits." }
     ]
   },
   {
-    title: "c2",
-    duration: "20 Days",
-    modules: [
-      {
-        num: 1,
-        title: "Introduction to c2",
-        overview: "Deep dive into c2 trading systems and research methodologies.",
-        lessons: [
-          { id: 5, title: "Overview of Advanced Technicals", content_type: "video", duration_minutes: 25 },
-          { id: 6, title: "Constructing Key Support Channels", content_type: "text", duration_minutes: 30 },
-          { id: 7, title: "Trend Analysis Assessment", content_type: "quiz", duration_minutes: 15 }
-        ]
-      }
-    ]
-  },
-  {
-    title: "Course1",
+    title: "FINANCIAL MARKET FOUNDATION",
     duration: "30 Days",
     modules: [
-      {
-        num: 1,
-        title: "Introduction to Course1",
-        overview: "Professional grade trading strategies and advanced risk management in Course1.",
-        lessons: [
-          { id: 8, title: "Institutional Order Flow", content_type: "video", duration_minutes: 45 },
-          { id: 9, title: "Risk Sizing Calculator Guide", content_type: "pdf", duration_minutes: 20 },
-          { id: 10, title: "Discipline Rules & Execution Check", content_type: "quiz", duration_minutes: 15 }
-        ]
-      }
+      { num: 1, title: "Introduction to Financial Market", overview: "Understanding how financial markets work." },
+      { num: 2, title: "Understanding Security Market", overview: "Market participants, stock exchanges, and demat accounts." },
+      { num: 3, title: "Methods of analysing Financial Security", overview: "Overview of technical and fundamental analysis." }
     ]
   },
   {
-    title: "c1",
-    duration: "10 Days",
+    title: "MARKET ANALYSIS AND TRADING STRATEGY DEVELOPMENT",
+    duration: "30 Days",
     modules: [
-      {
-        num: 1,
-        title: "Introduction to c1",
-        overview: "Applied technical analysis and intraday setups in c1.",
-        lessons: [
-          { id: 11, title: "Intraday Price Action Setups", content_type: "video", duration_minutes: 30 },
-          { id: 12, title: "RSI & VWAP Divergence Guide", content_type: "text", duration_minutes: 25 }
-        ]
-      }
+      { num: 1, title: "Fundamental Analysis Framework", overview: "Evaluating balance sheets and cash flows." },
+      { num: 2, title: "Application of Fundamental Analysis", overview: "Valuation methodologies and DCF models." },
+      { num: 3, title: "Technical Analysis for Trading and Investing", overview: "Candlesticks, trends, indicators, and chart patterns." },
+      { num: 4, title: "Trading & Analytics Software", overview: "Using charting software and trading terminals." }
     ]
   },
   {
-    title: "a",
-    duration: "10 Days",
+    title: "ADVANCED INSTITUTIONAL TRADING AND RISK MANAGEMENT",
+    duration: "30 Days",
     modules: [
-      {
-        num: 1,
-        title: "Introduction to a",
-        overview: "Capital allocation and proprietary desk simulation in course a.",
-        lessons: [
-          { id: 13, title: "Simulated Prop Desk Onboarding", content_type: "video", duration_minutes: 20 },
-          { id: 14, title: "Equity Curve Optimization", content_type: "text", duration_minutes: 30 }
-        ]
-      }
+      { num: 1, title: "Applied Technical Analysis", overview: "Advanced indicators and order book dynamics." },
+      { num: 2, title: "Mechanics of Derivative Market", overview: "Introduction to Futures & Options trading." },
+      { num: 3, title: "Options & Futures Strategies", overview: "Spreads, straddles, hedging, and Greeks." },
+      { num: 4, title: "Professional Risk Management", overview: "Position sizing, risk manual, and drawdown control." }
+    ]
+  },
+  {
+    title: "MARKET APPLICATION AND EXECUTION",
+    duration: "5 Days",
+    modules: [
+      { num: 1, title: "Trading Lab & Back testing Mastery", overview: "Testing strategy rules on historical data." },
+      { num: 2, title: "Real World Market Execution", overview: "Live trading execution under guidance." }
     ]
   }
 ];
 
 export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | null }) {
   const [expandedStageIdx, setExpandedStageIdx] = useState<number | null>(0);
-  const [courses, setCourses] = useState<any[]>([]);
+  const [timelineSections, setTimelineSections] = useState<any[]>(programSections);
   const [mobileActiveModKey, setMobileActiveModKey] = useState<string | null>(null);
   const [expandedDescKeys, setExpandedDescKeys] = useState<Set<string>>(new Set());
 
@@ -124,48 +90,23 @@ export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | nu
   };
 
   useEffect(() => {
-    if (apiCourses && apiCourses.length > 0) {
-      setCourses(apiCourses);
-      return;
-    }
-
-    const fetchCourses = async () => {
+    const fetchTimeline = async () => {
       try {
-        const res = await api.get("/courses");
-        if (res.data && res.data.length > 0) {
-          const detailed = await Promise.all(
-            res.data.map(async (c: any) => {
-              try {
-                const det = await api.get(`/courses/${c.id}`);
-                return det.data;
-              } catch {
-                return c;
-              }
-            })
-          );
-          setCourses(detailed);
+        const res = await api.get("/settings/landing-page");
+        if (res.data && res.data.program_modules && res.data.program_modules.length > 0) {
+          setTimelineSections(res.data.program_modules);
+        } else {
+          setTimelineSections(programSections);
         }
       } catch (err) {
-        console.error("Failed to fetch courses in ProgramModules", err);
+        console.error("Failed to fetch timeline config", err);
+        setTimelineSections(programSections);
       }
     };
-    fetchCourses();
-  }, [apiCourses]);
+    fetchTimeline();
+  }, []);
 
-  const sectionsToUse: any[] = courses.length > 0 
-    ? courses.map((c: any) => ({
-        title: c.title,
-        duration: c.duration_hours ? `${c.duration_hours} Days` : "TBD",
-        modules: c.modules?.length > 0 ? c.modules.map((m: any, i: number) => ({
-          num: i + 1,
-          title: m.title,
-          overview: m.description || "No description provided.",
-          lessons: m.lessons || []
-        })) : [
-          { num: 1, title: "Curriculum Pending", overview: "The syllabus for this course is currently being prepared.", lessons: [] }
-        ]
-      }))
-    : programSections;
+  const sectionsToUse: any[] = timelineSections;
 
   const toggleStage = (idx: number) => {
     setExpandedStageIdx((prev) => (prev === idx ? null : idx));

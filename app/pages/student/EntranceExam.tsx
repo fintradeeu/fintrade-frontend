@@ -90,31 +90,11 @@ export default function EntranceExam() {
   }, [cameraStream]);
 
   const enableCamera = async () => {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      throw new Error("Camera access is not supported in this browser.");
-    }
-
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: false,
-    });
-
-    // Monitor camera track closure/disconnection
-    stream.getVideoTracks().forEach((track) => {
-      track.onended = () => {
-        handleAutoSubmit("Camera Turned Off");
-      };
-    });
-
-    setCameraStream(stream);
-    setCameraActive(true);
-    return stream;
+    return null;
   };
 
   const stopCamera = () => {
-    cameraStream?.getTracks().forEach((track) => track.stop());
-    setCameraStream(null);
-    setCameraActive(false);
+    // No-op: camera disabled for entrance exams
   };
 
   useEffect(() => {
@@ -213,7 +193,8 @@ export default function EntranceExam() {
     }
   };
 
-  // 1. Detect tab switching & window blur
+  // 1. Detect tab switching & window blur (Disabled for Entrance Exam)
+  /*
   useEffect(() => {
     if (!examStarted) return;
 
@@ -230,6 +211,7 @@ export default function EntranceExam() {
       window.removeEventListener("blur", handleViolation);
     };
   }, [examStarted]);
+  */
 
   // 2. Prevent back navigation / popstate
   useEffect(() => {
@@ -280,9 +262,7 @@ export default function EntranceExam() {
       return;
     }
     setErrorMsg("");
-    let stream: MediaStream | null = null;
     try {
-      stream = await enableCamera();
       isExamFinishedRef.current = false;
 
       // 1. Start attempt
@@ -325,9 +305,7 @@ export default function EntranceExam() {
         });
       }, 1000);
     } catch (err: any) {
-      stream?.getTracks().forEach((track) => track.stop());
-      stopCamera();
-      setErrorMsg(err.response?.data?.detail || err.message || "Failed to start exam. Please allow camera access and try again.");
+      setErrorMsg(err.response?.data?.detail || err.message || "Failed to start exam. Please try again.");
     }
   };
 
@@ -438,7 +416,7 @@ export default function EntranceExam() {
                     4
                   </div>
                   <span>
-                    <strong>Tab Switching:</strong> Restricted - switching tabs will auto-submit your exam
+                    <strong>Tab Switching:</strong> Allowed (switching tabs will not submit your exam)
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -448,14 +426,6 @@ export default function EntranceExam() {
                   <span>
                     <strong>Device:</strong> Single device only - logging in from another device will
                     invalidate this session
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-[#C2A86A] rounded-full flex items-center justify-center flex-shrink-0 text-[#0B2A5B] text-sm font-semibold">
-                    6
-                  </div>
-                  <span>
-                    <strong>Camera:</strong> Webcam must remain active throughout the exam for proctoring
                   </span>
                 </li>
               </ul>
@@ -680,10 +650,6 @@ export default function EntranceExam() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h1 className="text-xl font-bold">FinTrade Entrance Exam</h1>
-            <div className="flex items-center gap-2 px-3 py-1 bg-[#1a3d7a] rounded-lg">
-              <Camera size={16} className={cameraActive ? "text-green-400" : "text-red-400"} />
-              <span className="text-sm">{cameraActive ? "Camera Active" : "Camera Off"}</span>
-            </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 px-4 py-2 bg-[#C2A86A] text-[#0B2A5B] rounded-lg font-semibold">
@@ -785,15 +751,6 @@ export default function EntranceExam() {
 
           {/* Question Navigator */}
           <Card className="p-6 bg-white shadow-xl h-fit sticky top-24">
-            <div className="mb-6 overflow-hidden rounded-lg border border-[#0B2A5B]/10 bg-black aspect-video">
-              <video
-                ref={videoRef}
-                autoPlay
-                muted
-                playsInline
-                className="h-full w-full object-cover"
-              />
-            </div>
             <h3 className="text-lg font-semibold text-[#0B2A5B] mb-4">Question Navigator</h3>
             <div className="grid grid-cols-5 gap-2">
               {questions.map((_, index) => (

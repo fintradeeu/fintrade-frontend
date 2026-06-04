@@ -70,6 +70,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "Login Details", path: "/admin/login-details", icon: <Users size={20} /> },
         { label: "Blog & CMS", path: "/admin/news", icon: <Newspaper size={20} /> },
         { label: "Site Content", path: "/admin/cms", icon: <LayoutTemplate size={20} /> },
+        { label: "Feedback Forms", path: "/admin/feedback-forms", icon: <FileText size={20} /> },
         { label: "Admin Roles", path: "/admin/roles", icon: <Shield size={20} /> },
         { label: "AI Chatbot", path: "/admin/ai-chatbot", icon: <Bot size={20} /> },
         { label: "Simulator", path: "/admin/simulator", icon: <TrendingUp size={20} /> },

@@ -47,6 +47,7 @@ export default function CourseEnrollment() {
   const [courses, setCourses] = useState<any[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<number | null>(null);
   const [showEntranceModal, setShowEntranceModal] = useState(false);
+  const [showKycModal, setShowKycModal] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [finalPrice, setFinalPrice] = useState(0);
@@ -136,7 +137,7 @@ export default function CourseEnrollment() {
     }
   };
 
-  const handleEnroll = (courseId: number) => {
+  const handleEnroll = async (courseId: number) => {
     setSelectedCourse(courseId);
     const course = courses.find(c => c.id === courseId);
     setFinalPrice(course ? course.price : 0);
@@ -145,31 +146,62 @@ export default function CourseEnrollment() {
     setCouponMsg("");
     setErrorMsg("");
 
-    // Check if there is an entrance exam for this course
-    const exam = entranceExams.find((e: any) => e.course_id === courseId);
-    if (exam && exam.is_active) {
-      const hasPassed = exam.attempts && exam.attempts.some((a: any) => a.passed);
-      if (!hasPassed) {
-        setShowEntranceModal(true);
+    try {
+      // Single API call to check if student passed entrance exam for this course
+      const checkRes = await api.get(`/exams/check-enrollment?course_id=${courseId}`);
+      const { has_entrance_exam, passed } = checkRes.data;
+
+      if (!has_entrance_exam) {
+        // No entrance exam — go straight to payment
+        setShowPayment(true);
         return;
       }
-    }
 
-    setShowPayment(true);
+      if (passed) {
+        // Passed the entrance exam — check KYC status
+        try {
+          const kycRes = await api.get("/kyc/status");
+          const kycStatus = kycRes.data?.status;
+          if (kycStatus === "verified" || kycStatus === "approved") {
+            setShowPayment(true); // KYC done — go to payment
+          } else {
+            setShowKycModal(true); // Show KYC popup
+          }
+        } catch {
+          setShowKycModal(true);
+        }
+      } else {
+        // Not passed — show entrance exam required modal
+        setShowEntranceModal(true);
+      }
+    } catch (err) {
+      // If API fails (unauthenticated etc), show entrance exam modal
+      setShowEntranceModal(true);
+    }
   };
 
   const completePayment = async () => {
-    if (!selectedCourse) return;
+    if (!selectedCourse) {
+      console.warn("completePayment: no selectedCourse");
+      return;
+    }
+    console.log("completePayment triggered. finalPrice:", finalPrice, "selectedCourse:", selectedCourse);
     setLoading(true);
     try {
       if (finalPrice > 0) {
         // Initiate Easebuzz Payment
+        console.log("Initiating payment for course ID:", selectedCourse);
         const res = await api.post("/payments/create", { course_id: selectedCourse });
+        console.log("Payment initiation API response:", res.data);
         if (res.data && res.data.redirect_url) {
+          console.log("Redirecting to:", res.data.redirect_url);
           window.location.href = res.data.redirect_url;
+        } else {
+          alert("Error: No redirect_url returned in API response.");
         }
       } else {
         // Free course or 100% discount
+        console.log("Final price is 0, enrolling user directly...");
         await api.post(`/courses/${selectedCourse}/enroll`, { distributor_code: couponCode });
         toast.success("Enrollment successful! Welcome to the course.");
         setTimeout(() => {
@@ -177,12 +209,13 @@ export default function CourseEnrollment() {
         }, 1500);
       }
     } catch (err: any) {
-      const errMsg = err.response?.data?.detail || "Payment initiation failed.";
-      if (errMsg.toLowerCase().includes("entrance exam")) {
+      console.error("completePayment failed with error:", err);
+      const errMsg = err.response?.data?.detail || err.message || "Payment initiation failed.";
+      if (typeof errMsg === "string" && errMsg.toLowerCase().includes("entrance exam")) {
         setShowPayment(false);
         setShowEntranceModal(true);
       } else {
-        toast.error(errMsg);
+        alert("Payment Error: " + (typeof errMsg === "object" ? JSON.stringify(errMsg) : errMsg));
       }
     } finally {
       setLoading(false);
@@ -230,7 +263,116 @@ export default function CourseEnrollment() {
         </div>
       </div>
 
-      {showEntranceModal ? (
+      {showKycModal ? (
+        <div style={{
+        background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)",
+        borderRadius: "24px",
+        overflow: "hidden",
+        boxShadow: "0 32px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.07)",
+        position: "relative",
+        maxWidth: "560px",
+        margin: "0 auto",
+      }}>
+        {/* Top gradient bar */}
+        <div style={{ height: "4px", background: "linear-gradient(90deg, #22c55e, #16a34a, #4ade80)" }} />
+        {/* Glow */}
+        <div style={{
+          position: "absolute", top: "-60px", left: "50%", transform: "translateX(-50%)",
+          width: "300px", height: "300px",
+          background: "radial-gradient(circle, rgba(34,197,94,0.1) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }} />
+        <div style={{ padding: "40px 36px 36px", textAlign: "center", position: "relative" }}>
+          {/* Icon */}
+          <div style={{
+            width: "88px", height: "88px",
+            background: "linear-gradient(135deg, rgba(34,197,94,0.2), rgba(22,163,74,0.15))",
+            borderRadius: "50%",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            margin: "0 auto 24px",
+            border: "2px solid rgba(34,197,94,0.4)",
+            boxShadow: "0 0 40px rgba(34,197,94,0.25)",
+          }}>
+            <div style={{
+              width: "60px", height: "60px",
+              background: "linear-gradient(135deg, #22c55e, #16a34a)",
+              borderRadius: "50%",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 8px 24px rgba(34,197,94,0.4)",
+            }}>
+              <CheckCircle style={{ color: "white", width: "32px", height: "32px" }} />
+            </div>
+          </div>
+          {/* Pill badge */}
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: "6px",
+            background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)",
+            borderRadius: "999px", padding: "4px 14px", marginBottom: "16px",
+          }}>
+            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e" }} />
+            <span style={{ color: "#4ade80", fontSize: "12px", fontWeight: 600, letterSpacing: "0.05em" }}>EXAM CLEARED</span>
+          </div>
+          <h2 style={{ color: "white", fontSize: "26px", fontWeight: 800, marginBottom: "8px" }}>Congratulations! 🎉</h2>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px", marginBottom: "28px", lineHeight: 1.6 }}>
+            You've passed the entrance exam. Complete KYC & contract signing to proceed with enrollment.
+          </p>
+          {/* Steps */}
+          <div style={{
+            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "16px", padding: "20px", marginBottom: "28px", textAlign: "left",
+          }}>
+            <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "11px", fontWeight: 600, letterSpacing: "0.1em", marginBottom: "16px" }}>NEXT STEPS</p>
+            {[
+              { icon: "✅", label: "Entrance Exam", done: true },
+              { icon: "📋", label: "KYC & Contract Signing", active: true },
+              { icon: "💳", label: "Payment & Enrollment" },
+            ].map((step, i) => (
+              <div key={i} style={{
+                display: "flex", alignItems: "center", gap: "12px",
+                padding: "8px 12px", borderRadius: "10px",
+                marginBottom: i < 2 ? "6px" : 0,
+                background: step.active ? "rgba(34,197,94,0.1)" : "transparent",
+                border: step.active ? "1px solid rgba(34,197,94,0.2)" : "1px solid transparent",
+              }}>
+                <span style={{ fontSize: "16px" }}>{step.icon}</span>
+                <span style={{
+                  color: step.done ? "rgba(255,255,255,0.35)" : step.active ? "#4ade80" : "rgba(255,255,255,0.5)",
+                  fontSize: "13px", fontWeight: step.active ? 700 : 500,
+                  textDecoration: step.done ? "line-through" : "none",
+                }}>{step.label}</span>
+                {step.active && <span style={{ marginLeft: "auto", fontSize: "10px", fontWeight: 700, color: "#22c55e", letterSpacing: "0.05em" }}>→ NOW</span>}
+              </div>
+            ))}
+          </div>
+          {/* Buttons */}
+          <div style={{ display: "flex", gap: "12px" }}>
+            <button
+              onClick={() => setShowKycModal(false)}
+              style={{
+                flex: 1, height: "48px", borderRadius: "12px",
+                border: "1px solid rgba(255,255,255,0.12)",
+                background: "rgba(255,255,255,0.06)",
+                color: "rgba(255,255,255,0.6)",
+                fontSize: "14px", fontWeight: 600, cursor: "pointer",
+              }}
+            >
+              Maybe Later
+            </button>
+            <button
+              onClick={() => { setShowKycModal(false); navigate(`/student/contract-kyc?course_id=${selectedCourse}`); }}
+              style={{
+                flex: 2, height: "48px", borderRadius: "12px", border: "none",
+                background: "linear-gradient(135deg, #22c55e, #16a34a)",
+                color: "white", fontSize: "14px", fontWeight: 700, cursor: "pointer",
+                boxShadow: "0 8px 24px rgba(34,197,94,0.35)",
+              }}
+            >
+              Complete KYC Now →
+            </button>
+          </div>
+        </div>
+      </div>
+      ) : showEntranceModal ? (
         <Card className="max-w-xl mx-auto p-8 bg-white shadow-2xl text-center border-t-4 border-[#D50032]">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <FileText className="text-[#D50032]" size={32} />

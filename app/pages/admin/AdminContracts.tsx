@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "../../components/DashboardLayout";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
@@ -7,6 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { Input } from "../../components/ui/input";
 import { CheckCircle, Download, Eye, FileText, Search, Shield, Lock } from "lucide-react";
+import api from "../../services/api";
+import logo from "../../../imports/fintrade_logo.png";
 
 interface StudentContract {
   id: number;
@@ -15,23 +17,57 @@ interface StudentContract {
   mobile: string;
   aadhaar: string;
   pan: string;
+  dob: string;
+  qualification: string;
+  address: string;
+  aadhaarDocUrl: string;
+  panDocUrl: string;
+  photoUrl: string;
+  signatureUrl: string;
+  biometricSelfieUrl: string;
   kycStatus: "Verified" | "Pending" | "Rejected";
   signedDate: string;
   course: string;
   contractId: string;
 }
 
-const contracts: StudentContract[] = [
-  { id: 1, name: "Rahul Sharma", email: "rahul.sharma@fintrade.in", mobile: "+91 98765 43210", aadhaar: "1234 5678 9012", pan: "ABCDE1234F", kycStatus: "Verified", signedDate: "2026-04-10", course: "Advanced Trading", contractId: "FT-2026-001" },
-  { id: 2, name: "Priya Verma", email: "priya.verma@fintrade.in", mobile: "+91 87654 32109", aadhaar: "9876 5432 1098", pan: "FGHIJ5678K", kycStatus: "Verified", signedDate: "2026-04-12", course: "Basic Trading", contractId: "FT-2026-002" },
-  { id: 3, name: "Amit Patel", email: "amit.patel@fintrade.in", mobile: "+91 76543 21098", aadhaar: "5678 9012 3456", pan: "KLMNO9012P", kycStatus: "Pending", signedDate: "2026-04-15", course: "Intermediate Trading", contractId: "FT-2026-003" },
-  { id: 4, name: "Neha Joshi", email: "neha.joshi@fintrade.in", mobile: "+91 65432 10987", aadhaar: "2345 6789 0123", pan: "QRSTU3456V", kycStatus: "Verified", signedDate: "2026-04-16", course: "Master Trading", contractId: "FT-2026-004" },
-  { id: 5, name: "Kiran Shah", email: "kiran.shah@fintrade.in", mobile: "+91 54321 09876", aadhaar: "8901 2345 6789", pan: "WXYZA7890B", kycStatus: "Rejected", signedDate: "2026-04-17", course: "Basic Trading", contractId: "FT-2026-005" },
-];
-
 export default function AdminContracts() {
   const [search, setSearch] = useState("");
   const [selectedContract, setSelectedContract] = useState<StudentContract | null>(null);
+  const [contracts, setContracts] = useState<StudentContract[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get("/kyc/admin/contracts")
+      .then((res) => {
+        const mapped = res.data.map((c: any) => ({
+          id: c.id,
+          name: c.user_name || "N/A",
+          email: c.user_email || "N/A",
+          mobile: c.user_mobile || "N/A",
+          aadhaar: c.user_aadhaar || "N/A",
+          pan: c.user_pan || "N/A",
+          dob: c.user_dob || "N/A",
+          qualification: c.user_qualification || "N/A",
+          address: c.user_address || "N/A",
+          aadhaarDocUrl: c.aadhaar_doc_url || "",
+          panDocUrl: c.pan_doc_url || "",
+          photoUrl: c.photo_url || "",
+          signatureUrl: c.signature_url || "",
+          biometricSelfieUrl: c.biometric_selfie_url || "",
+          kycStatus: c.kyc_status === "verified" ? "Verified" : c.kyc_status === "rejected" ? "Rejected" : "Pending",
+          signedDate: c.signed_at ? c.signed_at.split("T")[0] : c.created_at ? c.created_at.split("T")[0] : "N/A",
+          course: c.course_title || "General",
+          contractId: c.contract_number,
+        }));
+        setContracts(mapped);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error loading contracts:", err);
+        setLoading(false);
+      });
+  }, []);
 
   const filtered = contracts.filter(
     (c) =>
@@ -41,29 +77,165 @@ export default function AdminContracts() {
   );
 
   const handleDownload = (c: StudentContract) => {
-    const content = `
-FINTRADE TRADING EDUCATION AGREEMENT
-=====================================
-Contract ID   : ${c.contractId}
-Student Name  : ${c.name}
-Mobile        : ${c.mobile}
-Email         : ${c.email}
-Aadhaar       : ${c.aadhaar}
-PAN           : ${c.pan}
-Course        : ${c.course}
-KYC Status    : ${c.kycStatus === "Verified" ? "✓ VERIFIED" : c.kycStatus}
-Signed Date   : ${new Date(c.signedDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+    const base = api.defaults.baseURL || window.location.origin;
+    const cleanBase = base.replace(/\/+$/, "");
 
-[Contract terms as per FinTrade Education Agreement]
-© 2026 FinTrade Education Pvt. Ltd.
-    `.trim();
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `FinTrade_Contract_${c.contractId}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const getFullUrl = (urlPath: string) => {
+      if (!urlPath) return "";
+      if (urlPath.startsWith("http")) return urlPath;
+      const cleanPath = urlPath.startsWith("/") ? urlPath : `/${urlPath}`;
+      return `${cleanBase}${cleanPath}`;
+    };
+
+    const signatureImgSrc = getFullUrl(c.signatureUrl);
+    const selfieImgSrc = getFullUrl(c.biometricSelfieUrl);
+    const aadhaarImgSrc = getFullUrl(c.aadhaarDocUrl);
+    const panImgSrc = getFullUrl(c.panDocUrl);
+    const photoImgSrc = getFullUrl(c.photoUrl);
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      alert("Popup blocked. Please allow popups to download the contract as PDF.");
+      return;
+    }
+
+    const logoUrl = window.location.origin + logo;
+
+    const htmlContent = `
+      <html>
+      <head>
+        <title>FinTrade_Contract_${c.name.replace(/\s+/g, "_")}</title>
+        <style>
+          @page { size: A4; margin: 15mm; }
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1f2937; line-height: 1.5; margin: 0; padding: 0; background: #fff; }
+          .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+          .header { text-align: center; border-bottom: 3px solid #D50032; padding-bottom: 15px; margin-bottom: 25px; display: flex; flex-direction: column; align-items: center; }
+          .logo { height: 45px; margin-bottom: 8px; }
+          .title { font-size: 20px; font-weight: 800; color: #0B2A5B; margin: 4px 0; text-transform: uppercase; letter-spacing: 0.5px; }
+          .subtitle { font-size: 11px; color: #6b7280; margin: 0; text-transform: uppercase; font-weight: 600; }
+          .section { margin-bottom: 22px; page-break-inside: avoid; }
+          .section-title { font-size: 13px; font-weight: 800; color: #D50032; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+          .grid { display: grid; grid-template-cols: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+          .info-block { background: #f9fafb; border: 1px solid #e5e7eb; padding: 10px 14px; border-radius: 6px; }
+          .info-label { font-size: 10px; color: #6b7280; text-transform: uppercase; font-weight: 750; }
+          .info-value { font-size: 13px; font-weight: 600; color: #111827; margin-top: 2px; }
+          .terms-list { font-size: 11px; color: #374151; padding-left: 18px; margin: 0; }
+          .terms-item { margin-bottom: 6px; text-align: justify; }
+          .media-grid { display: grid; grid-template-cols: 1fr 1fr; gap: 15px; margin-top: 10px; page-break-inside: avoid; }
+          .media-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; text-align: center; background: #fff; }
+          .media-title { font-size: 11px; font-weight: 700; color: #4b5563; margin-bottom: 8px; text-transform: uppercase; }
+          .media-img { max-height: 90px; max-width: 100%; object-fit: contain; border: 1px solid #f3f4f6; border-radius: 4px; }
+          .footer-sign { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 15px; page-break-inside: avoid; }
+          .seal-box { display: flex; align-items: center; gap: 8px; color: #16a34a; font-weight: bold; font-size: 11px; }
+          .stamp { border: 2px solid #16a34a; padding: 3px 6px; border-radius: 4px; text-transform: uppercase; transform: rotate(-5deg); font-family: monospace; font-size: 12px; font-weight: 800; }
+          .sign-box { text-align: center; }
+          .sign-line { border-top: 1px solid #111827; width: 170px; margin-top: 40px; padding-top: 4px; font-size: 10px; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <img src="${logoUrl}" class="logo" alt="Logo" onerror="this.style.display='none'" />
+            <div class="title">Trading Education Agreement</div>
+            <div class="subtitle">FinTrade LMS Onboarding & Verification Dossier</div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">1. Student Profile & Personal Details</div>
+            <div class="grid">
+              <div class="info-block"><div class="info-label">Student Full Name</div><div class="info-value">${c.name}</div></div>
+              <div class="info-block"><div class="info-label">Date of Birth</div><div class="info-value">${c.dob}</div></div>
+              <div class="info-block"><div class="info-label">Email Address</div><div class="info-value">${c.email}</div></div>
+              <div class="info-block"><div class="info-label">Mobile Number</div><div class="info-value">${c.mobile}</div></div>
+              <div class="info-block"><div class="info-label">Educational Qualification</div><div class="info-value">${c.qualification}</div></div>
+              <div class="info-block"><div class="info-label">Residential Address</div><div class="info-value">${c.address}</div></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">2. Identity Verification & KYC Information</div>
+            <div class="grid">
+              <div class="info-block"><div class="info-label">Aadhaar Number</div><div class="info-value">${c.aadhaar}</div></div>
+              <div class="info-block"><div class="info-label">PAN Number</div><div class="info-value">${c.pan}</div></div>
+              <div class="info-block"><div class="info-label">Mobile OTP Verification Status</div><div class="info-value">✓ VERIFIED</div></div>
+              <div class="info-block"><div class="info-label">Email OTP Verification Status</div><div class="info-value">✓ VERIFIED</div></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">3. Terms & Conditions of Enrollment</div>
+            <ol class="terms-list">
+              <li class="terms-item">The Student agrees to abide by all FinTrade platform rules and community guidelines.</li>
+              <li class="terms-item">Course fees are non-refundable after 7 days of enrollment.</li>
+              <li class="terms-item">All course material is proprietary and may not be shared or redistributed.</li>
+              <li class="terms-item">Trading simulation is for educational purposes only; no real capital is at risk.</li>
+              <li class="terms-item">FinTrade holds the right to revoke access for breach of terms.</li>
+              <li class="terms-item">Placement assistance is merit-based and not guaranteed.</li>
+              <li class="terms-item">This contract is governed by the laws of India.</li>
+            </ol>
+          </div>
+
+          <div class="section">
+            <div class="section-title">4. Digital Signatures & Biometric Audit Trail</div>
+            <div class="media-grid">
+              <div class="media-card">
+                <div class="media-title">Recorded Digital Signature</div>
+                ${signatureImgSrc ? `<img src="${signatureImgSrc}" class="media-img" />` : `<div style="height: 60px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 10px; border: 1px dashed #ccc; border-radius: 4px;">Signature Image Not Loaded</div>`}
+              </div>
+              <div class="media-card">
+                <div class="media-title">Biometric Audit Selfie</div>
+                ${selfieImgSrc ? `<img src="${selfieImgSrc}" class="media-img" />` : `<div style="height: 60px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 10px; border: 1px dashed #ccc; border-radius: 4px;">Biometric Image Not Loaded</div>`}
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">5. Uploaded Verification Documents</div>
+            <div class="media-grid" style="grid-template-cols: 1fr 1fr 1fr;">
+              <div class="media-card">
+                <div class="media-title">Aadhaar Card</div>
+                ${aadhaarImgSrc ? `<img src="${aadhaarImgSrc}" class="media-img" />` : `<div style="height: 60px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 10px; border: 1px dashed #ccc; border-radius: 4px;">Aadhaar Not Loaded</div>`}
+              </div>
+              <div class="media-card">
+                <div class="media-title">PAN Card</div>
+                ${panImgSrc ? `<img src="${panImgSrc}" class="media-img" />` : `<div style="height: 60px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 10px; border: 1px dashed #ccc; border-radius: 4px;">PAN Not Loaded</div>`}
+              </div>
+              <div class="media-card">
+                <div class="media-title">Passport Size Photo</div>
+                ${photoImgSrc ? `<img src="${photoImgSrc}" class="media-img" />` : `<div style="height: 60px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 10px; border: 1px dashed #ccc; border-radius: 4px;">Photo Not Loaded</div>`}
+              </div>
+            </div>
+          </div>
+
+          <div class="footer-sign">
+            <div class="seal-box">
+              <div class="stamp">Verified</div>
+              <div>
+                <div style="font-size: 9px; color: #6b7280; font-weight: normal; text-transform: uppercase;">KYC Status</div>
+                <div style="color: #111827; font-weight: bold;">${c.kycStatus === "Verified" ? "APPROVED & STAMPED" : c.kycStatus.toUpperCase()}</div>
+                <div style="font-size: 8px; color: #6b7280; font-weight: normal; margin-top: 1px;">Dossier Sealed: ${new Date(c.signedDate).toLocaleString("en-IN")}</div>
+              </div>
+            </div>
+            <div class="sign-box">
+              <div class="sign-line">Student Digital Signature Auth</div>
+              <div style="font-size: 9px; color: #6b7280; margin-top: 2px;">IP Address logged & stamped</div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 600);
+          }
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
   };
 
   const statusStyle = (s: string) => {
@@ -207,16 +379,53 @@ Signed Date   : ${new Date(c.signedDate).toLocaleDateString("en-IN", { day: "num
                     ["Email", selectedContract.email],
                     ["Aadhaar", selectedContract.aadhaar],
                     ["PAN", selectedContract.pan],
+                    ["Date of Birth", selectedContract.dob],
+                    ["Qualification", selectedContract.qualification],
                     ["Course", selectedContract.course],
-                    ["Signed", new Date(selectedContract.signedDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })],
+                    ["Address", selectedContract.address],
+                    ["Signed Date", new Date(selectedContract.signedDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })],
                     ["Contract ID", selectedContract.contractId],
                   ].map(([k, v], i) => (
-                    <div key={i} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                    <div key={i} className={`bg-gray-50 rounded-lg p-3 border border-gray-100 ${k === "Address" ? "col-span-2" : ""}`}>
                       <div className="text-xs text-gray-400 mb-1">{k}</div>
                       <div className="font-semibold" style={{ color: "#121212" }}>{v}</div>
                     </div>
                   ))}
                 </div>
+
+                {/* Uploaded Documents section */}
+                <div className="border-t border-gray-100 pt-4">
+                  <h4 className="font-semibold text-sm mb-3">Uploaded KYC Documents</h4>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    {[
+                      { label: "Aadhaar Card", url: selectedContract.aadhaarDocUrl },
+                      { label: "PAN Card", url: selectedContract.panDocUrl },
+                      { label: "Passport Photo", url: selectedContract.photoUrl },
+                      { label: "Digital Signature", url: selectedContract.signatureUrl },
+                      { label: "Biometric Selfie", url: selectedContract.biometricSelfieUrl }
+                    ].map((doc, idx) => {
+                      const absoluteUrl = doc.url ? (doc.url.startsWith("http") ? doc.url : `${api.defaults.baseURL || ""}${doc.url}`) : "";
+                      return (
+                        <div key={idx} className="flex flex-col bg-gray-50 p-2.5 rounded-lg border border-gray-100 justify-between gap-2">
+                          <span className="font-medium text-gray-500">{doc.label}</span>
+                          {doc.url ? (
+                            <a
+                              href={absoluteUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[#D50032] font-semibold hover:underline flex items-center gap-1"
+                            >
+                              <Eye className="h-3 w-3" /> View Document
+                            </a>
+                          ) : (
+                            <span className="text-gray-400 italic">Not Uploaded</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
                   <div className="flex items-center gap-1"><Lock className="h-4 w-4" /> Signed digitally</div>
                   <div className="font-bold" style={{ fontFamily: "cursive", fontSize: 18, color: "#121212" }}>{selectedContract.name}</div>

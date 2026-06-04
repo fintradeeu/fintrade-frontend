@@ -4,3 +4,21 @@
 
 html, body { height: 100%; margin: 0; }
 #root { height: 100%; }
+
+/* Hide default browser date picker calendar icon and make entire input clickable */
+input[type="date"] {
+  position: relative;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  background: transparent;
+  bottom: 0;
+  color: transparent;
+  cursor: pointer;
+  height: auto;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: auto;
+  z-index: 10;
+}

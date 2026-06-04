@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router";
-import { Search, Phone, Instagram, Facebook, Youtube, Linkedin, X, Download, UserCircle, Save, Mail, Smartphone, AlertTriangle, Menu, LogIn } from "lucide-react";
+import { Search, Phone, Instagram, Facebook, Youtube, Linkedin, X, Download, UserCircle, Save, Mail, Smartphone, AlertTriangle, Menu, LogIn, BookOpen } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
@@ -16,6 +16,57 @@ export default function MarketingLayout() {
   const [showViolationModal, setShowViolationModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+
+  // Search states and logic
+  const [searchQuery, setSearchQuery] = useState("");
+  const [courses, setCourses] = useState<any[]>([]);
+  const [articles, setArticles] = useState<any[]>([]);
+  const [loadingSearch, setLoadingSearch] = useState(false);
+
+  useEffect(() => {
+    if (!searchOpen) {
+      setSearchQuery("");
+      return;
+    }
+    const fetchSearchData = async () => {
+      setLoadingSearch(true);
+      try {
+        const [coursesRes, newsRes] = await Promise.all([
+          api.get("/courses"),
+          api.get("/news")
+        ]);
+        setCourses(coursesRes.data || []);
+        setArticles(newsRes.data || []);
+      } catch (err) {
+        console.error("Failed to fetch search data", err);
+      } finally {
+        setLoadingSearch(false);
+      }
+    };
+    fetchSearchData();
+  }, [searchOpen]);
+
+  const filteredCourses = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase();
+    return courses.filter(
+      (c: any) =>
+        c.title.toLowerCase().includes(q) ||
+        (c.description && c.description.toLowerCase().includes(q)) ||
+        (c.short_description && c.short_description.toLowerCase().includes(q))
+    );
+  }, [searchQuery, courses]);
+
+  const filteredArticles = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase();
+    return articles.filter(
+      (a: any) =>
+        a.status === "published" &&
+        (a.title.toLowerCase().includes(q) ||
+          (a.description && a.description.toLowerCase().includes(q)))
+    );
+  }, [searchQuery, articles]);
 
   // Premium Preloader States & Hook
   const [isLoading, setIsLoading] = useState(true);
@@ -178,17 +229,104 @@ export default function MarketingLayout() {
           <div className="w-full max-w-2xl mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3 p-4 border-b border-gray-100">
               <Search className="h-5 w-5 text-gray-400" />
-              <input autoFocus type="text" placeholder="Search courses, topics, videos..." className="flex-1 text-lg outline-none bg-transparent" style={{ color: "#121212" }} />
-              <button onClick={() => setSearchOpen(false)} className="text-gray-400 hover:text-gray-600 text-sm font-medium px-2 py-1 rounded bg-gray-100">ESC</button>
+              <input
+                autoFocus
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search courses, articles, topics..."
+                className="flex-1 text-lg outline-none bg-transparent"
+                style={{ color: "#121212" }}
+              />
+              <button onClick={() => setSearchOpen(false)} className="text-gray-400 hover:text-gray-600 text-sm font-medium px-2 py-1 rounded bg-gray-100 cursor-pointer">ESC</button>
             </div>
-            <div className="p-4 text-sm text-gray-500">
-              <p className="font-medium mb-3" style={{ color: "#121212" }}>Popular Searches</p>
-              <div className="flex flex-wrap gap-2">
-                {["Technical Analysis", "Options Trading", "Risk Management", "NIFTY", "Candlestick Patterns", "Trading Psychology"].map((t) => (
-                  <span key={t} className="px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer hover:bg-[#D50032] hover:text-white transition-colors" style={{ background: "rgba(213,0,50,0.08)", color: "#D50032" }}>{t}</span>
-                ))}
+            
+            {loadingSearch ? (
+              <div className="p-8 text-center text-gray-500 flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-[#D50032] border-t-transparent rounded-full animate-spin"></div>
+                <span>Loading resources...</span>
               </div>
-            </div>
+            ) : (
+              <>
+                {!searchQuery.trim() ? (
+                  <div className="p-4 text-sm text-gray-500">
+                    <p className="font-medium mb-3" style={{ color: "#121212" }}>Popular Searches</p>
+                    <div className="flex flex-wrap gap-2">
+                      {["Technical Analysis", "Options Trading", "Risk Management", "NIFTY", "Candlestick Patterns", "Trading Psychology"].map((t) => (
+                        <span
+                          key={t}
+                          onClick={() => setSearchQuery(t)}
+                          className="px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer hover:bg-[#D50032] hover:text-white transition-colors"
+                          style={{ background: "rgba(213,0,50,0.08)", color: "#D50032" }}
+                        >
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {filteredCourses.length === 0 && filteredArticles.length === 0 ? (
+                      <div className="p-8 text-center text-gray-500">
+                        <BookOpen className="mx-auto text-gray-300 mb-2 h-8 w-8" />
+                        <p className="font-semibold text-[#0B2A5B]">No results found</p>
+                        <p className="text-xs text-gray-400 mt-1">Try checking your spelling or search for something else</p>
+                      </div>
+                    ) : (
+                      <div className="max-h-[60vh] overflow-y-auto p-4 space-y-6">
+                        {filteredCourses.length > 0 && (
+                          <div>
+                            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Courses</h4>
+                            <div className="space-y-2">
+                              {filteredCourses.map((c) => (
+                                <div
+                                  key={c.id}
+                                  onClick={() => {
+                                    setSearchOpen(false);
+                                    navigate("/courses");
+                                  }}
+                                  className="p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors flex items-center justify-between group border border-transparent hover:border-gray-100"
+                                >
+                                  <div>
+                                    <p className="font-bold text-[#0B2A5B] text-sm group-hover:text-[#D50032] transition-colors">{c.title}</p>
+                                    <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">{c.short_description || c.description}</p>
+                                  </div>
+                                  <span className="text-xs font-bold text-[#D50032] bg-[#D50032]/5 px-2.5 py-1 rounded-md">View</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {filteredArticles.length > 0 && (
+                          <div>
+                            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Articles & Insights</h4>
+                            <div className="space-y-2">
+                              {filteredArticles.map((a) => (
+                                <div
+                                  key={a.id}
+                                  onClick={() => {
+                                    setSearchOpen(false);
+                                    navigate(`/article/${a.id}`);
+                                  }}
+                                  className="p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors flex items-center justify-between group border border-transparent hover:border-gray-100"
+                                >
+                                  <div>
+                                    <p className="font-bold text-[#0B2A5B] text-sm group-hover:text-[#D50032] transition-colors">{a.title}</p>
+                                    <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">{a.description}</p>
+                                  </div>
+                                  <span className="text-xs font-bold text-[#D50032] bg-[#D50032]/5 px-2.5 py-1 rounded-md">Read</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </>
+            )}
           </div>
         </div>
       )}

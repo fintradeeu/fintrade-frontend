@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
@@ -7,7 +7,7 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import {
   CheckCircle, ArrowRight, ArrowLeft, User, Phone, Mail,
-  Camera, Fingerprint, FileText, Download, Shield, Lock, GraduationCap
+  Camera, Fingerprint, FileText, Download, Shield, Lock, GraduationCap, Calendar, Upload, X, RefreshCw
 } from "lucide-react";
 import {
   Select,
@@ -71,6 +71,30 @@ export default function ContractKYC() {
   const [verifying, setVerifying] = useState(false);
   const [verified, setVerified] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [dbSignatureUrl, setDbSignatureUrl] = useState<string | null>(null);
+  const [dbSelfieUrl, setDbSelfieUrl] = useState<string | null>(null);
+  const [dbAadhaarDocUrl, setDbAadhaarDocUrl] = useState<string | null>(null);
+  const [dbPanDocUrl, setDbPanDocUrl] = useState<string | null>(null);
+  const [dbPhotoUrl, setDbPhotoUrl] = useState<string | null>(null);
+
+  // Real file references
+  const [aadhaarFile, setAadhaarFile] = useState<File | null>(null);
+  const [panFile, setPanFile] = useState<File | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [signatureFile, setSignatureFile] = useState<File | null>(null);
+  const [biometricFile, setBiometricFile] = useState<File | null>(null);
+
+  // Canvas signature pad
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [hasDrawn, setHasDrawn] = useState(false);
+  const lastPos = useRef<{ x: number; y: number } | null>(null);
+
+  // Webcam selfie
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
 
   // Dynamic user data states (clean, no dummy defaults)
   const [fullName, setFullName] = useState("");
@@ -98,7 +122,10 @@ export default function ContractKYC() {
           if (res.data.email) setEmail(res.data.email);
         }
       })
-      .catch((err) => console.error("Error loading user profile details", err));
+      .catch((err) => {
+        console.error("Error loading user profile details", err);
+        navigate("/login");
+      });
 
     // 2. Fetch current KYC status and restore saved details if any
     api.get("/kyc/status")
@@ -113,11 +140,26 @@ export default function ContractKYC() {
           if (res.data.pan_number) setPan(res.data.pan_number);
           if (res.data.mobile_verified) setMobileOtp("123456");
           if (res.data.email_verified) setEmailOtp("654321");
-          if (res.data.aadhaar_doc_url) setAadhaarUploaded(true);
-          if (res.data.pan_doc_url) setPanUploaded(true);
-          if (res.data.photo_url) setPhotoUploaded(true);
-          if (res.data.signature_url) setSigned(true);
-          if (res.data.biometric_selfie_url) setBiometricDone(true);
+          if (res.data.aadhaar_doc_url) {
+            setAadhaarUploaded(true);
+            setDbAadhaarDocUrl(res.data.aadhaar_doc_url);
+          }
+          if (res.data.pan_doc_url) {
+            setPanUploaded(true);
+            setDbPanDocUrl(res.data.pan_doc_url);
+          }
+          if (res.data.photo_url) {
+            setPhotoUploaded(true);
+            setDbPhotoUrl(res.data.photo_url);
+          }
+          if (res.data.signature_url) {
+            setSigned(true);
+            setDbSignatureUrl(res.data.signature_url);
+          }
+          if (res.data.biometric_selfie_url) {
+            setBiometricDone(true);
+            setDbSelfieUrl(res.data.biometric_selfie_url);
+          }
           if (res.data.status === "verified" || res.data.status === "approved") {
             setVerified(true);
             // KYC already completed — skip to contract step
@@ -142,6 +184,99 @@ export default function ContractKYC() {
     }
   }, []);
 
+  // Trigger Email OTP automatically when entering Step 2
+  useEffect(() => {
+    if (step === 2) {
+      handleSendEmailOtp();
+    }
+  }, [step]);
+
+  // ── Canvas Signature helpers ──────────────────────────────
+  const getCanvasPos = (e: React.MouseEvent | React.TouchEvent) => {
+    const canvas = canvasRef.current!;
+    const rect = canvas.getBoundingClientRect();
+    if ("touches" in e) {
+      return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+    }
+    return { x: (e as React.MouseEvent).clientX - rect.left, y: (e as React.MouseEvent).clientY - rect.top };
+  };
+  const startDraw = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    setIsDrawing(true);
+    lastPos.current = getCanvasPos(e);
+  };
+  const draw = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDrawing) return;
+    e.preventDefault();
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext("2d")!;
+    const pos = getCanvasPos(e);
+    ctx.beginPath();
+    ctx.moveTo(lastPos.current!.x, lastPos.current!.y);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.strokeStyle = "#1a1a2e";
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = "round";
+    ctx.stroke();
+    lastPos.current = pos;
+    setHasDrawn(true);
+  };
+  const endDraw = () => setIsDrawing(false);
+  const clearSignature = () => {
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext("2d")!;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setHasDrawn(false);
+    setSigned(false);
+    setSignatureFile(null);
+  };
+  const saveSignature = () => {
+    if (!hasDrawn) { toast.error("Please draw your signature first."); return; }
+    const canvas = canvasRef.current!;
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const file = new File([blob], "signature.png", { type: "image/png" });
+      setSignatureFile(file);
+      setSigned(true);
+      toast.success("Signature saved!");
+    });
+  };
+
+  // ── Webcam Selfie helpers ─────────────────────────────────
+  const openCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      setCameraStream(stream);
+      setCameraOpen(true);
+      setTimeout(() => {
+        if (videoRef.current) videoRef.current.srcObject = stream;
+      }, 100);
+    } catch {
+      toast.error("Cannot access camera. Please allow camera permission.");
+    }
+  };
+  const capturePhoto = () => {
+    const video = videoRef.current!;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d")!.drawImage(video, 0, 0);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const file = new File([blob], "selfie.png", { type: "image/png" });
+      setBiometricFile(file);
+      setSelfiePreview(canvas.toDataURL("image/png"));
+      setBiometricDone(true);
+      stopCamera();
+      toast.success("Selfie captured!");
+    });
+  };
+  const stopCamera = () => {
+    cameraStream?.getTracks().forEach((t) => t.stop());
+    setCameraStream(null);
+    setCameraOpen(false);
+  };
+
   const next = () => {
     if (step === 5 && !verified) {
       setVerifying(true);
@@ -163,6 +298,15 @@ export default function ContractKYC() {
       toast.success("A verification OTP code has been sent to your mobile number.");
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "Failed to send SMS OTP. Please try again.");
+    }
+  };
+
+  const handleSendEmailOtp = async () => {
+    try {
+      await api.post("/kyc/send-email-otp");
+      toast.success("A verification OTP code has been sent to your email address.");
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "Failed to send email OTP. Please try again.");
     }
   };
 
@@ -211,48 +355,120 @@ export default function ContractKYC() {
     }
 
     if (step === 2) {
-      if (emailOtp !== "654321") {
-        toast.error("Invalid email OTP");
+      if (!emailOtp || emailOtp.length < 6) {
+        toast.error("Please enter a valid 6-digit OTP code.");
         return;
       }
       try {
         await api.post("/kyc/verify-email-otp", { otp: emailOtp });
-      } catch (e) {}
-      next();
+        toast.success("Email OTP verified successfully!");
+        next();
+      } catch (err: any) {
+        toast.error(err.response?.data?.detail || "Invalid email OTP code. Please try again.");
+      }
       return;
     }
 
     if (step === 3) {
-      if (!aadhaarUploaded || !panUploaded || !photoUploaded) {
-        toast.error("Please upload all documents to proceed.");
+      if (!aadhaar || !aadhaar.trim()) {
+        toast.error("Aadhaar Number is mandatory.");
         return;
       }
-      // Submit mock document upload to update backend fields
+      const cleanAadhaar = aadhaar.trim();
+      if (!/^\d{12}$/.test(cleanAadhaar)) {
+        toast.error("Aadhaar Number must be exactly 12 digits.");
+        return;
+      }
+
+      if (!pan || !pan.trim()) {
+        toast.error("PAN Number is mandatory.");
+        return;
+      }
+      const cleanPan = pan.trim().toUpperCase();
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(cleanPan)) {
+        toast.error("PAN Number must be a valid 10-character alphanumeric format (e.g. ABCDE1234F).");
+        return;
+      }
+
+      if (!(aadhaarFile || aadhaarUploaded) || !(panFile || panUploaded) || !(photoFile || photoUploaded)) {
+        toast.error("Please upload all 3 documents to proceed.");
+        return;
+      }
+
+      // Save Aadhaar and PAN numbers to backend database
       try {
-        const dummyFile = new File(["dummy"], "dummy.jpg", { type: "image/jpeg" });
-        const fd1 = new FormData(); fd1.append("file", dummyFile);
-        await api.post("/kyc/upload-document?doc_type=aadhaar", fd1);
-        const fd2 = new FormData(); fd2.append("file", dummyFile);
-        await api.post("/kyc/upload-document?doc_type=pan", fd2);
-        const fd3 = new FormData(); fd3.append("file", dummyFile);
-        await api.post("/kyc/upload-document?doc_type=photo", fd3);
-      } catch (e) {}
+        await api.post("/kyc/submit", {
+          full_name: fullName,
+          dob: dob,
+          qualification: qualification,
+          address: address,
+          mobile: mobile,
+          aadhaar_number: cleanAadhaar,
+          pan_number: cleanPan
+        });
+      } catch (err: any) {
+        toast.error("Failed to save Aadhaar/PAN details to database.");
+        return;
+      }
+
+      // Upload selected files
+      try {
+        if (aadhaarFile) {
+          const fd1 = new FormData(); fd1.append("file", aadhaarFile);
+          await api.post("/kyc/upload-document?doc_type=aadhaar", fd1, {
+            headers: { "Content-Type": undefined }
+          });
+        }
+        if (panFile) {
+          const fd2 = new FormData(); fd2.append("file", panFile);
+          await api.post("/kyc/upload-document?doc_type=pan", fd2, {
+            headers: { "Content-Type": undefined }
+          });
+        }
+        if (photoFile) {
+          const fd3 = new FormData(); fd3.append("file", photoFile);
+          await api.post("/kyc/upload-document?doc_type=photo", fd3, {
+            headers: { "Content-Type": undefined }
+          });
+        }
+        toast.success("Documents processed successfully!");
+      } catch (e: any) {
+        const errorMsg = typeof e.response?.data?.detail === "string"
+          ? e.response.data.detail
+          : "Document upload failed. Please try again.";
+        toast.error(errorMsg);
+        return;
+      }
       next();
       return;
     }
 
     if (step === 4) {
-      if (!signed || !biometricDone) {
-        toast.error("Please capture signature and selfie to proceed.");
+      if (!(signatureFile || signed) || !(biometricFile || biometricDone)) {
+        toast.error("Please draw your signature and capture a selfie to proceed.");
         return;
       }
       try {
-        const dummyFile = new File(["dummy"], "dummy.jpg", { type: "image/jpeg" });
-        const fd1 = new FormData(); fd1.append("file", dummyFile);
-        await api.post("/kyc/upload-signature", fd1);
-        const fd2 = new FormData(); fd2.append("file", dummyFile);
-        await api.post("/kyc/upload-biometric", fd2);
-      } catch (e) {}
+        if (signatureFile) {
+          const fd1 = new FormData(); fd1.append("file", signatureFile);
+          await api.post("/kyc/upload-signature", fd1, {
+            headers: { "Content-Type": undefined }
+          });
+        }
+        if (biometricFile) {
+          const fd2 = new FormData(); fd2.append("file", biometricFile);
+          await api.post("/kyc/upload-biometric", fd2, {
+            headers: { "Content-Type": undefined }
+          });
+        }
+        toast.success("Signature and selfie processed successfully!");
+      } catch (e: any) {
+        const errorMsg = typeof e.response?.data?.detail === "string"
+          ? e.response.data.detail
+          : "Upload failed. Please try again.";
+        toast.error(errorMsg);
+        return;
+      }
       next();
       return;
     }
@@ -291,45 +507,202 @@ export default function ContractKYC() {
     // Generate contract on database side
     await handleGenerateContractOnBackend();
 
-    const content = `
-FINTRADE TRADING EDUCATION AGREEMENT
-======================================
-Student Name   : ${fullName}
-Mobile         : ${mobile}
-Email          : ${email}
-Aadhaar        : ${aadhaar}
-PAN            : ${pan}
-Date of Birth  : ${dob}
-Address        : ${address}
+    // Resolve Aadhaar, PAN, and Photo document URLs
+    let aadhaarImgSrc = "";
+    if (aadhaarFile) {
+      aadhaarImgSrc = URL.createObjectURL(aadhaarFile);
+    } else if (dbAadhaarDocUrl) {
+      const base = api.defaults.baseURL || window.location.origin;
+      const cleanBase = base.replace(/\/+$/, "");
+      const cleanPath = dbAadhaarDocUrl.startsWith("/") ? dbAadhaarDocUrl : `/${dbAadhaarDocUrl}`;
+      aadhaarImgSrc = `${cleanBase}${cleanPath}`;
+    }
 
-KYC Status     : ✓ VERIFIED
-Contract Date  : ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+    let panImgSrc = "";
+    if (panFile) {
+      panImgSrc = URL.createObjectURL(panFile);
+    } else if (dbPanDocUrl) {
+      const base = api.defaults.baseURL || window.location.origin;
+      const cleanBase = base.replace(/\/+$/, "");
+      const cleanPath = dbPanDocUrl.startsWith("/") ? dbPanDocUrl : `/${dbPanDocUrl}`;
+      panImgSrc = `${cleanBase}${cleanPath}`;
+    }
 
-TERMS & CONDITIONS
-------------------
-This agreement is entered into between FinTrade Education Pvt. Ltd. ("Company") 
-and the above-named student ("Student").
+    let photoImgSrc = "";
+    if (photoFile) {
+      photoImgSrc = URL.createObjectURL(photoFile);
+    } else if (dbPhotoUrl) {
+      const base = api.defaults.baseURL || window.location.origin;
+      const cleanBase = base.replace(/\/+$/, "");
+      const cleanPath = dbPhotoUrl.startsWith("/") ? dbPhotoUrl : `/${dbPhotoUrl}`;
+      photoImgSrc = `${cleanBase}${cleanPath}`;
+    }
 
-1. The Student agrees to abide by all FinTrade platform rules and community guidelines.
-2. Course fees are non-refundable after 7 days of enrollment.
-3. All course material is proprietary and may not be shared or redistributed.
-4. Trading simulation is for educational purposes only; no real capital is at risk.
-5. FinTrade holds the right to revoke access for breach of terms.
-6. Placement assistance is merit-based and not guaranteed.
-7. This contract is governed by the laws of India.
+    // Get signature image source
+    let signatureImgSrc = "";
+    if (canvasRef.current && hasDrawn) {
+      signatureImgSrc = canvasRef.current.toDataURL("image/png");
+    } else if (dbSignatureUrl) {
+      const base = api.defaults.baseURL || window.location.origin;
+      const cleanBase = base.replace(/\/+$/, "");
+      const cleanPath = dbSignatureUrl.startsWith("/") ? dbSignatureUrl : `/${dbSignatureUrl}`;
+      signatureImgSrc = `${cleanBase}${cleanPath}`;
+    }
 
-Signed digitally by: ${fullName}
-Date: ${new Date().toLocaleDateString("en-IN")}
+    // Get selfie image source
+    let selfieImgSrc = "";
+    if (selfiePreview) {
+      selfieImgSrc = selfiePreview;
+    } else if (dbSelfieUrl) {
+      const base = api.defaults.baseURL || window.location.origin;
+      const cleanBase = base.replace(/\/+$/, "");
+      const cleanPath = dbSelfieUrl.startsWith("/") ? dbSelfieUrl : `/${dbSelfieUrl}`;
+      selfieImgSrc = `${cleanBase}${cleanPath}`;
+    }
 
-© 2026 FinTrade Education Pvt. Ltd. | Mumbai, India
-    `.trim();
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `FinTrade_Contract_${fullName.replace(" ", "_")}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("Popup blocked. Please allow popups to download the contract as PDF.");
+      return;
+    }
+
+    const logoUrl = window.location.origin + logo;
+
+    const htmlContent = `
+      <html>
+      <head>
+        <title>FinTrade_Contract_${fullName.replace(/\s+/g, "_")}</title>
+        <style>
+          @page { size: A4; margin: 15mm; }
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1f2937; line-height: 1.5; margin: 0; padding: 0; background: #fff; }
+          .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+          .header { text-align: center; border-bottom: 3px solid #D50032; padding-bottom: 15px; margin-bottom: 25px; display: flex; flex-direction: column; align-items: center; }
+          .logo { height: 45px; margin-bottom: 8px; }
+          .title { font-size: 20px; font-weight: 800; color: #0B2A5B; margin: 4px 0; text-transform: uppercase; letter-spacing: 0.5px; }
+          .subtitle { font-size: 11px; color: #6b7280; margin: 0; text-transform: uppercase; font-weight: 600; }
+          .section { margin-bottom: 22px; page-break-inside: avoid; }
+          .section-title { font-size: 13px; font-weight: 800; color: #D50032; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+          .grid { display: grid; grid-template-cols: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+          .info-block { background: #f9fafb; border: 1px solid #e5e7eb; padding: 10px 14px; border-radius: 6px; }
+          .info-label { font-size: 10px; color: #6b7280; text-transform: uppercase; font-weight: 750; }
+          .info-value { font-size: 13px; font-weight: 600; color: #111827; margin-top: 2px; }
+          .terms-list { font-size: 11px; color: #374151; padding-left: 18px; margin: 0; }
+          .terms-item { margin-bottom: 6px; text-align: justify; }
+          .media-grid { display: grid; grid-template-cols: 1fr 1fr; gap: 15px; margin-top: 10px; page-break-inside: avoid; }
+          .media-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; text-align: center; background: #fff; }
+          .media-title { font-size: 11px; font-weight: 700; color: #4b5563; margin-bottom: 8px; text-transform: uppercase; }
+          .media-img { max-height: 90px; max-width: 100%; object-fit: contain; border: 1px solid #f3f4f6; border-radius: 4px; }
+          .footer-sign { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 15px; page-break-inside: avoid; }
+          .seal-box { display: flex; align-items: center; gap: 8px; color: #16a34a; font-weight: bold; font-size: 11px; }
+          .stamp { border: 2px solid #16a34a; padding: 3px 6px; border-radius: 4px; text-transform: uppercase; transform: rotate(-5deg); font-family: monospace; font-size: 12px; font-weight: 800; }
+          .sign-box { text-align: center; }
+          .sign-line { border-top: 1px solid #111827; width: 170px; margin-top: 40px; padding-top: 4px; font-size: 10px; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <img src="${logoUrl}" class="logo" alt="Logo" onerror="this.style.display='none'" />
+            <div class="title">Trading Education Agreement</div>
+            <div class="subtitle">FinTrade LMS Onboarding & Verification Dossier</div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">1. Student Profile & Personal Details</div>
+            <div class="grid">
+              <div class="info-block"><div class="info-label">Student Full Name</div><div class="info-value">${fullName}</div></div>
+              <div class="info-block"><div class="info-label">Date of Birth</div><div class="info-value">${dob}</div></div>
+              <div class="info-block"><div class="info-label">Email Address</div><div class="info-value">${email}</div></div>
+              <div class="info-block"><div class="info-label">Mobile Number</div><div class="info-value">${mobile}</div></div>
+              <div class="info-block"><div class="info-label">Educational Qualification</div><div class="info-value">${qualification}</div></div>
+              <div class="info-block"><div class="info-label">Residential Address</div><div class="info-value">${address}</div></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">2. Identity Verification & KYC Information</div>
+            <div class="grid">
+              <div class="info-block"><div class="info-label">Aadhaar Number</div><div class="info-value">${aadhaar}</div></div>
+              <div class="info-block"><div class="info-label">PAN Number</div><div class="info-value">${pan}</div></div>
+              <div class="info-block"><div class="info-label">Mobile OTP Verification Status</div><div class="info-value">✓ VERIFIED</div></div>
+              <div class="info-block"><div class="info-label">Email OTP Verification Status</div><div class="info-value">✓ VERIFIED</div></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">3. Terms & Conditions of Enrollment</div>
+            <ol class="terms-list">
+              <li class="terms-item">The Student agrees to abide by all FinTrade platform rules and community guidelines.</li>
+              <li class="terms-item">Course fees are non-refundable after 7 days of enrollment.</li>
+              <li class="terms-item">All course material is proprietary and may not be shared or redistributed.</li>
+              <li class="terms-item">Trading simulation is for educational purposes only; no real capital is at risk.</li>
+              <li class="terms-item">FinTrade holds the right to revoke access for breach of terms.</li>
+              <li class="terms-item">Placement assistance is merit-based and not guaranteed.</li>
+              <li class="terms-item">This contract is governed by the laws of India.</li>
+            </ol>
+          </div>
+
+          <div class="section">
+            <div class="section-title">4. Digital Signatures & Biometric Audit Trail</div>
+            <div class="media-grid">
+              <div class="media-card">
+                <div class="media-title">Recorded Digital Signature</div>
+                ${signatureImgSrc ? `<img src="${signatureImgSrc}" class="media-img" />` : `<div style="height: 60px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 10px; border: 1px dashed #ccc; border-radius: 4px;">Signature Image Not Loaded</div>`}
+              </div>
+              <div class="media-card">
+                <div class="media-title">Biometric Audit Selfie</div>
+                ${selfieImgSrc ? `<img src="${selfieImgSrc}" class="media-img" />` : `<div style="height: 60px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 10px; border: 1px dashed #ccc; border-radius: 4px;">Biometric Image Not Loaded</div>`}
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">5. Uploaded Verification Documents</div>
+            <div class="media-grid" style="grid-template-cols: 1fr 1fr 1fr;">
+              <div class="media-card">
+                <div class="media-title">Aadhaar Card</div>
+                ${aadhaarImgSrc ? `<img src="${aadhaarImgSrc}" class="media-img" />` : `<div style="height: 60px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 10px; border: 1px dashed #ccc; border-radius: 4px;">Aadhaar Not Loaded</div>`}
+              </div>
+              <div class="media-card">
+                <div class="media-title">PAN Card</div>
+                ${panImgSrc ? `<img src="${panImgSrc}" class="media-img" />` : `<div style="height: 60px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 10px; border: 1px dashed #ccc; border-radius: 4px;">PAN Not Loaded</div>`}
+              </div>
+              <div class="media-card">
+                <div class="media-title">Passport Size Photo</div>
+                ${photoImgSrc ? `<img src="${photoImgSrc}" class="media-img" />` : `<div style="height: 60px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 10px; border: 1px dashed #ccc; border-radius: 4px;">Photo Not Loaded</div>`}
+              </div>
+            </div>
+          </div>
+
+          <div class="footer-sign">
+            <div class="seal-box">
+              <div class="stamp">Verified</div>
+              <div>
+                <div style="font-size: 9px; color: #6b7280; font-weight: normal; text-transform: uppercase;">KYC Status</div>
+                <div style="color: #111827; font-weight: bold;">APPROVED & STAMPED</div>
+                <div style="font-size: 8px; color: #6b7280; font-weight: normal; margin-top: 1px;">Dossier Sealed: ${new Date().toLocaleString("en-IN")}</div>
+              </div>
+            </div>
+            <div class="sign-box">
+              <div class="sign-line">Student Digital Signature Auth</div>
+              <div style="font-size: 9px; color: #6b7280; margin-top: 2px;">IP Address logged & stamped</div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 600);
+          }
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
   };
 
   return (
@@ -382,7 +755,16 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                 </div>
                 <div>
                   <Label>Date of Birth</Label>
-                  <Input value={dob} onChange={(e) => setDob(e.target.value)} className="mt-2 bg-gray-50" />
+                  <div className="relative mt-2">
+                    <Input
+                      type="date"
+                      value={dob}
+                      onChange={(e) => setDob(e.target.value)}
+                      className="w-full bg-gray-50 pr-10"
+                      onClick={(e) => e.currentTarget.showPicker()}
+                    />
+                    <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                  </div>
                 </div>
               </div>
               <div>
@@ -471,17 +853,12 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                     className="text-center text-xl tracking-widest font-bold"
                     style={{ letterSpacing: "0.5em" }}
                   />
-                  <Button variant="outline" className="whitespace-nowrap border-[#D50032] text-[#D50032]" onClick={() => setEmailOtp("654321")}>
-                    Auto-fill Demo
+                  <Button variant="outline" type="button" className="whitespace-nowrap border-[#D50032] text-[#D50032]" onClick={handleSendEmailOtp}>
+                    Resend Email OTP
                   </Button>
                 </div>
-                {emailOtp === "654321" && (
-                  <div className="flex items-center gap-2 mt-3 text-green-600 text-sm">
-                    <CheckCircle className="h-4 w-4" /> Email verified successfully!
-                  </div>
-                )}
               </div>
-              <p className="text-xs text-gray-400">Demo OTP: <span className="font-bold text-gray-600">654321</span>.</p>
+              <p className="text-xs text-gray-400">Please enter the 6-digit verification code sent to your email.</p>
             </div>
           )}
 
@@ -499,35 +876,84 @@ Date: ${new Date().toLocaleDateString("en-IN")}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Aadhaar Number</Label>
-                  <Input value={aadhaar} onChange={(e) => setAadhaar(e.target.value)} className="mt-2 bg-gray-50" />
+                  <Label>Aadhaar Number <span className="text-[#D50032]">*</span></Label>
+                  <Input value={aadhaar} onChange={(e) => setAadhaar(e.target.value)} className="mt-2 bg-gray-50" placeholder="12-digit number" />
                 </div>
                 <div>
-                  <Label>PAN Number</Label>
-                  <Input value={pan} onChange={(e) => setPan(e.target.value)} className="mt-2 bg-gray-50" />
+                  <Label>PAN Number <span className="text-[#D50032]">*</span></Label>
+                  <Input value={pan} onChange={(e) => setPan(e.target.value)} className="mt-2 bg-gray-50" placeholder="10-character alphanumeric" />
                 </div>
               </div>
-              {[
-                { label: "Aadhaar Card (Front & Back)", state: aadhaarUploaded, setState: setAadhaarUploaded },
-                { label: "PAN Card", state: panUploaded, setState: setPanUploaded },
-                { label: "Passport Photo", state: photoUploaded, setState: setPhotoUploaded },
-              ].map((doc, i) => (
+              {([
+                {
+                  label: "Aadhaar Card (Front & Back)",
+                  file: aadhaarFile,
+                  accept: "image/*,application/pdf",
+                  onFile: (f: File) => { setAadhaarFile(f); setAadhaarUploaded(true); },
+                  icon: <Fingerprint className="h-5 w-5" style={{ color: "#D50032" }} />,
+                },
+                {
+                  label: "PAN Card",
+                  file: panFile,
+                  accept: "image/*,application/pdf",
+                  onFile: (f: File) => { setPanFile(f); setPanUploaded(true); },
+                  icon: <FileText className="h-5 w-5" style={{ color: "#D50032" }} />,
+                },
+                {
+                  label: "Passport Size Photo",
+                  file: photoFile,
+                  accept: "image/*",
+                  onFile: (f: File) => { setPhotoFile(f); setPhotoUploaded(true); },
+                  icon: <Camera className="h-5 w-5" style={{ color: "#D50032" }} />,
+                },
+              ] as const).map((doc, i) => (
                 <div key={i}
-                  className="border-2 border-dashed rounded-xl p-4 flex items-center justify-between cursor-pointer transition-all hover:border-[#D50032]"
-                  style={{ borderColor: doc.state ? "#4CAF50" : "#d1d5db", background: doc.state ? "rgba(76,175,80,0.05)" : "#fafafa" }}
-                  onClick={() => doc.setState(true)}
+                  className="border-2 border-dashed rounded-xl p-4 transition-all"
+                  style={{ borderColor: doc.file ? "#4CAF50" : "#d1d5db", background: doc.file ? "rgba(76,175,80,0.04)" : "#fafafa" }}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: doc.state ? "rgba(76,175,80,0.1)" : "rgba(213,0,50,0.08)" }}>
-                      {doc.state ? <CheckCircle className="h-5 w-5 text-green-600" /> : <FileText className="h-5 w-5" style={{ color: "#D50032" }} />}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: doc.file ? "rgba(76,175,80,0.1)" : "rgba(213,0,50,0.08)" }}>
+                        {doc.file ? <CheckCircle className="h-5 w-5 text-green-600" /> : doc.icon}
+                      </div>
+                      <div>
+                        <div className="font-medium text-sm" style={{ color: "#121212" }}>{doc.label}</div>
+                        <div className="text-xs text-gray-500">
+                          {doc.file ? (
+                            <span className="text-green-600 font-semibold">✓ {doc.file.name}</span>
+                          ) : "No file chosen — click Upload to browse"}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-medium text-sm" style={{ color: "#121212" }}>{doc.label}</div>
-                      <div className="text-xs text-gray-500">{doc.state ? "File selected ✓" : "Click to upload (demo)"}</div>
-                    </div>
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept={doc.accept}
+                        className="hidden"
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) doc.onFile(f); }}
+                      />
+                      <span
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all"
+                        style={{
+                          borderColor: doc.file ? "#4CAF50" : "#D50032",
+                          color: doc.file ? "#4CAF50" : "#D50032",
+                          background: doc.file ? "rgba(76,175,80,0.06)" : "rgba(213,0,50,0.06)",
+                        }}
+                      >
+                        <Upload className="h-3.5 w-3.5" />
+                        {doc.file ? "Change" : "Upload"}
+                      </span>
+                    </label>
                   </div>
-                  {!doc.state && (
-                    <Button size="sm" variant="outline" className="border-[#D50032] text-[#D50032]">Upload</Button>
+                  {/* Image preview */}
+                  {doc.file && doc.file.type.startsWith("image/") && (
+                    <div className="mt-3">
+                      <img
+                        src={URL.createObjectURL(doc.file)}
+                        alt="preview"
+                        className="h-24 w-full object-contain rounded-lg border border-green-100"
+                      />
+                    </div>
                   )}
                 </div>
               ))}
@@ -543,51 +969,105 @@ Date: ${new Date().toLocaleDateString("en-IN")}
                 </div>
                 <div>
                   <h2 className="text-xl font-bold" style={{ color: "#121212" }}>Signature & Biometric</h2>
-                  <p className="text-sm text-gray-500">Sign and verify your identity</p>
+                  <p className="text-sm text-gray-500">Draw your signature and take a selfie</p>
                 </div>
               </div>
-              {/* Signature */}
+
+              {/* ── Signature Canvas ─────────────────────── */}
               <div>
-                <Label className="mb-2 block">Digital Signature</Label>
-                <div
-                  className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all hover:border-[#D50032]"
-                  style={{ borderColor: signed ? "#4CAF50" : "#d1d5db", background: signed ? "rgba(76,175,80,0.05)" : "#fafafa" }}
-                  onClick={() => setSigned(true)}
-                >
-                  {signed ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <CheckCircle className="h-8 w-8 text-green-600" />
-                      <p className="font-bold text-green-700" style={{ fontFamily: "cursive", fontSize: 22 }}>{fullName}</p>
-                      <p className="text-xs text-green-600">Signature captured</p>
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="text-gray-400 text-sm mb-2">Click to sign digitally (demo)</p>
-                      <Button size="sm" style={{ background: "#D50032", color: "white" }}>Draw Signature</Button>
-                    </div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Digital Signature <span className="text-xs text-gray-400 ml-1">(Draw with mouse or finger)</span></Label>
+                  {hasDrawn && (
+                    <button onClick={clearSignature} className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 transition-colors">
+                      <RefreshCw className="h-3 w-3" /> Clear
+                    </button>
                   )}
                 </div>
+                <div
+                  className="border-2 rounded-xl overflow-hidden"
+                  style={{ borderColor: signed ? "#4CAF50" : "#d1d5db", background: "#fff" }}
+                >
+                  <canvas
+                    ref={canvasRef}
+                    width={500}
+                    height={160}
+                    className="w-full touch-none cursor-crosshair"
+                    style={{ display: "block", background: signed ? "rgba(76,175,80,0.03)" : "#fafafa" }}
+                    onMouseDown={startDraw}
+                    onMouseMove={draw}
+                    onMouseUp={endDraw}
+                    onMouseLeave={endDraw}
+                    onTouchStart={startDraw}
+                    onTouchMove={draw}
+                    onTouchEnd={endDraw}
+                  />
+                  <div className="flex items-center justify-between px-4 py-2 border-t border-gray-100 bg-gray-50">
+                    {signed ? (
+                      <span className="text-xs text-green-600 font-semibold flex items-center gap-1">
+                        <CheckCircle className="h-3.5 w-3.5" /> Signature saved
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400">Draw your signature above</span>
+                    )}
+                    <Button
+                      size="sm"
+                      onClick={saveSignature}
+                      disabled={signed || !hasDrawn}
+                      style={{ background: signed ? "#4CAF50" : "#D50032", color: "white", fontSize: 12 }}
+                    >
+                      {signed ? "✓ Saved" : "Save Signature"}
+                    </Button>
+                  </div>
+                </div>
               </div>
-              {/* Biometric */}
+
+              {/* ── Webcam Selfie ────────────────────────── */}
               <div>
                 <Label className="mb-2 block">Biometric Selfie Verification</Label>
                 <div
-                  className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all hover:border-[#D50032]"
-                  style={{ borderColor: biometricDone ? "#4CAF50" : "#d1d5db", background: biometricDone ? "rgba(76,175,80,0.05)" : "#fafafa" }}
-                  onClick={() => setBiometricDone(true)}
+                  className="border-2 border-dashed rounded-xl overflow-hidden"
+                  style={{ borderColor: biometricDone ? "#4CAF50" : "#d1d5db", background: biometricDone ? "rgba(76,175,80,0.04)" : "#fafafa" }}
                 >
-                  {biometricDone ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <CheckCircle className="h-8 w-8 text-green-600" />
-                      <p className="text-sm text-green-600 font-medium">Face verified successfully</p>
+                  {biometricDone && selfiePreview ? (
+                    <div className="p-4 flex flex-col items-center gap-3">
+                      <div className="relative">
+                        <img src={selfiePreview} alt="selfie" className="w-32 h-32 rounded-full object-cover border-4 border-green-400 shadow-lg" />
+                        <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1">
+                          <CheckCircle className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                      <p className="text-sm text-green-600 font-semibold">Selfie captured successfully</p>
+                      <button
+                        onClick={() => { setBiometricDone(false); setSelfiePreview(null); setBiometricFile(null); }}
+                        className="text-xs text-gray-400 hover:text-red-500 flex items-center gap-1"
+                      >
+                        <RefreshCw className="h-3 w-3" /> Retake
+                      </button>
+                    </div>
+                  ) : cameraOpen ? (
+                    <div className="p-4 flex flex-col items-center gap-3">
+                      <div className="relative rounded-xl overflow-hidden w-full max-w-xs">
+                        <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-xl" style={{ transform: "scaleX(-1)" }} />
+                        <div className="absolute inset-0 border-4 border-[#D50032] rounded-xl pointer-events-none" style={{ boxShadow: "inset 0 0 20px rgba(213,0,50,0.2)" }} />
+                      </div>
+                      <div className="flex gap-3">
+                        <Button onClick={capturePhoto} style={{ background: "#D50032", color: "white" }}>
+                          <Camera className="mr-2 h-4 w-4" /> Capture
+                        </Button>
+                        <Button variant="outline" onClick={stopCamera} className="border-gray-300">
+                          <X className="mr-2 h-4 w-4" /> Cancel
+                        </Button>
+                      </div>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center gap-3">
+                    <div className="p-6 flex flex-col items-center gap-3">
                       <div className="w-20 h-20 rounded-full border-4 border-dashed flex items-center justify-center" style={{ borderColor: "#D50032" }}>
                         <Camera className="h-8 w-8" style={{ color: "#D50032" }} />
                       </div>
-                      <p className="text-gray-400 text-sm">Click to capture selfie (demo)</p>
-                      <Button size="sm" style={{ background: "#D50032", color: "white" }}>Open Camera</Button>
+                      <p className="text-gray-500 text-sm">Take a live selfie to verify your identity</p>
+                      <Button onClick={openCamera} style={{ background: "#D50032", color: "white" }}>
+                        <Camera className="mr-2 h-4 w-4" /> Open Camera
+                      </Button>
                     </div>
                   )}
                 </div>

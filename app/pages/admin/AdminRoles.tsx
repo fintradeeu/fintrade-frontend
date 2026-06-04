@@ -25,6 +25,7 @@ interface AdminUser {
     manageStudents: boolean;
     managePayments: boolean;
     manageContent: boolean;
+    directPublish: boolean;
     manageExams: boolean;
     manageAdmins: boolean;
     canViewRevenue: boolean;
@@ -325,11 +326,33 @@ interface AdminUser {
                   onCheckedChange={(checked) => 
                     setFormData({ 
                       ...formData, 
-                      permissions: { ...formData.permissions, manageContent: checked } 
+                      permissions: { 
+                        ...formData.permissions, 
+                        manageContent: checked,
+                        directPublish: checked ? formData.permissions.directPublish : false
+                      } 
                     })
                   }
                 />
               </div>
+
+              {formData.permissions.manageContent && (
+                <div className="pl-6 flex items-center justify-between mt-2 border-l-2 border-[#D50032]/30">
+                  <div className="space-y-0.5">
+                    <Label className="text-xs font-semibold">Direct Public</Label>
+                    <div className="text-[10px] text-gray-500">Publish articles directly to the public without approval</div>
+                  </div>
+                  <Switch
+                    checked={formData.permissions.directPublish}
+                    onCheckedChange={(checked) => 
+                      setFormData({ 
+                        ...formData, 
+                        permissions: { ...formData.permissions, directPublish: checked } 
+                      })
+                    }
+                  />
+                </div>
+              )}
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
@@ -487,6 +510,7 @@ export default function AdminRoles() {
       manageStudents: false,
       managePayments: false,
       manageContent: false,
+      directPublish: false,
       manageExams: false,
       manageAdmins: false,
       canViewRevenue: false,
@@ -502,30 +526,63 @@ export default function AdminRoles() {
     }
   });
 
+  const validateForm = (isEdit = false) => {
+    if (!formData.name.trim()) {
+      toast.error("Full name is required");
+      return false;
+    }
+    if (!formData.email.trim()) {
+      toast.error("Email address is required");
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      toast.error("Please enter a valid email address");
+      return false;
+    }
+    if (!formData.role.trim()) {
+      toast.error("Role name is required");
+      return false;
+    }
+    if (!isEdit && !formData.password) {
+      toast.error("Password is required");
+      return false;
+    }
+    if (!isEdit && formData.password.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return false;
+    }
+    return true;
+  };
+
   const handleAddAdmin = async () => {
+    if (!validateForm(false)) return;
     try {
         const newAdmin = { ...formData, lastActive: new Date().toISOString() };
         await api.post("/admin/roles", newAdmin);
-        toast.success("Admin created");
+        toast.success("Admin created successfully");
         fetchAdmins();
         setIsAddDialogOpen(false);
         resetForm();
-    } catch (err) {
-        toast.error("Failed to add admin");
+    } catch (err: any) {
+        const msg = err.response?.data?.detail || "Failed to add admin";
+        toast.error(msg);
     }
   };
 
   const handleEditAdmin = async () => {
     if (selectedAdmin) {
+      if (!validateForm(true)) return;
       try {
         await api.put(`/admin/roles/${selectedAdmin.id}`, formData);
-        toast.success("Admin updated");
+        toast.success("Admin updated successfully");
         fetchAdmins();
         setIsEditDialogOpen(false);
         setSelectedAdmin(null);
         resetForm();
-      } catch (err) {
-        toast.error("Failed to update admin");
+      } catch (err: any) {
+        const msg = err.response?.data?.detail || "Failed to update admin";
+        toast.error(msg);
       }
     }
   };
@@ -569,6 +626,7 @@ export default function AdminRoles() {
         manageStudents: false,
         managePayments: false,
         manageContent: false,
+        directPublish: false,
         manageExams: false,
         manageAdmins: false,
         canViewRevenue: false,

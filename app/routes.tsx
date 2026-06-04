@@ -61,6 +61,9 @@ import AdminNews from "./pages/admin/AdminNews";
 import AdminRoles from "./pages/admin/AdminRoles";
 import AdminLoginDetails from "./pages/admin/AdminLoginDetails";
 import AdminCMS from "./pages/admin/AdminCMS";
+import AdminFeedbackForms from "./pages/admin/AdminFeedbackForms";
+import SubmitFeedback from "./pages/SubmitFeedback";
+import ArticleDetail from "./pages/ArticleDetail";
 
 // Distributor Pages
 import DistributorDashboard from "./pages/distributor/DistributorDashboard";
@@ -96,6 +99,10 @@ export const router = createBrowserRouter([
       {
         path: "/about",
         Component: AboutUs,
+      },
+      {
+        path: "/article/:id",
+        Component: ArticleDetail,
       },
     ]
   },
@@ -290,6 +297,14 @@ export const router = createBrowserRouter([
   {
     path: "/admin/cms",
     Component: AdminCMS,
+  },
+  {
+    path: "/admin/feedback-forms",
+    Component: AdminFeedbackForms,
+  },
+  {
+    path: "/feedback/submit/:formId",
+    Component: SubmitFeedback,
   },
   // Distributor Routes
   {

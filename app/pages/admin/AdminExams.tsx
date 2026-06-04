@@ -32,6 +32,7 @@ export default function AdminExams() {
     questions_per_attempt: "",
     marks_per_question: 1,
     negative_marks: 0,
+    reattempt_fee: 500,
   });
 
   // Preview state
@@ -123,6 +124,9 @@ export default function AdminExams() {
       if (formData.type === "module_final" && formData.module_id) {
         payload.module_id = parseInt(formData.module_id);
       }
+      if (formData.type === "course_final") {
+        payload.reattempt_fee = formData.reattempt_fee;
+      }
 
       if (formData.type === "entrance") {
         await api.post("/admin/exams/create", payload);
@@ -135,7 +139,7 @@ export default function AdminExams() {
       
       toast.success("Exam created successfully!");
       setIsModalOpen(false);
-      setFormData({ title: "", type: "entrance", course_id: "", module_id: "", duration_minutes: 60, passing_score: 60, questions_per_attempt: "", marks_per_question: 1, negative_marks: 0 });
+      setFormData({ title: "", type: "entrance", course_id: "", module_id: "", duration_minutes: 60, passing_score: 60, questions_per_attempt: "", marks_per_question: 1, negative_marks: 0, reattempt_fee: 500 });
       setLoading(true);
       fetchExams();
     } catch (err: any) {
@@ -271,6 +275,17 @@ export default function AdminExams() {
                 <option value="module_final">Module Final</option>
               </select>
             </div>
+            {formData.type === "course_final" && (
+              <div className="grid gap-2">
+                <Label>Reattempt Fee (₹)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={formData.reattempt_fee}
+                  onChange={(e) => setFormData({ ...formData, reattempt_fee: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+            )}
             <div className="grid gap-2">
               <Label>Course</Label>
               <select

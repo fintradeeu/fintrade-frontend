@@ -40,27 +40,35 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
   };
 
   const completePayment = async () => {
+    console.log("completePayment triggered. finalPrice:", finalPrice, "course:", course);
     setLoading(true);
     try {
       if (Number(finalPrice) > 0) {
+        console.log("Initiating payment for course ID:", course.id);
         const res = await api.post("/payments/create", { course_id: course.id });
+        console.log("Payment initiation API response:", res.data);
         if (res.data?.redirect_url) {
+          console.log("Redirecting to:", res.data.redirect_url);
           window.location.href = res.data.redirect_url;
           return;
+        } else {
+          alert("Error: No redirect_url returned in API response.");
         }
       } else {
+        console.log("Final price is 0, enrolling user directly...");
         const payload = couponCode.trim() ? { distributor_code: couponCode.trim() } : {};
         await api.post(`/courses/${course.id}/enroll`, payload);
         onSuccess();
       }
     } catch (err: any) {
+      console.error("completePayment failed with error:", err);
       const detail = err.response?.data?.detail;
       if (Array.isArray(detail)) {
-        alert(detail.map((d: any) => d.msg).join(", "));
+        alert("Payment Error: " + detail.map((d: any) => d.msg).join(", "));
       } else if (typeof detail === 'object' && detail !== null) {
-        alert(JSON.stringify(detail));
+        alert("Payment Error: " + JSON.stringify(detail));
       } else {
-        alert(detail || "Enrollment failed.");
+        alert("Payment Error: " + (detail || err.message || "Enrollment failed."));
       }
     } finally {
       setLoading(false);

@@ -34,6 +34,12 @@ const getImageUrl = (path?: string) => {
   return `${cleanBase}${cleanPath}`;
 };
 
+const getBgImageUrl = (path?: string) => {
+  if (!path) return "";
+  if (path.startsWith("/background") || path.startsWith("/static")) return path;
+  return getImageUrl(path);
+};
+
 // Interactive Cursor Glow
 function CursorGlow() {
   return null;
@@ -300,6 +306,7 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
   const isAuthenticated = !!localStorage.getItem("token");
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [enrollLoading, setEnrollLoading] = useState(false);
+  const [showKycModal, setShowKycModal] = useState(false);
 
   const courseKey = course.name.includes("FMF") ? "FMF" : course.name.includes("CARP") ? "CARP" : "CPTP";
   const details = courseDetails[courseKey];
@@ -312,28 +319,33 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
 
     setEnrollLoading(true);
     try {
-      const res = await api.get("/exams/entrance");
-      const matchingExam = (res.data || []).find(
-        (exam: any) => Number(exam.course_id) === Number(course.id) && exam.is_active
-      );
+      // Single API call to check if student passed entrance exam for this course
+      const checkRes = await api.get(`/exams/check-enrollment?course_id=${course.id}`);
+      const { has_entrance_exam, passed } = checkRes.data;
 
       setIsDetailsOpen(false);
-      if (matchingExam) {
+
+      if (!has_entrance_exam) {
+        // No entrance exam — go straight to payment/checkout
+        onEnroll?.();
+        return;
+      }
+
+      if (passed) {
+        // Passed entrance exam — check KYC status
         try {
-          const allRes = await api.get("/exams/all");
-          const attemptedExam = (allRes.data?.entrance_exams || []).find(
-            (exam: any) => Number(exam.id) === Number(matchingExam.id)
-          );
-          const alreadyPassed = attemptedExam?.attempts?.some((attempt: any) => attempt.passed);
-          if (alreadyPassed) {
-            onEnroll?.();
-            return;
+          const kycRes = await api.get("/kyc/status");
+          const kycStatus = kycRes.data?.status;
+          if (kycStatus === "verified" || kycStatus === "approved") {
+            onEnroll?.(); // KYC done — go to checkout
+          } else {
+            setShowKycModal(true); // Show KYC required popup
           }
         } catch {
-          // If attempt history cannot be loaded, continue to the specific exam page.
+          setShowKycModal(true);
         }
-        window.location.href = `/student/entrance-exam?exam_id=${matchingExam.id}&course_id=${course.id}`;
       } else {
+        // Not passed — redirect to entrance exam page
         window.location.href = `/student/entrance-exam?course_id=${course.id}`;
       }
     } catch {
@@ -347,14 +359,18 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
   let levelBadge = course.level || "Beginner";
   if (levelBadge === "Foundation") levelBadge = "Beginner";
 
-  // Format duration to Hours for consistency with mockup image
-  let displayDuration = "30 Hours";
+  // Format duration to Days
+  let displayDuration = "30 Days";
   if (course.duration) {
-    const match = course.duration.match(/\d+/);
-    if (match) {
-      displayDuration = `${match[0]} Hours`;
-    } else {
+    if (course.duration.toLowerCase().includes("day") || course.duration.toLowerCase().includes("hour")) {
       displayDuration = course.duration;
+    } else {
+      const match = course.duration.match(/\d+/);
+      if (match) {
+        displayDuration = `${match[0]} Days`;
+      } else {
+        displayDuration = course.duration;
+      }
     }
   }
 
@@ -521,8 +537,163 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
                 disabled={enrollLoading}
                 className="w-full sm:w-auto h-12 text-sm font-semibold rounded-xl px-8 shadow-lg hover:shadow-xl bg-gradient-to-r from-[#D50032] to-[#FF0000] text-white hover:from-[#D50032] hover:to-[#D50032] transition-all duration-300"
               >
-                {enrollLoading ? "Opening Exam..." : "Enroll Now"}
+          {enrollLoading ? "Opening Exam..." : "Enroll Now"}
               </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* KYC Verification Required Dialog */}
+      <Dialog open={showKycModal} onOpenChange={setShowKycModal}>
+        <DialogContent className="sm:max-w-lg bg-transparent border-none shadow-none p-0 z-[10001] overflow-visible">
+          <div
+            style={{
+              background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)",
+              borderRadius: "24px",
+              padding: "0",
+              overflow: "hidden",
+              boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.07)",
+              position: "relative",
+            }}
+          >
+            {/* Decorative top gradient bar */}
+            <div style={{ height: "4px", background: "linear-gradient(90deg, #22c55e, #16a34a, #4ade80)", width: "100%" }} />
+
+            {/* Subtle background glow */}
+            <div style={{
+              position: "absolute", top: "-60px", left: "50%", transform: "translateX(-50%)",
+              width: "300px", height: "300px",
+              background: "radial-gradient(circle, rgba(34,197,94,0.12) 0%, transparent 70%)",
+              pointerEvents: "none",
+            }} />
+
+            <div style={{ padding: "40px 36px 36px", textAlign: "center", position: "relative" }}>
+              {/* Animated success badge */}
+              <div style={{
+                width: "88px", height: "88px",
+                background: "linear-gradient(135deg, rgba(34,197,94,0.2), rgba(22,163,74,0.15))",
+                borderRadius: "50%",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 24px",
+                border: "2px solid rgba(34,197,94,0.4)",
+                boxShadow: "0 0 40px rgba(34,197,94,0.25)",
+                animation: "pulse 2s infinite",
+              }}>
+                <div style={{
+                  width: "60px", height: "60px",
+                  background: "linear-gradient(135deg, #22c55e, #16a34a)",
+                  borderRadius: "50%",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  boxShadow: "0 8px 24px rgba(34,197,94,0.4)",
+                }}>
+                  <CheckCircle style={{ color: "white", width: "32px", height: "32px" }} />
+                </div>
+              </div>
+
+              {/* Status pill */}
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: "6px",
+                background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)",
+                borderRadius: "999px", padding: "4px 14px", marginBottom: "16px",
+              }}>
+                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e" }} />
+                <span style={{ color: "#4ade80", fontSize: "12px", fontWeight: 600, letterSpacing: "0.05em" }}>
+                  EXAM CLEARED
+                </span>
+              </div>
+
+              <h3 style={{ color: "white", fontSize: "26px", fontWeight: 800, marginBottom: "8px", lineHeight: 1.2 }}>
+                Congratulations! 🎉
+              </h3>
+              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px", marginBottom: "28px", lineHeight: 1.6 }}>
+                You've successfully passed the entrance exam. One final step before you begin your journey.
+              </p>
+
+              {/* Steps indicator */}
+              <div style={{
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "16px",
+                padding: "20px",
+                marginBottom: "28px",
+                textAlign: "left",
+              }}>
+                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "11px", fontWeight: 600, letterSpacing: "0.1em", marginBottom: "16px" }}>
+                  NEXT STEPS
+                </p>
+                {[
+                  { icon: "✅", label: "Entrance Exam", done: true },
+                  { icon: "📋", label: "KYC & Contract Signing", done: false, active: true },
+                  { icon: "💳", label: "Payment & Enrollment", done: false },
+                ].map((step, i) => (
+                  <div key={i} style={{
+                    display: "flex", alignItems: "center", gap: "12px",
+                    padding: "8px 12px",
+                    borderRadius: "10px",
+                    marginBottom: i < 2 ? "6px" : 0,
+                    background: step.active ? "rgba(34,197,94,0.1)" : "transparent",
+                    border: step.active ? "1px solid rgba(34,197,94,0.2)" : "1px solid transparent",
+                  }}>
+                    <span style={{ fontSize: "16px" }}>{step.icon}</span>
+                    <span style={{
+                      color: step.done ? "rgba(255,255,255,0.35)" : step.active ? "#4ade80" : "rgba(255,255,255,0.5)",
+                      fontSize: "13px",
+                      fontWeight: step.active ? 700 : 500,
+                      textDecoration: step.done ? "line-through" : "none",
+                    }}>
+                      {step.label}
+                    </span>
+                    {step.active && (
+                      <span style={{
+                        marginLeft: "auto", fontSize: "10px", fontWeight: 700,
+                        color: "#22c55e", letterSpacing: "0.05em",
+                      }}>
+                        → NOW
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Action buttons */}
+              <div style={{ display: "flex", gap: "12px" }}>
+                <button
+                  onClick={() => setShowKycModal(false)}
+                  style={{
+                    flex: 1, height: "48px", borderRadius: "12px",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    background: "rgba(255,255,255,0.06)",
+                    color: "rgba(255,255,255,0.6)",
+                    fontSize: "14px", fontWeight: 600, cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseOver={e => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
+                  onMouseOut={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
+                >
+                  Maybe Later
+                </button>
+                <button
+                  onClick={() => {
+                    setShowKycModal(false);
+                    window.location.href = `/student/contract-kyc?course_id=${course.id}`;
+                  }}
+                  style={{
+                    flex: 2, height: "48px", borderRadius: "12px",
+                    border: "none",
+                    background: "linear-gradient(135deg, #22c55e, #16a34a)",
+                    color: "white",
+                    fontSize: "14px", fontWeight: 700, cursor: "pointer",
+                    boxShadow: "0 8px 24px rgba(34,197,94,0.35)",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseOver={e => (e.currentTarget.style.transform = "translateY(-1px)")}
+                  onMouseOut={e => (e.currentTarget.style.transform = "translateY(0)")}
+                >
+                  Complete KYC Now →
+                </button>
+              </div>
             </div>
           </div>
         </DialogContent>
@@ -538,13 +709,34 @@ export default function MarketingHome() {
   const isAuthenticated = !!localStorage.getItem("token");
   const [activeSlide, setActiveSlide] = useState(0);
   const [currentBgIdx, setCurrentBgIdx] = useState(0);
+  const [heroBackgrounds, setHeroBackgrounds] = useState<string[]>([
+    "/background.jpg",
+    "/backgroundimage-1.avif",
+    "/backgroundimage-2.avif"
+  ]);
+
+  // Roadmap path animation states
+  const pathRef = useRef<SVGPathElement>(null);
+  const [pathLength, setPathLength] = useState(1200);
+  const [hoveredStep, setHoveredStep] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (pathRef.current) {
+      try {
+        setPathLength(pathRef.current.getTotalLength());
+      } catch (e) {
+        // Fallback if SVG isn't fully ready
+        setPathLength(1200);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const bgTimer = setInterval(() => {
-      setCurrentBgIdx((prev) => (prev + 1) % 3);
+      setCurrentBgIdx((prev) => (prev + 1) % (heroBackgrounds.length || 1));
     }, 1500);
     return () => clearInterval(bgTimer);
-  }, []);
+  }, [heroBackgrounds.length]);
 
   const [slides, setSlides] = useState<any[]>([
     {
@@ -583,11 +775,35 @@ export default function MarketingHome() {
   const [apiQuickTips, setApiQuickTips] = useState<any[]>([]);
   const [apiWhyChoose, setApiWhyChoose] = useState<any[]>([]);
   const [apiLeadership, setApiLeadership] = useState<any[]>([]);
+  const [showcaseVideos, setShowcaseVideos] = useState<any[]>([
+    {
+      title: "FinTrade Student Story",
+      subtitle: "From Zero to Prop Trader in 9 Months",
+      duration: "3:24",
+      thumbnail: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
+      videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-tablet-displaying-financial-charts-40433-large.mp4"
+    },
+    {
+      title: "Trading Simulator Walkthrough",
+      subtitle: "Experience Real Markets, Zero Risk",
+      duration: "2:10",
+      thumbnail: "https://images.unsplash.com/photo-1612178991541-b48cc8e92a4d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
+      videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-financial-data-on-a-monitor-screen-40431-large.mp4"
+    },
+    {
+      title: "What Our Alumni Say",
+      subtitle: "Hear from Placed Traders",
+      duration: "4:55",
+      thumbnail: "https://images.unsplash.com/photo-1659353221405-29b7d087f9e5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
+      videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-business-charts-on-a-laptop-42171-large.mp4"
+    },
+  ]);
   const [blogStories, setBlogStories] = useState<any[]>([]);
   const [marketUpdates, setMarketUpdates] = useState<any[]>([]);
   const [selectedCourseForCheckout, setSelectedCourseForCheckout] = useState<any | null>(null);
   const [customVideoUrl, setCustomVideoUrl] = useState<string>("");
   const [sectionVisibility, setSectionVisibility] = useState<any>({});
+  const [testimonials, setTestimonials] = useState<any[]>([]);
   const [emiConfig, setEmiConfig] = useState<any>({});
   const [certConfig, setCertConfig] = useState<any>({});
   const [liveClasses, setLiveClasses] = useState<any[]>([]);
@@ -765,10 +981,16 @@ export default function MarketingHome() {
           if (res.data.leadership) setApiLeadership(res.data.leadership);
           if (res.data.hero_buttons) setHeroButtons(res.data.hero_buttons);
           if (res.data.carousel_slides) setSlides(res.data.carousel_slides);
+          if (res.data.hero_backgrounds && res.data.hero_backgrounds.length > 0) {
+            setHeroBackgrounds(res.data.hero_backgrounds);
+          }
           if (res.data.section_visibility) setSectionVisibility(res.data.section_visibility);
           if (res.data.emi) setEmiConfig(res.data.emi);
           if (res.data.certificate) setCertConfig(res.data.certificate);
           if (res.data.live_classes) setLiveClasses(res.data.live_classes);
+          if (res.data.showcase_videos && res.data.showcase_videos.length > 0) {
+            setShowcaseVideos(res.data.showcase_videos);
+          }
         }
       } catch (err) { console.error("Landing page fetch failed", err); }
 
@@ -777,6 +999,11 @@ export default function MarketingHome() {
         setBlogStories(res.data.filter((n: any) => n.type === "Blog Story").slice(0, 4));
         setMarketUpdates(res.data.filter((n: any) => n.type === "Market Update").slice(0, 1));
       } catch (err) { console.error("News fetch failed", err); }
+
+      try {
+        const res = await api.get("/feedback/landing");
+        setTestimonials(res.data);
+      } catch (err) { console.error("Testimonials fetch failed", err); }
     };
     fetchCMSAndNews();
 
@@ -878,29 +1105,16 @@ export default function MarketingHome() {
     }
   };
 
-  const showcaseVideos = [
-    {
-      title: "FinTrade Student Story",
-      subtitle: "From Zero to Prop Trader in 9 Months",
-      duration: "3:24",
-      thumbnail: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
-      videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-tablet-displaying-financial-charts-40433-large.mp4"
-    },
-    {
-      title: "Trading Simulator Walkthrough",
-      subtitle: "Experience Real Markets, Zero Risk",
-      duration: "2:10",
-      thumbnail: "https://images.unsplash.com/photo-1612178991541-b48cc8e92a4d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
-      videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-financial-data-on-a-monitor-screen-40431-large.mp4"
-    },
-    {
-      title: "What Our Alumni Say",
-      subtitle: "Hear from Placed Traders",
-      duration: "4:55",
-      thumbnail: "https://images.unsplash.com/photo-1659353221405-29b7d087f9e5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
-      videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-business-charts-on-a-laptop-42171-large.mp4"
-    },
-  ];
+  const getActiveVideoUrl = () => {
+    if (customVideoUrl) return customVideoUrl;
+    if (activeVideoIdx !== null) {
+      return showcaseVideos[activeVideoIdx]?.url || showcaseVideos[activeVideoIdx]?.videoUrl || "";
+    }
+    return "";
+  };
+
+  const activeVideoUrl = getActiveVideoUrl();
+  const isYouTube = activeVideoUrl && (activeVideoUrl.includes("youtube.com") || activeVideoUrl.includes("youtu.be"));
 
   const marketNewsItems = [
     { headline: "NIFTY touches 52-week high on strong FII buying", source: "Economic Times", time: "2h ago", tag: "NIFTY" },
@@ -924,28 +1138,28 @@ export default function MarketingHome() {
             <button onClick={() => { setVideoOpen(false); setActiveVideoIdx(null); setCustomVideoUrl(""); }} className="absolute top-4 right-4 z-10 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 rounded-full p-2 transition-all">
               <X size={24} />
             </button>
-            {customVideoUrl && (customVideoUrl.includes("youtube.com") || customVideoUrl.includes("youtu.be")) ? (
+            {isYouTube ? (
               <iframe
                 src={(() => {
-                  if (!customVideoUrl) return "";
-                  if (customVideoUrl.includes("youtube.com/embed/")) return customVideoUrl;
-                  if (customVideoUrl.includes("youtube.com/watch")) {
+                  if (!activeVideoUrl) return "";
+                  if (activeVideoUrl.includes("youtube.com/embed/")) return activeVideoUrl;
+                  if (activeVideoUrl.includes("youtube.com/watch")) {
                     try {
-                      const urlObj = new URL(customVideoUrl);
+                      const urlObj = new URL(activeVideoUrl);
                       const v = urlObj.searchParams.get("v");
                       if (v) return `https://www.youtube.com/embed/${v}`;
                     } catch (e) {}
                   }
-                  if (customVideoUrl.includes("youtu.be/")) {
+                  if (activeVideoUrl.includes("youtu.be/")) {
                     try {
-                      const parts = customVideoUrl.split("youtu.be/");
+                      const parts = activeVideoUrl.split("youtu.be/");
                       if (parts[1]) {
                         const id = parts[1].split("?")[0];
                         return `https://www.youtube.com/embed/${id}`;
                       }
                     } catch (e) {}
                   }
-                  return customVideoUrl;
+                  return activeVideoUrl;
                 })()}
                 className="w-full h-full object-contain"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -953,7 +1167,7 @@ export default function MarketingHome() {
               />
             ) : (
               <video
-                src={customVideoUrl || (activeVideoIdx !== null && showcaseVideos[activeVideoIdx]?.videoUrl ? showcaseVideos[activeVideoIdx].videoUrl : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4")}
+                src={getImageUrl(activeVideoUrl) || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"}
                 autoPlay
                 muted
                 controls
@@ -982,12 +1196,12 @@ export default function MarketingHome() {
           >
             {/* Auto Slider Background */}
             <div className="absolute inset-0 z-0">
-              {["/background.jpg", "/backgroundimage-1.avif", "/backgroundimage-2.avif"].map((img, idx) => (
+              {heroBackgrounds.map((img, idx) => (
                 <div
-                  key={img}
+                  key={img + "-" + idx}
                   className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out"
                   style={{
-                    backgroundImage: `linear-gradient(to bottom, rgba(11, 15, 25, 0.88), rgba(11, 15, 25, 0.96)), url('${img}')`,
+                    backgroundImage: `linear-gradient(to bottom, rgba(11, 15, 25, 0.88), rgba(11, 15, 25, 0.96)), url('${getBgImageUrl(img)}')`,
                     opacity: currentBgIdx === idx ? 1 : 0,
                   }}
                 />
@@ -1509,6 +1723,78 @@ export default function MarketingHome() {
           </section>
         )}
 
+        {/* Section 4: Showcase Videos ("Watch Our Students") */}
+        {sectionVisibility.show_showcase_videos !== false && (
+          <section className="py-12 relative z-10 bg-[#0B0F19] text-white overflow-hidden">
+            {/* Subtle background glow */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#D50032]/5 rounded-full blur-[120px] pointer-events-none" />
+            
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <ScrollReveal>
+                <div className="text-center mb-10">
+                  <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-4 border border-[#D50032]/30 bg-[#D50032]/10">
+                    <span className="text-[#D50032] font-semibold text-xs uppercase tracking-wider">🎥 Showcase</span>
+                  </div>
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 tracking-tight uppercase">
+                    Watch Our <span className="text-[#D50032]">Students</span>
+                  </h2>
+                  <p className="text-base sm:text-lg text-gray-300 max-w-2xl mx-auto font-medium">
+                    Real stories and live walkthroughs from the FinTrade community.
+                  </p>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+                  {showcaseVideos.map((video, idx) => (
+                    <Card
+                      key={idx}
+                      onClick={() => {
+                        const targetUrl = video.url || video.videoUrl;
+                        if (targetUrl) {
+                          setCustomVideoUrl(targetUrl);
+                          setActiveVideoIdx(idx);
+                          setVideoOpen(true);
+                        }
+                      }}
+                      className="overflow-hidden border border-white/10 bg-white/[0.02] backdrop-blur-md shadow-lg group hover:-translate-y-1 transition-all duration-300 snap-center cursor-pointer flex flex-col justify-between"
+                    >
+                      <div className="relative aspect-video overflow-hidden">
+                        <img
+                          src={video.thumbnail ? getImageUrl(video.thumbnail) : "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800"}
+                          alt={video.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-black/45 flex items-center justify-center group-hover:bg-black/35 transition-colors">
+                          <div className="w-12 h-12 rounded-full bg-[#D50032] hover:bg-[#FF3D00] text-white flex items-center justify-center shadow-lg transition-all group-hover:scale-110">
+                            <Play className="h-5 w-5 text-white ml-0.5 fill-white" />
+                          </div>
+                        </div>
+                        {video.duration && (
+                          <div className="absolute bottom-3 right-3 bg-black/75 px-2.5 py-0.5 rounded text-[10px] font-bold text-white tracking-wider">
+                            {video.duration}
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-5 flex flex-col flex-grow justify-between text-left">
+                        <div>
+                          <h3 className="font-extrabold text-white text-base sm:text-lg mb-2 line-clamp-1 group-hover:text-[#D50032] transition-colors duration-300">
+                            {video.title}
+                          </h3>
+                          <p className="text-gray-400 text-xs sm:text-sm leading-relaxed font-medium line-clamp-2">
+                            {video.subtitle}
+                          </p>
+                        </div>
+                        <div className="mt-4 flex items-center text-[#D50032] text-xs font-black uppercase tracking-wider group-hover:gap-1.5 transition-all">
+                          Watch Video <ChevronRight size={14} className="ml-1" />
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </ScrollReveal>
+            </div>
+          </section>
+        )}
+
         {sectionVisibility.show_modules !== false && (
           <ProgramModules apiCourses={apiCourses.length > 0 ? apiCourses : null} />
         )}
@@ -1621,12 +1907,18 @@ export default function MarketingHome() {
                         strokeDasharray="12 10"
                       />
 
-                      {/* Completed gold path (1 to 3) */}
+                      {/* Completed/Hovered path overlay with fill animation */}
                       <path
-                        d="M 200,520 C 300,520 400,450 500,380"
+                        ref={pathRef}
+                        d="M 200,520 C 300,520 400,450 500,380 C 600,310 700,310 800,240 C 900,170 800,130 550,120 C 450,110 360,110 360,110"
                         stroke="url(#completedGradient)"
                         className="stroke-[5px] lg:stroke-[8px]"
                         strokeLinecap="round"
+                        style={{
+                          strokeDasharray: pathLength || 1200,
+                          strokeDashoffset: (pathLength || 1200) * (1 - (hoveredStep !== null && hoveredStep > 2 ? [0.0, 0.16, 0.33, 0.50, 0.67, 0.78, 0.89, 1.0][hoveredStep] : 0.33)),
+                          transition: "stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
+                        }}
                       />
 
                       {/* Gradient Definitions */}
@@ -1640,17 +1932,29 @@ export default function MarketingHome() {
 
                     {/* Render Steps */}
                     {[
-                      { num: "1", title: "Market Foundations", desc: "Markets, exchanges & instruments", status: "completed", x: 20, y: 86.6, align: isMobileViewport ? "right" : "bottom", isStart: true },
-                      { num: "2", title: "Technical Analysis", desc: "Chart patterns & price action", status: "completed", x: 35, y: 76.6, align: isMobileViewport ? "left" : "top" },
-                      { num: "3", title: "Risk Management", desc: "Position sizing & capital protection", status: "current", x: 50, y: 63.3, align: isMobileViewport ? "right" : "bottom", isCurrent: true },
-                      { num: "4", title: "Trading Psychology", desc: "Emotional discipline & consistency", status: "locked", x: 65, y: 53.3, align: isMobileViewport ? "left" : "top" },
-                      { num: "5", title: "Options & Derivatives", desc: "Options pricing, Greeks & hedging", status: "locked", x: 80, y: 40, align: isMobileViewport ? "left" : "bottom" },
-                      {num: "6", title: "Advanced Strategies", desc: "Algo trading & quant analysis", status: "locked", x: 72, y: 26.6, align: isMobileViewport ? "left" : "top"},
-                      {num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "locked", x: 55, y: 20, align: isMobileViewport ? "right" : "bottom"},
-                      { num: "8", title: "Certification & Placement", desc: "Final assessment & placement", status: "locked", x: 36, y: 18.3, align: isMobileViewport ? "top" : "top", isSummit: true },
+                      { num: "1", title: "Market Foundations", desc: "Markets, exchanges & instruments", status: "completed", x: 20, y: 86.6, align: isMobileViewport ? "right" : "left", isStart: true },
+                      { num: "2", title: "Technical Analysis", desc: "Chart patterns & price action", status: "completed", x: 35, y: 76.6, align: isMobileViewport ? "left" : "left" },
+                      { num: "3", title: "Risk Management", desc: "Position sizing & capital protection", status: "current", x: 50, y: 63.3, align: isMobileViewport ? "right" : "left", isCurrent: true },
+                      { num: "4", title: "Trading Psychology", desc: "Emotional discipline & consistency", status: "locked", x: 65, y: 53.3, align: isMobileViewport ? "left" : "left" },
+                      { num: "5", title: "Options & Derivatives", desc: "Options pricing, Greeks & hedging", status: "locked", x: 80, y: 40, align: isMobileViewport ? "left" : "left" },
+                      { num: "6", title: "Advanced Strategies", desc: "Algo trading & quant analysis", status: "locked", x: 72, y: 26.6, align: isMobileViewport ? "left" : "right" },
+                      { num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "locked", x: 55, y: 20, align: isMobileViewport ? "right" : "right" },
+                      { num: "8", title: "Certification & Placement", desc: "Final assessment & placement", status: "locked", x: 36, y: 18.3, align: isMobileViewport ? "top" : "left", isSummit: true },
                     ].map((step, idx) => {
-                      const isCompleted = step.status === "completed";
-                      const isCurrent = step.status === "current";
+                      // Determine status dynamically based on hover
+                      let displayStatus = step.status;
+                      if (hoveredStep !== null && hoveredStep > 2) {
+                        if (idx <= 2) {
+                          displayStatus = "completed";
+                        } else if (idx <= hoveredStep) {
+                          displayStatus = idx === hoveredStep ? "current" : "completed";
+                        } else {
+                          displayStatus = "locked";
+                        }
+                      }
+
+                      const isCompleted = displayStatus === "completed";
+                      const isCurrent = displayStatus === "current";
 
                       return (
                         <div key={idx}>
@@ -1658,6 +1962,8 @@ export default function MarketingHome() {
                           <div
                             className="absolute -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center transition-all duration-300 hover:scale-115 cursor-pointer origin-center"
                             style={{ left: `${step.x}%`, top: `${step.y}%` }}
+                            onMouseEnter={() => setHoveredStep(idx)}
+                            onMouseLeave={() => setHoveredStep(null)}
                           >
                             {isCurrent ? (
                               <div className="relative flex items-center justify-center">
@@ -1679,7 +1985,7 @@ export default function MarketingHome() {
                               </div>
                             ) : (
                               <div className={`rounded-full bg-gray-200 border-2 border-white shadow flex items-center justify-center text-gray-500 font-extrabold z-30 ${isMobileViewport ? 'w-3 h-3 text-[5.5px]' : 'w-7 h-7 text-xs'}`}>
-                                {step.num}
+                                  {step.num}
                               </div>
                             )}
 
@@ -1700,13 +2006,13 @@ export default function MarketingHome() {
 
                           {/* Label Container */}
                           <div
-                            className={`absolute -translate-y-1/2 z-10 ${step.align === "left" ? "text-right" : (step.align === "top" || step.align === "bottom") ? "text-center" : "text-left"}`}
+                            className={`absolute -translate-y-1/2 z-10 cursor-pointer ${step.align === "left" ? "text-right" : (step.align === "top" || step.align === "bottom") ? "text-center" : "text-left"}`}
                             style={{
-                              width: `${isMobileViewport ? 105 : 200}px`,
+                              width: `${isMobileViewport ? 130 : 250}px`,
                               left: step.align === "left"
-                                ? `calc(${step.x}% - ${isMobileViewport ? 117 : 220}px)`
+                                ? `calc(${step.x}% - ${isMobileViewport ? 142 : 270}px)`
                                 : (step.align === "top" || step.align === "bottom")
-                                  ? `calc(${step.x}% - ${isMobileViewport ? 52 : 100}px)`
+                                  ? `calc(${step.x}% - ${isMobileViewport ? 65 : 125}px)`
                                   : `calc(${step.x}% + ${isMobileViewport ? 12 : 20}px)`,
                               top: isMobileViewport
                                 ? step.num === "8"
@@ -1728,15 +2034,19 @@ export default function MarketingHome() {
                                     ? `calc(${step.y}% + 58px)`
                                     : `${step.y}%`
                             }}
+                            onMouseEnter={() => setHoveredStep(idx)}
+                            onMouseLeave={() => setHoveredStep(null)}
                           >
                             <h3
-                              className={`font-black tracking-normal mb-1.5 ${
-                                isCurrent ? "text-[#D50032]" : isCompleted ? "text-gray-900" : "text-gray-400"
-                              } ${isMobileViewport ? 'text-[8.5px] leading-tight mb-0.5 font-black' : 'text-sm sm:text-base font-black'}`}
+                              className={`tracking-tight mb-1 transition-colors duration-300 ${
+                                isCurrent ? "text-[#D50032] font-black" : isCompleted ? "text-slate-900 font-extrabold" : "text-slate-600 font-bold"
+                              } ${isMobileViewport ? 'text-xs leading-tight' : 'text-base sm:text-lg'}`}
                             >
                               {step.title}
                             </h3>
-                            <p className={`font-semibold leading-normal inline-block ${isMobileViewport ? 'text-gray-455 text-[6.8px] leading-tight max-w-[100px]' : 'text-gray-500 text-[10px] sm:text-xs max-w-[200px]'}`}>
+                            <p className={`font-medium leading-relaxed inline-block transition-colors duration-300 ${
+                              isCurrent ? "text-[#D50032]/85" : isCompleted ? "text-slate-600" : "text-slate-500"
+                            } ${isMobileViewport ? 'text-[10px] leading-tight' : 'text-xs sm:text-sm'}`}>
                               {step.desc}
                             </p>
                           </div>
@@ -1867,8 +2177,12 @@ export default function MarketingHome() {
                           </div>
                         </div>
                         <div className="p-4 bg-white">
+                          <div className="flex items-center justify-between text-[11px] text-gray-500 mb-1.5">
+                            <span className="flex items-center gap-1"><Video size={12} /> Video</span>
+                            <span>10 min watch</span>
+                          </div>
                           <h3 className="text-base font-bold mb-1" style={{ color: "#121212" }}>{marketUpdates[0].title}</h3>
-                          <p className="text-xs text-gray-500 line-clamp-2">{marketUpdates[0].content}</p>
+                          <p className="text-xs text-gray-500 line-clamp-2">{marketUpdates[0].description || marketUpdates[0].content}</p>
                         </div>
                       </Card>
                     ) : (
@@ -1919,8 +2233,8 @@ export default function MarketingHome() {
                             <span>5 min read</span>
                           </div>
                           <h3 className="font-bold text-sm mb-1 line-clamp-2 hover:text-[#D50032] transition-colors cursor-pointer" style={{ color: "#121212" }}>{story.title}</h3>
-                          <p className="text-xs text-gray-500 mb-2 line-clamp-2 flex-1">{story.content}</p>
-                          <Link to="/blog" className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all">
+                          <p className="text-xs text-gray-500 mb-2 line-clamp-2 flex-1">{story.description || story.content}</p>
+                          <Link to={`/article/${story.id}`} className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all">
                             Read Story <ChevronRight size={14} />
                           </Link>
                         </div>
@@ -2146,6 +2460,73 @@ export default function MarketingHome() {
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
               <ScrollReveal>
                 <ExpertProfile leaders={apiLeadership} />
+              </ScrollReveal>
+            </div>
+          </section>
+        )}
+
+        {/* Testimonials Section */}
+        {sectionVisibility.show_testimonials !== false && testimonials.length > 0 && (
+          <section className="py-16 bg-[#07162C] text-white relative z-10 overflow-hidden border-t border-[#0b192e] shadow-inner select-none">
+            {/* Subtle gold decorative glow */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#C2A86A]/5 rounded-full blur-[120px] pointer-events-none" />
+
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+              <ScrollReveal>
+                <div className="text-center mb-12">
+                  <div className="inline-flex items-center gap-1.5 px-4.5 py-1.5 rounded-full mb-3 border border-[#C2A86A]/20 bg-[#C2A86A]/5">
+                    <span className="text-[#C2A86A] font-extrabold text-xs tracking-wider uppercase">💬 Feedback</span>
+                  </div>
+                  <h2 className="text-3xl md:text-4.5xl font-black mb-3 tracking-tight">
+                    What Our <span className="text-[#C2A86A]">Traders</span> Say
+                  </h2>
+                  <p className="text-sm sm:text-base text-gray-400 max-w-xl mx-auto leading-relaxed">
+                    Hear from students who completed our prop training and successfully qualified for trading capital.
+                  </p>
+                </div>
+
+                {/* Testimonials Grid */}
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {testimonials.map((testi, i) => (
+                    <Card
+                      key={testi.id || i}
+                      className="p-6 border border-[#C2A86A]/10 bg-[#0B203E]/50 backdrop-blur-md text-white rounded-[24px] flex flex-col justify-between hover:border-[#C2A86A]/30 transition-all duration-300 group shadow-lg"
+                    >
+                      <div>
+                        {/* Quote icon & stars */}
+                        <div className="flex justify-between items-center mb-4">
+                          <span className="text-4xl text-[#C2A86A]/20 font-serif leading-none">“</span>
+                          <div className="flex items-center gap-0.5">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                size={14}
+                                className={star <= testi.rating ? "fill-[#C2A86A] text-[#C2A86A]" : "text-[#F4F1EA]/20"}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Review comments */}
+                        <p className="text-gray-300 text-sm leading-relaxed mb-6 italic">
+                          "{testi.comments || "Excellent course and mentor support!"}"
+                        </p>
+                      </div>
+
+                      {/* User info */}
+                      <div className="border-t border-[#C2A86A]/10 pt-4 mt-auto">
+                        <div className="font-bold text-sm text-[#F4F1EA]">
+                          {testi.user_name || "Verified Student"}
+                        </div>
+                        {testi.course_title && (
+                          <div className="inline-block mt-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-bold text-[#C2A86A] bg-[#C2A86A]/10 uppercase tracking-wider">
+                            {testi.course_title}
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               </ScrollReveal>
             </div>
           </section>

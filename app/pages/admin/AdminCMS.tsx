@@ -7,7 +7,7 @@ import { Label } from "../../components/ui/label";
 import {
   Megaphone, Trash2, Plus, Save, RefreshCw, Globe, Phone, Video,
   Star, BookOpen, CheckCircle2, XCircle, LayoutTemplate, Link as LinkIcon,
-  AlertTriangle, Info, Users, Award, TrendingUp
+  AlertTriangle, Info, Users, Award, TrendingUp, Layers, Newspaper
 } from "lucide-react";
 import api from "../../services/api";
 
@@ -142,6 +142,7 @@ interface SectionVisibilityConfig {
   show_roadmap: boolean;
   show_career_pathways: boolean;
   show_cta: boolean;
+  show_testimonials?: boolean;
 }
 
 interface EMIPaymentItem {
@@ -187,6 +188,8 @@ interface LandingConfig {
   section_visibility?: SectionVisibilityConfig;
   emi?: EMIConfig;
   certificate?: CertificateConfig;
+  program_modules?: any[];
+  hero_backgrounds?: string[];
 }
 
 // ── Sub-components ────────────────────────────────────────────────────
@@ -218,7 +221,7 @@ function Toast({ message, type }: { message: string; type: "success" | "error" }
 // ── Main Component ────────────────────────────────────────────────────
 
 export default function AdminCMS() {
-  const [activeTab, setActiveTab] = useState<"announcements" | "courses" | "settings" | "videos" | "benefits" | "services" | "quick_tips" | "why_choose" | "leadership" | "hero_slider" | "live_classes" | "certificate" | "emi">("announcements");
+  const [activeTab, setActiveTab] = useState<"announcements" | "courses" | "settings" | "videos" | "benefits" | "services" | "quick_tips" | "why_choose" | "leadership" | "hero_slider" | "live_classes" | "certificate" | "emi" | "modules_timeline" | "reviews" | "articles">("announcements");
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   // Announcements state
@@ -229,9 +232,17 @@ export default function AdminCMS() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
 
+  // Reviews state
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+
   // Landing config state
   const [config, setConfig] = useState<LandingConfig>({});
   const [configLoading, setConfigLoading] = useState(true);
+
+  // Articles state
+  const [articles, setArticles] = useState<any[]>([]);
+  const [articlesLoading, setArticlesLoading] = useState(false);
 
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
@@ -262,11 +273,63 @@ export default function AdminCMS() {
     finally { setConfigLoading(false); }
   }, []);
 
+  const fetchReviews = useCallback(async () => {
+    setReviewsLoading(true);
+    try {
+      const res = await api.get("/feedback");
+      setReviews(res.data);
+    } catch { /* silent */ }
+    finally { setReviewsLoading(false); }
+  }, []);
+
+  const fetchArticles = useCallback(async () => {
+    setArticlesLoading(true);
+    try {
+      const res = await api.get("/admin/news");
+      setArticles(res.data);
+    } catch { /* silent */ }
+    finally { setArticlesLoading(false); }
+  }, []);
+
+  const toggleArticleVisibility = async (id: number, currentStatus: string) => {
+    try {
+      const newStatus = currentStatus === "published" ? "draft" : "published";
+      await api.put(`/admin/news/${id}`, { status: newStatus });
+      fetchArticles();
+      showToast(`Article status updated to ${newStatus}!`, "success");
+    } catch {
+      showToast("Failed to update article status", "error");
+    }
+  };
+
+  const toggleReviewVisibility = async (id: number, show: boolean) => {
+    try {
+      await api.put(`/feedback/${id}/toggle-visibility?show_on_landing_page=${show}`);
+      fetchReviews();
+      showToast("Review visibility updated!", "success");
+    } catch {
+      showToast("Failed to update review visibility", "error");
+    }
+  };
+
+  const deleteReview = async (id: number) => {
+    if (!confirm("Delete this student review?")) return;
+    try {
+      await api.delete(`/feedback/${id}`);
+      fetchReviews();
+      showToast("Review deleted", "success");
+    } catch {
+      showToast("Failed to delete review", "error");
+    }
+  };
+
   useEffect(() => {
     fetchAnnouncements();
     fetchCourses();
     fetchConfig();
-  }, [fetchAnnouncements, fetchCourses, fetchConfig]);
+    fetchReviews();
+    fetchArticles();
+  }, [fetchAnnouncements, fetchCourses, fetchConfig, fetchReviews, fetchArticles]);
 
   // ── Announcements CRUD ──────────────────────────────────────────────
   const createAnnouncement = async () => {
@@ -351,6 +414,7 @@ export default function AdminCMS() {
         <TabBtn active={activeTab === "courses"} onClick={() => setActiveTab("courses")} icon={<BookOpen size={16} />} label="Section 2: Professional Programs" />
         <TabBtn active={activeTab === "live_classes"} onClick={() => setActiveTab("live_classes")} icon={<Video size={16} />} label="Section 3: Live Classes" />
         <TabBtn active={activeTab === "videos"} onClick={() => setActiveTab("videos")} icon={<Video size={16} />} label="Section 4: Showcase Videos" />
+        <TabBtn active={activeTab === "modules_timeline"} onClick={() => setActiveTab("modules_timeline")} icon={<Layers size={16} />} label="Section 4.5: Program Modules" />
         <TabBtn active={activeTab === "benefits"} onClick={() => setActiveTab("benefits")} icon={<LayoutTemplate size={16} />} label="Section 5: Program Benefits" />
         <TabBtn active={activeTab === "services"} onClick={() => setActiveTab("services")} icon={<Globe size={16} />} label="Section 6: Our Services" />
         <TabBtn active={activeTab === "quick_tips"} onClick={() => setActiveTab("quick_tips")} icon={<Video size={16} />} label="Section 7: Quick Tips" />
@@ -358,6 +422,8 @@ export default function AdminCMS() {
         <TabBtn active={activeTab === "leadership"} onClick={() => setActiveTab("leadership")} icon={<Users size={16} />} label="Section 9: Leadership Team" />
         <TabBtn active={activeTab === "certificate"} onClick={() => setActiveTab("certificate")} icon={<Award size={16} />} label="Section 10: Certificate Showcase" />
         <TabBtn active={activeTab === "emi"} onClick={() => setActiveTab("emi")} icon={<TrendingUp size={16} />} label="Section 11: EMI & Payment Plans" />
+        <TabBtn active={activeTab === "reviews"} onClick={() => setActiveTab("reviews")} icon={<Star size={16} />} label="Section 9.5: Student Reviews" />
+        <TabBtn active={activeTab === "articles"} onClick={() => setActiveTab("articles")} icon={<Newspaper size={16} />} label="Section 12: Articles Moderation" />
         <TabBtn active={activeTab === "settings"} onClick={() => setActiveTab("settings")} icon={<Globe size={16} />} label="Site Settings" />
       </div>
 
@@ -798,6 +864,7 @@ export default function AdminCMS() {
                 { key: "show_quick_tips", label: "Quick Tips (Videos)" },
                 { key: "show_why_choose", label: "Why Choose Us" },
                 { key: "show_leadership", label: "Leadership Team" },
+                { key: "show_testimonials", label: "Student Testimonials" },
                 { key: "show_certificate", label: "Certificate Showcase" },
                 { key: "show_emi", label: "EMI & Payment Plans" },
                 { key: "show_career_pathways", label: "Placement & Career Pathways" },
@@ -829,6 +896,7 @@ export default function AdminCMS() {
                               show_quick_tips: true,
                               show_why_choose: true,
                               show_leadership: true,
+                              show_testimonials: true,
                               show_certificate: true,
                               show_emi: true,
                               show_career_pathways: true,
@@ -1282,89 +1350,411 @@ export default function AdminCMS() {
             </div>
           </Card>
 
-          {(config.showcase_videos || []).map((video, idx) => (
-            <Card key={idx} className="p-6 border border-gray-100 shadow-sm">
-              <h3 className="text-sm font-bold mb-4 text-gray-700">Video Slot {idx + 1}</h3>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Title</Label>
-                  <Input
-                    value={video.title}
-                    onChange={e => {
-                      const vids = [...(config.showcase_videos || [])];
-                      vids[idx] = { ...vids[idx], title: e.target.value };
-                      setConfig(p => ({ ...p, showcase_videos: vids }));
-                    }}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label>Subtitle</Label>
-                  <Input
-                    value={video.subtitle}
-                    onChange={e => {
-                      const vids = [...(config.showcase_videos || [])];
-                      vids[idx] = { ...vids[idx], subtitle: e.target.value };
-                      setConfig(p => ({ ...p, showcase_videos: vids }));
-                    }}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label>Duration (e.g. 3:24)</Label>
-                  <Input
-                    value={video.duration}
-                    onChange={e => {
-                      const vids = [...(config.showcase_videos || [])];
-                      vids[idx] = { ...vids[idx], duration: e.target.value };
-                      setConfig(p => ({ ...p, showcase_videos: vids }));
-                    }}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label>Video URL (YouTube embed / direct link)</Label>
-                  <Input
-                    value={video.url}
-                    onChange={e => {
-                      const vids = [...(config.showcase_videos || [])];
-                      vids[idx] = { ...vids[idx], url: e.target.value };
-                      setConfig(p => ({ ...p, showcase_videos: vids }));
-                    }}
-                    placeholder="https://youtube.com/embed/..."
-                    className="mt-1"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <Label>Thumbnail Image URL</Label>
-                  <Input
-                    value={video.thumbnail}
-                    onChange={e => {
-                      const vids = [...(config.showcase_videos || [])];
-                      vids[idx] = { ...vids[idx], thumbnail: e.target.value };
-                      setConfig(p => ({ ...p, showcase_videos: vids }));
-                    }}
-                    className="mt-1"
-                  />
-                  {video.thumbnail && (
-                    <img
-                      src={video.thumbnail}
-                      alt="preview"
-                      className="mt-2 h-20 w-36 object-cover rounded-lg border border-gray-200"
-                      onError={e => (e.currentTarget.style.display = "none")}
-                    />
-                  )}
-                </div>
-              </div>
-            </Card>
-          ))}
+          {(() => {
+            const defaultShowcaseVideos = [
+              { title: "FinTrade Student Story", subtitle: "From Zero to Prop Trader in 9 Months", thumbnail: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800", url: "", duration: "3:24" },
+              { title: "Trading Simulator Walkthrough", subtitle: "Experience Real Markets, Zero Risk", thumbnail: "https://images.unsplash.com/photo-1612178991541-b48cc8e92a4d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800", url: "", duration: "2:10" },
+              { title: "What Our Alumni Say", subtitle: "Hear from Placed Traders", thumbnail: "https://images.unsplash.com/photo-1659353221405-29b7d087f9e5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800", url: "", duration: "4:55" },
+            ];
+            const showcaseVids = config.showcase_videos && config.showcase_videos.length > 0
+              ? config.showcase_videos
+              : defaultShowcaseVideos;
+
+            return showcaseVids.map((video, idx) => {
+              const isFileSource = video.url?.startsWith("/uploads") || video._sourceType === "file";
+              return (
+                <Card key={idx} className="p-6 border border-gray-100 shadow-sm">
+                  <h3 className="text-sm font-bold mb-4 text-[#0B2A5B]">Video Slot {idx + 1}</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Title</Label>
+                      <Input
+                        value={video.title || ""}
+                        onChange={e => {
+                          const vids = [...showcaseVids];
+                          vids[idx] = { ...vids[idx], title: e.target.value };
+                          setConfig(p => ({ ...p, showcase_videos: vids }));
+                        }}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label>Description</Label>
+                      <Input
+                        value={video.subtitle || ""}
+                        onChange={e => {
+                          const vids = [...showcaseVids];
+                          vids[idx] = { ...vids[idx], subtitle: e.target.value };
+                          setConfig(p => ({ ...p, showcase_videos: vids }));
+                        }}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label>Thumbnail Image URL</Label>
+                      <Input
+                        value={video.thumbnail || ""}
+                        onChange={e => {
+                          const vids = [...showcaseVids];
+                          vids[idx] = { ...vids[idx], thumbnail: e.target.value };
+                          setConfig(p => ({ ...p, showcase_videos: vids }));
+                        }}
+                        className="mt-1"
+                      />
+                      {video.thumbnail && (
+                        <img
+                          src={video.thumbnail}
+                          alt="preview"
+                          className="mt-2 h-20 w-36 object-cover rounded-lg border border-gray-200"
+                          onError={e => (e.currentTarget.style.display = "none")}
+                        />
+                      )}
+                    </div>
+
+                    {/* Video Source Selection & File Upload / URL Text Field */}
+                    <div className="md:col-span-2 space-y-4 pt-2 border-t border-gray-100 mt-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <Label className="text-xs font-bold text-[#0B2A5B]">Video Option (Choose URL or File Upload)</Label>
+                        <div className="flex rounded-lg overflow-hidden border border-gray-200 p-0.5 bg-gray-50">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const vids = [...showcaseVids];
+                              vids[idx] = { ...vids[idx], _sourceType: "url" };
+                              if (vids[idx].url?.startsWith("/uploads")) {
+                                vids[idx].url = "";
+                              }
+                              setConfig(p => ({ ...p, showcase_videos: vids }));
+                            }}
+                            className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${
+                              !isFileSource
+                                ? "bg-[#E53935] text-white shadow-sm"
+                                : "text-gray-500 hover:text-gray-900"
+                            }`}
+                          >
+                            Paste Video URL
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const vids = [...showcaseVids];
+                              vids[idx] = { ...vids[idx], _sourceType: "file" };
+                              if (!vids[idx].url?.startsWith("/uploads")) {
+                                vids[idx].url = "";
+                              }
+                              setConfig(p => ({ ...p, showcase_videos: vids }));
+                            }}
+                            className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${
+                              isFileSource
+                                ? "bg-[#E53935] text-white shadow-sm"
+                                : "text-gray-500 hover:text-gray-900"
+                            }`}
+                          >
+                            Upload Video File
+                          </button>
+                        </div>
+                      </div>
+
+                      {isFileSource ? (
+                        <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                          <Label className="text-xs">Upload Video File *</Label>
+                          <div className="flex items-center gap-3 mt-1.5">
+                            <Input
+                              type="file"
+                              accept="video/*"
+                              onChange={async (e) => {
+                                if (!e.target.files || e.target.files.length === 0) return;
+                                const file = e.target.files[0];
+                                const formData = new FormData();
+                                formData.append("file", file);
+                                try {
+                                  showToast("Uploading video...", "success");
+                                  const res = await api.post("/admin/upload", formData, {
+                                    headers: { "Content-Type": "multipart/form-data" }
+                                  });
+                                  if (res.data && res.data.url) {
+                                    const vids = [...showcaseVids];
+                                    vids[idx] = { ...vids[idx], url: res.data.url, _sourceType: "file" };
+                                    setConfig(p => ({ ...p, showcase_videos: vids }));
+                                    showToast("Video uploaded!", "success");
+                                  }
+                                } catch {
+                                  showToast("Upload failed.", "error");
+                                }
+                              }}
+                              className="cursor-pointer h-10 py-1.5 text-xs bg-white flex-1"
+                            />
+                            {video.url && video.url.startsWith("/uploads") && (
+                              <span className="text-xs bg-green-100 border border-green-200 text-green-800 px-3 py-2 rounded-lg font-mono truncate max-w-[200px]" title={video.url}>
+                                {video.url.split("/").pop()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <Label>Video URL *</Label>
+                          <Input
+                            value={video.url || ""}
+                            onChange={e => {
+                              const vids = [...showcaseVids];
+                              vids[idx] = { ...vids[idx], url: e.target.value, _sourceType: "url" };
+                              setConfig(p => ({ ...p, showcase_videos: vids }));
+                            }}
+                            placeholder="e.g. https://www.youtube.com/embed/..."
+                            className="mt-1"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              );
+            });
+          })()}
 
           <Button
-            onClick={() => saveConfig({ showcase_videos: config.showcase_videos })}
+            onClick={() => {
+              const defaultShowcaseVideos = [
+                { title: "FinTrade Student Story", subtitle: "From Zero to Prop Trader in 9 Months", thumbnail: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800", url: "", duration: "3:24" },
+                { title: "Trading Simulator Walkthrough", subtitle: "Experience Real Markets, Zero Risk", thumbnail: "https://images.unsplash.com/photo-1612178991541-b48cc8e92a4d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800", url: "", duration: "2:10" },
+                { title: "What Our Alumni Say", subtitle: "Hear from Placed Traders", thumbnail: "https://images.unsplash.com/photo-1659353221405-29b7d087f9e5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800", url: "", duration: "4:55" },
+              ];
+              const showcaseVids = config.showcase_videos && config.showcase_videos.length > 0
+                ? config.showcase_videos
+                : defaultShowcaseVideos;
+              saveConfig({ showcase_videos: showcaseVids });
+            }}
             className="bg-[#E53935] text-white hover:bg-[#b71c1c]"
           >
             <Save size={16} className="mr-2" /> Save All Videos
           </Button>
+        </div>
+      )}
+
+      {/* ── TAB: Program Modules Timeline ───────────────────────────── */}
+      {activeTab === "modules_timeline" && !configLoading && (
+        <div className="space-y-6">
+          <Card className="p-4 border border-blue-100 bg-blue-50/50">
+            <div className="flex items-start gap-3">
+              <Info size={18} className="text-blue-500 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-blue-700">
+                Manage the stages and respective modules for the <strong>Certified Professional Trading Program</strong> vertical timeline on the landing page.
+              </p>
+            </div>
+          </Card>
+
+          {(() => {
+            const defaultProgramModules = [
+              {
+                title: "PROFESSIONAL TRADING MINDSET FOUNDATION",
+                duration: "2 Days",
+                modules: [
+                  { num: 1, title: "Trader’s Mindset & Market Psychology", overview: "Psychology foundation for retail and professional trading." },
+                  { num: 2, title: "Professional Trading Mindset Foundation", overview: "Developing discipline and professional trading habits." }
+                ]
+              },
+              {
+                title: "FINANCIAL MARKET FOUNDATION",
+                duration: "30 Days",
+                modules: [
+                  { num: 1, title: "Introduction to Financial Market", overview: "Understanding how financial markets work." },
+                  { num: 2, title: "Understanding Security Market", overview: "Market participants, stock exchanges, and demat accounts." },
+                  { num: 3, title: "Methods of analysing Financial Security", overview: "Overview of technical and fundamental analysis." }
+                ]
+              },
+              {
+                title: "MARKET ANALYSIS AND TRADING STRATEGY DEVELOPMENT",
+                duration: "30 Days",
+                modules: [
+                  { num: 1, title: "Fundamental Analysis Framework", overview: "Evaluating balance sheets and cash flows." },
+                  { num: 2, title: "Application of Fundamental Analysis", overview: "Valuation methodologies and DCF models." },
+                  { num: 3, title: "Technical Analysis for Trading and Investing", overview: "Candlesticks, trends, indicators, and chart patterns." },
+                  { num: 4, title: "Trading & Analytics Software", overview: "Using charting software and trading terminals." }
+                ]
+              },
+              {
+                title: "ADVANCED INSTITUTIONAL TRADING AND RISK MANAGEMENT",
+                duration: "30 Days",
+                modules: [
+                  { num: 1, title: "Applied Technical Analysis", overview: "Advanced indicators and order book dynamics." },
+                  { num: 2, title: "Mechanics of Derivative Market", overview: "Introduction to Futures & Options trading." },
+                  { num: 3, title: "Options & Futures Strategies", overview: "Spreads, straddles, hedging, and Greeks." },
+                  { num: 4, title: "Professional Risk Management", overview: "Position sizing, risk manual, and drawdown control." }
+                ]
+              },
+              {
+                title: "MARKET APPLICATION AND EXECUTION",
+                duration: "5 Days",
+                modules: [
+                  { num: 1, title: "Trading Lab & Back testing Mastery", overview: "Testing strategy rules on historical data." },
+                  { num: 2, title: "Real World Market Execution", overview: "Live trading execution under guidance." }
+                ]
+              }
+            ];
+
+            const stagesList = config.program_modules && config.program_modules.length > 0
+              ? config.program_modules
+              : defaultProgramModules;
+
+            return (
+              <div className="space-y-6">
+                {stagesList.map((stage, sIdx) => (
+                  <Card key={sIdx} className="p-6 border border-gray-200 shadow-sm relative space-y-4">
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                      <h3 className="font-bold text-base text-[#0B2A5B]">Stage #{sIdx + 1}</h3>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!confirm("Remove this entire stage?")) return;
+                          const list = [...stagesList];
+                          list.splice(sIdx, 1);
+                          setConfig(p => ({ ...p, program_modules: list }));
+                        }}
+                        className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 font-semibold"
+                      >
+                        <Trash2 size={14} className="mr-1" /> Remove Stage
+                      </button>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Stage Title</Label>
+                        <Input
+                          value={stage.title || ""}
+                          onChange={e => {
+                            const list = [...stagesList];
+                            list[sIdx] = { ...list[sIdx], title: e.target.value };
+                            setConfig(p => ({ ...p, program_modules: list }));
+                          }}
+                          placeholder="e.g. PROFESSIONAL TRADING MINDSET FOUNDATION"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label>Duration Label</Label>
+                        <Input
+                          value={stage.duration || ""}
+                          onChange={e => {
+                            const list = [...stagesList];
+                            list[sIdx] = { ...list[sIdx], duration: e.target.value };
+                            setConfig(p => ({ ...p, program_modules: list }));
+                          }}
+                          placeholder="e.g. 2 Days"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Modules list inside stage */}
+                    <div className="pt-2">
+                      <div className="flex items-center justify-between mb-3">
+                        <Label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Modules in Stage #{sIdx + 1}</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const list = [...stagesList];
+                            const mods = [...(list[sIdx].modules || [])];
+                            mods.push({ num: mods.length + 1, title: "", overview: "" });
+                            list[sIdx] = { ...list[sIdx], modules: mods };
+                            setConfig(p => ({ ...p, program_modules: list }));
+                          }}
+                          className="h-8 text-xs border-[#E53935] text-[#E53935] hover:bg-[#E53935]/5"
+                        >
+                          <Plus size={12} className="mr-1" /> Add Module Card
+                        </Button>
+                      </div>
+
+                      <div className="space-y-3">
+                        {(stage.modules || []).map((mod: any, mIdx: number) => (
+                          <div key={mIdx} className="p-4 bg-gray-50 rounded-xl border border-gray-150 relative group">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const list = [...stagesList];
+                                const mods = [...(list[sIdx].modules || [])];
+                                mods.splice(mIdx, 1);
+                                // Re-index module numbers
+                                const reindexed = mods.map((m, i) => ({ ...m, num: i + 1 }));
+                                list[sIdx] = { ...list[sIdx], modules: reindexed };
+                                setConfig(p => ({ ...p, program_modules: list }));
+                              }}
+                              className="absolute top-3 right-3 p-1 text-gray-400 hover:text-red-500 rounded transition-colors animate-none"
+                              title="Delete module"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+
+                            <div className="grid md:grid-cols-12 gap-3 pr-6">
+                              <div className="md:col-span-1 flex items-center justify-center">
+                                <span className="w-6 h-6 rounded-full bg-gray-200 text-gray-700 flex items-center justify-center text-xs font-black">
+                                  {mod.num}
+                                </span>
+                              </div>
+                              <div className="md:col-span-4">
+                                <Label className="text-xs">Module Title</Label>
+                                <Input
+                                  value={mod.title || ""}
+                                  onChange={e => {
+                                    const list = [...stagesList];
+                                    const mods = [...(list[sIdx].modules || [])];
+                                    mods[mIdx] = { ...mods[mIdx], title: e.target.value };
+                                    list[sIdx] = { ...list[sIdx], modules: mods };
+                                    setConfig(p => ({ ...p, program_modules: list }));
+                                  }}
+                                  placeholder="e.g. Trader’s Mindset & Market Psychology"
+                                  className="mt-1 h-8 text-xs bg-white"
+                                />
+                              </div>
+                              <div className="md:col-span-7">
+                                <Label className="text-xs">Overview Description</Label>
+                                <Input
+                                  value={mod.overview || ""}
+                                  onChange={e => {
+                                    const list = [...stagesList];
+                                    const mods = [...(list[sIdx].modules || [])];
+                                    mods[mIdx] = { ...mods[mIdx], overview: e.target.value };
+                                    list[sIdx] = { ...list[sIdx], modules: mods };
+                                    setConfig(p => ({ ...p, program_modules: list }));
+                                  }}
+                                  placeholder="e.g. Psychology foundation for retail and professional trading..."
+                                  className="mt-1 h-8 text-xs bg-white"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+
+                <div className="flex gap-4 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const list = [...stagesList];
+                      list.push({ title: "", duration: "", modules: [] });
+                      setConfig(p => ({ ...p, program_modules: list }));
+                    }}
+                    className="border border-[#E53935] text-[#E53935] hover:bg-[#E53935]/5"
+                  >
+                    <Plus size={16} className="mr-2" /> Add Stage Block
+                  </Button>
+
+                  <Button
+                    onClick={() => saveConfig({ program_modules: stagesList })}
+                    className="bg-[#E53935] text-white hover:bg-[#b71c1c]"
+                  >
+                    <Save size={16} className="mr-2" /> Save All Stages & Modules
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 
@@ -2628,12 +3018,309 @@ export default function AdminCMS() {
             </div>
           </Card>
 
+          {/* Hero Background Slider Images */}
+          <Card className="p-6 border border-gray-100 shadow-sm">
+            <h2 className="text-lg font-bold mb-5 flex items-center gap-2" style={{ color: "#121212" }}>
+              <Globe size={18} className="text-[#E53935]" /> Hero Background Slider Images (Exactly 3 Images)
+            </h2>
+            <p className="text-xs text-gray-500 mb-4 font-semibold">
+              These 3 background images slide dynamically in the background of the Hero section. You can upload a new background image file or paste an image URL.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[0, 1, 2].map((idx) => {
+                const defaultBgs = ["/background.jpg", "/backgroundimage-1.avif", "/backgroundimage-2.avif"];
+                const bgList = config.hero_backgrounds && config.hero_backgrounds.length > 0
+                  ? config.hero_backgrounds
+                  : defaultBgs;
+                const bgUrl = bgList[idx] || "";
+
+                return (
+                  <div key={idx} className="p-5 rounded-2xl bg-gray-50 border border-gray-100 space-y-4">
+                    <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                      <span className="w-5.5 h-5.5 rounded-full bg-[#E53935]/10 text-[#E53935] flex items-center justify-center font-bold text-xs">{idx + 1}</span>
+                      <span className="font-bold text-sm text-gray-800">Background Image {idx + 1}</span>
+                    </div>
+
+                    <div>
+                      <Label htmlFor={`bg-url-${idx}`}>Image URL</Label>
+                      <Input
+                        id={`bg-url-${idx}`}
+                        value={bgUrl}
+                        onChange={e => {
+                          const list = [...bgList];
+                          list[idx] = e.target.value;
+                          setConfig(p => ({ ...p, hero_backgrounds: list }));
+                        }}
+                        placeholder="e.g. /background.jpg or https://"
+                        className="mt-1 bg-white text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor={`bg-file-${idx}`}>Or Upload Image File</Label>
+                      <Input
+                        id={`bg-file-${idx}`}
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          if (!e.target.files || e.target.files.length === 0) return;
+                          const file = e.target.files[0];
+                          const formData = new FormData();
+                          formData.append("file", file);
+
+                          try {
+                            showToast("Uploading background image...", "success");
+                            const res = await api.post("/admin/upload", formData, {
+                              headers: { "Content-Type": "multipart/form-data" }
+                            });
+                            if (res.data && res.data.url) {
+                              const list = [...bgList];
+                              list[idx] = res.data.url;
+                              setConfig(p => ({ ...p, hero_backgrounds: list }));
+                              showToast("Background image uploaded!", "success");
+                            }
+                          } catch {
+                            showToast("Upload failed.", "error");
+                          }
+                        }}
+                        className="mt-1 bg-white text-xs cursor-pointer h-10 py-1.5"
+                      />
+                    </div>
+
+                    {bgUrl && (
+                      <div className="mt-2 relative h-24 w-full rounded-lg border border-gray-200 overflow-hidden bg-gray-900">
+                        <img
+                          src={getImageUrl(bgUrl)}
+                          alt={`Background ${idx + 1} preview`}
+                          className="w-full h-full object-cover"
+                          onError={e => (e.currentTarget.style.display = "none")}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+
           <Button
-            onClick={() => saveConfig({ hero_buttons: config.hero_buttons, carousel_slides: config.carousel_slides })}
+            onClick={() => saveConfig({
+              hero_buttons: config.hero_buttons,
+              carousel_slides: config.carousel_slides,
+              hero_backgrounds: config.hero_backgrounds
+            })}
             className="bg-[#E53935] text-white hover:bg-[#b71c1c]"
           >
             <Save size={16} className="mr-2" /> Save Hero & Carousel Settings
           </Button>
+        </div>
+      )}
+
+      {/* ── TAB: Student Reviews Moderation ─────────────────────────── */}
+      {activeTab === "reviews" && (
+        <div className="space-y-6">
+          <Card className="p-4 border border-blue-100 bg-blue-50/50">
+            <div className="flex items-start gap-3">
+              <Info size={18} className="text-blue-500 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-blue-700">
+                Moderate student and public reviews. Reviews with the <strong>"Show on Landing Page"</strong> toggle enabled will appear in the Testimonials Carousel section on the main landing page.
+              </p>
+            </div>
+          </Card>
+
+          <Card className="p-6 border border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Submitted Reviews ({reviews.length})</h2>
+                <p className="text-xs text-gray-500">Enable or disable reviews for display on the landing page</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={fetchReviews}>
+                <RefreshCw size={14} className="mr-1" /> Refresh List
+              </Button>
+            </div>
+
+            {reviewsLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <RefreshCw className="h-8 w-8 text-[#E53935] animate-spin" />
+              </div>
+            ) : reviews.length === 0 ? (
+              <div className="text-center py-16 text-gray-400">
+                <Star size={48} className="mx-auto mb-3 opacity-20" />
+                <p className="font-medium text-sm">No reviews submitted yet</p>
+                <p className="text-xs text-gray-400 mt-1">Distribute feedback forms to students to gather testimonials.</p>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2">
+                {reviews.map((rev) => (
+                  <Card key={rev.id} className="p-5 border border-gray-100 shadow-sm hover:shadow transition-all relative flex flex-col justify-between">
+                    <div>
+                      {/* Top info and delete button */}
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-0.5">
+                            Course Review
+                          </span>
+                          <h4 className="font-bold text-sm text-gray-800 line-clamp-1">
+                            {rev.course_title || "General / Unknown Course"}
+                          </h4>
+                        </div>
+                        <button
+                          onClick={() => deleteReview(rev.id)}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                          title="Delete Submission"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+
+                      {/* Stars */}
+                      <div className="flex items-center gap-1 mb-3">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            size={14}
+                            className={star <= rev.rating ? "fill-[#C2A86A] text-[#C2A86A]" : "text-gray-200"}
+                          />
+                        ))}
+                        <span className="text-xs font-bold text-[#C2A86A] ml-1 bg-[#C2A86A]/10 px-1.5 py-0.5 rounded">
+                          {rev.rating}/5
+                        </span>
+                      </div>
+
+                      {/* Comment */}
+                      <p className="text-gray-600 text-sm mb-4 leading-relaxed bg-gray-50/50 p-3 rounded-lg border border-gray-50 italic">
+                        "{rev.comments || "No comments"}"
+                      </p>
+                    </div>
+
+                    {/* Bottom moderation controls */}
+                    <div className="border-t border-gray-100 pt-4 mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div>
+                        <div className="font-semibold text-xs text-gray-800">
+                          {rev.user_name || "Anonymous"}
+                        </div>
+                        {rev.email && (
+                          <div className="text-[10px] text-gray-400">
+                            {rev.email}
+                          </div>
+                        )}
+                        <div className="text-[9px] text-gray-400">
+                          {new Date(rev.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100/80 transition-all px-3 py-1.5 rounded-xl border border-gray-100">
+                        <input
+                          id={`show-landing-${rev.id}`}
+                          type="checkbox"
+                          checked={rev.show_on_landing_page}
+                          onChange={(e) => toggleReviewVisibility(rev.id, e.target.checked)}
+                          className="w-4 h-4 rounded text-[#E53935] focus:ring-[#E53935]"
+                        />
+                        <Label
+                          htmlFor={`show-landing-${rev.id}`}
+                          className="cursor-pointer text-xs font-bold text-gray-700 select-none whitespace-nowrap"
+                        >
+                          Show on Landing Page
+                        </Label>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* ── TAB: Articles & Blogs Moderation ─────────────────────────── */}
+      {activeTab === "articles" && (
+        <div className="space-y-6">
+          <Card className="p-4 border border-blue-100 bg-blue-50/50">
+            <div className="flex items-start gap-3">
+              <Info size={18} className="text-blue-500 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-blue-700">
+                Moderate articles, blogs, and market updates submitted by content editors. Articles with status <strong>"Published"</strong> will be visible on the public website. Draft articles require approval to go live.
+              </p>
+            </div>
+          </Card>
+
+          <Card className="p-6 border border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Submitted Articles ({articles.length})</h2>
+                <p className="text-xs text-gray-500">Enable or disable visibility of articles on the landing page/blog</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={fetchArticles}>
+                <RefreshCw size={14} className="mr-1" /> Refresh List
+              </Button>
+            </div>
+
+            {articlesLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <RefreshCw className="h-8 w-8 text-[#E53935] animate-spin" />
+              </div>
+            ) : articles.length === 0 ? (
+              <div className="text-center py-16 text-gray-400">
+                <Newspaper size={48} className="mx-auto mb-3 opacity-20" />
+                <p className="font-medium text-sm">No articles found</p>
+                <p className="text-xs text-gray-400 mt-1">Create updates or stories in the Blog & CMS section first.</p>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2">
+                {articles.map((art) => (
+                  <Card key={art.id} className="p-5 border border-gray-100 shadow-sm hover:shadow transition-all relative flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-0.5">
+                            {art.type || "Blog Story"}
+                          </span>
+                          <h4 className="font-bold text-sm text-gray-800 line-clamp-2">
+                            {art.title}
+                          </h4>
+                        </div>
+                      </div>
+
+                      {art.description && (
+                        <p className="text-gray-600 text-xs mb-4 line-clamp-3 bg-gray-50/50 p-2.5 rounded border border-gray-50">
+                          {art.description}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="border-t border-gray-100 pt-4 mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div>
+                        <div className="text-[10px] text-gray-400">
+                          Views: {art.views_count || 0}
+                        </div>
+                        <div className="text-[9px] text-gray-400">
+                          Created: {new Date(art.created_at || Date.now()).toLocaleDateString()}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100/80 transition-all px-3 py-1.5 rounded-xl border border-gray-100">
+                        <input
+                          id={`show-article-${art.id}`}
+                          type="checkbox"
+                          checked={art.status === "published"}
+                          onChange={() => toggleArticleVisibility(art.id, art.status)}
+                          className="w-4 h-4 rounded text-[#E53935] focus:ring-[#E53935]"
+                        />
+                        <Label
+                          htmlFor={`show-article-${art.id}`}
+                          className="cursor-pointer text-xs font-bold text-gray-700 select-none whitespace-nowrap"
+                        >
+                          Visible on Site
+                        </Label>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </Card>
         </div>
       )}
     </DashboardLayout>

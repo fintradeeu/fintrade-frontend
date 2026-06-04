@@ -99,6 +99,8 @@ export default function CourseExamInterface() {
   const examType = searchParams.get("type") || "course";
   
   const [examStarted, setExamStarted] = useState(false);
+  const [agreedToRestrictions, setAgreedToRestrictions] = useState(false);
+  const [showPaymentBtn, setShowPaymentBtn] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, { optionId?: number; text?: string }>>({});
   const [timeRemaining, setTimeRemaining] = useState(3600);
@@ -123,12 +125,14 @@ export default function CourseExamInterface() {
     if (!examId) return;
     setErrorMsg("");
     try {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        (window as any).examCameraStream = stream;
-      } catch (err) {
-        setErrorMsg("Camera access is required to start the proctored exam.");
-        return;
+      if (examType !== "entrance") {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          (window as any).examCameraStream = stream;
+        } catch (err) {
+          setErrorMsg("Camera and microphone access are required to start the proctored exam.");
+          return;
+        }
       }
 
       const startEndpoint = examType === "entrance" 
@@ -162,26 +166,43 @@ export default function CourseExamInterface() {
       }, 1000);
       (window as any).examTimer = timer;
 
-      const handleVisibilityChange = async () => {
-        if (document.hidden && newAttemptId) {
-          // Immediately display the violation warning modal in the UI
-          setShowViolationModal(true);
-          
-          try {
-            await api.post("/exams/violation", {
-              attempt_id: newAttemptId,
-              violation_type: "tab_switch"
-            });
-          } catch (e) {
-            console.error("Failed to log violation:", e);
+      if (examType !== "entrance") {
+        const handleVisibilityChange = async () => {
+          if (document.hidden && newAttemptId) {
+            // Immediately display the violation warning modal in the UI
+            setShowViolationModal(true);
+            
+            try {
+              await api.post("/exams/violation", {
+                attempt_id: newAttemptId,
+                violation_type: "tab_switch"
+              });
+            } catch (e) {
+              console.error("Failed to log violation:", e);
+            }
           }
-        }
-      };
-      document.addEventListener("visibilitychange", handleVisibilityChange);
-      (window as any).examVisibilityListener = handleVisibilityChange;
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        (window as any).examVisibilityListener = handleVisibilityChange;
+      }
 
     } catch (err: any) {
       setErrorMsg(err.response?.data?.detail || "Failed to start exam. Check if you are allowed to attempt.");
+      if (err.response?.status === 402) {
+        setShowPaymentBtn(true);
+      }
+    }
+  };
+
+  const handlePayment = async () => {
+    try {
+      setErrorMsg("");
+      await api.post("/exams/pay", { exam_id: parseInt(examId!), amount: 500.0 });
+      alert("Payment processed successfully! You can now start the exam.");
+      setShowPaymentBtn(false);
+      setErrorMsg("");
+    } catch (payErr: any) {
+      setErrorMsg(payErr.response?.data?.detail || "Payment failed. Please try again.");
     }
   };
 
@@ -258,6 +279,34 @@ export default function CourseExamInterface() {
             </div>
           </div>
 
+          {examType !== "entrance" && (
+            <div className="space-y-4 mb-6 border-t border-gray-100 pt-6">
+              <h3 className="font-semibold text-gray-900 text-base">Exam Restrictions & Guidelines:</h3>
+              <ul className="list-disc list-inside text-sm text-gray-600 space-y-2 pl-1">
+                <li>Webcam active monitoring is required for the entire exam.</li>
+                <li>Closing or switching tabs, windows, or applications is strictly prohibited.</li>
+                <li>Ensure you have a stable connection before beginning.</li>
+                <li>The exam will auto-submit when the timer reaches zero.</li>
+              </ul>
+              
+              <div 
+                className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-100 rounded-lg cursor-pointer select-none mt-4 hover:bg-gray-100/70 transition-colors"
+                onClick={() => setAgreedToRestrictions(!agreedToRestrictions)}
+              >
+                <input 
+                  type="radio" 
+                  id="agree-restrictions"
+                  checked={agreedToRestrictions}
+                  onChange={(e) => setAgreedToRestrictions(e.target.checked)}
+                  className="w-4 h-4 text-[#0B2A5B] border-gray-300 focus:ring-[#0B2A5B] cursor-pointer"
+                />
+                <label htmlFor="agree-restrictions" className="text-sm font-medium text-gray-800 cursor-pointer">
+                  I clarify and confirm that I have read all restrictions and instructions.
+                </label>
+              </div>
+            </div>
+          )}
+
           {errorMsg && (
             <div className="mb-4 p-3 bg-red-50 text-red-600 rounded text-center text-sm font-medium">
               {errorMsg}
@@ -267,11 +316,25 @@ export default function CourseExamInterface() {
           <div className="flex flex-col gap-4">
             <Button 
               size="lg" 
-              className="w-full bg-[#C2A86A] hover:bg-[#C2A86A]/90 text-[#0B2A5B] text-lg font-semibold h-14"
+              className={`w-full text-lg font-semibold h-14 ${
+                examType !== "entrance" && !agreedToRestrictions
+                  ? "bg-[#C2A86A]/40 text-[#0B2A5B]/50 cursor-not-allowed hover:bg-[#C2A86A]/40"
+                  : "bg-[#C2A86A] hover:bg-[#C2A86A]/90 text-[#0B2A5B]"
+              }`}
+              disabled={examType !== "entrance" && !agreedToRestrictions}
               onClick={handleStartExam}
             >
               Start Exam
             </Button>
+            {showPaymentBtn && (
+              <Button 
+                size="lg" 
+                className="w-full bg-green-600 hover:bg-green-700 text-white text-lg font-semibold h-14"
+                onClick={handlePayment}
+              >
+                Pay Reattempt Fee
+              </Button>
+            )}
             <Button 
               variant="outline" 
               className="w-full text-[#0B2A5B] h-12"
@@ -299,14 +362,18 @@ export default function CourseExamInterface() {
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h1 className="font-bold text-xl hidden md:block">FinTrade Examination</h1>
-            <div className="bg-red-500/20 text-red-100 px-3 py-1 rounded-full flex items-center gap-2 text-sm font-medium">
-              <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              Proctored Session
-            </div>
-            <div className="bg-green-500/20 text-green-100 px-3 py-1 rounded-full flex items-center gap-2 text-sm font-medium">
-              <Camera size={14} className="text-green-400" />
-              Camera Active
-            </div>
+            {examType !== "entrance" && (
+              <>
+                <div className="bg-red-500/20 text-red-100 px-3 py-1 rounded-full flex items-center gap-2 text-sm font-medium">
+                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                  Proctored Session
+                </div>
+                <div className="bg-green-500/20 text-green-100 px-3 py-1 rounded-full flex items-center gap-2 text-sm font-medium">
+                  <Camera size={14} className="text-green-400" />
+                  Camera Active
+                </div>
+              </>
+            )}
           </div>
           
           <div className="flex items-center gap-4">

@@ -25,6 +25,13 @@ const getImageUrl = (path?: string) => {
 export default function AdminNews() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("news");
+
+  // Read permissions from localStorage
+  const storedUser = localStorage.getItem("user");
+  const userObj = storedUser ? JSON.parse(storedUser) : null;
+  const userPerms = userObj?.permissions || {};
+  const isSuper = userObj?.email === "admin@platform.com" || userPerms.roleName === "Super Admin";
+  const hasDirectPublish = userPerms.directPublish !== false && (isSuper || userPerms.directPublish === true);
   
   // CMS Content State
   const [cmsContent, setCmsContent] = useState({
@@ -122,7 +129,7 @@ export default function AdminNews() {
         description: "",
         video_url: "",
         thumbnail_url: "",
-        status: "published"
+        status: hasDirectPublish ? "published" : "draft"
       });
     }
     setIsModalOpen(true);
@@ -397,14 +404,28 @@ export default function AdminNews() {
             
             <div className="grid gap-2">
               <Label>Status</Label>
-              <select 
-                value={formData.status}
-                onChange={e => setFormData({...formData, status: e.target.value})}
-                className="flex h-10 w-full items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="published">Published</option>
-                <option value="draft">Draft</option>
-              </select>
+              {hasDirectPublish ? (
+                <select 
+                  value={formData.status}
+                  onChange={e => setFormData({...formData, status: e.target.value})}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="published">Published</option>
+                  <option value="draft">Draft</option>
+                </select>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex h-10 w-full items-center rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500 font-medium">
+                    Draft (Requires Approval)
+                  </div>
+                  <div className="text-xs text-orange-600 bg-orange-50 border border-orange-200/50 rounded-lg p-2.5 flex items-start gap-2">
+                    <Info className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                    <span>
+                      You do not have <strong>Direct Public</strong> permissions. Your article will be saved as a draft and sent to the <strong>Site Content Manager</strong> for approval.
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex justify-end gap-3 mt-4">
