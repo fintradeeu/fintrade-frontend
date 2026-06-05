@@ -489,7 +489,7 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
             <div className="space-y-6">
               <div>
                 <h4 className="font-bold text-[#121212] text-sm uppercase tracking-wider mb-2.5">About this Program</h4>
-                <p className="text-gray-600 text-sm leading-relaxed font-medium">{course.fullDescription}</p>
+                <p className="text-gray-600 text-sm leading-relaxed font-medium whitespace-pre-wrap">{course.fullDescription}</p>
               </div>
 
               <div>

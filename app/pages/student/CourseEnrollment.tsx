@@ -423,7 +423,7 @@ export default function CourseEnrollment() {
                 <div></div>
               </div>
 
-              <p className="text-[#0B2A5B]/70 mb-4">{course.description}</p>
+              <p className="text-[#0B2A5B]/70 mb-4 whitespace-pre-wrap">{course.description}</p>
 
               <div className="grid grid-cols-3 gap-4 mb-4 pb-4 border-b border-[#0B2A5B]/10">
                 <div className="text-center">
@@ -503,7 +503,7 @@ export default function CourseEnrollment() {
 
           <div className="bg-[#F4F1EA] rounded-lg p-6 mb-6">
             <h3 className="font-semibold text-[#0B2A5B] mb-2">{selectedCourseData?.title}</h3>
-            <p className="text-sm text-[#0B2A5B]/70 mb-4">{selectedCourseData?.description}</p>
+            <p className="text-sm text-[#0B2A5B]/70 mb-4 whitespace-pre-wrap">{selectedCourseData?.description}</p>
             <div className="flex items-center gap-4 text-sm text-[#0B2A5B]/60">
               <span className="flex items-center gap-1">
                 <Clock size={14} />

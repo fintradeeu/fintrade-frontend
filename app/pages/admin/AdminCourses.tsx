@@ -77,17 +77,28 @@ export default function AdminCourses() {
     }
   };
 
-  const openEditCourse = (course: any) => {
-    setEditCourseId(course.id);
+  const openEditCourse = async (course: any) => {
+    let fullCourse = course;
+    if (course.description === undefined) {
+      try {
+        const res = await api.get(`/courses/${course.id}`);
+        fullCourse = res.data;
+        setCourses((prev) => prev.map((c) => (c.id === course.id ? fullCourse : c)));
+      } catch (err) {
+        console.error("Failed to fetch full course details", err);
+      }
+    }
+
+    setEditCourseId(fullCourse.id);
     setNewCourse({
-      title: course.title || "",
-      description: course.description || "",
-      short_description: course.short_description || "",
-      original_price: course.original_price || 0,
-      price: course.price || 0,
-      difficulty_level: course.difficulty_level || "beginner",
-      duration_days: course.duration_hours || 0,
-      is_published: course.is_published || false
+      title: fullCourse.title || "",
+      description: fullCourse.description || "",
+      short_description: fullCourse.short_description || "",
+      original_price: fullCourse.original_price || 0,
+      price: fullCourse.price || 0,
+      difficulty_level: fullCourse.difficulty_level || "beginner",
+      duration_days: fullCourse.duration_hours || 0,
+      is_published: fullCourse.is_published || false
     });
     setShowCourseModal(true);
   };
