@@ -480,7 +480,7 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
                 </span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight">{course.name}</h2>
-              <p className="text-white/80 text-sm mt-2 font-medium tracking-wide">Complete Program Overview & Course Curriculum</p>
+              <p className="text-white/80 text-sm mt-2 font-medium tracking-wide">{course.short_name || "Complete Program Overview & Course Curriculum"}</p>
             </div>
           </div>
 
@@ -506,38 +506,41 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
-                <div>
-                  <span className="text-xs text-gray-400 font-medium">Program Enrollment Fee</span>
-                  <div className="text-3xl font-extrabold text-[#121212] tracking-tight">
-                    {course.price}
-                    <span className="text-sm font-normal text-gray-500 ml-1">+ GST</span>
-                  </div>
+            </div>
+          </div>
+
+          {/* Sticky Actions Footer */}
+          <div className="p-4 sm:px-8 sm:py-5 bg-white border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-0 z-20 shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
+            <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
+              <div>
+                <span className="text-xs text-gray-400 font-medium block mb-0.5">Program Enrollment Fee</span>
+                <div className="text-2xl sm:text-3xl font-extrabold text-[#121212] tracking-tight leading-none">
+                  {course.price}
+                  <span className="text-xs sm:text-sm font-normal text-gray-500 ml-1">+ GST</span>
                 </div>
-                {course.savings && (
-                  <div className="px-4 py-2 rounded-xl bg-green-50 border border-green-200 text-green-700 flex flex-col items-end shadow-sm">
-                    <span className="text-[10px] font-bold text-green-600 uppercase tracking-widest leading-none mb-1">You Save</span>
-                    <span className="text-base font-extrabold leading-none">{course.savings} instantly</span>
-                  </div>
-                )}
               </div>
+              {course.savings && (
+                <div className="px-3 py-1.5 rounded-lg bg-green-50 border border-green-200 text-green-700 flex flex-col items-end sm:items-start shadow-sm">
+                  <span className="text-[9px] font-bold text-green-600 uppercase tracking-widest leading-none mb-1">You Save</span>
+                  <span className="text-sm font-extrabold leading-none">{course.savings}</span>
+                </div>
+              )}
             </div>
 
-            {/* Actions Footer */}
-            <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end mt-8 pt-6 border-t border-gray-100">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
               <Button
                 onClick={() => setIsDetailsOpen(false)}
                 variant="outline"
-                className="w-full sm:w-auto h-12 text-sm font-semibold rounded-xl border-gray-200 text-gray-600 hover:border-[#D50032] hover:text-[#D50032] hover:bg-[#D50032]/5 transition-all duration-300"
+                className="flex-1 sm:flex-none sm:w-auto h-12 text-sm font-semibold rounded-xl border-gray-200 text-gray-600 hover:border-[#D50032] hover:text-[#D50032] hover:bg-[#D50032]/5 transition-all duration-300"
               >
                 Close Details
               </Button>
               <Button
                 onClick={handleEnrollClick}
                 disabled={enrollLoading}
-                className="w-full sm:w-auto h-12 text-sm font-semibold rounded-xl px-8 shadow-lg hover:shadow-xl bg-gradient-to-r from-[#D50032] to-[#FF0000] text-white hover:from-[#D50032] hover:to-[#D50032] transition-all duration-300"
+                className="flex-1 sm:flex-none sm:w-auto h-12 text-sm font-semibold rounded-xl px-8 shadow-lg hover:shadow-xl bg-[#D50032] hover:bg-black text-white transition-all duration-300"
               >
-          {enrollLoading ? "Opening Exam..." : "Enroll Now"}
+                {enrollLoading ? "Opening Exam..." : "Enroll Now"}
               </Button>
             </div>
           </div>
