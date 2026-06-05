@@ -1043,8 +1043,14 @@ export default function MarketingHome() {
 
       try {
         const res = await api.get("/news");
-        setBlogStories(res.data.filter((n: any) => n.type === "Blog Story").slice(0, 4));
-        setMarketUpdates(res.data.filter((n: any) => n.type === "Market Update").slice(0, 1));
+        const blogs = res.data.filter((n: any) => n.type === "Blog Story");
+        const updates = res.data.filter((n: any) => n.type === "Market Update");
+        
+        // Show newest 4 blogs (LIFO)
+        setBlogStories([...blogs].reverse().slice(0, 4));
+        
+        // Show newest 1 update
+        setMarketUpdates([...updates].reverse().slice(0, 1));
       } catch (err) { console.error("News fetch failed", err); }
 
       try {
