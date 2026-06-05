@@ -263,7 +263,12 @@ export default function TeacherAssignments() {
                           </span>
                         </p>
                         <div className="mt-2">
-                          <a href={sub.file_url} target="_blank" rel="noopener noreferrer" className="text-[#C2A86A] text-sm hover:underline font-medium flex items-center gap-1">
+                          <a 
+                            href={sub.file_url?.startsWith('http') ? sub.file_url : `${api.defaults.baseURL?.replace('/api', '') || ''}${sub.file_url}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-[#C2A86A] text-sm hover:underline font-medium flex items-center gap-1"
+                          >
                             <FileText size={14} /> View Document
                           </a>
                         </div>
