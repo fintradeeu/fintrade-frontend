@@ -6,12 +6,14 @@ import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { Search, Download, Eye, Mail } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import api from "../../services/api";
 
 export default function TeacherStudents() {
   const [searchTerm, setSearchTerm] = useState("");
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
 
   useEffect(() => {
     api.get("/faculty/students")
@@ -124,7 +126,7 @@ export default function TeacherStudents() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                              <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 hover:bg-[#0B2A5B] hover:text-white" onClick={() => alert(`Student Details:\nName: ${student.student_name}\nEmail: ${student.student_email}\nCourse: ${student.course_title}`)}>
+                              <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 hover:bg-[#0B2A5B] hover:text-white" onClick={() => setSelectedStudent(student)}>
                                 <Eye size={14} />
                               </Button>
                               <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 hover:bg-[#D50032] hover:text-white" onClick={() => window.location.href = `mailto:${student.student_email}`}>
@@ -147,6 +149,46 @@ export default function TeacherStudents() {
           </Card>
         </>
       )}
+
+      {/* Student Details Dialog */}
+      <Dialog open={!!selectedStudent} onOpenChange={(open) => !open && setSelectedStudent(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-[#0B2A5B]">Student Details</DialogTitle>
+          </DialogHeader>
+          {selectedStudent && (
+            <div className="space-y-4 py-4">
+              <div className="flex flex-col gap-1">
+                <span className="text-sm text-[#0B2A5B]/60">Full Name</span>
+                <span className="font-semibold text-[#0B2A5B]">{selectedStudent.student_name}</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-sm text-[#0B2A5B]/60">Email Address</span>
+                <span className="text-[#0B2A5B]">{selectedStudent.student_email}</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-sm text-[#0B2A5B]/60">Enrolled Course</span>
+                <Badge variant="outline" className="w-fit border-[#C2A86A] text-[#0B2A5B]">{selectedStudent.course_title}</Badge>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm text-[#0B2A5B]/60">Enrollment Date</span>
+                  <span className="text-[#0B2A5B]">{new Date(selectedStudent.enrolled_at).toLocaleDateString()}</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm text-[#0B2A5B]/60">Course Progress</span>
+                  <span className="font-medium text-[#0B2A5B]">{selectedStudent.progress_percent?.toFixed(1) || 0}%</span>
+                </div>
+              </div>
+              <div className="pt-4 flex gap-2">
+                <Button className="w-full bg-[#0B2A5B] hover:bg-[#1a3d7a] text-white" onClick={() => window.location.href = `mailto:${selectedStudent.student_email}`}>
+                  <Mail size={16} className="mr-2" /> Contact Student
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
