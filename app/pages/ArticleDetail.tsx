@@ -12,7 +12,17 @@ interface Article {
   author_name?: string;
   views_count: number;
   created_at: string;
+  description?: string;
 }
+
+const getImageUrl = (path?: string) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
+  const base = api.defaults.baseURL || "";
+  const cleanBase = base.endsWith("/") ? base.slice(0, -1) : base;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `${cleanBase}${cleanPath}`;
+};
 
 export default function ArticleDetail() {
   const { id } = useParams<{ id: string }>();
@@ -152,7 +162,7 @@ export default function ArticleDetail() {
           {article.thumbnail_url && !imageError && (
             <div className="w-full aspect-[21/9] rounded-2xl overflow-hidden mb-8 shadow-sm border border-gray-100 bg-gray-50">
               <img 
-                src={article.thumbnail_url} 
+                src={getImageUrl(article.thumbnail_url)} 
                 alt={article.title} 
                 onError={() => setImageError(true)}
                 className="w-full h-full object-cover"
@@ -188,7 +198,7 @@ export default function ArticleDetail() {
               {suggestedArticle.thumbnail_url && !suggestedImageError ? (
                 <div className="md:w-1/3 aspect-video md:aspect-auto relative overflow-hidden bg-gray-100 min-h-[200px]">
                   <img 
-                    src={suggestedArticle.thumbnail_url} 
+                    src={getImageUrl(suggestedArticle.thumbnail_url)} 
                     alt={suggestedArticle.title} 
                     onError={() => setSuggestedImageError(true)}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
