@@ -12,12 +12,14 @@ type ProfileForm = {
   full_name: string;
   email: string;
   phone: string;
+  city: string;
 };
 
 const emptyProfile: ProfileForm = {
   full_name: "",
   email: "",
   phone: "",
+  city: "",
 };
 
 export default function StudentProfile() {
@@ -44,6 +46,7 @@ export default function StudentProfile() {
           full_name: user.full_name || "",
           email: user.email || "",
           phone: user.phone || "",
+          city: user.city || "",
         });
       } catch {
         // Fresh API data below will repair stale local storage.
@@ -59,6 +62,7 @@ export default function StudentProfile() {
           full_name: user.full_name || "",
           email: user.email || "",
           phone: user.phone || "",
+          city: user.city || "",
         });
       })
       .catch(() => toast.error("Unable to load your profile"))
@@ -78,12 +82,14 @@ export default function StudentProfile() {
         full_name: form.full_name,
         email: form.email,
         phone: form.phone || null,
+        city: form.city || null,
       });
       localStorage.setItem("user", JSON.stringify(res.data));
       setForm({
         full_name: res.data.full_name || "",
         email: res.data.email || "",
         phone: res.data.phone || "",
+        city: res.data.city || "",
       });
       toast.success("Profile updated successfully");
     } catch (err: any) {
@@ -116,6 +122,10 @@ export default function StudentProfile() {
               <div className="flex items-center gap-3 text-sm text-[#0B2A5B]/80">
                 <Phone size={16} className="text-[#C2A86A]" />
                 <span className="truncate">{form.phone || "No phone number"}</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-[#0B2A5B]/80">
+                <span className="text-[#C2A86A] text-xs font-bold w-4 text-center">📍</span>
+                <span className="truncate">{form.city || "No city specified"}</span>
               </div>
             </div>
           </div>
@@ -159,6 +169,19 @@ export default function StudentProfile() {
                 autoComplete="tel"
                 value={form.phone}
                 onChange={(event) => updateField("phone", event.target.value)}
+                className="mt-2 bg-gray-50 border-gray-300 focus:border-[#D50032] focus:ring-[#D50032]"
+                disabled={loading || saving}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="profileCity">City</Label>
+              <Input
+                id="profileCity"
+                type="text"
+                autoComplete="address-level2"
+                value={form.city}
+                onChange={(event) => updateField("city", event.target.value)}
                 className="mt-2 bg-gray-50 border-gray-300 focus:border-[#D50032] focus:ring-[#D50032]"
                 disabled={loading || saving}
               />
