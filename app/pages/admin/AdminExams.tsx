@@ -5,7 +5,7 @@ import DashboardLayout from "../../components/DashboardLayout";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
-import { Plus, Edit, Eye, Clock, FileText, BookOpen, Hash, Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Edit, Eye, Clock, FileText, BookOpen, Hash, Loader2, CheckCircle, XCircle, Trash } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
@@ -53,6 +53,21 @@ export default function AdminExams() {
       setPreviewQuestions([]);
     } finally {
       setPreviewLoading(false);
+    }
+  };
+
+  const handleDelete = async (exam: any) => {
+    if (!window.confirm(`Are you sure you want to delete the exam "${exam.title}"? This cannot be undone.`)) return;
+    try {
+      if (exam.type === "entrance") {
+        await api.delete(`/admin/exams/${exam.id}`);
+      } else {
+        await api.delete(`/admin/course-exams/${exam.id}`);
+      }
+      toast.success("Exam deleted successfully");
+      fetchExams();
+    } catch (err: any) {
+      toast.error("Failed to delete exam: " + (err.response?.data?.detail || err.message));
     }
   };
 
@@ -230,7 +245,7 @@ export default function AdminExams() {
                   onClick={() => navigate(`/admin/exams/${exam.id}/questions?type=${exam.type}`)}
                 >
                   <Edit size={14} className="mr-2" />
-                  Manage Questions
+                  Manage
                 </Button>
                 <Button 
                   size="sm" 
@@ -240,6 +255,15 @@ export default function AdminExams() {
                 >
                   <Eye size={14} className="mr-2" />
                   Preview
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="flex-none px-2.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+                  onClick={() => handleDelete(exam)}
+                  title="Delete Exam"
+                >
+                  <Trash size={14} />
                 </Button>
               </div>
             </Card>
