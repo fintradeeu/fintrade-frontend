@@ -1238,7 +1238,7 @@ export default function MarketingHome() {
                   <Link to="/courses" className="w-full sm:w-auto">
                     <Button
                       size="lg"
-                      className="w-full sm:w-auto bg-[#D50032] hover:bg-[#FF3D00] text-white rounded-2xl px-8 py-5 h-auto text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all hover:scale-105 whitespace-nowrap"
+                      className="w-full sm:w-auto bg-[#D50032] hover:bg-black text-white rounded-2xl px-8 py-5 h-auto text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all hover:scale-105 whitespace-nowrap"
                     >
                       {heroButtons.btn1_name || "Apply Now"}
                       <ArrowRight className="ml-2 h-5 w-5" />
@@ -1257,7 +1257,7 @@ export default function MarketingHome() {
                         setVideoOpen(true);
                       }
                     }}
-                    className="w-full sm:w-auto bg-[#D50032] hover:bg-[#FF3D00] text-white rounded-2xl px-6 py-5 h-auto text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all inline-flex items-center justify-center gap-2.5 hover:scale-105 whitespace-nowrap"
+                    className="w-full sm:w-auto bg-[#D50032] hover:bg-black text-white rounded-2xl px-6 py-5 h-auto text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all inline-flex items-center justify-center gap-2.5 hover:scale-105 whitespace-nowrap"
                   >
                     <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-sm">
                       <Play className="h-2.5 w-2.5 text-[#D50032] ml-0.5 fill-[#D50032]" />
@@ -1268,7 +1268,7 @@ export default function MarketingHome() {
                   <a
                     href="#"
                     onClick={handleDownloadClick}
-                    className="w-full sm:w-auto bg-[#D50032] hover:bg-[#FF3D00] text-white rounded-2xl px-6 py-5 h-auto text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all inline-flex items-center justify-center gap-2.5 hover:scale-105 whitespace-nowrap"
+                    className="w-full sm:w-auto bg-[#D50032] hover:bg-black text-white rounded-2xl px-6 py-5 h-auto text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all inline-flex items-center justify-center gap-2.5 hover:scale-105 whitespace-nowrap"
                   >
                     <Download className="h-4.5 w-4.5 text-white" />
                     {heroButtons.btn3_name || "Download Brochure"}
@@ -1313,7 +1313,7 @@ export default function MarketingHome() {
                     </p>
                     <Link to={slides[activeSlide].link}>
                       <Button
-                        className="bg-[#D50032] hover:bg-[#FF3D00] text-white rounded-xl px-7 py-3 h-auto text-xs md:text-sm font-bold shadow-md shadow-[#D50032]/10 transition-all hover:scale-105"
+                        className="bg-[#D50032] hover:bg-black text-white rounded-xl px-7 py-3 h-auto text-xs md:text-sm font-bold shadow-md shadow-[#D50032]/10 transition-all hover:scale-105"
                       >
                         {slides[activeSlide].buttonText}
                         <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
@@ -1763,7 +1763,7 @@ export default function MarketingHome() {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         <div className="absolute inset-0 bg-black/45 flex items-center justify-center group-hover:bg-black/35 transition-colors">
-                          <div className="w-12 h-12 rounded-full bg-[#D50032] hover:bg-[#FF3D00] text-white flex items-center justify-center shadow-lg transition-all group-hover:scale-110">
+                          <div className="w-12 h-12 rounded-full bg-[#D50032] hover:bg-black text-white flex items-center justify-center shadow-lg transition-all group-hover:scale-110">
                             <Play className="h-5 w-5 text-white ml-0.5 fill-white" />
                           </div>
                         </div>
@@ -2213,7 +2213,7 @@ export default function MarketingHome() {
                   >
                     {blogStories.length > 0 ? blogStories.map((story, i) => (
                       <Card key={i} className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 flex flex-col border-0 shadow-md group hover:-translate-y-1 transition-all duration-300 snap-center">
-                        <div className="h-32 overflow-hidden relative">
+                        <div className="aspect-video overflow-hidden relative">
                           <img src={getImageUrl(story.thumbnail_url) || "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80"} alt={story.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                           <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2.5 py-0.5 rounded-full text-[10px] font-bold text-[#D50032]">
                             Blog
@@ -2224,9 +2224,8 @@ export default function MarketingHome() {
                             <span className="flex items-center gap-1"><FileText size={12} />Read</span>
                             <span>5 min read</span>
                           </div>
-                          <h3 className="font-bold text-sm mb-1 line-clamp-2 hover:text-[#D50032] transition-colors cursor-pointer" style={{ color: "#121212" }}>{story.title}</h3>
-                          <p className="text-xs text-gray-500 mb-2 line-clamp-2 flex-1">{story.description || story.content}</p>
-                          <Link to={`/article/${story.id}`} className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all">
+                          <h3 className="font-bold text-sm mb-3 line-clamp-2 hover:text-[#D50032] transition-colors cursor-pointer flex-1" style={{ color: "#121212" }}>{story.title}</h3>
+                          <Link to={`/article/${story.id}`} className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all mt-auto">
                             Read Story <ChevronRight size={14} />
                           </Link>
                         </div>
@@ -2262,7 +2261,7 @@ export default function MarketingHome() {
                       }
                     ].map((post, i) => (
                       <Card key={i} className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 flex flex-col border-0 shadow-md group hover:-translate-y-1 transition-all duration-300 snap-center">
-                        <div className="h-32 overflow-hidden relative">
+                        <div className="aspect-video overflow-hidden relative">
                           <img src={post.img} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                           <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2.5 py-0.5 rounded-full text-[10px] font-bold text-[#D50032]">
                             {post.category}
@@ -2273,8 +2272,7 @@ export default function MarketingHome() {
                             <span className="flex items-center gap-1"><FileText size={12} /> Article</span>
                             <span>{post.readTime}</span>
                           </div>
-                          <h3 className="font-bold text-sm mb-1 line-clamp-2 hover:text-[#D50032] transition-colors cursor-pointer" style={{ color: "#121212" }}>{post.title}</h3>
-                          <p className="text-xs text-gray-500 mb-2 line-clamp-2 flex-1">{post.desc}</p>
+                          <h3 className="font-bold text-sm mb-3 line-clamp-2 hover:text-[#D50032] transition-colors cursor-pointer flex-1" style={{ color: "#121212" }}>{post.title}</h3>
                           <button className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all mt-auto self-start">
                             Read Full Article <ChevronRight size={16} />
                           </button>
