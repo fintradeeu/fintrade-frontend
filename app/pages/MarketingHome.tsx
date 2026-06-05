@@ -2221,7 +2221,7 @@ export default function MarketingHome() {
                         </div>
                         <div className="p-4 flex flex-col flex-1">
                           <div className="flex items-center justify-between text-[11px] text-gray-500 mb-1.5">
-                            <span className="flex items-center gap-1"><FileText size={12} />Read</span>
+                            <span className="flex items-center gap-1"><FileText size={12} />{story.author_name ? `By ${story.author_name}` : "Read"}</span>
                             <span>5 min read</span>
                           </div>
                           <h3 className="font-bold text-sm mb-3 line-clamp-2 hover:text-[#D50032] transition-colors cursor-pointer flex-1" style={{ color: "#121212" }}>{story.title}</h3>

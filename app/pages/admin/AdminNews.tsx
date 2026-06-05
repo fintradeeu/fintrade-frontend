@@ -52,6 +52,7 @@ export default function AdminNews() {
     title: "",
     type: "Market Update",
     description: "",
+    author_name: "",
     video_url: "",
     thumbnail_url: "",
     status: "published"
@@ -116,6 +117,7 @@ export default function AdminNews() {
         title: item.title,
         type: item.type || (type === "news" ? "Market Update" : "Blog Story"),
         description: item.description || "",
+        author_name: item.author_name || "",
         video_url: item.video_url || "",
         thumbnail_url: item.thumbnail_url || "",
         status: item.status
@@ -127,6 +129,7 @@ export default function AdminNews() {
         title: "",
         type: type === "news" ? "Market Update" : "Blog Story",
         description: "",
+        author_name: "",
         video_url: "",
         thumbnail_url: "",
         status: hasDirectPublish ? "published" : "draft"
@@ -390,6 +393,15 @@ export default function AdminNews() {
                   <img src={getImageUrl(formData.thumbnail_url)} alt="thumbnail preview" className="w-full h-full object-cover" />
                 </div>
               )}
+            </div>
+            
+            <div className="grid gap-2">
+              <Label>Author Name (Optional)</Label>
+              <Input 
+                value={formData.author_name} 
+                onChange={e => setFormData({...formData, author_name: e.target.value})} 
+                placeholder="Author Name..."
+              />
             </div>
             
             <div className="grid gap-2">

@@ -8,8 +8,8 @@ interface Article {
   id: number;
   title: string;
   type: string;
-  description: string;
   thumbnail_url?: string;
+  author_name?: string;
   views_count: number;
   created_at: string;
 }
@@ -123,6 +123,11 @@ export default function ArticleDetail() {
               {article.type || "Blog Story"}
             </span>
             <div className="flex items-center gap-4 text-xs text-gray-500 font-medium">
+              {article.author_name && (
+                <span className="flex items-center gap-1.5 text-[#0B2A5B] font-semibold">
+                  By {article.author_name}
+                </span>
+              )}
               <span className="flex items-center gap-1.5">
                 <Calendar size={14} className="text-gray-400" />
                 {article.created_at ? new Date(article.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "Recently"}
