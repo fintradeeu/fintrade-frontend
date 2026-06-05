@@ -494,12 +494,12 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
 
               <div>
                 <h4 className="font-bold text-[#121212] text-sm uppercase tracking-wider mb-3">Key Highlights</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-stretch">
                   {((course.marketing_highlights && Array.isArray(course.marketing_highlights) && course.marketing_highlights.some((h: any) => h && h.trim()))
                     ? course.marketing_highlights.filter((h: any) => h && h.trim())
                     : details.highlights).map((highlight: string, idx: number) => (
-                      <div key={idx} className="flex flex-col p-4 rounded-2xl bg-gray-50 border border-gray-100 text-center hover:shadow-md transition-shadow">
-                        <span className="text-[#D50032] text-xl mb-1.5">✓</span>
+                      <div key={idx} className="flex flex-col p-4 rounded-2xl bg-gray-50 border border-gray-100 text-center hover:shadow-md transition-shadow h-full justify-center items-center">
+                        <CheckCircle className="w-6 h-6 text-emerald-500 mb-2.5" strokeWidth={2.5} />
                         <span className="text-xs font-semibold text-gray-800 leading-snug">{highlight}</span>
                       </div>
                     ))}
