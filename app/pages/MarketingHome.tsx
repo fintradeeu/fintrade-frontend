@@ -479,8 +479,8 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
                   {course.duration}
                 </span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight">{course.name}</h2>
-              <p className="text-white/80 text-sm mt-2 font-medium tracking-wide">{course.short_name || "Complete Program Overview & Course Curriculum"}</p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight">{course.name || course.title}</h2>
+              <p className="text-white/80 text-sm mt-2 font-medium tracking-wide">{course.shortDescription || "Complete Program Overview & Course Curriculum"}</p>
             </div>
           </div>
 
