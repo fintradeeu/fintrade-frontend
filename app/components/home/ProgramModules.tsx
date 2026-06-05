@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChevronDown, ChevronUp, Clock, BookOpen, Layers, Play, Video, FileAudio, FileText, HelpCircle, Download } from "lucide-react";
 import api from "../../services/api";
 
@@ -69,6 +69,8 @@ export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | nu
   const [mobileActiveModKey, setMobileActiveModKey] = useState<string | null>(null);
   const [expandedDescKeys, setExpandedDescKeys] = useState<Set<string>>(new Set());
 
+  const stageRefs = useRef<(HTMLDivElement | null)[]>([]);
+
   const toggleDesc = (key: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setExpandedDescKeys(prev => {
@@ -108,6 +110,37 @@ export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | nu
 
   const sectionsToUse: any[] = timelineSections;
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const idx = Number(entry.target.getAttribute("data-idx"));
+            if (!isNaN(idx)) {
+              setExpandedStageIdx(idx);
+            }
+          }
+        });
+      },
+      {
+        root: null,
+        rootMargin: "-40% 0px -40% 0px", // Trigger when the element reaches the center of the viewport
+        threshold: 0,
+      }
+    );
+
+    const currentRefs = stageRefs.current;
+    currentRefs.forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => {
+      currentRefs.forEach((ref) => {
+        if (ref) observer.unobserve(ref);
+      });
+    };
+  }, [sectionsToUse]);
+
   const toggleStage = (idx: number) => {
     setExpandedStageIdx((prev) => (prev === idx ? null : idx));
   };
@@ -141,7 +174,12 @@ export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | nu
               const isLeft = idx % 2 === 0;
 
               return (
-                <div key={idx} className="relative flex flex-row items-center w-full">
+                <div 
+                  key={idx} 
+                  ref={(el) => { stageRefs.current[idx] = el; }}
+                  data-idx={idx}
+                  className="relative flex flex-row items-center w-full transition-all duration-500"
+                >
                   {/* Circular Node dot indicator on the timeline */}
                   <div className="absolute left-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
                     <button
