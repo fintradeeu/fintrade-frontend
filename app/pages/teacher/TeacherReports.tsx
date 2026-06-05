@@ -89,7 +89,7 @@ export default function TeacherReports() {
               )}
             </Card>
           </div>
-
+          {/* Detailed Reports Section */}
           {/* Detailed Reports Section */}
           <div className="mt-8">
             <h2 className="text-2xl font-bold text-[#0B2A5B] mb-4">Detailed Reports</h2>

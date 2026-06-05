@@ -56,7 +56,7 @@ export default function Lectures() {
         const res = await api.get("/lectures");
         const allLectures: LectureType[] = res.data;
         const lectures = allLectures.filter(l => enrolledCourseIds.includes(l.course_id));
-        
+
         const now = new Date();
         const upcoming: LectureType[] = [];
         const past: LectureType[] = [];
@@ -87,7 +87,7 @@ export default function Lectures() {
         <h1 className="text-3xl font-bold text-[#0B2A5B] mb-2">Live Lectures & Recordings</h1>
         <p className="text-[#0B2A5B]/70">Attend live sessions and access recorded lectures</p>
       </div>
-
+      {/* Live Lecture Banner */}
       {/* Live Lecture Banner */}
       {liveLecture && (
         <Card className="p-6 mb-6 bg-gradient-to-r from-red-500 to-red-600 text-white shadow-xl">
