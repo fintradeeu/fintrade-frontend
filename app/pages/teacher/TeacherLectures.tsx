@@ -223,7 +223,7 @@ export default function TeacherLectures() {
                 <span>{l.duration_minutes} min</span>
               </div>
               {l.recordings?.length > 0 ? (
-                <a href={api.defaults.baseURL?.replace(/\\/api$/, '') + l.recordings[0].recording_url} target="_blank" rel="noreferrer">
+                <a href={api.defaults.baseURL?.replace(new RegExp('/api$'), '') + l.recordings[0].recording_url} target="_blank" rel="noreferrer">
                   <Button size="sm" variant="outline" className="w-full mt-3 border-[#0B2A5B]/20 text-[#0B2A5B]"><Video size={14} className="mr-2" />View Recording</Button>
                 </a>
               ) : (
