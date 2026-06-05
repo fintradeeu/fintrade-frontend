@@ -2,7 +2,8 @@
 @import './tailwind.css';
 @import './theme.css';
 
-html, body { height: 100%; margin: 0; }
+* { font-family: sans-serif; }
+html, body { height: 100%; margin: 0; font-family: sans-serif; }
 #root { height: 100%; }
 
 /* Hide default browser date picker calendar icon and make entire input clickable */

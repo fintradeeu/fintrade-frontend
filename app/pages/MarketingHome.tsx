@@ -1196,6 +1196,7 @@ export default function MarketingHome() {
         {sectionVisibility.show_hero_slider !== false && (
           <section
             className="relative pt-6 pb-8 md:pt-10 md:pb-10 overflow-hidden select-none bg-[#0b0f19] text-white"
+            style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }}
           >
             {/* Auto Slider Background */}
             <div className="absolute inset-0 z-0">
@@ -1485,7 +1486,7 @@ export default function MarketingHome() {
 
         {/* 1. Featured Courses Section */}
         {sectionVisibility.show_courses !== false && (
-          <section id="courses" className="pt-6 pb-2 md:py-8 relative z-10 bg-transparent">
+          <section id="courses" className="pt-6 pb-2 md:py-8 relative z-10 bg-transparent" style={{ fontFamily: "sans-serif" }}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <ScrollReveal>
                 <div className="text-center mb-10">
