@@ -181,7 +181,12 @@ export default function TeacherStudents() {
                 </div>
               </div>
               <div className="pt-4 flex gap-2">
-                <Button className="w-full bg-[#0B2A5B] hover:bg-[#1a3d7a] text-white" onClick={() => window.location.href = `mailto:${selectedStudent.student_email}`}>
+                <Button className="flex-1 bg-[#0B2A5B] hover:bg-[#1a3d7a] text-white" onClick={() => {
+                  window.location.href = `/teacher/students/${selectedStudent.student_id}`;
+                }}>
+                  View Full Profile
+                </Button>
+                <Button className="flex-1 variant-outline border-[#0B2A5B]/20 text-[#0B2A5B]" onClick={() => window.location.href = `mailto:${selectedStudent.student_email}`}>
                   <Mail size={16} className="mr-2" /> Contact Student
                 </Button>
               </div>

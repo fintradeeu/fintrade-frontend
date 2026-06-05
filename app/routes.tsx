@@ -38,6 +38,7 @@ import InvoicePage from "./pages/student/InvoicePage";
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import TeacherCourses from "./pages/teacher/TeacherCourses";
 import TeacherStudents from "./pages/teacher/TeacherStudents";
+import TeacherStudentProfile from "./pages/teacher/TeacherStudentProfile";
 import TeacherLectures from "./pages/teacher/TeacherLectures";
 import DoubtSessions from "./pages/teacher/DoubtSessions";
 import TeacherExams from "./pages/teacher/TeacherExams";
@@ -208,6 +209,11 @@ export const router = createBrowserRouter([
   {
     path: "/teacher/students",
     Component: TeacherStudents,
+  },
+  {
+    path: "/teacher/students/:studentId",
+    Component: TeacherStudentProfile,
+    roles: ["faculty"],
   },
   {
     path: "/teacher/lectures",
