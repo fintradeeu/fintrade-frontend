@@ -1201,7 +1201,7 @@ export default function MarketingHome() {
                   key={img + "-" + idx}
                   className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out"
                   style={{
-                    backgroundImage: `linear-gradient(to bottom, rgba(11, 15, 25, 0.88), rgba(11, 15, 25, 0.96)), url('${getBgImageUrl(img)}')`,
+                    backgroundImage: `linear-gradient(to bottom, rgba(11, 15, 25, 0.5), rgba(11, 15, 25, 0.7)), url('${getBgImageUrl(img)}')`,
                     opacity: currentBgIdx === idx ? 1 : 0,
                   }}
                 />
