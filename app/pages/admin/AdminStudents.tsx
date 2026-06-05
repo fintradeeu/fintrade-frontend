@@ -151,12 +151,13 @@ function DocTile({ label, url, icon }: { label: string; url?: string; icon: Reac
       </div>
     );
   }
+  const fullUrl = url.startsWith("http") ? url : `${api.defaults.baseURL?.replace(/\/api$/, "") || ""}${url}`;
   const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(url) || url.includes("/photo") || url.includes("/biometric") || url.includes("/aadhaar") || url.includes("/pan") || url.includes("/signature");
   return (
     <div className="flex flex-col gap-1 p-2 rounded-xl border border-green-100 bg-green-50/50 text-center">
       {isImage ? (
-        <a href={url} target="_blank" rel="noreferrer">
-          <img src={url} alt={label} className="w-full h-20 object-cover rounded-lg border border-green-100 hover:opacity-90 transition-opacity" />
+        <a href={fullUrl} target="_blank" rel="noreferrer">
+          <img src={fullUrl} alt={label} className="w-full h-20 object-cover rounded-lg border border-green-100 hover:opacity-90 transition-opacity" />
         </a>
       ) : (
         <div className="h-20 flex items-center justify-center bg-white rounded-lg border border-green-100 text-green-600">
@@ -164,7 +165,7 @@ function DocTile({ label, url, icon }: { label: string; url?: string; icon: Reac
         </div>
       )}
       <span className="text-xs font-medium text-gray-600">{label}</span>
-      <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 justify-center text-[10px] text-blue-500 hover:underline">
+      <a href={fullUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 justify-center text-[10px] text-blue-500 hover:underline">
         <ExternalLink className="h-2.5 w-2.5" /> Open
       </a>
     </div>
@@ -373,6 +374,7 @@ export default function AdminStudents() {
             <TableHeader><TableRow className="bg-[#F4F1EA]">
               <TableHead className="text-[#0B2A5B]">User</TableHead>
               <TableHead className="text-[#0B2A5B]">Phone</TableHead>
+              <TableHead className="text-[#0B2A5B]">City</TableHead>
               <TableHead className="text-[#0B2A5B]">Roles</TableHead>
               <TableHead className="text-[#0B2A5B]">KYC</TableHead>
               <TableHead className="text-[#0B2A5B]">Joined</TableHead>
@@ -384,6 +386,7 @@ export default function AdminStudents() {
                 <TableRow key={u.id} className="hover:bg-[#F4F1EA]/50">
                   <TableCell><div><p className="font-semibold text-[#0B2A5B]">{u.full_name}</p><p className="text-xs text-[#0B2A5B]/60">{u.email}</p></div></TableCell>
                   <TableCell className="text-[#0B2A5B] text-sm">{u.phone || "—"}</TableCell>
+                  <TableCell className="text-[#0B2A5B] text-sm">{u.city || "—"}</TableCell>
                   <TableCell>{u.roles?.map((r: any) => (
                     <Badge key={r.id} className={`mr-1 ${r.name === "admin" ? "bg-red-100 text-red-700" : r.name === "faculty" ? "bg-purple-100 text-purple-700" : r.name === "distributor" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}`}>{r.name}</Badge>
                   ))}</TableCell>
@@ -402,7 +405,7 @@ export default function AdminStudents() {
                   </TableCell>
                 </TableRow>
               ))}
-              {filtered.length === 0 && !loading && <TableRow><TableCell colSpan={7} className="text-center text-[#0B2A5B]/60 py-8">No users found</TableCell></TableRow>}
+              {filtered.length === 0 && !loading && <TableRow><TableCell colSpan={8} className="text-center text-[#0B2A5B]/60 py-8">No users found</TableCell></TableRow>}
             </TableBody>
           </Table>
         </div>
