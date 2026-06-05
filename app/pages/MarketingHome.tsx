@@ -1939,12 +1939,12 @@ export default function MarketingHome() {
                     {[
                       { num: "1", title: "Market Foundations", desc: "Markets, exchanges & instruments", status: "completed", x: 20, y: 86.6, align: isMobileViewport ? "right" : "left", isStart: true },
                       { num: "2", title: "Technical Analysis", desc: "Chart patterns & price action", status: "completed", x: 35, y: 76.6, align: isMobileViewport ? "left" : "left" },
-                      { num: "3", title: "Risk Management", desc: "Position sizing & capital protection", status: "current", x: 50, y: 63.3, align: isMobileViewport ? "right" : "left", isCurrent: true },
-                      { num: "4", title: "Trading Psychology", desc: "Emotional discipline & consistency", status: "locked", x: 65, y: 53.3, align: isMobileViewport ? "left" : "left" },
-                      { num: "5", title: "Options & Derivatives", desc: "Options pricing, Greeks & hedging", status: "locked", x: 80, y: 40, align: isMobileViewport ? "left" : "left" },
-                      { num: "6", title: "Advanced Strategies", desc: "Algo trading & quant analysis", status: "locked", x: 72, y: 26.6, align: isMobileViewport ? "left" : "right" },
-                      { num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "locked", x: 55, y: 20, align: isMobileViewport ? "right" : "right" },
-                      { num: "8", title: "Certification & Placement", desc: "Final assessment & placement", status: "locked", x: 36, y: 18.3, align: isMobileViewport ? "top" : "left", isSummit: true },
+                      { num: "3", title: "Risk Management", desc: "Position sizing & capital protection", status: "completed", x: 50, y: 63.3, align: isMobileViewport ? "right" : "left" },
+                      { num: "4", title: "Trading Psychology", desc: "Emotional discipline & consistency", status: "completed", x: 65, y: 53.3, align: isMobileViewport ? "left" : "left" },
+                      { num: "5", title: "Options & Derivatives", desc: "Options pricing, Greeks & hedging", status: "completed", x: 80, y: 40, align: isMobileViewport ? "left" : "left" },
+                      { num: "6", title: "Advanced Strategies", desc: "Algo trading & quant analysis", status: "completed", x: 72, y: 26.6, align: isMobileViewport ? "left" : "right" },
+                      { num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "completed", x: 55, y: 20, align: isMobileViewport ? "right" : "right" },
+                      { num: "8", title: "Certification & Placement", desc: "Final assessment & placement", status: "completed", x: 36, y: 18.3, align: isMobileViewport ? "top" : "left", isSummit: true },
                     ].map((step, idx) => {
                       // Status is static by default
                       const displayStatus = step.status;
