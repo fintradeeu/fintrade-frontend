@@ -718,7 +718,6 @@ export default function MarketingHome() {
   // Roadmap path animation states
   const pathRef = useRef<SVGPathElement>(null);
   const [pathLength, setPathLength] = useState(1200);
-  const [hoveredStep, setHoveredStep] = useState<number | null>(null);
 
   useEffect(() => {
     if (pathRef.current) {
@@ -761,7 +760,7 @@ export default function MarketingHome() {
 
   const [heroButtons, setHeroButtons] = useState<any>({
     btn1_name: "Apply Now",
-    btn2_name: "Watch: The FinTrade Story",
+    btn2_name: "The FinTrade",
     btn2_youtube_url: "",
     btn3_name: "Download Brochure",
     btn3_file_url: "/brochure.pdf"
@@ -1235,11 +1234,11 @@ export default function MarketingHome() {
                 </p>
 
                 {/* Action Buttons Row */}
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4.5 max-w-2xl mx-auto mb-6">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4.5 max-w-4xl mx-auto mb-6">
                   <Link to="/courses" className="w-full sm:w-auto">
                     <Button
                       size="lg"
-                      className="w-full sm:w-auto bg-[#D50032] hover:bg-[#FF3D00] text-white rounded-2xl px-8 py-5 h-auto text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all hover:scale-105"
+                      className="w-full sm:w-auto bg-[#D50032] hover:bg-[#FF3D00] text-white rounded-2xl px-8 py-5 h-auto text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all hover:scale-105 whitespace-nowrap"
                     >
                       {heroButtons.btn1_name || "Apply Now"}
                       <ArrowRight className="ml-2 h-5 w-5" />
@@ -1258,18 +1257,18 @@ export default function MarketingHome() {
                         setVideoOpen(true);
                       }
                     }}
-                    className="w-full sm:w-auto bg-white/5 hover:bg-white/10 text-white border border-white/15 rounded-2xl px-6 py-5 h-auto text-base font-bold transition-all inline-flex items-center justify-center gap-2.5"
+                    className="w-full sm:w-auto bg-[#D50032] hover:bg-[#FF3D00] text-white rounded-2xl px-6 py-5 h-auto text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all inline-flex items-center justify-center gap-2.5 hover:scale-105 whitespace-nowrap"
                   >
-                    <span className="w-6 h-6 rounded-full bg-[#D50032] flex items-center justify-center shadow-sm">
-                      <Play className="h-2.5 w-2.5 text-white ml-0.5 fill-white" />
+                    <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-sm">
+                      <Play className="h-2.5 w-2.5 text-[#D50032] ml-0.5 fill-[#D50032]" />
                     </span>
-                    {heroButtons.btn2_name || "Watch: The FinTrade Story"}
+                    {heroButtons.btn2_name || "The FinTrade"}
                   </button>
 
                   <a
                     href="#"
                     onClick={handleDownloadClick}
-                    className="w-full sm:w-auto bg-white/5 hover:bg-white/10 text-white border border-white/15 rounded-2xl px-6 py-5 h-auto text-base font-bold transition-all inline-flex items-center justify-center gap-2.5"
+                    className="w-full sm:w-auto bg-[#D50032] hover:bg-[#FF3D00] text-white rounded-2xl px-6 py-5 h-auto text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all inline-flex items-center justify-center gap-2.5 hover:scale-105 whitespace-nowrap"
                   >
                     <Download className="h-4.5 w-4.5 text-white" />
                     {heroButtons.btn3_name || "Download Brochure"}
@@ -1867,6 +1866,12 @@ export default function MarketingHome() {
               .animate-marquee:hover {
                 animation-play-state: paused;
               }
+
+              @keyframes pathFlow {
+                0% { stroke-dashoffset: var(--path-length); }
+                50% { stroke-dashoffset: 0; }
+                100% { stroke-dashoffset: var(--path-length); }
+              }
             `}</style>
             </div>
           </section>
@@ -1916,9 +1921,9 @@ export default function MarketingHome() {
                         strokeLinecap="round"
                         style={{
                           strokeDasharray: pathLength || 1200,
-                          strokeDashoffset: (pathLength || 1200) * (1 - (hoveredStep !== null && hoveredStep > 2 ? [0.0, 0.16, 0.33, 0.50, 0.67, 0.78, 0.89, 1.0][hoveredStep] : 0.33)),
-                          transition: "stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
-                        }}
+                          "--path-length": pathLength || 1200,
+                          animation: "pathFlow 6s ease-in-out infinite",
+                        } as any}
                       />
 
                       {/* Gradient Definitions */}
@@ -1941,17 +1946,8 @@ export default function MarketingHome() {
                       { num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "locked", x: 55, y: 20, align: isMobileViewport ? "right" : "right" },
                       { num: "8", title: "Certification & Placement", desc: "Final assessment & placement", status: "locked", x: 36, y: 18.3, align: isMobileViewport ? "top" : "left", isSummit: true },
                     ].map((step, idx) => {
-                      // Determine status dynamically based on hover
-                      let displayStatus = step.status;
-                      if (hoveredStep !== null && hoveredStep > 2) {
-                        if (idx <= 2) {
-                          displayStatus = "completed";
-                        } else if (idx <= hoveredStep) {
-                          displayStatus = idx === hoveredStep ? "current" : "completed";
-                        } else {
-                          displayStatus = "locked";
-                        }
-                      }
+                      // Status is static by default
+                      const displayStatus = step.status;
 
                       const isCompleted = displayStatus === "completed";
                       const isCurrent = displayStatus === "current";
@@ -1960,10 +1956,8 @@ export default function MarketingHome() {
                         <div key={idx}>
                           {/* Node Circle */}
                           <div
-                            className="absolute -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center transition-all duration-300 hover:scale-115 cursor-pointer origin-center"
+                            className="absolute -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center transition-all duration-300 hover:scale-115 origin-center"
                             style={{ left: `${step.x}%`, top: `${step.y}%` }}
-                            onMouseEnter={() => setHoveredStep(idx)}
-                            onMouseLeave={() => setHoveredStep(null)}
                           >
                             {isCurrent ? (
                               <div className="relative flex items-center justify-center">
@@ -2006,7 +2000,7 @@ export default function MarketingHome() {
 
                           {/* Label Container */}
                           <div
-                            className={`absolute -translate-y-1/2 z-10 cursor-pointer ${step.align === "left" ? "text-right" : (step.align === "top" || step.align === "bottom") ? "text-center" : "text-left"}`}
+                            className={`absolute -translate-y-1/2 z-10 ${step.align === "left" ? "text-right" : (step.align === "top" || step.align === "bottom") ? "text-center" : "text-left"}`}
                             style={{
                               width: `${isMobileViewport ? 130 : 250}px`,
                               left: step.align === "left"
@@ -2034,8 +2028,6 @@ export default function MarketingHome() {
                                     ? `calc(${step.y}% + 58px)`
                                     : `${step.y}%`
                             }}
-                            onMouseEnter={() => setHoveredStep(idx)}
-                            onMouseLeave={() => setHoveredStep(null)}
                           >
                             <h3
                               className={`tracking-tight mb-1 transition-colors duration-300 ${
