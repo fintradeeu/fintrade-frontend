@@ -219,7 +219,7 @@ export default function Lectures() {
                       </div>
                       <div className="flex gap-2">
                         {lecture.recordings && lecture.recordings.length > 0 && (
-                          <a href={api.defaults.baseURL?.replace('/api', '') + lecture.recordings[0].recording_url} target="_blank" rel="noreferrer">
+                          <a href={api.defaults.baseURL?.replace(/\\/api$/, '') + lecture.recordings[0].recording_url} target="_blank" rel="noreferrer">
                             <Button
                               size="sm"
                               className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a]"
