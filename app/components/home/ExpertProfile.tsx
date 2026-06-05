@@ -122,7 +122,7 @@ export default function ExpertProfile({ leaders: leadersProp }: { leaders?: Lead
                     {/* Large Circular Avatar Monogram */}
                     <div className="w-18 h-18 rounded-full bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
                       {leadersData[0].profile_image ? (
-                        <img src={getImageUrl(leadersData[0].profile_image)} alt={leadersData[0].name} className="w-full h-full object-cover" />
+                        <img src={getImageUrl(leadersData[0].profile_image)} alt={leadersData[0].name} className="w-full h-full object-cover object-top" />
                       ) : (
                         <span className="text-xl font-extrabold text-[#D50032] tracking-tighter">{leadersData[0].monogram}</span>
                       )}
@@ -187,7 +187,7 @@ export default function ExpertProfile({ leaders: leadersProp }: { leaders?: Lead
                       {/* Circular Avatar Monogram */}
                       <div className="w-14 h-14 rounded-full bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
                         {leader.profile_image ? (
-                          <img src={getImageUrl(leader.profile_image)} alt={leader.name} className="w-full h-full object-cover" />
+                          <img src={getImageUrl(leader.profile_image)} alt={leader.name} className="w-full h-full object-cover object-top" />
                         ) : (
                           <span className="text-base font-extrabold text-[#D50032] tracking-tighter">{leader.monogram}</span>
                         )}
@@ -252,7 +252,7 @@ export default function ExpertProfile({ leaders: leadersProp }: { leaders?: Lead
             <div className="flex items-center gap-3 md:gap-4.5 text-left">
               <div className="w-12 h-12 md:w-18 md:h-18 rounded-full bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {leadersData[activeLeader].profile_image ? (
-                  <img src={getImageUrl(leadersData[activeLeader].profile_image)} alt={leadersData[activeLeader].name} className="w-full h-full object-cover" />
+                  <img src={getImageUrl(leadersData[activeLeader].profile_image)} alt={leadersData[activeLeader].name} className="w-full h-full object-cover object-top" />
                 ) : (
                   <span className="text-base md:text-xl font-black text-[#D50032] tracking-tighter">
                     {leadersData[activeLeader].monogram}
