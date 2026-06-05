@@ -711,6 +711,50 @@ export default function MarketingHome() {
   const [activeVideoIdx, setActiveVideoIdx] = useState<number | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const isAuthenticated = !!localStorage.getItem("token");
+  
+  const [isRegModalOpen, setIsRegModalOpen] = useState(false);
+  const [selectedLectureForReg, setSelectedLectureForReg] = useState<any>(null);
+  const [regForm, setRegForm] = useState({ full_name: "", email: "", mobile_no: "", city: "" });
+  const [isSubmittingReg, setIsSubmittingReg] = useState(false);
+  const [regSuccess, setRegSuccess] = useState(false);
+
+  useEffect(() => {
+    try {
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        const u = JSON.parse(userStr);
+        setRegForm({
+          full_name: u.full_name || "",
+          email: u.email || "",
+          mobile_no: u.phone || "",
+          city: u.city || ""
+        });
+      }
+    } catch(e) {}
+  }, []);
+
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingReg(true);
+    try {
+      await api.post("/lectures/register", {
+        lecture_id: selectedLectureForReg?.id || null,
+        lecture_title: selectedLectureForReg?.title || null,
+        ...regForm
+      });
+      setRegSuccess(true);
+      setTimeout(() => {
+        setIsRegModalOpen(false);
+        setRegSuccess(false);
+      }, 3000);
+    } catch (error) {
+      console.error("Failed to register", error);
+      alert("Failed to register. Please try again.");
+    } finally {
+      setIsSubmittingReg(false);
+    }
+  };
+
   const [activeSlide, setActiveSlide] = useState(0);
   const [currentBgIdx, setCurrentBgIdx] = useState(0);
   const [heroBackgrounds, setHeroBackgrounds] = useState<string[]>([
@@ -1703,20 +1747,28 @@ export default function MarketingHome() {
                           <div className="flex-1" />
 
                           {/* CTA — always at bottom */}
-                          <Link to={isAuthenticated ? "/student/lectures" : "/login"} className="block">
+                          {lecture.status === "live" ? (
+                            <Link to={isAuthenticated ? "/student/lectures" : "/login"} className="block">
+                              <Button
+                                className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 !bg-gradient-to-r !from-[#D50032] !to-[#FF0000] !text-white hover:!from-[#FF0000] hover:!to-[#FF0000]"
+                                style={{ boxShadow: "0 8px 30px rgba(213,0,50,0.3)" }}
+                              >
+                                Join Now
+                                <ArrowRight className="ml-2 h-4 w-4" />
+                              </Button>
+                            </Link>
+                          ) : (
                             <Button
-                              className={`w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 ${lecture.status === "live"
-                                ? "!bg-gradient-to-r !from-[#D50032] !to-[#FF0000] !text-white hover:!from-[#FF0000] hover:!to-[#FF0000]"
-                                : "!bg-[#121212] !text-white hover:!bg-[#D50032] hover:!text-white"
-                                }`}
-                              style={{
-                                boxShadow: lecture.status === "live" ? "0 8px 30px rgba(213,0,50,0.3)" : "none"
+                              onClick={() => {
+                                setSelectedLectureForReg(lecture);
+                                setIsRegModalOpen(true);
                               }}
+                              className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 !bg-[#121212] !text-white hover:!bg-[#D50032] hover:!text-white block"
                             >
-                              {lecture.status === "live" ? "Join Now" : "Register Now"}
+                              Register Now
                               <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
-                          </Link>
+                          )}
                         </div>
                       </Card>
                     </div>
@@ -2574,6 +2626,57 @@ export default function MarketingHome() {
       )}
 
 
+
+        {/* Registration Modal */}
+        <Dialog open={isRegModalOpen} onOpenChange={setIsRegModalOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Register for {selectedLectureForReg?.title || "Live Class"}</DialogTitle>
+              <DialogDescription>
+                Please fill in your details to reserve your spot.
+              </DialogDescription>
+            </DialogHeader>
+
+            {regSuccess ? (
+              <div className="py-6 text-center">
+                <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                  <CheckCircle className="w-6 h-6 text-green-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">Registration Successful!</h3>
+                <p className="text-sm text-gray-500">We'll send you the meeting details soon.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleRegisterSubmit}>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="reg-name">Full Name <span className="text-[#D50032]">*</span></Label>
+                    <Input id="reg-name" required placeholder="John Doe" value={regForm.full_name} onChange={(e) => setRegForm({ ...regForm, full_name: e.target.value })} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="reg-contact">Mobile Number <span className="text-[#D50032]">*</span></Label>
+                    <Input id="reg-contact" required placeholder="+91 98765 43210" value={regForm.mobile_no} onChange={(e) => setRegForm({ ...regForm, mobile_no: e.target.value })} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="reg-email">Email Address <span className="text-[#D50032]">*</span></Label>
+                    <Input id="reg-email" required type="email" placeholder="john@example.com" value={regForm.email} onChange={(e) => setRegForm({ ...regForm, email: e.target.value })} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="reg-city">City</Label>
+                    <Input id="reg-city" placeholder="Mumbai" value={regForm.city} onChange={(e) => setRegForm({ ...regForm, city: e.target.value })} />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsRegModalOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmittingReg} className="bg-[#D50032] hover:bg-[#b00029] text-white">
+                    {isSubmittingReg ? "Registering..." : "Confirm Registration"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Brochure Modal */}
         <Dialog open={brochureOpen} onOpenChange={setBrochureOpen}>

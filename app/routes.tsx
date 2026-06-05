@@ -65,6 +65,7 @@ import AdminCMS from "./pages/admin/AdminCMS";
 import AdminFeedbackForms from "./pages/admin/AdminFeedbackForms";
 import SubmitFeedback from "./pages/SubmitFeedback";
 import ArticleDetail from "./pages/ArticleDetail";
+import AdminLiveClassRegistrations from "./pages/admin/AdminLiveClassRegistrations";
 
 // Distributor Pages
 import DistributorDashboard from "./pages/distributor/DistributorDashboard";
@@ -307,6 +308,10 @@ export const router = createBrowserRouter([
   {
     path: "/admin/feedback-forms",
     Component: AdminFeedbackForms,
+  },
+  {
+    path: "/admin/live-class-registrations",
+    Component: AdminLiveClassRegistrations,
   },
   {
     path: "/feedback/submit/:formId",

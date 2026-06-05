@@ -65,6 +65,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "Courses", path: "/admin/courses", icon: <BookOpen size={20} /> },
         { label: "Module Students", path: "/admin/module-students", icon: <GraduationCap size={20} /> },
         { label: "Lectures", path: "/admin/lectures", icon: <Video size={20} /> },
+        { label: "Live Class Registrations", path: "/admin/live-class-registrations", icon: <Users size={20} /> },
         { label: "Exams", path: "/admin/exams", icon: <FileQuestion size={20} /> },
         { label: "Payments & Coupons", path: "/admin/payments", icon: <IndianRupee size={20} /> },
         { label: "Login Details", path: "/admin/login-details", icon: <Users size={20} /> },
@@ -125,6 +126,8 @@ export function DashboardLayout({
         case "/admin/module-students":
           return userPermissions.viewModuleStudents !== false;
         case "/admin/lectures":
+          return userPermissions.viewLectures !== false;
+        case "/admin/live-class-registrations":
           return userPermissions.viewLectures !== false;
         case "/admin/exams":
           return userPermissions.manageExams !== false;
