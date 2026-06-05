@@ -317,7 +317,7 @@ export default function Modules() {
                     {selectedCourse.progress_percent >= 100 ? "Completed" : selectedCourse.progress_percent > 0 ? "In Progress" : "Not Started"}
                   </Badge>
                   <h2 className="text-2xl font-bold text-[#0B2A5B] mb-2">{selectedCourse.title}</h2>
-                  <p className="text-[#0B2A5B]/70 mb-4">{selectedCourse.description || selectedCourse.short_description || "No description"}</p>
+                  <p className="text-[#0B2A5B]/70 mb-4 whitespace-pre-wrap">{selectedCourse.description || selectedCourse.short_description || "No description"}</p>
                   <div className="flex items-center gap-6 text-sm text-[#0B2A5B]/60">
                     <span>{totalModules} Modules</span>
                     <span>{selectedCourse.duration_hours || "—"} hours</span>

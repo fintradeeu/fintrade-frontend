@@ -132,7 +132,7 @@ export default function Lectures() {
                 <div className="mb-4">
                   <Badge className="mb-3 bg-blue-100 text-blue-700">Scheduled</Badge>
                   <h3 className="text-xl font-semibold text-[#0B2A5B] mb-2">{lecture.title}</h3>
-                  <p className="text-sm text-[#0B2A5B]/70 mb-4">{lecture.description}</p>
+                  <p className="text-sm text-[#0B2A5B]/70 mb-4 whitespace-pre-wrap">{lecture.description}</p>
                 </div>
 
                 <div className="space-y-2 mb-4 pb-4 border-b border-[#0B2A5B]/10">
