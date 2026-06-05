@@ -273,15 +273,15 @@ export default function EntranceExam() {
       // 2. Fetch questions
       const qRes = await api.get(`/exams/questions?exam_id=${examId}`);
       
-      // If the backend doesn't have options seeded, use local mock fallback temporarily for UI flow to work
-      const loadedQuestions = qRes.data.length > 0 ? qRes.data.map((q: any) => ({
+      if (qRes.data.length === 0) {
+        setErrorMsg("This exam has no questions configured. Please add questions from the Admin Panel.");
+        return;
+      }
+
+      const loadedQuestions = qRes.data.map((q: any) => ({
         id: q.id,
         text: q.question_text,
         options: q.options.map((opt: any) => ({ id: opt.id, text: opt.option_text }))
-      })) : examQuestions.map(q => ({
-        id: q.id,
-        text: q.question,
-        options: q.options.map((opt, i) => ({ id: i, text: opt }))
       }));
 
       setQuestions(loadedQuestions);
