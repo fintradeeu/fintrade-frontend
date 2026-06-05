@@ -4,6 +4,15 @@ import api from "../services/api";
 import { Card } from "../components/ui/card";
 import { BookOpen, Calendar, Clock, ChevronRight } from "lucide-react";
 
+const getImageUrl = (path?: string) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
+  const base = api.defaults.baseURL || "";
+  const cleanBase = base.endsWith("/") ? base.slice(0, -1) : base;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `${cleanBase}${cleanPath}`;
+};
+
 export default function BlogPage() {
   const [blogs, setBlogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,11 +60,11 @@ export default function BlogPage() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {blogs.map((blog) => (
-              <Card key={blog.id} className="overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300 border-none bg-white">
+              <Card key={blog.id} onClick={() => handleReadArticle(blog)} className="overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300 border-none bg-white cursor-pointer">
                 <div className="aspect-video w-full bg-gray-100 relative overflow-hidden">
                   {blog.thumbnail_url ? (
                     <img 
-                      src={blog.thumbnail_url} 
+                      src={getImageUrl(blog.thumbnail_url)} 
                       alt={blog.title} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
@@ -91,10 +100,7 @@ export default function BlogPage() {
                     {blog.description}
                   </p>
                   
-                  <div 
-                    onClick={() => handleReadArticle(blog)}
-                    className="mt-auto flex items-center text-[#D50032] font-semibold text-sm cursor-pointer group/btn"
-                  >
+                  <div className="mt-auto flex items-center text-[#D50032] font-semibold text-sm group/btn">
                     Read Full Article 
                     <ChevronRight size={16} className="ml-1 group-hover/btn:translate-x-1 transition-transform" />
                   </div>

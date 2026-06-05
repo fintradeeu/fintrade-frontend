@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import api from "../services/api";
 import { Play, TrendingUp, Award, Users, BookOpen, LineChart, Video, CheckCircle, Star, ArrowRight, BarChart3, Brain, Target, Trophy, X, FileText, Search, Phone, Download, Instagram, Youtube, Linkedin, Twitter, Facebook, ChevronRight, ChevronLeft, ChevronDown, Shield, UserCheck, Monitor, Wifi, Activity, ClipboardCheck, GitBranch, Cpu, Clock } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -706,6 +706,7 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
 }
 
 export default function MarketingHome() {
+  const navigate = useNavigate();
   const [videoOpen, setVideoOpen] = useState(false);
   const [activeVideoIdx, setActiveVideoIdx] = useState<number | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -2215,8 +2216,8 @@ export default function MarketingHome() {
                     style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                   >
                     {blogStories.length > 0 ? blogStories.map((story, i) => (
-                      <Card key={i} className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 flex flex-col border-0 shadow-md group hover:-translate-y-1 transition-all duration-300 snap-center">
-                        <div className="aspect-video overflow-hidden relative">
+                      <Card key={i} onClick={() => navigate(`/article/${story.id}`)} className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 flex flex-col border-0 shadow-md group hover:-translate-y-1 transition-all duration-300 snap-center cursor-pointer">
+                        <div className="aspect-video overflow-hidden relative bg-gray-100 flex items-center justify-center">
                           <img src={getImageUrl(story.thumbnail_url) || "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80"} alt={story.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                           <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2.5 py-0.5 rounded-full text-[10px] font-bold text-[#D50032]">
                             Blog
@@ -2227,10 +2228,10 @@ export default function MarketingHome() {
                             <span className="flex items-center gap-1"><FileText size={12} />{story.author_name ? `By ${story.author_name}` : "Read"}</span>
                             <span>5 min read</span>
                           </div>
-                          <h3 className="font-bold text-sm mb-3 line-clamp-2 hover:text-[#D50032] transition-colors cursor-pointer flex-1" style={{ color: "#121212" }}>{story.title}</h3>
-                          <Link to={`/article/${story.id}`} className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all mt-auto">
+                          <h3 className="font-bold text-sm mb-3 line-clamp-2 hover:text-[#D50032] transition-colors flex-1" style={{ color: "#121212" }}>{story.title}</h3>
+                          <div className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all mt-auto">
                             Read Story <ChevronRight size={14} />
-                          </Link>
+                          </div>
                         </div>
                       </Card>
                     )) : [
