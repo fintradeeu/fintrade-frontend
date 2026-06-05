@@ -14,6 +14,7 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [city, setCity] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,6 +30,7 @@ export default function RegisterPage() {
         full_name: fullName,
         email,
         phone,
+        city,
         password
       });
       const { access_token, user } = response.data;
@@ -175,6 +177,21 @@ export default function RegisterPage() {
                 placeholder="+91 98765 43210"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+                className="mt-1 bg-gray-50 border-gray-300 focus:border-[#D50032] focus:ring-[#D50032]"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="city">City</Label>
+              <Input
+                id="city"
+                name="city"
+                type="text"
+                autoComplete="address-level2"
+                placeholder="Mumbai"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
                 className="mt-1 bg-gray-50 border-gray-300 focus:border-[#D50032] focus:ring-[#D50032]"
                 required
               />

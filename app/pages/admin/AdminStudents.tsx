@@ -34,7 +34,7 @@ function exportToExcel(users: any[], kycMap: Record<number, any>, apiBaseUrl: st
   };
 
   const headers = [
-    "ID", "Full Name", "Email", "Phone", "Roles", "Status", "Joined",
+    "ID", "Full Name", "Email", "Phone", "City", "Roles", "Status", "Joined",
     "KYC Status", "DOB", "Qualification", "Address",
     "Aadhaar Number", "PAN Number",
     "Aadhaar Doc URL", "PAN Doc URL", "Passport Photo URL",
@@ -92,6 +92,7 @@ function exportToExcel(users: any[], kycMap: Record<number, any>, apiBaseUrl: st
       <td>${u.full_name || ""}</td>
       <td>${u.email || ""}</td>
       <td>${u.phone || ""}</td>
+      <td>${u.city || ""}</td>
       <td>${rolesStr}</td>
       <td class="${statusClass}">${statusText}</td>
       <td>${joinedDate}</td>
@@ -178,7 +179,7 @@ export default function AdminStudents() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newUser, setNewUser] = useState({
-    role: "faculty", email: "", full_name: "", phone: "", password: "",
+    role: "faculty", email: "", full_name: "", phone: "", city: "", password: "",
     region: "", referral_code: "", discount_percentage: 10,
     permissions: { ...DEFAULT_FACULTY_PERMISSIONS }
   });
@@ -192,7 +193,7 @@ export default function AdminStudents() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [editForm, setEditForm] = useState({
-    email: "", full_name: "", phone: "", region: "", referral_code: "",
+    email: "", full_name: "", phone: "", city: "", region: "", referral_code: "",
     discount_percentage: 10, permissions: { ...DEFAULT_FACULTY_PERMISSIONS }
   });
 
@@ -268,7 +269,7 @@ export default function AdminStudents() {
   const handleOpenEdit = (user: any) => {
     setSelectedUser(user);
     setEditForm({
-      email: user.email || "", full_name: user.full_name || "", phone: user.phone || "",
+      email: user.email || "", full_name: user.full_name || "", phone: user.phone || "", city: user.city || "",
       region: user.distributor_profile?.region || "",
       referral_code: user.distributor_profile?.referral_code || "",
       discount_percentage: user.distributor_profile?.discount_percentage || 10,
@@ -295,12 +296,12 @@ export default function AdminStudents() {
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault(); setCreating(true);
     try {
-      const base = { email: newUser.email, full_name: newUser.full_name, password: newUser.password, phone: newUser.phone || undefined };
+      const base = { email: newUser.email, full_name: newUser.full_name, password: newUser.password, phone: newUser.phone || undefined, city: newUser.city || undefined };
       if (newUser.role === "admin") await api.post("/admin/users/create-admin", base);
       else if (newUser.role === "faculty") await api.post("/admin/users/create-faculty", { ...base, permissions: newUser.permissions });
       else await api.post("/admin/users/create-distributor", { ...base, region: newUser.region, referral_code: newUser.referral_code, discount_percentage: newUser.discount_percentage });
       setShowAddModal(false);
-      setNewUser({ role: "faculty", email: "", full_name: "", phone: "", password: "", region: "", referral_code: "", discount_percentage: 10, permissions: { ...DEFAULT_FACULTY_PERMISSIONS } });
+      setNewUser({ role: "faculty", email: "", full_name: "", phone: "", city: "", password: "", region: "", referral_code: "", discount_percentage: 10, permissions: { ...DEFAULT_FACULTY_PERMISSIONS } });
       fetchUsers();
     } catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
     finally { setCreating(false); }
@@ -309,7 +310,7 @@ export default function AdminStudents() {
   const handleEditUser = async (e: React.FormEvent) => {
     e.preventDefault(); setUpdating(true);
     try {
-      const payload: any = { email: editForm.email, full_name: editForm.full_name, phone: editForm.phone || null };
+      const payload: any = { email: editForm.email, full_name: editForm.full_name, phone: editForm.phone || null, city: editForm.city || null };
       if (selectedUser.roles?.some((r: any) => r.name === "distributor")) {
         payload.region = editForm.region; payload.referral_code = editForm.referral_code; payload.discount_percentage = editForm.discount_percentage;
       }
@@ -441,6 +442,7 @@ export default function AdminStudents() {
                     ["Name", selectedUser.full_name],
                     ["Email", selectedUser.email],
                     ["Phone", selectedUser.phone || "—"],
+                    ["City", selectedUser.city || "—"],
                     ["Joined", new Date(selectedUser.created_at).toLocaleDateString("en-IN")],
                     ["Status", selectedUser.is_active ? "Active" : "Inactive"],
                   ].map(([k, v]) => (
@@ -587,6 +589,7 @@ export default function AdminStudents() {
               <div><label className="text-sm font-medium text-[#0B2A5B]">Full Name *</label><Input required minLength={2} value={newUser.full_name} onChange={e => setNewUser({ ...newUser, full_name: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Email *</label><Input required type="email" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Phone</label><Input type="tel" placeholder="+91 98765 43210" value={newUser.phone} onChange={e => setNewUser({ ...newUser, phone: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
+              <div><label className="text-sm font-medium text-[#0B2A5B]">City</label><Input type="text" placeholder="Mumbai" value={newUser.city} onChange={e => setNewUser({ ...newUser, city: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Password *</label><Input required type="password" minLength={8} placeholder="Min 8 characters" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
               {newUser.role === "distributor" && (<>
                 <div><label className="text-sm font-medium text-[#0B2A5B]">Region *</label><Input required value={newUser.region} onChange={e => setNewUser({ ...newUser, region: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
@@ -624,6 +627,7 @@ export default function AdminStudents() {
               <div><label className="text-sm font-medium text-[#0B2A5B]">Full Name *</label><Input required minLength={2} value={editForm.full_name} onChange={e => setEditForm({ ...editForm, full_name: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Email *</label><Input required type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Phone</label><Input type="tel" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
+              <div><label className="text-sm font-medium text-[#0B2A5B]">City</label><Input type="text" value={editForm.city} onChange={e => setEditForm({ ...editForm, city: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
               {selectedUser.roles?.some((r: any) => r.name === "distributor") && (
                 <div className="space-y-3 border-t pt-4 mt-4">
                   <h3 className="font-semibold text-sm text-[#0B2A5B]">Distributor Settings</h3>
