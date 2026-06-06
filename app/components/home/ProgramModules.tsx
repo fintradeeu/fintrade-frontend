@@ -160,22 +160,22 @@ export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | nu
                     <button
                       onClick={() => toggleStage(idx)}
                       className={`w-3.5 h-3.5 sm:w-6 h-6 rounded-full border-2 sm:border-4 border-white transition-all duration-300 shadow-md ${isExpanded
-                          ? "bg-[#D50032] scale-110 shadow-[0_0_12px_rgba(213,0,50,0.5)]"
-                          : "bg-gray-200 hover:bg-gray-300"
+                        ? "bg-[#D50032] scale-110 shadow-[0_0_12px_rgba(213,0,50,0.5)]"
+                        : "bg-gray-200 hover:bg-gray-300"
                         }`}
                     />
                   </div>
 
                   {/* Stage Card - Responsive Alternating Layout */}
                   <div className={`w-[calc(50%-12px)] sm:w-[calc(50%-20px)] md:w-[calc(50%-28px)] ${isLeft
-                      ? "mr-auto pr-2 sm:pr-6 md:pr-10 text-left"
-                      : "ml-auto pl-2 sm:pl-6 md:pl-10 text-left"
-
-                      < div
+                    ? "mr-auto pr-2 sm:pr-6 md:pr-10 text-left"
+                    : "ml-auto pl-2 sm:pl-6 md:pl-10 text-left"
+                  }`}>
+                    <div
                       onClick={() => toggleStage(idx)}
                     className={`w-full p-2.5 sm:p-4.5 md:p-5 bg-white border rounded-xl sm:rounded-2xl transition-all duration-300 cursor-pointer text-left ${isExpanded
-                        ? "border-[#D50032] shadow-[0_12px_45px_rgba(213,0,50,0.04)] relative ring-1 ring-[#D50032]/10"
-                        : "border-gray-100 shadow-[0_8px_35px_rgba(0,0,0,0.015)] hover:border-gray-200 hover:shadow-[0_12px_45px_rgba(0,0,0,0.02)]"
+                      ? "border-[#D50032] shadow-[0_12px_45px_rgba(213,0,50,0.04)] relative ring-1 ring-[#D50032]/10"
+                      : "border-gray-100 shadow-[0_8px_35px_rgba(0,0,0,0.015)] hover:border-gray-200 hover:shadow-[0_12px_45px_rgba(0,0,0,0.02)]"
                       }`}
                   >
                     <div className="flex justify-between items-center gap-2 sm:gap-4">
