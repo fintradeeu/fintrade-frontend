@@ -21,7 +21,6 @@ import PlatformFeatures from "../components/home/PlatformFeatures";
 import CareerPathways from "../components/home/CareerPathways";
 import ModuleRoadmap from "../components/home/ModuleRoadmap";
 import ProgramModules from "../components/home/ProgramModules";
-import logo from "../../imports/fintrade_logo.png";
 import CourseCheckoutModal from "../components/CourseCheckoutModal";
 import { motion } from "motion/react";
 
@@ -718,6 +717,10 @@ export default function MarketingHome() {
   const [isSubmittingReg, setIsSubmittingReg] = useState(false);
   const [regSuccess, setRegSuccess] = useState(false);
 
+  const [regOtp, setRegOtp] = useState("");
+  const [isRegOtpSent, setIsRegOtpSent] = useState(false);
+  const [isSendingRegOtp, setIsSendingRegOtp] = useState(false);
+
   useEffect(() => {
     try {
       const userStr = localStorage.getItem("user");
@@ -733,6 +736,28 @@ export default function MarketingHome() {
     } catch(e) {}
   }, []);
 
+  const sendRegistrationOTP = async () => {
+    if (!regForm.email) {
+      alert("Please enter your email address.");
+      return;
+    }
+    setIsSendingRegOtp(true);
+    try {
+      await api.post("/lectures/send-otp", {
+        email: regForm.email,
+        lecture_title: selectedLectureForReg?.title || null
+      });
+      setIsRegOtpSent(true);
+      alert("OTP sent to your email address. Please check your inbox.");
+    } catch (error: any) {
+      console.error("Failed to send OTP", error);
+      const msg = error.response?.data?.detail || "Failed to send OTP. Please check your details.";
+      alert(msg);
+    } finally {
+      setIsSendingRegOtp(false);
+    }
+  };
+
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmittingReg(true);
@@ -740,16 +765,20 @@ export default function MarketingHome() {
       await api.post("/lectures/register", {
         lecture_id: selectedLectureForReg?.id || null,
         lecture_title: selectedLectureForReg?.title || null,
+        otp: regOtp,
         ...regForm
       });
       setRegSuccess(true);
       setTimeout(() => {
         setIsRegModalOpen(false);
         setRegSuccess(false);
-      }, 3000);
-    } catch (error) {
+        setIsRegOtpSent(false);
+        setRegOtp("");
+      }, 5000);
+    } catch (error: any) {
       console.error("Failed to register", error);
-      alert("Failed to register. Please try again.");
+      const msg = error.response?.data?.detail || "Failed to register. Please try again.";
+      alert(msg);
     } finally {
       setIsSubmittingReg(false);
     }
@@ -1769,10 +1798,9 @@ export default function MarketingHome() {
                                 setSelectedLectureForReg(lecture);
                                 setIsRegModalOpen(true);
                               }}
-                              className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 !bg-[#121212] !text-white hover:!bg-[#D50032] hover:!text-white block"
+                              className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 !bg-[#121212] !text-white hover:!bg-[#D50032] hover:!text-white flex items-center justify-center"
                             >
                               Register Now
-                              <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
                           )}
                         </div>
@@ -2634,12 +2662,20 @@ export default function MarketingHome() {
 
 
         {/* Registration Modal */}
-        <Dialog open={isRegModalOpen} onOpenChange={setIsRegModalOpen}>
+        <Dialog open={isRegModalOpen} onOpenChange={(open) => {
+          setIsRegModalOpen(open);
+          if (!open) {
+            setIsRegOtpSent(false);
+            setRegOtp("");
+          }
+        }}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Register for {selectedLectureForReg?.title || "Live Class"}</DialogTitle>
               <DialogDescription>
-                Please fill in your details to reserve your spot.
+                {isRegOtpSent 
+                  ? `Enter the 6-digit OTP sent to ${regForm.email}`
+                  : "Please fill in your details to reserve your spot."}
               </DialogDescription>
             </DialogHeader>
 
@@ -2648,36 +2684,60 @@ export default function MarketingHome() {
                 <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
                   <CheckCircle className="w-6 h-6 text-green-600" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-1">Registration Successful!</h3>
-                <p className="text-sm text-gray-500">We'll send you the meeting details soon.</p>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">Registered Successfully!</h3>
+                <p className="text-sm text-gray-500">Meeting link you will get on your mail.</p>
               </div>
             ) : (
               <form onSubmit={handleRegisterSubmit}>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="reg-name">Full Name <span className="text-[#D50032]">*</span></Label>
-                    <Input id="reg-name" required placeholder="John Doe" value={regForm.full_name} onChange={(e) => setRegForm({ ...regForm, full_name: e.target.value })} />
+                {!isRegOtpSent ? (
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="reg-name">Full Name <span className="text-[#D50032]">*</span></Label>
+                      <Input id="reg-name" required placeholder="John Doe" value={regForm.full_name} onChange={(e) => setRegForm({ ...regForm, full_name: e.target.value })} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="reg-contact">Mobile Number <span className="text-[#D50032]">*</span></Label>
+                      <Input id="reg-contact" required placeholder="+91 98765 43210" value={regForm.mobile_no} onChange={(e) => setRegForm({ ...regForm, mobile_no: e.target.value })} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="reg-email">Email Address <span className="text-[#D50032]">*</span></Label>
+                      <Input id="reg-email" required type="email" placeholder="john@example.com" value={regForm.email} onChange={(e) => setRegForm({ ...regForm, email: e.target.value })} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="reg-city">City</Label>
+                      <Input id="reg-city" placeholder="Mumbai" value={regForm.city} onChange={(e) => setRegForm({ ...regForm, city: e.target.value })} />
+                    </div>
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="reg-contact">Mobile Number <span className="text-[#D50032]">*</span></Label>
-                    <Input id="reg-contact" required placeholder="+91 98765 43210" value={regForm.mobile_no} onChange={(e) => setRegForm({ ...regForm, mobile_no: e.target.value })} />
+                ) : (
+                  <div className="flex flex-col items-center gap-6 py-8">
+                    <InputOTP maxLength={6} value={regOtp} onChange={setRegOtp}>
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                    <Button variant="link" className="text-xs text-[#D50032]" onClick={() => { setIsRegOtpSent(false); setRegOtp(""); }}>
+                      Edit Details
+                    </Button>
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="reg-email">Email Address <span className="text-[#D50032]">*</span></Label>
-                    <Input id="reg-email" required type="email" placeholder="john@example.com" value={regForm.email} onChange={(e) => setRegForm({ ...regForm, email: e.target.value })} />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="reg-city">City</Label>
-                    <Input id="reg-city" placeholder="Mumbai" value={regForm.city} onChange={(e) => setRegForm({ ...regForm, city: e.target.value })} />
-                  </div>
-                </div>
+                )}
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsRegModalOpen(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={isSubmittingReg} className="bg-[#D50032] hover:bg-[#b00029] text-white">
-                    {isSubmittingReg ? "Registering..." : "Confirm Registration"}
-                  </Button>
+                  {!isRegOtpSent ? (
+                    <Button type="button" onClick={sendRegistrationOTP} disabled={isSendingRegOtp || !regForm.full_name || !regForm.email || !regForm.mobile_no} className="bg-[#D50032] hover:bg-[#b00029] text-white">
+                      {isSendingRegOtp ? "Sending OTP..." : "Verify Email"}
+                    </Button>
+                  ) : (
+                    <Button type="submit" disabled={isSubmittingReg || regOtp.length !== 6} className="bg-[#D50032] hover:bg-[#b00029] text-white">
+                      {isSubmittingReg ? "Registering..." : "Confirm Registration"}
+                    </Button>
+                  )}
                 </DialogFooter>
               </form>
             )}
