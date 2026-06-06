@@ -237,7 +237,7 @@ function Toast({ message, type }: { message: string; type: "success" | "error" }
 // ── Main Component ────────────────────────────────────────────────────
 
 export default function AdminCMS() {
-  const [activeTab, setActiveTab] = useState<"announcements" | "courses" | "settings" | "videos" | "benefits" | "services" | "quick_tips" | "why_choose" | "leadership" | "hero_slider" | "live_classes" | "certificate" | "emi" | "modules_timeline" | "reviews" | "articles" | "about_us_slider" | "about_us_details">("announcements");
+  const [activeTab, setActiveTab] = useState<"announcements" | "courses" | "settings" | "videos" | "benefits" | "services" | "quick_tips" | "why_choose" | "leadership" | "hero_slider" | "live_classes" | "certificate" | "emi" | "modules_timeline" | "reviews" | "articles" | "about_us">("announcements");
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   // Announcements state
@@ -440,8 +440,7 @@ export default function AdminCMS() {
         <TabBtn active={activeTab === "emi"} onClick={() => setActiveTab("emi")} icon={<TrendingUp size={16} />} label="Section 11: EMI & Payment Plans" />
         <TabBtn active={activeTab === "reviews"} onClick={() => setActiveTab("reviews")} icon={<Star size={16} />} label="Section 9.5: Student Reviews" />
         <TabBtn active={activeTab === "articles"} onClick={() => setActiveTab("articles")} icon={<Newspaper size={16} />} label="Section 12: Articles Moderation" />
-        <TabBtn active={activeTab === "about_us_slider"} onClick={() => setActiveTab("about_us_slider")} icon={<LayoutTemplate size={16} />} label="Section 13: About Us Hero" />
-        <TabBtn active={activeTab === "about_us_details"} onClick={() => setActiveTab("about_us_details")} icon={<LayoutTemplate size={16} />} label="Section 14: About Us Details" />
+        <TabBtn active={activeTab === "about_us"} onClick={() => setActiveTab("about_us")} icon={<Users size={16} />} label="Section 13: About Us Page" />
         <TabBtn active={activeTab === "settings"} onClick={() => setActiveTab("settings")} icon={<Globe size={16} />} label="Site Settings" />
       </div>
 
@@ -3531,14 +3530,14 @@ export default function AdminCMS() {
         </div>
       )}
 
-      {/* ── TAB: About Us Hero Slider ───────────────────────────── */}
-      {activeTab === "about_us_slider" && !configLoading && (
+      {/* ── TAB: About Us Page ─────────────────────────────────────── */}
+      {activeTab === "about_us" && !configLoading && (
         <div className="space-y-6">
           <Card className="p-4 border border-blue-100 bg-blue-50/50">
             <div className="flex items-start gap-3">
               <Info size={18} className="text-blue-500 mt-0.5 flex-shrink-0" />
               <p className="text-sm text-blue-700">
-                Manage the background images for the <strong>About Us Hero Slider</strong>. You can upload new images or remove existing ones. Note: Use high-quality landscape images.
+                Manage the <strong>About Us</strong> page content, including the Hero Slider images, statistics counters, and company vision/mission.
               </p>
             </div>
           </Card>
@@ -3547,7 +3546,7 @@ export default function AdminCMS() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold" style={{ color: "#121212" }}>Slider Background Images</h2>
               <Button onClick={() => saveConfig({ about_us_slides: config.about_us_slides })} className="bg-[#E53935] text-white hover:bg-[#b71c1c]">
-                <Save size={16} className="mr-2" /> Save About Us Slides
+                <Save size={16} className="mr-2" /> Save Slides
               </Button>
             </div>
 
