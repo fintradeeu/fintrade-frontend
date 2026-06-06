@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ChevronDown, ChevronUp, Clock, BookOpen, Layers, Play, Video, FileAudio, FileText, HelpCircle, Download } from "lucide-react";
 import api from "../../services/api";
-
+import { motion } from "motion/react";
 interface Module {
   num: number;
   title: string;
@@ -64,9 +64,9 @@ const programSections: ProgramSection[] = [
 ];
 
 export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | null }) {
-  const [expandedStageIdx, setExpandedStageIdx] = useState<number | null>(0);
+  const [expandedStageIdx, setExpandedStageIdx] = useState<number | null>(null);
   const [timelineSections, setTimelineSections] = useState<any[]>(programSections);
-  const [mobileActiveModKey, setMobileActiveModKey] = useState<string | null>(null);
+  const [activeModKey, setActiveModKey] = useState<string | null>(null);
   const [expandedDescKeys, setExpandedDescKeys] = useState<Set<string>>(new Set());
 
   const stageRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -110,36 +110,7 @@ export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | nu
 
   const sectionsToUse: any[] = timelineSections;
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const idx = Number(entry.target.getAttribute("data-idx"));
-            if (!isNaN(idx)) {
-              setExpandedStageIdx(idx);
-            }
-          }
-        });
-      },
-      {
-        root: null,
-        rootMargin: "-40% 0px -40% 0px", // Trigger when the element reaches the center of the viewport
-        threshold: 0,
-      }
-    );
 
-    const currentRefs = stageRefs.current;
-    currentRefs.forEach((ref) => {
-      if (ref) observer.observe(ref);
-    });
-
-    return () => {
-      currentRefs.forEach((ref) => {
-        if (ref) observer.unobserve(ref);
-      });
-    };
-  }, [sectionsToUse]);
 
   const toggleStage = (idx: number) => {
     setExpandedStageIdx((prev) => (prev === idx ? null : idx));
@@ -174,10 +145,14 @@ export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | nu
               const isLeft = idx % 2 === 0;
 
               return (
-                <div 
+                <motion.div 
                   key={idx} 
                   ref={(el) => { stageRefs.current[idx] = el; }}
                   data-idx={idx}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
                   className="relative flex flex-row items-center w-full transition-all duration-500"
                 >
                   {/* Circular Node dot indicator on the timeline */}
@@ -233,16 +208,15 @@ export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | nu
                       {isExpanded && (
                         <div className="mt-4 pt-4 border-t border-gray-100 space-y-2.5 transition-all duration-500 ease-in-out">
                           {sec.modules.map((mod: any, modIdx: number) => {
-                            const mobileKey = `${idx}-${modIdx}`;
-                            const isMobileActive = mobileActiveModKey === mobileKey;
+                            const modKey = `${idx}-${modIdx}`;
+                            const isActive = activeModKey === modKey;
 
                             return (
                               <div
                                 key={modIdx}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  const key = `${idx}-${modIdx}`;
-                                  setMobileActiveModKey(prev => prev === key ? null : key);
+                                  setActiveModKey(prev => prev === modKey ? null : modKey);
                                 }}
                                 className="group relative bg-white hover:bg-gray-50/50 border border-gray-100 rounded-xl p-2 sm:p-3.5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-[0_8px_30px_rgba(213,0,50,0.02)] transition-all cursor-pointer select-none"
                               >
@@ -255,83 +229,14 @@ export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | nu
                                       {mod.title}
                                     </h4>
                                   </div>
-                                  <div className="md:hidden w-5 h-5 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center flex-shrink-0 border border-gray-150 transition-all">
-                                    {isMobileActive ? <ChevronUp className="w-3 h-3 text-[#D50032]" /> : <ChevronDown className="w-3 h-3" />}
+                                  <div className="w-5 h-5 rounded-full bg-gray-50 text-gray-400 flex items-center justify-center flex-shrink-0 border border-gray-150 transition-all">
+                                    {isActive ? <ChevronUp className="w-3 h-3 text-[#D50032]" /> : <ChevronDown className="w-3 h-3" />}
                                   </div>
                                 </div>
 
-                                {/* Floating Hover Details Card (Desktop only) */}
-                                <div
-                                  className={`hidden md:group-hover:flex absolute top-1/2 -translate-y-1/2 w-[340px] bg-white border border-gray-150 shadow-[0_20px_50px_rgba(0,0,0,0.12)] rounded-2xl p-5 z-[100] flex-col text-left transition-all duration-300 pointer-events-none ${
-                                    isLeft ? "left-full ml-6" : "right-full mr-6"
-                                  }`}
-                                >
-                                  {/* Pointing triangle arrow */}
-                                  <div
-                                    className={`absolute top-1/2 -translate-y-1/2 border-[8px] border-transparent z-10 ${
-                                      isLeft
-                                        ? "right-full border-r-white filter drop-shadow-[-1px_0_0_rgba(0,0,0,0.08)]"
-                                        : "left-full border-l-white filter drop-shadow-[1px_0_0_rgba(0,0,0,0.08)]"
-                                    }`}
-                                  />
-
-                                  {/* Header */}
-                                  <div className="flex items-center gap-2 mb-3">
-                                    <span className="text-[10px] font-black bg-[#D50032]/5 text-[#D50032] border border-[#D50032]/10 px-2 py-0.5 rounded-md uppercase tracking-wider">
-                                      Module {mod.num}
-                                    </span>
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                      • Detailed Syllabus
-                                    </span>
-                                  </div>
-                                  <h4 className="font-extrabold text-gray-900 text-base leading-snug mb-2">
-                                    {mod.title}
-                                  </h4>
-                                  <p className="text-gray-500 text-xs font-medium leading-relaxed mb-4">
-                                    {mod.overview}
-                                  </p>
-
-                                  {/* Lessons list */}
-                                  {mod.lessons && mod.lessons.length > 0 && (
-                                    <div className="border-t border-gray-100 pt-3">
-                                      <h5 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1">
-                                        📚 Lectures & Topics ({mod.lessons.length})
-                                      </h5>
-                                      <div className="space-y-2">
-                                        {mod.lessons.slice(0, 4).map((lesson: any, lessonIdx: number) => (
-                                          <div
-                                            key={lessonIdx}
-                                            className="flex items-start justify-between gap-3 p-1.5 rounded-lg hover:bg-gray-50 transition-colors"
-                                          >
-                                            <div className="flex items-center gap-2 overflow-hidden">
-                                              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100">
-                                                {getTypeIcon(lesson.content_type)}
-                                              </div>
-                                              <span className="text-gray-700 text-xs font-bold truncate max-w-[200px]">
-                                                {lesson.title}
-                                              </span>
-                                            </div>
-                                            {lesson.duration_minutes && (
-                                              <span className="flex-shrink-0 flex items-center gap-0.5 text-[10px] font-semibold text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">
-                                                <Clock className="w-2.5 h-2.5" />
-                                                {lesson.duration_minutes}m
-                                              </span>
-                                            )}
-                                          </div>
-                                        ))}
-                                        {mod.lessons.length > 4 && (
-                                          <div className="text-center pt-1">
-                                            <span className="text-[10px] font-bold text-[#D50032]">
-                                              + {mod.lessons.length - 4} more lectures in curriculum
-                                            </span>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>                                {/* Mobile Inline Details */}
-                                {isMobileActive && (
-                                  <div className="md:hidden mt-3 p-4 bg-gray-50 border border-gray-200/60 rounded-xl space-y-3.5 block text-left transition-all animate-in fade-in slide-in-from-top-2 duration-300">
+                                {/* Inline Details */}
+                                {isActive && (
+                                  <div className="mt-3 p-4 bg-gray-50 border border-gray-200/60 rounded-xl space-y-3.5 block text-left transition-all animate-in fade-in slide-in-from-top-2 duration-300">
                                     {/* Header */}
                                     <div className="flex items-center gap-2">
                                       <span className="text-[9px] font-black bg-[#D50032]/5 text-[#D50032] border border-[#D50032]/10 px-2 py-0.5 rounded-md uppercase tracking-wider">
@@ -348,16 +253,16 @@ export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | nu
                                     {/* Overview Description with Read More / Read Less */}
                                     <div className="text-gray-500 text-xs font-medium leading-relaxed">
                                       <span>
-                                        {!mod.overview || mod.overview.length <= 50 || expandedDescKeys.has(mobileKey)
+                                        {!mod.overview || mod.overview.length <= 50 || expandedDescKeys.has(modKey)
                                           ? mod.overview
                                           : `${mod.overview.slice(0, 45)}...`}
                                       </span>
                                       {mod.overview && mod.overview.length > 50 && (
                                         <button
-                                          onClick={(e) => toggleDesc(mobileKey, e)}
+                                          onClick={(e) => toggleDesc(modKey, e)}
                                           className="text-[9px] font-black text-[#D50032] hover:text-[#FF3D00] focus:outline-none ml-1 uppercase tracking-wider inline-block cursor-pointer"
                                         >
-                                          {expandedDescKeys.has(mobileKey) ? "Read Less" : "Read More"}
+                                          {expandedDescKeys.has(modKey) ? "Read Less" : "Read More"}
                                         </button>
                                       )}
                                     </div>
@@ -400,7 +305,7 @@ export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | nu
                       )}
                     </div>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>

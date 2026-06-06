@@ -13,6 +13,7 @@ import MarketsPage from "./pages/MarketsPage";
 import MarketUpdatesPage from "./pages/MarketUpdatesPage";
 import BlogPage from "./pages/BlogPage";
 import AboutUs from "./pages/AboutUs";
+import LeaderProfile from "./pages/LeaderProfile";
 import MarketingLayout from "./components/MarketingLayout";
 
 // Student Pages
@@ -101,6 +102,10 @@ export const router = createBrowserRouter([
       {
         path: "/about",
         Component: AboutUs,
+      },
+      {
+        path: "/leader/:id",
+        Component: LeaderProfile,
       },
       {
         path: "/article/:id",
