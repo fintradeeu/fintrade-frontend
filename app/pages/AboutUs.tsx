@@ -3,8 +3,8 @@ import { Users, TrendingUp, Target, Award, ArrowRight, Shield, UserCheck, BookOp
 import { Link } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { Card } from "../components/ui/card";
-import { leaders } from "../data/leaders";
 import { Button } from "../components/ui/button";
+import ExpertProfile from "../components/home/ExpertProfile";
 
 export default function AboutUs() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -43,7 +43,7 @@ export default function AboutUs() {
                 index === currentSlide ? "opacity-100" : "opacity-0"
               }`}
             >
-              <div className="absolute inset-0 bg-black/20 z-10" />
+              <div className="absolute inset-0 bg-black/60 z-10" />
               <img
                 src={slide}
                 alt={`Background ${index + 1}`}
@@ -69,7 +69,7 @@ export default function AboutUs() {
           <h1 className="text-4xl sm:text-5xl md:text-6.5xl font-black mb-6 tracking-tight leading-none text-white font-sans uppercase drop-shadow-lg">
             About <span className="text-[#D50032]">FinTrade</span>
           </h1>
-          <p className="text-base sm:text-xl text-gray-200 max-w-3xl mx-auto font-medium leading-relaxed drop-shadow-md">
+          <p className="text-base sm:text-xl text-white max-w-3xl mx-auto font-sans font-medium leading-relaxed drop-shadow-lg">
             Building India's most trusted prop trading education and capital allocation ecosystem
           </p>
 
@@ -214,54 +214,7 @@ export default function AboutUs() {
 
         {/* Leadership Section */}
         <div className="border-t border-gray-100 pt-12">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-1.5 px-4.5 py-1.5 rounded-full mb-4 border border-[#D50032]/25 bg-[#D50032]/5">
-              <span className="text-[#D50032] font-black text-xs tracking-wider uppercase">
-                👥 Our Team
-              </span>
-            </div>
-            <h2 className="text-3xl sm:text-4.5xl font-black mb-4 text-gray-900 tracking-tight">
-              Meet Our <span className="text-[#D50032]">Leadership</span>
-            </h2>
-            <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto font-medium">
-              Visionary leaders who built FinTrade to reshape India's trading education landscape
-            </p>
-          </div>
-
-          {/* Leaders Profile Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {leaders.map((leader, i) => (
-              <Card key={i} className="p-7 bg-white border border-gray-100 rounded-[28px] shadow-[0_10px_35px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex flex-col justify-between group">
-                <div>
-                  <div className="flex items-center gap-3.5 mb-6">
-                    <div className="w-12 h-12 rounded-full bg-[#FFF0F2] text-[#D50032] flex items-center justify-center font-extrabold text-sm tracking-tight border border-[#D50032]/10 group-hover:scale-105 transition-all duration-300">
-                      {leader.initials}
-                    </div>
-                    <div>
-                      <h3 className="font-extrabold text-gray-950 text-base leading-snug">{leader.name}</h3>
-                      <p className="text-[#D50032] text-xs font-black tracking-wide uppercase mt-0.5">{leader.role}</p>
-                    </div>
-                  </div>
-
-                  <p className="text-gray-500 text-xs md:text-sm leading-relaxed mb-6 font-medium text-left">
-                    {leader.bio}
-                  </p>
-
-                  <div className="flex flex-wrap gap-2 mb-8">
-                    {leader.tags.map((tag, tIdx) => (
-                      <span key={tIdx} className="px-3 py-1.5 rounded-full text-[10px] font-bold text-gray-650 bg-gray-50 border border-gray-100">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <Link to={`/leader/${leader.id}`} className="text-[#D50032] font-black text-xs tracking-wider uppercase flex items-center gap-1 group-hover:gap-2 transition-all self-start mt-auto">
-                  Read Full Profile <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </Card>
-            ))}
-          </div>
+          <ExpertProfile />
         </div>
 
       </div>
