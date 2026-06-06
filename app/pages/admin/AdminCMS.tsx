@@ -172,6 +172,16 @@ interface CertificateConfig {
   benefit3_desc?: string;
 }
 
+interface AboutUsStat {
+  val: string;
+  lbl: string;
+}
+
+interface AboutUsVisionMission {
+  text: string;
+  bullets: string[];
+}
+
 interface LandingConfig {
   hero?: { title: string; highlight: string; subtitle: string; badge: string };
   contact?: { phone: string; phone_href: string };
@@ -191,6 +201,10 @@ interface LandingConfig {
   program_modules?: any[];
   hero_backgrounds?: string[];
   about_us_slides?: string[];
+  about_us_stats?: AboutUsStat[];
+  about_us_text?: string[];
+  about_us_vision?: AboutUsVisionMission;
+  about_us_mission?: AboutUsVisionMission;
 }
 
 // ── Sub-components ────────────────────────────────────────────────────
@@ -222,7 +236,7 @@ function Toast({ message, type }: { message: string; type: "success" | "error" }
 // ── Main Component ────────────────────────────────────────────────────
 
 export default function AdminCMS() {
-  const [activeTab, setActiveTab] = useState<"announcements" | "courses" | "settings" | "videos" | "benefits" | "services" | "quick_tips" | "why_choose" | "leadership" | "hero_slider" | "live_classes" | "certificate" | "emi" | "modules_timeline" | "reviews" | "articles" | "about_us_slider">("announcements");
+  const [activeTab, setActiveTab] = useState<"announcements" | "courses" | "settings" | "videos" | "benefits" | "services" | "quick_tips" | "why_choose" | "leadership" | "hero_slider" | "live_classes" | "certificate" | "emi" | "modules_timeline" | "reviews" | "articles" | "about_us_slider" | "about_us_details">("announcements");
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   // Announcements state
@@ -426,6 +440,7 @@ export default function AdminCMS() {
         <TabBtn active={activeTab === "reviews"} onClick={() => setActiveTab("reviews")} icon={<Star size={16} />} label="Section 9.5: Student Reviews" />
         <TabBtn active={activeTab === "articles"} onClick={() => setActiveTab("articles")} icon={<Newspaper size={16} />} label="Section 12: Articles Moderation" />
         <TabBtn active={activeTab === "about_us_slider"} onClick={() => setActiveTab("about_us_slider")} icon={<LayoutTemplate size={16} />} label="Section 13: About Us Hero" />
+        <TabBtn active={activeTab === "about_us_details"} onClick={() => setActiveTab("about_us_details")} icon={<LayoutTemplate size={16} />} label="Section 14: About Us Details" />
         <TabBtn active={activeTab === "settings"} onClick={() => setActiveTab("settings")} icon={<Globe size={16} />} label="Site Settings" />
       </div>
 
@@ -522,6 +537,178 @@ export default function AdminCMS() {
                 ))}
               </div>
             )}
+          </Card>
+        </div>
+      )}
+
+      {/* ── TAB: Hero & Carousel ──────────────────────────────────── */}
+      {activeTab === "hero_slider" && !configLoading && (
+        <div className="space-y-6">
+          <Card className="p-4 border border-blue-100 bg-blue-50/50">
+            <div className="flex items-start gap-3">
+              <Info size={18} className="text-blue-500 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-blue-700">
+                Manage the main <strong>Landing Page Hero Slider</strong>. You can upload background images and configure the floating carousel text cards.
+              </p>
+            </div>
+          </Card>
+
+          <Card className="p-6 border border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold" style={{ color: "#121212" }}>Hero Background Images</h2>
+              <Button onClick={() => saveConfig({ hero_backgrounds: config.hero_backgrounds })} className="bg-[#E53935] text-white hover:bg-[#b71c1c]">
+                <Save size={16} className="mr-2" /> Save Hero Backgrounds
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+              {(config.hero_backgrounds || []).map((slideUrl, idx) => (
+                <div key={idx} className="relative group rounded-xl overflow-hidden border border-gray-200 shadow-sm aspect-video">
+                  <img src={getImageUrl(slideUrl)} alt={`Hero Background ${idx + 1}`} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button
+                      onClick={() => {
+                        const newSlides = [...(config.hero_backgrounds || [])];
+                        newSlides.splice(idx, 1);
+                        setConfig(p => ({ ...p, hero_backgrounds: newSlides }));
+                      }}
+                      className="p-3 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors transform hover:scale-110"
+                      title="Remove this background"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
+                  <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white text-xs rounded-md backdrop-blur-sm">
+                    Background {idx + 1}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 border-t border-gray-100 pt-6">
+              <Label className="text-gray-700 font-bold mb-2 block">Upload New Hero Background</Label>
+              <div className="flex items-center gap-4">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    if (!e.target.files || e.target.files.length === 0) return;
+                    const file = e.target.files[0];
+                    const formData = new FormData();
+                    formData.append("file", file);
+
+                    try {
+                      showToast("Uploading background image...", "success");
+                      const res = await api.post("/admin/upload", formData, {
+                        headers: { "Content-Type": "multipart/form-data" }
+                      });
+                      if (res.data && res.data.url) {
+                        const newSlides = [...(config.hero_backgrounds || []), res.data.url];
+                        setConfig(p => ({ ...p, hero_backgrounds: newSlides }));
+                        showToast("Background uploaded successfully!", "success");
+                      }
+                    } catch {
+                      showToast("Background upload failed.", "error");
+                    }
+                  }}
+                  className="cursor-pointer max-w-md h-12 flex items-center"
+                />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6 border border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold" style={{ color: "#121212" }}>Carousel Floating Cards</h2>
+              <Button onClick={() => saveConfig({ carousel_slides: config.carousel_slides })} className="bg-[#E53935] text-white hover:bg-[#b71c1c]">
+                <Save size={16} className="mr-2" /> Save Carousel Cards
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {(config.carousel_slides || []).map((slide, idx) => (
+                <div key={idx} className="p-5 rounded-2xl bg-gray-50 border border-gray-100 relative">
+                  <span className="absolute top-4 right-4 bg-gray-200 text-gray-600 px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-wider">Card #{idx + 1}</span>
+                  <button
+                    onClick={() => {
+                      if (!confirm("Remove this carousel card?")) return;
+                      const list = [...(config.carousel_slides || [])];
+                      list.splice(idx, 1);
+                      setConfig(p => ({ ...p, carousel_slides: list }));
+                    }}
+                    className="absolute top-12 right-4 text-xs text-red-500 hover:text-red-700 flex items-center gap-1 font-semibold"
+                  >
+                    <Trash2 size={14} /> Remove
+                  </button>
+                  <div className="grid md:grid-cols-2 gap-4 max-w-4xl">
+                    <div>
+                      <Label className="text-xs">Title</Label>
+                      <Input
+                        value={slide.title || ""}
+                        onChange={e => {
+                          const list = [...(config.carousel_slides || [])];
+                          list[idx] = { ...list[idx], title: e.target.value };
+                          setConfig(p => ({ ...p, carousel_slides: list }));
+                        }}
+                        className="bg-white mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Subtitle</Label>
+                      <Input
+                        value={slide.subtitle || ""}
+                        onChange={e => {
+                          const list = [...(config.carousel_slides || [])];
+                          list[idx] = { ...list[idx], subtitle: e.target.value };
+                          setConfig(p => ({ ...p, carousel_slides: list }));
+                        }}
+                        className="bg-white mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Button Text</Label>
+                      <Input
+                        value={slide.buttonText || ""}
+                        onChange={e => {
+                          const list = [...(config.carousel_slides || [])];
+                          list[idx] = { ...list[idx], buttonText: e.target.value };
+                          setConfig(p => ({ ...p, carousel_slides: list }));
+                        }}
+                        className="bg-white mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Button Link</Label>
+                      <Input
+                        value={slide.link || ""}
+                        onChange={e => {
+                          const list = [...(config.carousel_slides || [])];
+                          list[idx] = { ...list[idx], link: e.target.value };
+                          setConfig(p => ({ ...p, carousel_slides: list }));
+                        }}
+                        placeholder="e.g. #courses or /about"
+                        className="bg-white mt-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const list = [...(config.carousel_slides || [])];
+                  list.push({ title: "", subtitle: "", buttonText: "", link: "" });
+                  setConfig(p => ({ ...p, carousel_slides: list }));
+                }}
+                className="border border-[#E53935] text-[#E53935] hover:bg-[#E53935]/5"
+              >
+                <Plus size={16} className="mr-2" /> Add Carousel Card
+              </Button>
+            </div>
           </Card>
         </div>
       )}
@@ -3418,6 +3605,221 @@ export default function AdminCMS() {
               </div>
             </div>
           </Card>
+        </div>
+      )}
+
+      {/* ── TAB: About Us Details ─────────────────────────────────── */}
+      {activeTab === "about_us_details" && !configLoading && (
+        <div className="space-y-6">
+          <Card className="p-4 border border-blue-100 bg-blue-50/50">
+            <div className="flex items-start gap-3">
+              <Info size={18} className="text-blue-500 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-blue-700">
+                Manage the details for the <strong>About Us</strong> page, including Statistics Counters, Main Description text, Vision, and Mission.
+              </p>
+            </div>
+          </Card>
+
+          {/* Stats Counters */}
+          <Card className="p-6 border border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold" style={{ color: "#121212" }}>Statistics Counters</h2>
+              <Button onClick={() => saveConfig({ about_us_stats: config.about_us_stats })} className="bg-[#E53935] text-white hover:bg-[#b71c1c]">
+                <Save size={16} className="mr-2" /> Save Stats
+              </Button>
+            </div>
+            <div className="grid md:grid-cols-3 gap-6">
+              {[0, 1, 2].map(idx => {
+                const defaultStats = [
+                  { val: "1,200+", lbl: "Students Trained" },
+                  { val: "₹50 Cr+", lbl: "Trading Capital" },
+                  { val: "90 Days", lbl: "To Get Funded" }
+                ];
+                const stats = config.about_us_stats && config.about_us_stats.length === 3 ? config.about_us_stats : defaultStats;
+                const stat = stats[idx];
+                return (
+                  <div key={idx} className="space-y-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <Label className="text-xs font-bold text-gray-500">Stat #{idx + 1}</Label>
+                    <div>
+                      <Label className="text-[10px]">Value (e.g. 1,200+)</Label>
+                      <Input
+                        value={stat.val}
+                        onChange={e => {
+                          const newStats = [...stats];
+                          newStats[idx] = { ...stat, val: e.target.value };
+                          setConfig(p => ({ ...p, about_us_stats: newStats }));
+                        }}
+                        className="bg-white mt-1 h-8"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[10px]">Label (e.g. Students Trained)</Label>
+                      <Input
+                        value={stat.lbl}
+                        onChange={e => {
+                          const newStats = [...stats];
+                          newStats[idx] = { ...stat, lbl: e.target.value };
+                          setConfig(p => ({ ...p, about_us_stats: newStats }));
+                        }}
+                        className="bg-white mt-1 h-8"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+
+          {/* Main Description */}
+          <Card className="p-6 border border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold" style={{ color: "#121212" }}>Main Description</h2>
+              <Button onClick={() => saveConfig({ about_us_text: config.about_us_text })} className="bg-[#E53935] text-white hover:bg-[#b71c1c]">
+                <Save size={16} className="mr-2" /> Save Description
+              </Button>
+            </div>
+            <div className="space-y-4">
+              {(() => {
+                const defaultText = [
+                  "The FinTrade is an initiative by Junomoneta Finsol Pvt Ltd, a leading financial institution known for robust trading ecosystem and market expertise.",
+                  "We believe that anyone with discipline and the right framework can master the markets. Our prop trading academy bridges the gap between education and capital allocation."
+                ];
+                const texts = config.about_us_text && config.about_us_text.length > 0 ? config.about_us_text : defaultText;
+                return texts.map((txt, idx) => (
+                  <div key={idx} className="relative group">
+                    <textarea
+                      value={txt}
+                      onChange={e => {
+                        const newTexts = [...texts];
+                        newTexts[idx] = e.target.value;
+                        setConfig(p => ({ ...p, about_us_text: newTexts }));
+                      }}
+                      className="w-full rounded-xl border border-gray-200 p-4 text-sm min-h-[100px] focus:outline-none focus:ring-2 focus:ring-[#E53935]/50"
+                      placeholder="Enter description paragraph..."
+                    />
+                    <button
+                      onClick={() => {
+                        const newTexts = [...texts];
+                        newTexts.splice(idx, 1);
+                        setConfig(p => ({ ...p, about_us_text: newTexts }));
+                      }}
+                      className="absolute top-2 right-2 p-1.5 bg-red-100 text-red-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ));
+              })()}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const texts = config.about_us_text || [];
+                  setConfig(p => ({ ...p, about_us_text: [...texts, ""] }));
+                }}
+                className="border border-[#E53935] text-[#E53935] hover:bg-[#E53935]/5"
+              >
+                <Plus size={16} className="mr-2" /> Add Paragraph
+              </Button>
+            </div>
+          </Card>
+
+          {/* Vision & Mission */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Vision */}
+            <Card className="p-6 border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold" style={{ color: "#121212" }}>Our Vision</h2>
+                <Button onClick={() => saveConfig({ about_us_vision: config.about_us_vision })} size="sm" className="bg-[#E53935] text-white hover:bg-[#b71c1c]">
+                  <Save size={14} />
+                </Button>
+              </div>
+              <div className="space-y-4">
+                {(() => {
+                  const defaultVision = {
+                    text: "To democratize professional trading by providing world-class education, proprietary strategies, and capital allocation to aspiring traders.",
+                    bullets: ["Accessible Institutional Training", "Performance-Based Capital Funding"]
+                  };
+                  const vision = config.about_us_vision || defaultVision;
+                  return (
+                    <>
+                      <div>
+                        <Label className="text-xs">Vision Description</Label>
+                        <textarea
+                          value={vision.text}
+                          onChange={e => setConfig(p => ({ ...p, about_us_vision: { ...vision, text: e.target.value } }))}
+                          className="w-full rounded-xl border border-gray-200 p-3 text-sm min-h-[80px] mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Vision Bullets (Up to 3)</Label>
+                        {[0, 1, 2].map(idx => (
+                          <Input
+                            key={idx}
+                            value={vision.bullets[idx] || ""}
+                            onChange={e => {
+                              const newBullets = [...(vision.bullets || [])];
+                              newBullets[idx] = e.target.value;
+                              setConfig(p => ({ ...p, about_us_vision: { ...vision, bullets: newBullets } }));
+                            }}
+                            placeholder={`Bullet ${idx + 1}`}
+                            className="mt-2 h-8"
+                          />
+                        ))}
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </Card>
+
+            {/* Mission */}
+            <Card className="p-6 border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold" style={{ color: "#121212" }}>Our Mission</h2>
+                <Button onClick={() => saveConfig({ about_us_mission: config.about_us_mission })} size="sm" className="bg-[#E53935] text-white hover:bg-[#b71c1c]">
+                  <Save size={14} />
+                </Button>
+              </div>
+              <div className="space-y-4">
+                {(() => {
+                  const defaultMission = {
+                    text: "To build India's largest community of funded professional traders by transforming raw talent through rigorous training and mentorship.",
+                    bullets: ["Hands-on Live Trading", "Strict Risk Management Rules"]
+                  };
+                  const mission = config.about_us_mission || defaultMission;
+                  return (
+                    <>
+                      <div>
+                        <Label className="text-xs">Mission Description</Label>
+                        <textarea
+                          value={mission.text}
+                          onChange={e => setConfig(p => ({ ...p, about_us_mission: { ...mission, text: e.target.value } }))}
+                          className="w-full rounded-xl border border-gray-200 p-3 text-sm min-h-[80px] mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Mission Bullets (Up to 3)</Label>
+                        {[0, 1, 2].map(idx => (
+                          <Input
+                            key={idx}
+                            value={mission.bullets[idx] || ""}
+                            onChange={e => {
+                              const newBullets = [...(mission.bullets || [])];
+                              newBullets[idx] = e.target.value;
+                              setConfig(p => ({ ...p, about_us_mission: { ...mission, bullets: newBullets } }));
+                            }}
+                            placeholder={`Bullet ${idx + 1}`}
+                            className="mt-2 h-8"
+                          />
+                        ))}
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </Card>
+          </div>
         </div>
       )}
 

@@ -20,11 +20,21 @@ export default function AboutUs() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [vmSlide, setVmSlide] = useState(0);
   const [dynamicSlides, setDynamicSlides] = useState<string[]>([]);
+  const [dynamicStats, setDynamicStats] = useState<any[]>([]);
+  const [dynamicText, setDynamicText] = useState<string[]>([]);
+  const [dynamicVision, setDynamicVision] = useState<any>(null);
+  const [dynamicMission, setDynamicMission] = useState<any>(null);
   
   useEffect(() => {
     api.get("/settings/landing-page").then(res => {
-      if (res.data?.about_us_slides?.length > 0) {
-        setDynamicSlides(res.data.about_us_slides.map(getImageUrl));
+      if (res.data) {
+        if (res.data.about_us_slides?.length > 0) {
+          setDynamicSlides(res.data.about_us_slides.map(getImageUrl));
+        }
+        if (res.data.about_us_stats?.length > 0) setDynamicStats(res.data.about_us_stats);
+        if (res.data.about_us_text?.length > 0) setDynamicText(res.data.about_us_text);
+        if (res.data.about_us_vision) setDynamicVision(res.data.about_us_vision);
+        if (res.data.about_us_mission) setDynamicMission(res.data.about_us_mission);
       }
     }).catch(console.error);
   }, []);
@@ -111,11 +121,11 @@ export default function AboutUs() {
 
         {/* Stats Counters */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {[
+          {(dynamicStats.length > 0 ? dynamicStats : [
             { val: "1,200+", lbl: "Students Trained" },
             { val: "95%", lbl: "Failure Rate Addressed" },
             { val: "₹50+", lbl: "Crore Live Market Exp." }
-          ].map((m, idx) => (
+          ]).map((m, idx) => (
             <Card key={idx} className="flex flex-col items-center justify-center text-center p-8 bg-[#D50032] border-none rounded-2xl shadow-xl transition-all hover:bg-black duration-300 group cursor-pointer">
               <span className="text-4xl md:text-5xl font-black text-white leading-none mb-3 font-sans transition-colors duration-300">
                 {m.val}
@@ -143,15 +153,13 @@ export default function AboutUs() {
                 </div>
 
                 <div className="space-y-4 text-gray-600 text-sm md:text-base leading-relaxed">
-                  <p>
-                    FinTrade is a <strong className="text-gray-900 font-bold">results-driven prop trading academy</strong> focused on developing skilled and disciplined traders. We combine practical learning, live market exposure, and structured mentorship to bridge the gap between knowledge and real trading performance.
-                  </p>
-                  <p>
-                    Our programs are designed to build consistency, confidence, and profitability, guiding students from basics to <strong className="text-gray-900 font-bold">professional-level trading</strong>.
-                  </p>
-                  <p className="text-gray-950 font-extrabold text-base md:text-lg border-l-4 border-[#D50032] pl-4 py-1 bg-red-50/30">
-                    At FinTrade, we don't just teach trading — <span className="text-[#D50032]">we build traders</span>.
-                  </p>
+                  {(dynamicText.length > 0 ? dynamicText : [
+                    "FinTrade is a <strong class=\"text-gray-900 font-bold\">results-driven prop trading academy</strong> focused on developing skilled and disciplined traders. We combine practical learning, live market exposure, and structured mentorship to bridge the gap between knowledge and real trading performance.",
+                    "Our programs are designed to build consistency, confidence, and profitability, guiding students from basics to <strong class=\"text-gray-900 font-bold\">professional-level trading</strong>.",
+                    "At FinTrade, we don't just teach trading — <span class=\"text-[#D50032]\">we build traders</span>."
+                  ]).map((txt: string, idx: number) => (
+                    <p key={idx} dangerouslySetInnerHTML={{ __html: txt }} className={idx === 2 && dynamicText.length === 0 ? "text-gray-950 font-extrabold text-base md:text-lg border-l-4 border-[#D50032] pl-4 py-1 bg-red-50/30" : ""} />
+                  ))}
                 </div>
               </div>
 
@@ -176,14 +184,14 @@ export default function AboutUs() {
                   <div className="flex-1">
                     <h3 className="font-black text-gray-950 text-2xl tracking-tight mb-3">Our Vision</h3>
                     <p className="text-gray-600 text-base md:text-lg leading-relaxed mb-6">
-                      To build India's most trusted, full-stack <strong className="text-gray-950 font-bold">Prop Trading Education & Capital Allocation ecosystem</strong> — transforming retail traders into consistently profitable, funded professionals.
+                      {dynamicVision?.text || "To build India's most trusted, full-stack Prop Trading Education & Capital Allocation ecosystem — transforming retail traders into consistently profitable, funded professionals."}
                     </p>
                     <ul className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      {[
+                      {(dynamicVision?.bullets?.length > 0 ? dynamicVision.bullets : [
                         "Trusted Education Platform",
                         "Capital Allocation Ecosystem",
                         "Funded Professionals"
-                      ].map((bullet, idx) => (
+                      ]).map((bullet: string, idx: number) => (
                         <li key={idx} className="flex items-center gap-2.5 text-sm md:text-base font-bold text-gray-700">
                           <span className="w-2.5 h-2.5 flex-shrink-0 rounded bg-[#D50032]" />
                           {bullet}
@@ -206,14 +214,14 @@ export default function AboutUs() {
                   <div className="flex-1">
                     <h3 className="font-black text-gray-950 text-2xl tracking-tight mb-3">Our Mission</h3>
                     <p className="text-gray-600 text-base md:text-lg leading-relaxed mb-6">
-                      To empower aspiring traders by providing them with the right knowledge, discipline, and capital required to succeed in global markets and achieve lasting financial freedom.
+                      {dynamicMission?.text || "To empower aspiring traders by providing them with the right knowledge, discipline, and capital required to succeed in global markets and achieve lasting financial freedom."}
                     </p>
                     <ul className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      {[
+                      {(dynamicMission?.bullets?.length > 0 ? dynamicMission.bullets : [
                         "Practical Learning Approach",
                         "Discipline & Risk Management",
                         "Pathway to Financial Freedom"
-                      ].map((bullet, idx) => (
+                      ]).map((bullet: string, idx: number) => (
                         <li key={idx} className="flex items-center gap-2.5 text-sm md:text-base font-bold text-gray-700">
                           <span className="w-2.5 h-2.5 flex-shrink-0 rounded bg-[#D50032]" />
                           {bullet}
