@@ -190,6 +190,7 @@ interface LandingConfig {
   certificate?: CertificateConfig;
   program_modules?: any[];
   hero_backgrounds?: string[];
+  about_us_slides?: string[];
 }
 
 // ── Sub-components ────────────────────────────────────────────────────
@@ -221,7 +222,7 @@ function Toast({ message, type }: { message: string; type: "success" | "error" }
 // ── Main Component ────────────────────────────────────────────────────
 
 export default function AdminCMS() {
-  const [activeTab, setActiveTab] = useState<"announcements" | "courses" | "settings" | "videos" | "benefits" | "services" | "quick_tips" | "why_choose" | "leadership" | "hero_slider" | "live_classes" | "certificate" | "emi" | "modules_timeline" | "reviews" | "articles">("announcements");
+  const [activeTab, setActiveTab] = useState<"announcements" | "courses" | "settings" | "videos" | "benefits" | "services" | "quick_tips" | "why_choose" | "leadership" | "hero_slider" | "live_classes" | "certificate" | "emi" | "modules_timeline" | "reviews" | "articles" | "about_us_slider">("announcements");
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   // Announcements state
@@ -424,6 +425,7 @@ export default function AdminCMS() {
         <TabBtn active={activeTab === "emi"} onClick={() => setActiveTab("emi")} icon={<TrendingUp size={16} />} label="Section 11: EMI & Payment Plans" />
         <TabBtn active={activeTab === "reviews"} onClick={() => setActiveTab("reviews")} icon={<Star size={16} />} label="Section 9.5: Student Reviews" />
         <TabBtn active={activeTab === "articles"} onClick={() => setActiveTab("articles")} icon={<Newspaper size={16} />} label="Section 12: Articles Moderation" />
+        <TabBtn active={activeTab === "about_us_slider"} onClick={() => setActiveTab("about_us_slider")} icon={<LayoutTemplate size={16} />} label="Section 13: About Us Hero" />
         <TabBtn active={activeTab === "settings"} onClick={() => setActiveTab("settings")} icon={<Globe size={16} />} label="Site Settings" />
       </div>
 
@@ -3340,6 +3342,85 @@ export default function AdminCMS() {
           </Card>
         </div>
       )}
+
+      {/* ── TAB: About Us Hero Slider ───────────────────────────── */}
+      {activeTab === "about_us_slider" && !configLoading && (
+        <div className="space-y-6">
+          <Card className="p-4 border border-blue-100 bg-blue-50/50">
+            <div className="flex items-start gap-3">
+              <Info size={18} className="text-blue-500 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-blue-700">
+                Manage the background images for the <strong>About Us Hero Slider</strong>. You can upload new images or remove existing ones. Note: Use high-quality landscape images.
+              </p>
+            </div>
+          </Card>
+
+          <Card className="p-6 border border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold" style={{ color: "#121212" }}>Slider Background Images</h2>
+              <Button onClick={() => saveConfig({ about_us_slides: config.about_us_slides })} className="bg-[#E53935] text-white hover:bg-[#b71c1c]">
+                <Save size={16} className="mr-2" /> Save About Us Slides
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+              {(config.about_us_slides || []).map((slideUrl, idx) => (
+                <div key={idx} className="relative group rounded-xl overflow-hidden border border-gray-200 shadow-sm aspect-video">
+                  <img src={getImageUrl(slideUrl)} alt={`Slide ${idx + 1}`} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button
+                      onClick={() => {
+                        const newSlides = [...(config.about_us_slides || [])];
+                        newSlides.splice(idx, 1);
+                        setConfig(p => ({ ...p, about_us_slides: newSlides }));
+                      }}
+                      className="p-3 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors transform hover:scale-110"
+                      title="Remove this slide"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
+                  <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white text-xs rounded-md backdrop-blur-sm">
+                    Slide {idx + 1}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 border-t border-gray-100 pt-6">
+              <Label className="text-gray-700 font-bold mb-2 block">Upload New Background Slide</Label>
+              <div className="flex items-center gap-4">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    if (!e.target.files || e.target.files.length === 0) return;
+                    const file = e.target.files[0];
+                    const formData = new FormData();
+                    formData.append("file", file);
+
+                    try {
+                      showToast("Uploading slide image...", "success");
+                      const res = await api.post("/admin/upload", formData, {
+                        headers: { "Content-Type": "multipart/form-data" }
+                      });
+                      if (res.data && res.data.url) {
+                        const newSlides = [...(config.about_us_slides || []), res.data.url];
+                        setConfig(p => ({ ...p, about_us_slides: newSlides }));
+                        showToast("Slide uploaded successfully!", "success");
+                      }
+                    } catch {
+                      showToast("Slide upload failed.", "error");
+                    }
+                  }}
+                  className="cursor-pointer max-w-md h-12 flex items-center"
+                />
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
     </DashboardLayout>
   );
 }

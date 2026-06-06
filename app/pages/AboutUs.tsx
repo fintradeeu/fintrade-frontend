@@ -5,23 +5,44 @@ import { motion, AnimatePresence } from "motion/react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import ExpertProfile from "../components/home/ExpertProfile";
+import api from "../services/api";
+
+const getImageUrl = (path?: string) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
+  const base = api.defaults.baseURL || "";
+  const cleanBase = base.endsWith("/") ? base.slice(0, -1) : base;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `${cleanBase}${cleanPath}`;
+};
 
 export default function AboutUs() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [vmSlide, setVmSlide] = useState(0);
+  const [dynamicSlides, setDynamicSlides] = useState<string[]>([]);
   
-  const slides = [
+  useEffect(() => {
+    api.get("/settings/landing-page").then(res => {
+      if (res.data?.about_us_slides?.length > 0) {
+        setDynamicSlides(res.data.about_us_slides.map(getImageUrl));
+      }
+    }).catch(console.error);
+  }, []);
+
+  const defaultSlides = [
     "/background.jpg",
     "/backgroundimage-1.avif",
     "/backgroundimage-2.avif"
   ];
+  
+  const slides = dynamicSlides.length > 0 ? dynamicSlides : defaultSlides;
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
   useEffect(() => {
     const vmTimer = setInterval(() => {
