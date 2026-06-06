@@ -1769,10 +1769,9 @@ export default function MarketingHome() {
                                 setSelectedLectureForReg(lecture);
                                 setIsRegModalOpen(true);
                               }}
-                              className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 !bg-[#121212] !text-white hover:!bg-[#D50032] hover:!text-white block"
+                              className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 !bg-[#121212] !text-white hover:!bg-[#D50032] hover:!text-white flex items-center justify-center"
                             >
                               Register Now
-                              <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
                           )}
                         </div>
