@@ -440,11 +440,7 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
           </span>
         </div>
 
-        {/* Modules Count */}
-        <div className="flex items-center gap-2 text-sm text-gray-500 font-bold mb-5 pl-1">
-          <BookOpen className="w-4.5 h-4.5 text-gray-400" />
-          <span>{modulesCount} Modules</span>
-        </div>
+
 
         {/* Divider */}
         <hr className="border-gray-100 w-full mb-5" />
@@ -1800,7 +1796,6 @@ export default function MarketingHome() {
                               className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 !bg-[#121212] !text-white hover:!bg-[#D50032] hover:!text-white block"
                             >
                               Register Now
-                              <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
                           )}
                         </div>
