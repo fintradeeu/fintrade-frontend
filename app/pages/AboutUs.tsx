@@ -140,7 +140,7 @@ export default function AboutUs() {
         </div>
 
         {/* Vision & Mission Slider */}
-        <div className="max-w-6xl mx-auto mb-6 relative overflow-hidden h-[320px] md:h-[280px]">
+        <div className="max-w-6xl mx-auto mb-6 relative overflow-hidden min-h-[280px]">
           <AnimatePresence mode="wait">
             {vmSlide === 0 ? (
               <motion.div
@@ -149,7 +149,7 @@ export default function AboutUs() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: "-100%", opacity: 0 }}
                 transition={{ duration: 0.6, ease: "easeInOut" }}
-                className="w-full absolute left-0 top-0 px-4"
+                className="w-full px-4"
               >
                 <Card className="p-8 bg-white border border-gray-100 rounded-[36px] shadow-[0_12px_45px_rgba(0,0,0,0.015)] flex gap-4 items-start mx-auto max-w-5xl transition-all hover:shadow-[0_20px_50px_rgba(0,0,0,0.03)] hover:border-[#D50032]/10">
                   <div className="flex-1">
@@ -179,7 +179,7 @@ export default function AboutUs() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: "-100%", opacity: 0 }}
                 transition={{ duration: 0.6, ease: "easeInOut" }}
-                className="w-full absolute left-0 top-0 px-4"
+                className="w-full px-4"
               >
                 <Card className="p-8 bg-white border border-gray-100 rounded-[36px] shadow-[0_12px_45px_rgba(0,0,0,0.015)] flex gap-4 items-start mx-auto max-w-5xl transition-all hover:shadow-[0_20px_50px_rgba(0,0,0,0.03)] hover:border-[#D50032]/10">
                   <div className="flex-1">
@@ -204,7 +204,6 @@ export default function AboutUs() {
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
           
           {/* Slider Controls */}
           <div className="flex justify-center gap-2 mt-6">
