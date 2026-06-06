@@ -767,6 +767,22 @@ export default function AdminCMS() {
                     <Label htmlFor={`lc-visible-${idx}`} className="cursor-pointer">Show on site</Label>
                   </div>
 
+                  {/* Lecture Link */}
+                  <div className="md:col-span-12">
+                    <Label htmlFor={`lc-link-${idx}`}>Lecture Link (Sent to student on email upon registration)</Label>
+                    <Input
+                      id={`lc-link-${idx}`}
+                      value={lecture.lecture_link || ""}
+                      onChange={e => {
+                        const list = [...(config.live_classes || [])];
+                        list[idx] = { ...list[idx], lecture_link: e.target.value };
+                        setConfig(p => ({ ...p, live_classes: list }));
+                      }}
+                      placeholder="e.g. https://zoom.us/j/123456789"
+                      className="mt-1"
+                    />
+                  </div>
+
                   {/* Custom Thumbnail Image Uploader */}
                   <div className="md:col-span-12">
                     <Label className="text-gray-700 font-bold">Class Thumbnail Image</Label>
@@ -821,7 +837,8 @@ export default function AdminCMS() {
                   status: "upcoming",
                   students: 100,
                   thumbnail: "",
-                  is_visible: true
+                  is_visible: true,
+                  lecture_link: ""
                 });
                 setConfig(p => ({ ...p, live_classes: list }));
               }}
