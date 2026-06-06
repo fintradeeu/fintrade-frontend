@@ -178,6 +178,7 @@ export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | nu
                       : "border-gray-100 shadow-[0_8px_35px_rgba(0,0,0,0.015)] hover:border-gray-200 hover:shadow-[0_12px_45px_rgba(0,0,0,0.02)]"
                       }`}
                   >
+
                     <div className="flex justify-between items-center gap-2 sm:gap-4">
                       <div className="flex-1 min-w-0">
                         <span className={`text-[8px] sm:text-xs font-black uppercase tracking-widest leading-normal block mb-0.5 sm:mb-2 ${isExpanded ? "text-[#D50032]" : "text-gray-400"

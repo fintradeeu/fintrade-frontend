@@ -121,6 +121,7 @@ interface LiveClassItem {
   students: number;
   thumbnail: string;
   is_visible: boolean;
+  lecture_link?: string;
 }
 
 interface SectionVisibilityConfig {
