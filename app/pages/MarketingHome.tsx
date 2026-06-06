@@ -2232,9 +2232,9 @@ export default function MarketingHome() {
                   </Link>
                 </div>
 
-                <div className="grid lg:grid-cols-12 gap-5 items-stretch">
-                  {/* Featured Video (Left Side) */}
-                  <div className="lg:col-span-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
+                  {/* Featured Video (Card 1) */}
+                  <div className="flex flex-col h-full">
                     {marketUpdates.length > 0 ? (
                       <Card
                         onClick={() => { setActiveVideoIdx(0); setVideoOpen(true); }}
@@ -2286,21 +2286,14 @@ export default function MarketingHome() {
                     )}
                   </div>
 
-                  {/* Blog Stories (4 Cards) */}
-                  <div
-                    ref={blogScrollRef}
-                    onScroll={handleBlogScroll}
-                    onTouchStart={handleBlogTouchStart}
-                    onTouchEnd={handleBlogTouchEnd}
-                    className="lg:col-span-7 flex md:grid md:grid-cols-2 gap-4 overflow-x-auto lg:overflow-x-visible pb-6 lg:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 lg:px-0 lg:mx-0 items-stretch"
-                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                  >
-                    {blogStories.length > 0 ? blogStories.map((story, i) => (
-                      <Card key={i} onClick={() => navigate(`/article/${story.id}`)} className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 flex flex-col border-0 shadow-md group hover:-translate-y-1 transition-all duration-300 snap-center cursor-pointer">
-                        <div className="aspect-video overflow-hidden relative bg-gray-100 flex items-center justify-center">
+                  {/* Blog Stories (Cards 2-6) */}
+                  {blogStories.length > 0 ? blogStories.slice(0, 5).map((story, i) => (
+                    <div key={i} className="flex flex-col h-full">
+                      <Card onClick={() => navigate(`/article/${story.id}`)} className="flex-1 flex flex-col border-0 shadow-md group hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                        <div className="aspect-[16/10] overflow-hidden relative bg-gray-100 flex items-center justify-center">
                           <img src={getImageUrl(story.thumbnail_url) || "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80"} alt={story.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                          <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2.5 py-0.5 rounded-full text-[10px] font-bold text-[#D50032]">
-                            Blog
+                          <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2.5 py-0.5 rounded-full text-[10px] font-bold text-[#D50032] shadow-sm">
+                            Article
                           </div>
                         </div>
                         <div className="p-4 flex flex-col flex-1">
@@ -2308,46 +2301,55 @@ export default function MarketingHome() {
                             <span className="flex items-center gap-1"><FileText size={12} />{story.author_name ? `By ${story.author_name}` : "Read"}</span>
                             <span>5 min read</span>
                           </div>
-                          <h3 className="font-bold text-sm mb-3 line-clamp-2 hover:text-[#D50032] transition-colors flex-1" style={{ color: "#121212" }}>{story.title}</h3>
-                          <div className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all mt-auto">
-                            Read Story <ChevronRight size={14} />
+                          <h3 className="font-bold text-sm mb-2 line-clamp-2 hover:text-[#D50032] transition-colors flex-1" style={{ color: "#121212" }}>{story.title}</h3>
+                          <div className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all mt-auto self-start">
+                            Read Story <ChevronRight size={16} />
                           </div>
                         </div>
                       </Card>
-                    )) : [
-                      {
-                        title: "How to Start Option Trading in India",
-                        category: "Options",
-                        readTime: "8 min read",
-                        img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80",
-                        desc: "A comprehensive guide for beginners looking to enter the derivative markets safely."
-                      },
-                      {
-                        title: "Top 5 Mistakes Day Traders Make",
-                        category: "Psychology",
-                        readTime: "5 min read",
-                        img: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=800&q=80",
-                        desc: "Avoid these common psychological traps that destroy trading accounts."
-                      },
-                      {
-                        title: "Understanding Institutional Order Flow",
-                        category: "Advanced",
-                        readTime: "12 min read",
-                        img: "https://images.unsplash.com/photo-1535320903710-d993d3d77d29?auto=format&fit=crop&w=800&q=80",
-                        desc: "Learn to read the market like smart money and trade alongside the institutions."
-                      },
-                      {
-                        title: "Building a Winning Trading System",
-                        category: "Strategy",
-                        readTime: "10 min read",
-                        img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
-                        desc: "Step-by-step process to backtest and deploy your own profitable strategy."
-                      }
-                    ].map((post, i) => (
-                      <Card key={i} className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 flex flex-col border-0 shadow-md group hover:-translate-y-1 transition-all duration-300 snap-center">
-                        <div className="aspect-video overflow-hidden relative">
+                    </div>
+                  )) : [
+                    {
+                      title: "How to Start Option Trading in India",
+                      category: "Options",
+                      readTime: "8 min read",
+                      img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80",
+                      desc: "A comprehensive guide for beginners looking to enter the derivative markets safely."
+                    },
+                    {
+                      title: "Top 5 Mistakes Day Traders Make",
+                      category: "Psychology",
+                      readTime: "5 min read",
+                      img: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=800&q=80",
+                      desc: "Avoid these common psychological traps that destroy trading accounts."
+                    },
+                    {
+                      title: "Understanding Institutional Order Flow",
+                      category: "Advanced",
+                      readTime: "12 min read",
+                      img: "https://images.unsplash.com/photo-1535320903710-d993d3d77d29?auto=format&fit=crop&w=800&q=80",
+                      desc: "Learn to read the market like smart money and trade alongside the institutions."
+                    },
+                    {
+                      title: "Building a Winning Trading System",
+                      category: "Strategy",
+                      readTime: "10 min read",
+                      img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
+                      desc: "Step-by-step process to backtest and deploy your own profitable strategy."
+                    },
+                    {
+                      title: "How to Manage Risk Like a Pro",
+                      category: "Risk Management",
+                      readTime: "6 min read",
+                      img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80",
+                      desc: "Protect your capital with these essential risk management rules."
+                    }
+                  ].map((post, i) => (
+                    <div key={i} className="flex flex-col h-full">
+                      <Card className="flex-1 flex flex-col border-0 shadow-md group hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                        <div className="aspect-[16/10] overflow-hidden relative">
                           <img src={post.img} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                          <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2.5 py-0.5 rounded-full text-[10px] font-bold text-[#D50032]">
+                          <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2.5 py-0.5 rounded-full text-[10px] font-bold text-[#D50032] shadow-sm">
                             {post.category}
                           </div>
                         </div>
@@ -2356,45 +2358,14 @@ export default function MarketingHome() {
                             <span className="flex items-center gap-1"><FileText size={12} /> Article</span>
                             <span>{post.readTime}</span>
                           </div>
-                          <h3 className="font-bold text-sm mb-3 line-clamp-2 hover:text-[#D50032] transition-colors cursor-pointer flex-1" style={{ color: "#121212" }}>{post.title}</h3>
-                          <button className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all mt-auto self-start">
+                          <h3 className="font-bold text-sm mb-2 line-clamp-2 hover:text-[#D50032] transition-colors flex-1" style={{ color: "#121212" }}>{post.title}</h3>
+                          <div className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all mt-auto self-start">
                             Read Full Article <ChevronRight size={16} />
-                          </button>
+                          </div>
                         </div>
                       </Card>
-                    ))}
-                  </div>
-
-                  {/* Mobile Dot Indicators for Blog Section */}
-                  <div className="flex md:hidden gap-1.5 justify-center items-center mt-1 w-full">
-                    {Array.from({ length: blogStoriesCount }).map((_, idx) => {
-                      const isActive = idx === blogActiveIndex;
-                      return (
-                        <button
-                          key={idx}
-                          onClick={() => {
-                            setIsBlogPaused(true);
-                            setBlogActiveIndex(idx);
-                            const container = blogScrollRef.current;
-                            if (container) {
-                              const cardWidth = container.firstElementChild?.getBoundingClientRect().width || 0;
-                              const gap = 16;
-                              container.scrollTo({
-                                left: idx * (cardWidth + gap),
-                                behavior: "smooth"
-                              });
-                            }
-                            if (blogTouchTimeoutRef.current) clearTimeout(blogTouchTimeoutRef.current);
-                            blogTouchTimeoutRef.current = setTimeout(() => {
-                              setIsBlogPaused(false);
-                            }, 8000);
-                          }}
-                          className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${isActive ? "w-5 bg-[#D50032]" : "w-1.5 bg-gray-300 hover:bg-gray-400"
-                            }`}
-                        />
-                      );
-                    })}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </ScrollReveal>
             </div>
