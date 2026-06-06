@@ -21,7 +21,6 @@ import PlatformFeatures from "../components/home/PlatformFeatures";
 import CareerPathways from "../components/home/CareerPathways";
 import ModuleRoadmap from "../components/home/ModuleRoadmap";
 import ProgramModules from "../components/home/ProgramModules";
-import logo from "../../imports/fintrade_logo.png";
 import CourseCheckoutModal from "../components/CourseCheckoutModal";
 import { motion } from "motion/react";
 
