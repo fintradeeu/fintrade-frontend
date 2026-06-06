@@ -21,6 +21,7 @@ import PlatformFeatures from "../components/home/PlatformFeatures";
 import CareerPathways from "../components/home/CareerPathways";
 import ModuleRoadmap from "../components/home/ModuleRoadmap";
 import ProgramModules from "../components/home/ProgramModules";
+import logo from "../../imports/fintrade_logo.png";
 import CourseCheckoutModal from "../components/CourseCheckoutModal";
 import { motion } from "motion/react";
 
@@ -710,16 +711,12 @@ export default function MarketingHome() {
   const [activeVideoIdx, setActiveVideoIdx] = useState<number | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const isAuthenticated = !!localStorage.getItem("token");
-  
+
   const [isRegModalOpen, setIsRegModalOpen] = useState(false);
   const [selectedLectureForReg, setSelectedLectureForReg] = useState<any>(null);
   const [regForm, setRegForm] = useState({ full_name: "", email: "", mobile_no: "", city: "" });
   const [isSubmittingReg, setIsSubmittingReg] = useState(false);
   const [regSuccess, setRegSuccess] = useState(false);
-
-  const [regOtp, setRegOtp] = useState("");
-  const [isRegOtpSent, setIsRegOtpSent] = useState(false);
-  const [isSendingRegOtp, setIsSendingRegOtp] = useState(false);
 
   useEffect(() => {
     try {
@@ -733,30 +730,8 @@ export default function MarketingHome() {
           city: u.city || ""
         });
       }
-    } catch(e) {}
+    } catch (e) { }
   }, []);
-
-  const sendRegistrationOTP = async () => {
-    if (!regForm.email) {
-      alert("Please enter your email address.");
-      return;
-    }
-    setIsSendingRegOtp(true);
-    try {
-      await api.post("/lectures/send-otp", {
-        email: regForm.email,
-        lecture_title: selectedLectureForReg?.title || null
-      });
-      setIsRegOtpSent(true);
-      alert("OTP sent to your email address. Please check your inbox.");
-    } catch (error: any) {
-      console.error("Failed to send OTP", error);
-      const msg = error.response?.data?.detail || "Failed to send OTP. Please check your details.";
-      alert(msg);
-    } finally {
-      setIsSendingRegOtp(false);
-    }
-  };
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -765,20 +740,16 @@ export default function MarketingHome() {
       await api.post("/lectures/register", {
         lecture_id: selectedLectureForReg?.id || null,
         lecture_title: selectedLectureForReg?.title || null,
-        otp: regOtp,
         ...regForm
       });
       setRegSuccess(true);
       setTimeout(() => {
         setIsRegModalOpen(false);
         setRegSuccess(false);
-        setIsRegOtpSent(false);
-        setRegOtp("");
-      }, 5000);
-    } catch (error: any) {
+      }, 3000);
+    } catch (error) {
       console.error("Failed to register", error);
-      const msg = error.response?.data?.detail || "Failed to register. Please try again.";
-      alert(msg);
+      alert("Failed to register. Please try again.");
     } finally {
       setIsSubmittingReg(false);
     }
@@ -958,8 +929,8 @@ export default function MarketingHome() {
     }, 8000);
   };
 
-  const coursesCount = isCoursesExpanded 
-    ? (apiCourses.length > 0 ? apiCourses.length : 5) 
+  const coursesCount = isCoursesExpanded
+    ? (apiCourses.length > 0 ? apiCourses.length : 5)
     : 3;
 
   // Handle manual scroll synchronization
@@ -1074,10 +1045,10 @@ export default function MarketingHome() {
         const res = await api.get("/news");
         const blogs = res.data.filter((n: any) => n.type === "Blog Story");
         const updates = res.data.filter((n: any) => n.type === "Market Update");
-        
+
         // Show newest 4 blogs (LIFO)
         setBlogStories([...blogs].reverse().slice(0, 4));
-        
+
         // Show newest 1 update
         setMarketUpdates([...updates].reverse().slice(0, 1));
       } catch (err) { console.error("News fetch failed", err); }
@@ -1230,7 +1201,7 @@ export default function MarketingHome() {
                       const urlObj = new URL(activeVideoUrl);
                       const v = urlObj.searchParams.get("v");
                       if (v) return `https://www.youtube.com/embed/${v}`;
-                    } catch (e) {}
+                    } catch (e) { }
                   }
                   if (activeVideoUrl.includes("youtu.be/")) {
                     try {
@@ -1239,7 +1210,7 @@ export default function MarketingHome() {
                         const id = parts[1].split("?")[0];
                         return `https://www.youtube.com/embed/${id}`;
                       }
-                    } catch (e) {}
+                    } catch (e) { }
                   }
                   return activeVideoUrl;
                 })()}
@@ -1449,7 +1420,7 @@ export default function MarketingHome() {
           <section className="py-6 md:py-10 relative z-10 bg-white overflow-hidden border-b border-gray-100">
             {/* Decorative subtle background glows */}
             <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#D50032]/5 rounded-full blur-[120px] pointer-events-none" />
-            
+
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               {/* Header: What FINTRADE Stands For */}
               <ScrollReveal>
@@ -1516,15 +1487,14 @@ export default function MarketingHome() {
                     <div
                       key={idx}
                       style={{ transitionDelay: `${idx * 150}ms` }}
-                      className={`w-full rounded-2xl md:rounded-[24px] border border-gray-100 bg-[#FAFBFD]/30 p-4 md:p-5 flex items-center gap-4 md:gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.005)] hover:border-[#D50032]/25 hover:shadow-[0_12px_45px_rgba(213,0,50,0.03)] hover:bg-white select-none relative overflow-hidden transition-all duration-700 ease-out transform ${
-                        isAcronymVisible 
-                          ? "opacity-100 translate-y-0" 
-                          : "opacity-0 translate-y-8 pointer-events-none"
-                      } group`}
+                      className={`w-full rounded-2xl md:rounded-[24px] border border-gray-100 bg-[#FAFBFD]/30 p-4 md:p-5 flex items-center gap-4 md:gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.005)] hover:border-[#D50032]/25 hover:shadow-[0_12px_45px_rgba(213,0,50,0.03)] hover:bg-white select-none relative overflow-hidden transition-all duration-700 ease-out transform ${isAcronymVisible
+                        ? "opacity-100 translate-y-0"
+                        : "opacity-0 translate-y-8 pointer-events-none"
+                        } group`}
                     >
                       {/* Glowing light background hover effect */}
                       <div className="absolute inset-0 bg-gradient-to-r from-[#D50032]/0 via-[#D50032]/[0.01] to-[#D50032]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      
+
                       {/* Letter Square Box */}
                       <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-[#FFF0F2] border border-[#D50032]/10 flex items-center justify-center flex-shrink-0 z-10 transition-transform duration-300 group-hover:scale-105">
                         <span className="text-xl md:text-2xl font-black text-[#D50032] font-sans">
@@ -1596,88 +1566,88 @@ export default function MarketingHome() {
                 >
                   {(apiCourses.length > 0
                     ? apiCourses.map((c: any) => {
-                        const diff = c.difficulty_level || "beginner";
-                        return {
-                          ...c,
-                          name: c.title,
-                          level: diff.charAt(0).toUpperCase() + diff.slice(1),
-                          duration: c.duration_hours ? `${c.duration_hours} Days` : "Self-paced",
-                          originalPrice: c.original_price && Number(c.original_price) > 0 ? `\u20B9${Number(c.original_price).toLocaleString("en-IN")}` : null,
-                          price: `\u20B9${Number(c.price).toLocaleString("en-IN")}`,
-                          savings: c.original_price && Number(c.original_price) > Number(c.price) ? `\u20B9${(Number(c.original_price) - Number(c.price)).toLocaleString("en-IN")}` : null,
-                          shortDescription: c.short_description || c.description || "Professional trading course",
-                          fullDescription: c.description || c.short_description || "Professional trading course.",
-                          icon: diff === "beginner" ? BookOpen : diff === "intermediate" ? LineChart : Trophy,
-                          modules: (c.modules || []).sort((a: any, b: any) => a.order - b.order),
-                        };
-                      })
+                      const diff = c.difficulty_level || "beginner";
+                      return {
+                        ...c,
+                        name: c.title,
+                        level: diff.charAt(0).toUpperCase() + diff.slice(1),
+                        duration: c.duration_hours ? `${c.duration_hours} Days` : "Self-paced",
+                        originalPrice: c.original_price && Number(c.original_price) > 0 ? `\u20B9${Number(c.original_price).toLocaleString("en-IN")}` : null,
+                        price: `\u20B9${Number(c.price).toLocaleString("en-IN")}`,
+                        savings: c.original_price && Number(c.original_price) > Number(c.price) ? `\u20B9${(Number(c.original_price) - Number(c.price)).toLocaleString("en-IN")}` : null,
+                        shortDescription: c.short_description || c.description || "Professional trading course",
+                        fullDescription: c.description || c.short_description || "Professional trading course.",
+                        icon: diff === "beginner" ? BookOpen : diff === "intermediate" ? LineChart : Trophy,
+
+                      };
+                    })
                     : [
-                        {
-                          id: 13,
-                          name: "Course 2",
-                          level: "Beginner",
-                          duration: "10 Days",
-                          price: "₹1,299",
-                          originalPrice: null,
-                          savings: null,
-                          shortDescription: "Course 2",
-                          fullDescription: "Course 2.",
-                          icon: BookOpen,
-                          modules: [],
-                        },
-                        {
-                          id: 11,
-                          name: "c2",
-                          level: "Beginner",
-                          duration: "20 Days",
-                          price: "₹23,233",
-                          originalPrice: "₹199",
-                          savings: null,
-                          shortDescription: "asdfgh",
-                          fullDescription: "asdfgh.",
-                          icon: BookOpen,
-                          modules: [],
-                        },
-                        {
-                          id: 10,
-                          name: "Course1",
-                          level: "Beginner",
-                          duration: "30 Days",
-                          price: "₹4,999",
-                          originalPrice: null,
-                          savings: null,
-                          shortDescription: "Course1",
-                          fullDescription: "Course1.",
-                          icon: BookOpen,
-                          modules: [],
-                        },
-                        {
-                          id: 9,
-                          name: "c1",
-                          level: "Beginner",
-                          duration: "10 Days",
-                          price: "₹20",
-                          originalPrice: "₹299",
-                          savings: "₹279",
-                          shortDescription: "abcdefgh",
-                          fullDescription: "abcdefgh.",
-                          icon: BookOpen,
-                          modules: [],
-                        },
-                        {
-                          id: 8,
-                          name: "a",
-                          level: "Beginner",
-                          duration: "10 Days",
-                          price: "₹500",
-                          originalPrice: "₹1,000",
-                          savings: "₹500",
-                          shortDescription: "a",
-                          fullDescription: "a.",
-                          icon: BookOpen,
-                          modules: [],
-                        }
-                      ]
+                      {
+                        id: 13,
+                        name: "Course 2",
+                        level: "Beginner",
+                        duration: "10 Days",
+                        price: "₹1,299",
+                        originalPrice: null,
+                        savings: null,
+                        shortDescription: "Course 2",
+                        fullDescription: "Course 2.",
+                        icon: BookOpen,
+
+                      },
+                      {
+                        id: 11,
+                        name: "c2",
+                        level: "Beginner",
+                        duration: "20 Days",
+                        price: "₹23,233",
+                        originalPrice: "₹199",
+                        savings: null,
+                        shortDescription: "asdfgh",
+                        fullDescription: "asdfgh.",
+                        icon: BookOpen,
+
+                      },
+                      {
+                        id: 10,
+                        name: "Course1",
+                        level: "Beginner",
+                        duration: "30 Days",
+                        price: "₹4,999",
+                        originalPrice: null,
+                        savings: null,
+                        shortDescription: "Course1",
+                        fullDescription: "Course1.",
+                        icon: BookOpen,
+                        modules: [],
+                      },
+                      {
+                        id: 9,
+                        name: "c1",
+                        level: "Beginner",
+                        duration: "10 Days",
+                        price: "₹20",
+                        originalPrice: "₹299",
+                        savings: "₹279",
+                        shortDescription: "abcdefgh",
+                        fullDescription: "abcdefgh.",
+                        icon: BookOpen,
+                        modules: [],
+                      },
+                      {
+                        id: 8,
+                        name: "a",
+                        level: "Beginner",
+                        duration: "10 Days",
+                        price: "₹500",
+                        originalPrice: "₹1,000",
+                        savings: "₹500",
+                        shortDescription: "a",
+                        fullDescription: "a.",
+                        icon: BookOpen,
+                        modules: [],
+                      }
+                    ]
                   ).slice(0, isCoursesExpanded ? undefined : 3).map((course, i) => (
                     <div key={i} className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex">
                       <CourseCard course={course} onEnroll={() => setSelectedCourseForCheckout(course)} />
@@ -1687,7 +1657,7 @@ export default function MarketingHome() {
 
                 {((apiCourses.length > 3) || (apiCourses.length === 0)) && (
                   <div className="mt-8 text-center">
-                    <Button 
+                    <Button
                       onClick={() => {
                         setIsCoursesExpanded(!isCoursesExpanded);
                         if (isCoursesExpanded) {
@@ -1724,19 +1694,19 @@ export default function MarketingHome() {
                   {(liveClasses && liveClasses.length > 0
                     ? liveClasses.filter((lecture: any) => lecture.is_visible !== false)
                     : [
-                        { title: "Technical Analysis Masterclass", instructor: "Amit Desai", date: "April 18, 2026", time: "10:00 AM IST", students: 145, status: "live" },
-                        { title: "Options Trading Strategies", instructor: "Priya Sharma", date: "April 19, 2026", time: "2:00 PM IST", students: 132, status: "upcoming" },
-                        { title: "Risk Management Fundamentals", instructor: "Rajesh Kumar", date: "April 20, 2026", time: "4:00 PM IST", students: 178, status: "upcoming" },
-                      ]
+                      { title: "Technical Analysis Masterclass", instructor: "Amit Desai", date: "April 18, 2026", time: "10:00 AM IST", students: 145, status: "live" },
+                      { title: "Options Trading Strategies", instructor: "Priya Sharma", date: "April 19, 2026", time: "2:00 PM IST", students: 132, status: "upcoming" },
+                      { title: "Risk Management Fundamentals", instructor: "Rajesh Kumar", date: "April 20, 2026", time: "4:00 PM IST", students: 178, status: "upcoming" },
+                    ]
                   ).map((lecture, i) => (
                     <div key={i} className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex">
                       <Card className={`w-full flex flex-col overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-2xl ${lecture.status === "live" ? "border-2 border-[#D50032] shadow-xl" : "border border-gray-200 hover:border-[#D50032]/50"}`}>
                         {/* Image Header */}
                         <div className="relative h-44 bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center overflow-hidden">
-                          <img 
-                            src={lecture.thumbnail ? getImageUrl(lecture.thumbnail) : "https://images.unsplash.com/photo-1616587896649-79b16d8b173d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"} 
-                            alt="Live class" 
-                            className="absolute inset-0 w-full h-full object-cover opacity-25" 
+                          <img
+                            src={lecture.thumbnail ? getImageUrl(lecture.thumbnail) : "https://images.unsplash.com/photo-1616587896649-79b16d8b173d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"}
+                            alt="Live class"
+                            className="absolute inset-0 w-full h-full object-cover opacity-25"
                           />
                           <div className="relative z-10 flex flex-col items-center">
                             <div className="w-16 h-16 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center border-2 border-white/40 mb-3">
@@ -1798,9 +1768,10 @@ export default function MarketingHome() {
                                 setSelectedLectureForReg(lecture);
                                 setIsRegModalOpen(true);
                               }}
-                              className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 !bg-[#121212] !text-white hover:!bg-[#D50032] hover:!text-white flex items-center justify-center"
+                              className="w-full h-12 text-base font-semibold rounded-xl transition-all duration-300 !bg-[#121212] !text-white hover:!bg-[#D50032] hover:!text-white block"
                             >
                               Register Now
+                              <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
                           )}
                         </div>
@@ -1818,7 +1789,7 @@ export default function MarketingHome() {
           <section className="py-12 relative z-10 bg-[#0B0F19] text-white overflow-hidden">
             {/* Subtle background glow */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#D50032]/5 rounded-full blur-[120px] pointer-events-none" />
-            
+
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <ScrollReveal>
                 <div className="text-center mb-10">
@@ -1971,195 +1942,193 @@ export default function MarketingHome() {
         {/* Learning Path Section */}
         {sectionVisibility.show_roadmap !== false && (
           <section className="py-4 md:py-6 bg-transparent relative z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <ScrollReveal>
-              {/* Header */}
-              <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-4 border border-[#D50032]/20 bg-[#D50032]/5">
-                  <span className="text-xs font-bold text-[#D50032] flex items-center gap-1">
-                    🗺️ Course Roadmap
-                  </span>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <ScrollReveal>
+                {/* Header */}
+                <div className="text-center mb-8">
+                  <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-4 border border-[#D50032]/20 bg-[#D50032]/5">
+                    <span className="text-xs font-bold text-[#D50032] flex items-center gap-1">
+                      🗺️ Course Roadmap
+                    </span>
+                  </div>
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4 text-gray-900 tracking-tight text-center">
+                    Your <span className="text-[#D50032]">Learning Path</span>
+                  </h2>
+                  <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto font-medium text-center">
+                    A structured roadmap from beginner to professional trader
+                  </p>
                 </div>
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4 text-gray-900 tracking-tight text-center">
-                  Your <span className="text-[#D50032]">Learning Path</span>
-                </h2>
-                <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto font-medium text-center">
-                  A structured roadmap from beginner to professional trader
-                </p>
-              </div>
 
-              {/* Curved Learning Path Card (Fully Responsive - Zero Scroll) */}
-              <div className="w-full bg-white border border-gray-100 rounded-[24px] md:rounded-[40px] shadow-[0_15px_50px_rgba(0,0,0,0.02)] p-4 sm:p-6 md:p-8 relative overflow-hidden">
-                <div className="w-full relative">
-                  <div className={`relative w-full select-none ${isMobileViewport ? "aspect-[1000/1350]" : "aspect-[1000/680]"}`}>
+                {/* Curved Learning Path Card (Fully Responsive - Zero Scroll) */}
+                <div className="w-full bg-white border border-gray-100 rounded-[24px] md:rounded-[40px] shadow-[0_15px_50px_rgba(0,0,0,0.02)] p-4 sm:p-6 md:p-8 relative overflow-hidden">
+                  <div className="w-full relative">
+                    <div className={`relative w-full select-none ${isMobileViewport ? "aspect-[1000/1350]" : "aspect-[1000/680]"}`}>
 
-                    {/* Curve Line SVG */}
-                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 600" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      {/* Dashed base line (locked path) */}
-                      <path
-                        d="M 200,520 C 300,520 400,450 500,380 C 600,310 700,310 800,240 C 900,170 800,130 550,120 C 450,110 360,110 360,110"
-                        className="stroke-gray-200 stroke-[3.5px] lg:stroke-[6px]"
-                        strokeLinecap="round"
-                        strokeDasharray="12 10"
-                      />
+                      {/* Curve Line SVG */}
+                      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 600" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        {/* Dashed base line (locked path) */}
+                        <path
+                          d="M 200,520 C 300,520 400,450 500,380 C 600,310 700,310 800,240 C 900,170 800,130 550,120 C 450,110 360,110 360,110"
+                          className="stroke-gray-200 stroke-[3.5px] lg:stroke-[6px]"
+                          strokeLinecap="round"
+                          strokeDasharray="12 10"
+                        />
 
-                      {/* Completed/Hovered path overlay with fill animation */}
-                      <path
-                        ref={pathRef}
-                        d="M 200,520 C 300,520 400,450 500,380 C 600,310 700,310 800,240 C 900,170 800,130 550,120 C 450,110 360,110 360,110"
-                        stroke="url(#completedGradient)"
-                        className="stroke-[5px] lg:stroke-[8px]"
-                        strokeLinecap="round"
-                        style={{
-                          strokeDasharray: pathLength || 1200,
-                          "--path-length": pathLength || 1200,
-                          animation: "pathFlow 6s ease-in-out infinite",
-                        } as any}
-                      />
+                        {/* Completed/Hovered path overlay with fill animation */}
+                        <path
+                          ref={pathRef}
+                          d="M 200,520 C 300,520 400,450 500,380 C 600,310 700,310 800,240 C 900,170 800,130 550,120 C 450,110 360,110 360,110"
+                          stroke="url(#completedGradient)"
+                          className="stroke-[5px] lg:stroke-[8px]"
+                          strokeLinecap="round"
+                          style={{
+                            strokeDasharray: pathLength || 1200,
+                            "--path-length": pathLength || 1200,
+                            animation: "pathFlow 6s ease-in-out infinite",
+                          } as any}
+                        />
 
-                      {/* Gradient Definitions */}
-                      <defs>
-                        <linearGradient id="completedGradient" x1="0%" y1="100%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="#10B981" />
-                          <stop offset="100%" stopColor="#D50032" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
+                        {/* Gradient Definitions */}
+                        <defs>
+                          <linearGradient id="completedGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#10B981" />
+                            <stop offset="100%" stopColor="#D50032" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
 
-                    {/* Render Steps */}
-                    {[
-                      { num: "1", title: "Market Foundations", desc: "Markets, exchanges & instruments", status: "completed", x: 20, y: 86.6, align: isMobileViewport ? "right" : "left", isStart: true },
-                      { num: "2", title: "Technical Analysis", desc: "Chart patterns & price action", status: "completed", x: 35, y: 76.6, align: isMobileViewport ? "left" : "left" },
-                      { num: "3", title: "Risk Management", desc: "Position sizing & capital protection", status: "completed", x: 50, y: 63.3, align: isMobileViewport ? "right" : "left" },
-                      { num: "4", title: "Trading Psychology", desc: "Emotional discipline & consistency", status: "completed", x: 65, y: 53.3, align: isMobileViewport ? "left" : "left" },
-                      { num: "5", title: "Options & Derivatives", desc: "Options pricing, Greeks & hedging", status: "completed", x: 80, y: 40, align: isMobileViewport ? "left" : "left" },
-                      { num: "6", title: "Advanced Strategies", desc: "Algo trading & quant analysis", status: "completed", x: 72, y: 26.6, align: isMobileViewport ? "left" : "right" },
-                      { num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "completed", x: 55, y: 20, align: isMobileViewport ? "right" : "right" },
-                      { num: "8", title: "Certification & Placement", desc: "Final assessment & placement", status: "completed", x: 36, y: 18.3, align: isMobileViewport ? "top" : "left", isSummit: true },
-                    ].map((step, idx) => {
-                      // Status is static by default
-                      const displayStatus = step.status;
+                      {/* Render Steps */}
+                      {[
+                        { num: "1", title: "Market Foundations", desc: "Markets, exchanges & instruments", status: "completed", x: 20, y: 86.6, align: isMobileViewport ? "right" : "left", isStart: true },
+                        { num: "2", title: "Technical Analysis", desc: "Chart patterns & price action", status: "completed", x: 35, y: 76.6, align: isMobileViewport ? "left" : "left" },
+                        { num: "3", title: "Risk Management", desc: "Position sizing & capital protection", status: "completed", x: 50, y: 63.3, align: isMobileViewport ? "right" : "left" },
+                        { num: "4", title: "Trading Psychology", desc: "Emotional discipline & consistency", status: "completed", x: 65, y: 53.3, align: isMobileViewport ? "left" : "left" },
+                        { num: "5", title: "Options & Derivatives", desc: "Options pricing, Greeks & hedging", status: "completed", x: 80, y: 40, align: isMobileViewport ? "left" : "left" },
+                        { num: "6", title: "Advanced Strategies", desc: "Algo trading & quant analysis", status: "completed", x: 72, y: 26.6, align: isMobileViewport ? "left" : "right" },
+                        { num: "7", title: "Trading Simulator", desc: "Live practice with virtual capital", status: "completed", x: 55, y: 20, align: isMobileViewport ? "right" : "right" },
+                        { num: "8", title: "Certification & Placement", desc: "Final assessment & placement", status: "completed", x: 36, y: 18.3, align: isMobileViewport ? "top" : "left", isSummit: true },
+                      ].map((step, idx) => {
+                        // Status is static by default
+                        const displayStatus = step.status;
 
-                      const isCompleted = displayStatus === "completed";
-                      const isCurrent = displayStatus === "current";
+                        const isCompleted = displayStatus === "completed";
+                        const isCurrent = displayStatus === "current";
 
-                      return (
-                        <div key={idx}>
-                          {/* Node Circle */}
-                          <div
-                            className="absolute -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center transition-all duration-300 hover:scale-115 origin-center"
-                            style={{ left: `${step.x}%`, top: `${step.y}%` }}
-                          >
-                            {isCurrent ? (
-                              <div className="relative flex items-center justify-center">
-                                {/* Outer pulse rings */}
-                                <div className={`absolute rounded-full bg-[#D50032]/25 animate-ping ${isMobileViewport ? 'w-5 h-5' : 'w-12 h-12'}`} />
-                                <div className={`absolute rounded-full bg-[#D50032]/40 ${isMobileViewport ? 'w-3.5 h-3.5' : 'w-9 h-9'}`} />
-                                {/* Inner circle */}
-                                <div className={`rounded-full bg-[#D50032] border-2 border-white shadow-md flex items-center justify-center text-white font-extrabold relative z-30 ${isMobileViewport ? 'w-3 h-3 text-[5.5px]' : 'w-8 h-8 text-sm'}`}>
-                                  {step.num}
-                                </div>
-                                {/* Current Module Pill Badge */}
-                                <div className={`absolute bg-[#D50032] text-white font-black uppercase rounded-full shadow-sm z-30 whitespace-nowrap ${isMobileViewport ? 'top-4 px-1 py-0.5 text-[4.5px]' : 'top-10 px-2.5 py-0.5 text-[9px]'}`}>
-                                  Current Module
-                                </div>
-                              </div>
-                            ) : isCompleted ? (
-                              <div className={`rounded-full bg-emerald-500 border-2 border-white shadow flex items-center justify-center text-white z-30 ${isMobileViewport ? 'w-3 h-3' : 'w-7 h-7'}`}>
-                                <CheckCircle className={`fill-emerald-500 stroke-white stroke-[3px] ${isMobileViewport ? 'w-1.5 h-1.5' : 'w-5 h-5'}`} />
-                              </div>
-                            ) : (
-                              <div className={`rounded-full bg-gray-200 border-2 border-white shadow flex items-center justify-center text-gray-500 font-extrabold z-30 ${isMobileViewport ? 'w-3 h-3 text-[5.5px]' : 'w-7 h-7 text-xs'}`}>
-                                  {step.num}
-                              </div>
-                            )}
-
-                            {/* Start Label */}
-                            {step.isStart && (
-                              <div className={`absolute font-black uppercase text-gray-400 tracking-wider ${isMobileViewport ? '-top-3.5 text-[5.5px]' : '-top-6 text-[10px]'}`}>
-                                Start
-                              </div>
-                            )}
-
-                            {/* Summit Label */}
-                            {step.isSummit && (
-                              <div className={`absolute font-black uppercase text-[#D50032] tracking-wider flex items-center gap-0.5 ${isMobileViewport ? 'bottom-3.5 text-[5.5px]' : 'bottom-8 text-[10px]'}`}>
-                                🏆 Summit
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Label Container */}
-                          <div
-                            className={`absolute -translate-y-1/2 z-10 ${step.align === "left" ? "text-right" : (step.align === "top" || step.align === "bottom") ? "text-center" : "text-left"}`}
-                            style={{
-                              width: `${isMobileViewport ? 130 : 250}px`,
-                              left: step.align === "left"
-                                ? `calc(${step.x}% - ${isMobileViewport ? 142 : 270}px)`
-                                : (step.align === "top" || step.align === "bottom")
-                                  ? `calc(${step.x}% - ${isMobileViewport ? 65 : 125}px)`
-                                  : `calc(${step.x}% + ${isMobileViewport ? 12 : 20}px)`,
-                              top: isMobileViewport
-                                ? step.num === "8"
-                                  ? `calc(${step.y}% - 40px)`
-                                  : step.num === "7"
-                                    ? `calc(${step.y}% - 18px)`
-                                    : step.num === "6"
-                                      ? `calc(${step.y}% + 18px)`
-                                      : step.num === "3"
-                                        ? `calc(${step.y}% + 22px)` // Shifts down to clear the "CURRENT MODULE" badge!
-                                        : step.align === "top"
-                                          ? `calc(${step.y}% - 22px)`
-                                          : step.align === "bottom"
-                                            ? `calc(${step.y}% + 22px)`
-                                            : `${step.y}%`
-                                : step.align === "top"
-                                  ? `calc(${step.y}% - 58px)`
-                                  : step.align === "bottom"
-                                    ? `calc(${step.y}% + 58px)`
-                                    : `${step.y}%`
-                            }}
-                          >
-                            <h3
-                              className={`tracking-tight mb-1 transition-colors duration-300 ${
-                                isCurrent ? "text-[#D50032] font-black" : isCompleted ? "text-slate-900 font-extrabold" : "text-slate-600 font-bold"
-                              } ${isMobileViewport ? 'text-xs leading-tight' : 'text-base sm:text-lg'}`}
+                        return (
+                          <div key={idx}>
+                            {/* Node Circle */}
+                            <div
+                              className="absolute -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center transition-all duration-300 hover:scale-115 origin-center"
+                              style={{ left: `${step.x}%`, top: `${step.y}%` }}
                             >
-                              {step.title}
-                            </h3>
-                            <p className={`font-medium leading-relaxed inline-block transition-colors duration-300 ${
-                              isCurrent ? "text-[#D50032]/85" : isCompleted ? "text-slate-600" : "text-slate-500"
-                            } ${isMobileViewport ? 'text-[10px] leading-tight' : 'text-xs sm:text-sm'}`}>
-                              {step.desc}
-                            </p>
+                              {isCurrent ? (
+                                <div className="relative flex items-center justify-center">
+                                  {/* Outer pulse rings */}
+                                  <div className={`absolute rounded-full bg-[#D50032]/25 animate-ping ${isMobileViewport ? 'w-5 h-5' : 'w-12 h-12'}`} />
+                                  <div className={`absolute rounded-full bg-[#D50032]/40 ${isMobileViewport ? 'w-3.5 h-3.5' : 'w-9 h-9'}`} />
+                                  {/* Inner circle */}
+                                  <div className={`rounded-full bg-[#D50032] border-2 border-white shadow-md flex items-center justify-center text-white font-extrabold relative z-30 ${isMobileViewport ? 'w-3 h-3 text-[5.5px]' : 'w-8 h-8 text-sm'}`}>
+                                    {step.num}
+                                  </div>
+                                  {/* Current Module Pill Badge */}
+                                  <div className={`absolute bg-[#D50032] text-white font-black uppercase rounded-full shadow-sm z-30 whitespace-nowrap ${isMobileViewport ? 'top-4 px-1 py-0.5 text-[4.5px]' : 'top-10 px-2.5 py-0.5 text-[9px]'}`}>
+                                    Current Module
+                                  </div>
+                                </div>
+                              ) : isCompleted ? (
+                                <div className={`rounded-full bg-emerald-500 border-2 border-white shadow flex items-center justify-center text-white z-30 ${isMobileViewport ? 'w-3 h-3' : 'w-7 h-7'}`}>
+                                  <CheckCircle className={`fill-emerald-500 stroke-white stroke-[3px] ${isMobileViewport ? 'w-1.5 h-1.5' : 'w-5 h-5'}`} />
+                                </div>
+                              ) : (
+                                <div className={`rounded-full bg-gray-200 border-2 border-white shadow flex items-center justify-center text-gray-500 font-extrabold z-30 ${isMobileViewport ? 'w-3 h-3 text-[5.5px]' : 'w-7 h-7 text-xs'}`}>
+                                  {step.num}
+                                </div>
+                              )}
+
+                              {/* Start Label */}
+                              {step.isStart && (
+                                <div className={`absolute font-black uppercase text-gray-400 tracking-wider ${isMobileViewport ? '-top-3.5 text-[5.5px]' : '-top-6 text-[10px]'}`}>
+                                  Start
+                                </div>
+                              )}
+
+                              {/* Summit Label */}
+                              {step.isSummit && (
+                                <div className={`absolute font-black uppercase text-[#D50032] tracking-wider flex items-center gap-0.5 ${isMobileViewport ? 'bottom-3.5 text-[5.5px]' : 'bottom-8 text-[10px]'}`}>
+                                  🏆 Summit
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Label Container */}
+                            <div
+                              className={`absolute -translate-y-1/2 z-10 ${step.align === "left" ? "text-right" : (step.align === "top" || step.align === "bottom") ? "text-center" : "text-left"}`}
+                              style={{
+                                width: `${isMobileViewport ? 130 : 250}px`,
+                                left: step.align === "left"
+                                  ? `calc(${step.x}% - ${isMobileViewport ? 142 : 270}px)`
+                                  : (step.align === "top" || step.align === "bottom")
+                                    ? `calc(${step.x}% - ${isMobileViewport ? 65 : 125}px)`
+                                    : `calc(${step.x}% + ${isMobileViewport ? 12 : 20}px)`,
+                                top: isMobileViewport
+                                  ? step.num === "8"
+                                    ? `calc(${step.y}% - 40px)`
+                                    : step.num === "7"
+                                      ? `calc(${step.y}% - 18px)`
+                                      : step.num === "6"
+                                        ? `calc(${step.y}% + 18px)`
+                                        : step.num === "3"
+                                          ? `calc(${step.y}% + 22px)` // Shifts down to clear the "CURRENT MODULE" badge!
+                                          : step.align === "top"
+                                            ? `calc(${step.y}% - 22px)`
+                                            : step.align === "bottom"
+                                              ? `calc(${step.y}% + 22px)`
+                                              : `${step.y}%`
+                                  : step.align === "top"
+                                    ? `calc(${step.y}% - 58px)`
+                                    : step.align === "bottom"
+                                      ? `calc(${step.y}% + 58px)`
+                                      : `${step.y}%`
+                              }}
+                            >
+                              <h3
+                                className={`tracking-tight mb-1 transition-colors duration-300 ${isCurrent ? "text-[#D50032] font-black" : isCompleted ? "text-slate-900 font-extrabold" : "text-slate-600 font-bold"
+                                  } ${isMobileViewport ? 'text-xs leading-tight' : 'text-base sm:text-lg'}`}
+                              >
+                                {step.title}
+                              </h3>
+                              <p className={`font-medium leading-relaxed inline-block transition-colors duration-300 ${isCurrent ? "text-[#D50032]/85" : isCompleted ? "text-slate-600" : "text-slate-500"
+                                } ${isMobileViewport ? 'text-[10px] leading-tight' : 'text-xs sm:text-sm'}`}>
+                                {step.desc}
+                              </p>
+                            </div>
+
                           </div>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-                        </div>
-                      );
-                    })}
+                  {/* Bottom Legend */}
+                  <div className="flex justify-center items-center gap-4 sm:gap-6 mt-4 pt-4 border-t border-gray-100 text-[9px] sm:text-xs font-semibold text-gray-500">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-emerald-500" />
+                      Completed
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#D50032]" />
+                      Current
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-gray-200" />
+                      Locked
+                    </div>
                   </div>
                 </div>
-
-                {/* Bottom Legend */}
-                <div className="flex justify-center items-center gap-4 sm:gap-6 mt-4 pt-4 border-t border-gray-100 text-[9px] sm:text-xs font-semibold text-gray-500">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-emerald-500" />
-                    Completed
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#D50032]" />
-                    Current
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-gray-200" />
-                    Locked
-                  </div>
-                </div>
-              </div>
-            </ScrollReveal>
-          </div>
-        </section>
-      )}
+              </ScrollReveal>
+            </div>
+          </section>
+        )}
 
         {/* Our Services Section */}
         {sectionVisibility.show_services !== false && (
@@ -2243,7 +2212,7 @@ export default function MarketingHome() {
                   {/* Featured Video (Left Side) */}
                   <div className="lg:col-span-5">
                     {marketUpdates.length > 0 ? (
-                      <Card 
+                      <Card
                         onClick={() => { setActiveVideoIdx(0); setVideoOpen(true); }}
                         className="overflow-hidden border-0 shadow-md relative group h-full flex flex-col cursor-pointer"
                       >
@@ -2269,7 +2238,7 @@ export default function MarketingHome() {
                         </div>
                       </Card>
                     ) : (
-                      <Card 
+                      <Card
                         onClick={() => { setActiveVideoIdx(0); setVideoOpen(true); }}
                         className="overflow-hidden border-0 shadow-md relative group h-full flex flex-col cursor-pointer"
                       >
@@ -2522,9 +2491,8 @@ export default function MarketingHome() {
                             setIsWhyChoosePaused(false);
                           }, 8000);
                         }}
-                        className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                          isActive ? "w-5 bg-[#D50032]" : "w-1.5 bg-gray-300 hover:bg-gray-400"
-                        }`}
+                        className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${isActive ? "w-5 bg-[#D50032]" : "w-1.5 bg-gray-300 hover:bg-gray-400"
+                          }`}
                       />
                     );
                   })}
@@ -2616,66 +2584,58 @@ export default function MarketingHome() {
         {/* CTA Section */}
         {sectionVisibility.show_cta !== false && (
           <section className="py-6 md:py-8 bg-white relative z-10 overflow-hidden">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <ScrollReveal>
-              <div className="relative bg-white border border-[#D50032]/8 rounded-[32px] p-8 md:p-12 text-center shadow-[0_15px_40px_rgba(213,0,50,0.02)] overflow-hidden select-none">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <ScrollReveal>
+                <div className="relative bg-white border border-[#D50032]/8 rounded-[32px] p-8 md:p-12 text-center shadow-[0_15px_40px_rgba(213,0,50,0.02)] overflow-hidden select-none">
 
-                {/* Top glowing red gradient bar */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 md:w-44 h-1.5 bg-gradient-to-r from-[#D50032] via-[#FF4D6D] to-[#D50032] rounded-b-full shadow-[0_2px_10px_rgba(213,0,50,0.4)]" />
+                  {/* Top glowing red gradient bar */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 md:w-44 h-1.5 bg-gradient-to-r from-[#D50032] via-[#FF4D6D] to-[#D50032] rounded-b-full shadow-[0_2px_10px_rgba(213,0,50,0.4)]" />
 
-                {/* Heading */}
-                <h2 className="text-3xl md:text-5xl font-black tracking-tight text-gray-950 leading-tight font-sans">
-                  THE MARKET'S MOVING,<br />
-                  <span className="text-[#D50032]">ARE YOU?</span>
-                </h2>
+                  {/* Heading */}
+                  <h2 className="text-3xl md:text-5xl font-black tracking-tight text-gray-950 leading-tight font-sans">
+                    THE MARKET'S MOVING,<br />
+                    <span className="text-[#D50032]">ARE YOU?</span>
+                  </h2>
 
-                {/* Subtitle */}
-                <p className="text-gray-600 font-semibold text-sm sm:text-base max-w-xl mx-auto leading-relaxed mt-4.5 mb-8">
-                  Join hundreds of traders who have transformed their financial future with The FinTrade Academy.
-                </p>
+                  {/* Subtitle */}
+                  <p className="text-gray-600 font-semibold text-sm sm:text-base max-w-xl mx-auto leading-relaxed mt-4.5 mb-8">
+                    Join hundreds of traders who have transformed their financial future with The FinTrade Academy.
+                  </p>
 
-                {/* Buttons */}
-                <div className="flex flex-col sm:flex-row justify-center items-center gap-4.5">
-                  <Link to="/courses" className="w-full sm:w-auto">
-                    <button className="w-full sm:w-auto py-3.5 px-8 rounded-2xl bg-gradient-to-r from-[#D50032] to-[#FF3D00] text-white font-extrabold text-sm hover:shadow-[0_8px_25px_rgba(213,0,50,0.35)] transition-all duration-300 transform active:scale-98 cursor-pointer flex items-center justify-center gap-1">
-                      Apply Now <span>→</span>
-                    </button>
-                  </Link>
+                  {/* Buttons */}
+                  <div className="flex flex-col sm:flex-row justify-center items-center gap-4.5">
+                    <Link to="/courses" className="w-full sm:w-auto">
+                      <button className="w-full sm:w-auto py-3.5 px-8 rounded-2xl bg-gradient-to-r from-[#D50032] to-[#FF3D00] text-white font-extrabold text-sm hover:shadow-[0_8px_25px_rgba(213,0,50,0.35)] transition-all duration-300 transform active:scale-98 cursor-pointer flex items-center justify-center gap-1">
+                        Apply Now <span>→</span>
+                      </button>
+                    </Link>
 
-                  <a href="#" onClick={handleDownloadClick} className="w-full sm:w-auto">
-                    <button className="w-full sm:w-auto py-3.5 px-8 rounded-2xl border border-[#D50032] text-[#D50032] font-extrabold text-sm bg-white hover:bg-[#D50032]/5 transition-all duration-300 transform active:scale-98 cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.01)] border-solid">
-                      <Download className="w-4.5 h-4.5 stroke-[2.5]" />
-                      Download Brochure
-                    </button>
-                  </a>
+                    <a href="#" onClick={handleDownloadClick} className="w-full sm:w-auto">
+                      <button className="w-full sm:w-auto py-3.5 px-8 rounded-2xl border border-[#D50032] text-[#D50032] font-extrabold text-sm bg-white hover:bg-[#D50032]/5 transition-all duration-300 transform active:scale-98 cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.01)] border-solid">
+                        <Download className="w-4.5 h-4.5 stroke-[2.5]" />
+                        Download Brochure
+                      </button>
+                    </a>
+                  </div>
+
+                  {/* Bottom glowing red gradient bar */}
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 md:w-44 h-1.5 bg-gradient-to-r from-[#D50032] via-[#FF4D6D] to-[#D50032] rounded-t-full shadow-[0_-2px_10px_rgba(213,0,50,0.4)]" />
+
                 </div>
-
-                {/* Bottom glowing red gradient bar */}
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 md:w-44 h-1.5 bg-gradient-to-r from-[#D50032] via-[#FF4D6D] to-[#D50032] rounded-t-full shadow-[0_-2px_10px_rgba(213,0,50,0.4)]" />
-
-              </div>
-            </ScrollReveal>
-          </div>
-        </section>
-      )}
+              </ScrollReveal>
+            </div>
+          </section>
+        )}
 
 
 
         {/* Registration Modal */}
-        <Dialog open={isRegModalOpen} onOpenChange={(open) => {
-          setIsRegModalOpen(open);
-          if (!open) {
-            setIsRegOtpSent(false);
-            setRegOtp("");
-          }
-        }}>
+        <Dialog open={isRegModalOpen} onOpenChange={setIsRegModalOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Register for {selectedLectureForReg?.title || "Live Class"}</DialogTitle>
               <DialogDescription>
-                {isRegOtpSent 
-                  ? `Enter the 6-digit OTP sent to ${regForm.email}`
-                  : "Please fill in your details to reserve your spot."}
+                Please fill in your details to reserve your spot.
               </DialogDescription>
             </DialogHeader>
 
@@ -2684,60 +2644,36 @@ export default function MarketingHome() {
                 <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
                   <CheckCircle className="w-6 h-6 text-green-600" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-1">Registered Successfully!</h3>
-                <p className="text-sm text-gray-500">Meeting link you will get on your mail.</p>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">Registration Successful!</h3>
+                <p className="text-sm text-gray-500">We'll send you the meeting details soon.</p>
               </div>
             ) : (
               <form onSubmit={handleRegisterSubmit}>
-                {!isRegOtpSent ? (
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="reg-name">Full Name <span className="text-[#D50032]">*</span></Label>
-                      <Input id="reg-name" required placeholder="John Doe" value={regForm.full_name} onChange={(e) => setRegForm({ ...regForm, full_name: e.target.value })} />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="reg-contact">Mobile Number <span className="text-[#D50032]">*</span></Label>
-                      <Input id="reg-contact" required placeholder="+91 98765 43210" value={regForm.mobile_no} onChange={(e) => setRegForm({ ...regForm, mobile_no: e.target.value })} />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="reg-email">Email Address <span className="text-[#D50032]">*</span></Label>
-                      <Input id="reg-email" required type="email" placeholder="john@example.com" value={regForm.email} onChange={(e) => setRegForm({ ...regForm, email: e.target.value })} />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="reg-city">City</Label>
-                      <Input id="reg-city" placeholder="Mumbai" value={regForm.city} onChange={(e) => setRegForm({ ...regForm, city: e.target.value })} />
-                    </div>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="reg-name">Full Name <span className="text-[#D50032]">*</span></Label>
+                    <Input id="reg-name" required placeholder="John Doe" value={regForm.full_name} onChange={(e) => setRegForm({ ...regForm, full_name: e.target.value })} />
                   </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-6 py-8">
-                    <InputOTP maxLength={6} value={regOtp} onChange={setRegOtp}>
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                        <InputOTPSlot index={3} />
-                        <InputOTPSlot index={4} />
-                        <InputOTPSlot index={5} />
-                      </InputOTPGroup>
-                    </InputOTP>
-                    <Button variant="link" className="text-xs text-[#D50032]" onClick={() => { setIsRegOtpSent(false); setRegOtp(""); }}>
-                      Edit Details
-                    </Button>
+                  <div className="grid gap-2">
+                    <Label htmlFor="reg-contact">Mobile Number <span className="text-[#D50032]">*</span></Label>
+                    <Input id="reg-contact" required placeholder="+91 98765 43210" value={regForm.mobile_no} onChange={(e) => setRegForm({ ...regForm, mobile_no: e.target.value })} />
                   </div>
-                )}
+                  <div className="grid gap-2">
+                    <Label htmlFor="reg-email">Email Address <span className="text-[#D50032]">*</span></Label>
+                    <Input id="reg-email" required type="email" placeholder="john@example.com" value={regForm.email} onChange={(e) => setRegForm({ ...regForm, email: e.target.value })} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="reg-city">City</Label>
+                    <Input id="reg-city" placeholder="Mumbai" value={regForm.city} onChange={(e) => setRegForm({ ...regForm, city: e.target.value })} />
+                  </div>
+                </div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsRegModalOpen(false)}>
                     Cancel
                   </Button>
-                  {!isRegOtpSent ? (
-                    <Button type="button" onClick={sendRegistrationOTP} disabled={isSendingRegOtp || !regForm.full_name || !regForm.email || !regForm.mobile_no} className="bg-[#D50032] hover:bg-[#b00029] text-white">
-                      {isSendingRegOtp ? "Sending OTP..." : "Verify Email"}
-                    </Button>
-                  ) : (
-                    <Button type="submit" disabled={isSubmittingReg || regOtp.length !== 6} className="bg-[#D50032] hover:bg-[#b00029] text-white">
-                      {isSubmittingReg ? "Registering..." : "Confirm Registration"}
-                    </Button>
-                  )}
+                  <Button type="submit" disabled={isSubmittingReg} className="bg-[#D50032] hover:bg-[#b00029] text-white">
+                    {isSubmittingReg ? "Registering..." : "Confirm Registration"}
+                  </Button>
                 </DialogFooter>
               </form>
             )}

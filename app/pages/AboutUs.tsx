@@ -3,25 +3,56 @@ import { Users, TrendingUp, Target, Award, ArrowRight, Shield, UserCheck, BookOp
 import { Link } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { Card } from "../components/ui/card";
-import { leaders } from "../data/leaders";
 import { Button } from "../components/ui/button";
+import ExpertProfile from "../components/home/ExpertProfile";
+import api from "../services/api";
+
+const getImageUrl = (path?: string) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
+  const base = api.defaults.baseURL || "";
+  const cleanBase = base.endsWith("/") ? base.slice(0, -1) : base;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `${cleanBase}${cleanPath}`;
+};
 
 export default function AboutUs() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [vmSlide, setVmSlide] = useState(0);
+  const [dynamicSlides, setDynamicSlides] = useState<string[]>([]);
+  const [dynamicStats, setDynamicStats] = useState<any[]>([]);
+  const [dynamicText, setDynamicText] = useState<string[]>([]);
+  const [dynamicVision, setDynamicVision] = useState<any>(null);
+  const [dynamicMission, setDynamicMission] = useState<any>(null);
   
-  const slides = [
+  useEffect(() => {
+    api.get("/settings/landing-page").then(res => {
+      if (res.data) {
+        if (res.data.about_us_slides?.length > 0) {
+          setDynamicSlides(res.data.about_us_slides.map(getImageUrl));
+        }
+        if (res.data.about_us_stats?.length > 0) setDynamicStats(res.data.about_us_stats);
+        if (res.data.about_us_text?.length > 0) setDynamicText(res.data.about_us_text);
+        if (res.data.about_us_vision) setDynamicVision(res.data.about_us_vision);
+        if (res.data.about_us_mission) setDynamicMission(res.data.about_us_mission);
+      }
+    }).catch(console.error);
+  }, []);
+
+  const defaultSlides = [
     "/background.jpg",
     "/backgroundimage-1.avif",
     "/backgroundimage-2.avif"
   ];
+  
+  const slides = dynamicSlides.length > 0 ? dynamicSlides : defaultSlides;
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
   useEffect(() => {
     const vmTimer = setInterval(() => {
@@ -43,7 +74,7 @@ export default function AboutUs() {
                 index === currentSlide ? "opacity-100" : "opacity-0"
               }`}
             >
-              <div className="absolute inset-0 bg-black/20 z-10" />
+              <div className="absolute inset-0 bg-black/60 z-10" />
               <img
                 src={slide}
                 alt={`Background ${index + 1}`}
@@ -69,7 +100,7 @@ export default function AboutUs() {
           <h1 className="text-4xl sm:text-5xl md:text-6.5xl font-black mb-6 tracking-tight leading-none text-white font-sans uppercase drop-shadow-lg">
             About <span className="text-[#D50032]">FinTrade</span>
           </h1>
-          <p className="text-base sm:text-xl text-gray-200 max-w-3xl mx-auto font-medium leading-relaxed drop-shadow-md">
+          <p className="text-base sm:text-xl text-white max-w-3xl mx-auto font-sans font-medium leading-relaxed drop-shadow-lg">
             Building India's most trusted prop trading education and capital allocation ecosystem
           </p>
 
@@ -90,11 +121,11 @@ export default function AboutUs() {
 
         {/* Stats Counters */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {[
+          {(dynamicStats.length > 0 ? dynamicStats : [
             { val: "1,200+", lbl: "Students Trained" },
             { val: "95%", lbl: "Failure Rate Addressed" },
             { val: "₹50+", lbl: "Crore Live Market Exp." }
-          ].map((m, idx) => (
+          ]).map((m, idx) => (
             <Card key={idx} className="flex flex-col items-center justify-center text-center p-8 bg-[#D50032] border-none rounded-2xl shadow-xl transition-all hover:bg-black duration-300 group cursor-pointer">
               <span className="text-4xl md:text-5xl font-black text-white leading-none mb-3 font-sans transition-colors duration-300">
                 {m.val}
@@ -122,15 +153,13 @@ export default function AboutUs() {
                 </div>
 
                 <div className="space-y-4 text-gray-600 text-sm md:text-base leading-relaxed">
-                  <p>
-                    FinTrade is a <strong className="text-gray-900 font-bold">results-driven prop trading academy</strong> focused on developing skilled and disciplined traders. We combine practical learning, live market exposure, and structured mentorship to bridge the gap between knowledge and real trading performance.
-                  </p>
-                  <p>
-                    Our programs are designed to build consistency, confidence, and profitability, guiding students from basics to <strong className="text-gray-900 font-bold">professional-level trading</strong>.
-                  </p>
-                  <p className="text-gray-950 font-extrabold text-base md:text-lg border-l-4 border-[#D50032] pl-4 py-1 bg-red-50/30">
-                    At FinTrade, we don't just teach trading — <span className="text-[#D50032]">we build traders</span>.
-                  </p>
+                  {(dynamicText.length > 0 ? dynamicText : [
+                    "FinTrade is a <strong class=\"text-gray-900 font-bold\">results-driven prop trading academy</strong> focused on developing skilled and disciplined traders. We combine practical learning, live market exposure, and structured mentorship to bridge the gap between knowledge and real trading performance.",
+                    "Our programs are designed to build consistency, confidence, and profitability, guiding students from basics to <strong class=\"text-gray-900 font-bold\">professional-level trading</strong>.",
+                    "At FinTrade, we don't just teach trading — <span class=\"text-[#D50032]\">we build traders</span>."
+                  ]).map((txt: string, idx: number) => (
+                    <p key={idx} dangerouslySetInnerHTML={{ __html: txt }} className={idx === 2 && dynamicText.length === 0 ? "text-gray-950 font-extrabold text-base md:text-lg border-l-4 border-[#D50032] pl-4 py-1 bg-red-50/30" : ""} />
+                  ))}
                 </div>
               </div>
 
@@ -155,14 +184,14 @@ export default function AboutUs() {
                   <div className="flex-1">
                     <h3 className="font-black text-gray-950 text-2xl tracking-tight mb-3">Our Vision</h3>
                     <p className="text-gray-600 text-base md:text-lg leading-relaxed mb-6">
-                      To build India's most trusted, full-stack <strong className="text-gray-950 font-bold">Prop Trading Education & Capital Allocation ecosystem</strong> — transforming retail traders into consistently profitable, funded professionals.
+                      {dynamicVision?.text || "To build India's most trusted, full-stack Prop Trading Education & Capital Allocation ecosystem — transforming retail traders into consistently profitable, funded professionals."}
                     </p>
                     <ul className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      {[
+                      {(dynamicVision?.bullets?.length > 0 ? dynamicVision.bullets : [
                         "Trusted Education Platform",
                         "Capital Allocation Ecosystem",
                         "Funded Professionals"
-                      ].map((bullet, idx) => (
+                      ]).map((bullet: string, idx: number) => (
                         <li key={idx} className="flex items-center gap-2.5 text-sm md:text-base font-bold text-gray-700">
                           <span className="w-2.5 h-2.5 flex-shrink-0 rounded bg-[#D50032]" />
                           {bullet}
@@ -185,14 +214,14 @@ export default function AboutUs() {
                   <div className="flex-1">
                     <h3 className="font-black text-gray-950 text-2xl tracking-tight mb-3">Our Mission</h3>
                     <p className="text-gray-600 text-base md:text-lg leading-relaxed mb-6">
-                      To empower aspiring traders by providing them with the right knowledge, discipline, and capital required to succeed in global markets and achieve lasting financial freedom.
+                      {dynamicMission?.text || "To empower aspiring traders by providing them with the right knowledge, discipline, and capital required to succeed in global markets and achieve lasting financial freedom."}
                     </p>
                     <ul className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      {[
+                      {(dynamicMission?.bullets?.length > 0 ? dynamicMission.bullets : [
                         "Practical Learning Approach",
                         "Discipline & Risk Management",
                         "Pathway to Financial Freedom"
-                      ].map((bullet, idx) => (
+                      ]).map((bullet: string, idx: number) => (
                         <li key={idx} className="flex items-center gap-2.5 text-sm md:text-base font-bold text-gray-700">
                           <span className="w-2.5 h-2.5 flex-shrink-0 rounded bg-[#D50032]" />
                           {bullet}
@@ -214,54 +243,7 @@ export default function AboutUs() {
 
         {/* Leadership Section */}
         <div className="border-t border-gray-100 pt-12">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-1.5 px-4.5 py-1.5 rounded-full mb-4 border border-[#D50032]/25 bg-[#D50032]/5">
-              <span className="text-[#D50032] font-black text-xs tracking-wider uppercase">
-                👥 Our Team
-              </span>
-            </div>
-            <h2 className="text-3xl sm:text-4.5xl font-black mb-4 text-gray-900 tracking-tight">
-              Meet Our <span className="text-[#D50032]">Leadership</span>
-            </h2>
-            <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto font-medium">
-              Visionary leaders who built FinTrade to reshape India's trading education landscape
-            </p>
-          </div>
-
-          {/* Leaders Profile Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {leaders.map((leader, i) => (
-              <Card key={i} className="p-7 bg-white border border-gray-100 rounded-[28px] shadow-[0_10px_35px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex flex-col justify-between group">
-                <div>
-                  <div className="flex items-center gap-3.5 mb-6">
-                    <div className="w-12 h-12 rounded-full bg-[#FFF0F2] text-[#D50032] flex items-center justify-center font-extrabold text-sm tracking-tight border border-[#D50032]/10 group-hover:scale-105 transition-all duration-300">
-                      {leader.initials}
-                    </div>
-                    <div>
-                      <h3 className="font-extrabold text-gray-950 text-base leading-snug">{leader.name}</h3>
-                      <p className="text-[#D50032] text-xs font-black tracking-wide uppercase mt-0.5">{leader.role}</p>
-                    </div>
-                  </div>
-
-                  <p className="text-gray-500 text-xs md:text-sm leading-relaxed mb-6 font-medium text-left">
-                    {leader.bio}
-                  </p>
-
-                  <div className="flex flex-wrap gap-2 mb-8">
-                    {leader.tags.map((tag, tIdx) => (
-                      <span key={tIdx} className="px-3 py-1.5 rounded-full text-[10px] font-bold text-gray-650 bg-gray-50 border border-gray-100">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <Link to={`/leader/${leader.id}`} className="text-[#D50032] font-black text-xs tracking-wider uppercase flex items-center gap-1 group-hover:gap-2 transition-all self-start mt-auto">
-                  Read Full Profile <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </Card>
-            ))}
-          </div>
+          <ExpertProfile />
         </div>
 
       </div>
