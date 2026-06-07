@@ -7,7 +7,7 @@ import { Label } from "../../components/ui/label";
 import {
   Megaphone, Trash2, Plus, Save, RefreshCw, Globe, Phone, Video,
   Star, BookOpen, CheckCircle2, XCircle, LayoutTemplate, Link as LinkIcon,
-  AlertTriangle, Info, Users, Award, TrendingUp, Layers, Newspaper
+  AlertTriangle, Info, Users, Award, TrendingUp, Layers, Newspaper, Flame
 } from "lucide-react";
 import api from "../../services/api";
 
@@ -39,6 +39,7 @@ interface Course {
   original_price?: number;
   is_published: boolean;
   is_featured: boolean;
+  is_popular?: boolean;
   marketing_highlights?: string[];
   difficulty_level: string;
 }
@@ -377,6 +378,16 @@ export default function AdminCMS() {
       await api.put(`/admin/courses/${course.id}`, { is_featured: !course.is_featured });
       fetchCourses();
       showToast(`${course.is_featured ? "Removed from" : "Added to"} featured`, "success");
+    } catch {
+      showToast("Failed to update", "error");
+    }
+  };
+
+  const togglePopular = async (course: Course) => {
+    try {
+      await api.put(`/admin/courses/${course.id}`, { is_popular: !course.is_popular });
+      fetchCourses();
+      showToast(`${course.is_popular ? "Removed from" : "Set as"} most popular`, "success");
     } catch {
       showToast("Failed to update", "error");
     }
@@ -734,6 +745,17 @@ export default function AdminCMS() {
                   <span className="text-xs text-gray-400 capitalize">{course.difficulty_level}</span>
                 </div>
                 <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => togglePopular(course)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      course.is_popular
+                        ? "bg-[#D50032] text-white shadow-md"
+                        : "border border-gray-300 text-gray-600 hover:border-[#D50032] hover:text-[#D50032]"
+                    }`}
+                  >
+                    <Flame size={14} fill={course.is_popular ? "white" : "none"} />
+                    {course.is_popular ? "Most Popular" : "Set Popular"}
+                  </button>
                   <button
                     onClick={() => toggleFeatured(course)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${

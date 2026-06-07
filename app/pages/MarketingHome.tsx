@@ -382,7 +382,7 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
   }
 
   // Determine if this is the "Most Popular" card
-  const isMostPopular = course.name.includes("CARP") || levelBadge === "Intermediate";
+  const isMostPopular = course.is_popular || (course.is_popular === undefined && (course.name.includes("CARP") || levelBadge === "Intermediate"));
 
   // Modules count fallback
   const modulesCount = course.modules?.length || (course.name.includes("FMF") ? 6 : course.name.includes("CARP") ? 12 : 18);
