@@ -1,63 +1,171 @@
-export default function TickerStrip() {
-  const tickers = [
-    { label: "NIFTY 50", value: "21,845.50", change: "+520.30", pct: "+2.4%", up: true },
-    { label: "SENSEX", value: "72,340.10", change: "+1,280.60", pct: "+1.8%", up: true },
-    { label: "BANK NIFTY", value: "48,120.75", change: "+530.25", pct: "+1.1%", up: true },
-    { label: "GOLD", value: "₹71,450/10g", change: "+430", pct: "+0.6%", up: true },
-    { label: "SILVER", value: "₹84,200/kg", change: "+610", pct: "+0.7%", up: true },
-    { label: "CRUDE OIL", value: "$82.40/bbl", change: "-0.25", pct: "-0.3%", up: false },
-    { label: "USD/INR", value: "83.45", change: "-0.09", pct: "-0.1%", up: false },
-    { label: "EUR/INR", value: "89.72", change: "+0.14", pct: "+0.2%", up: true },
-    { label: "NIFTY IT", value: "38,920.40", change: "+640.80", pct: "+1.7%", up: true },
-    { label: "NIFTY PHARMA", value: "18,740.60", change: "-85.30", pct: "-0.5%", up: false },
-    { label: "FII NET", value: "+₹2,840 Cr", change: "", pct: "", up: true },
-    { label: "DII NET", value: "+₹1,120 Cr", change: "", pct: "", up: true },
-  ];
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 
-  const items = [...tickers, ...tickers]; // duplicate for seamless loop
+// Baseline data
+const fallbackTickers = [
+  { label: "SENSEX", value: "74,243.34", change: "-116.67", pct: "-0.16%", up: false, symbol: "BSE:SENSEX" },
+  { label: "SBI", value: "834.50", change: "+12.30", pct: "+1.5%", up: true, symbol: "BSE:SBIN" },
+  { label: "RELIANCE", value: "2,934.10", change: "+45.20", pct: "+1.6%", up: true, symbol: "BSE:RELIANCE" },
+  { label: "HDFC BANK", value: "1,520.40", change: "-5.60", pct: "-0.4%", up: false, symbol: "BSE:HDFCBANK" },
+  { label: "TCS", value: "3,890.00", change: "+25.40", pct: "+0.7%", up: true, symbol: "BSE:TCS" },
+  { label: "INFOSYS", value: "1,450.20", change: "+15.10", pct: "+1.1%", up: true, symbol: "BSE:INFY" },
+  { label: "GOLD", value: "71,450", change: "+430", pct: "+0.6%", up: true, symbol: "TVC:GOLD" },
+  { label: "SILVER", value: "84,200", change: "+610", pct: "+0.7%", up: true, symbol: "TVC:SILVER" },
+  { label: "CRUDE OIL", value: "6,840", change: "-25", pct: "-0.3%", up: false, symbol: "TVC:USOIL" },
+  { label: "USD/INR", value: "83.45", change: "-0.09", pct: "-0.1%", up: false, symbol: "FX_IDC:USDINR" },
+  { label: "BITCOIN", value: "$64,230", change: "+1,200", pct: "+1.9%", up: true, symbol: "CRYPTO:BTCUSD" }
+];
+
+export default function TickerStrip() {
+  const chartContainer = useRef<HTMLDivElement>(null);
+  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
+  const [tickers, setTickers] = useState(fallbackTickers);
+  const [isHovered, setIsHovered] = useState(false);
+
+  // We could add an API fetch here later if we want real-time updates for the strip numbers
+  
+  // Effect to load the advanced chart when a symbol is selected
+  useEffect(() => {
+    if (selectedSymbol && chartContainer.current) {
+      chartContainer.current.innerHTML = '';
+      const script = document.createElement("script");
+      script.src = "https://s3.tradingview.com/tv.js";
+      script.type = "text/javascript";
+      script.async = true;
+      script.onload = () => {
+        if (typeof (window as any).TradingView !== 'undefined') {
+          new (window as any).TradingView.widget({
+            "width": "100%",
+            "height": "100%",
+            "symbol": selectedSymbol,
+            "interval": "D",
+            "timezone": "Asia/Kolkata",
+            "theme": "dark",
+            "style": "1",
+            "locale": "in",
+            "enable_publishing": false,
+            "backgroundColor": "rgba(18, 18, 18, 1)",
+            "hide_top_toolbar": false,
+            "save_image": false,
+            "container_id": "tv_chart_container"
+          });
+        }
+      };
+      document.body.appendChild(script);
+      
+      return () => {
+        if (document.body.contains(script)) {
+          document.body.removeChild(script);
+        }
+      }
+    }
+  }, [selectedSymbol]);
+
+  // Triplicated for seamless infinite scroll
+  const items = [...tickers, ...tickers, ...tickers];
+
+  const modalContent = selectedSymbol ? (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.85)',
+      zIndex: 999999, // Super high z-index to cover header
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: '20px'
+    }}>
+      <div style={{
+        width: '90%',
+        height: '80%',
+        backgroundColor: '#121212',
+        borderRadius: '12px',
+        position: 'relative',
+        overflow: 'hidden',
+        border: '1px solid #333',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+      }}>
+        <button 
+          onClick={() => setSelectedSymbol(null)}
+          style={{
+            position: 'absolute',
+            top: '10px',
+            right: '15px',
+            background: 'rgba(0,0,0,0.5)',
+            border: '1px solid #444',
+            color: 'white',
+            borderRadius: '50%',
+            width: '36px',
+            height: '36px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            cursor: 'pointer',
+            zIndex: 10,
+            transition: 'all 0.2s'
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(213,0,50,0.8)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.5)')}
+        >
+          <X size={20} />
+        </button>
+        <div id="tv_chart_container" ref={chartContainer} style={{ width: '100%', height: '100%' }}></div>
+      </div>
+    </div>
+  ) : null;
 
   return (
-    <div
-      style={{
-        background: "#121212",
-        borderBottom: "1px solid rgba(213,0,50,0.2)",
-        overflow: "hidden",
-        width: "100%",
-        position: "relative",
-        zIndex: 49,
-      }}
-    >
+    <>
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          animation: "ticker-scroll 20s linear infinite",
-          whiteSpace: "nowrap",
-          padding: "8px 0",
-          willChange: "transform",
-          backfaceVisibility: "hidden",
-          transform: "translateZ(0)",
-          perspective: 1000,
+          background: "#121212",
+          borderBottom: "1px solid rgba(213,0,50,0.2)",
+          overflow: "hidden",
+          width: "100%",
+          position: "relative",
+          zIndex: 49,
         }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        {items.map((t, i) => (
-          <span
-            key={i}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              paddingRight: "40px",
-              fontSize: "13px",
-              fontFamily: "'Inter', sans-serif",
-              fontWeight: 500,
-            }}
-          >
-            <span style={{ color: "#9CA3AF", fontSize: "11px", fontWeight: 600, letterSpacing: "0.04em" }}>
-              {t.label}
-            </span>
-            <span style={{ color: "white", fontWeight: 700 }}>{t.value}</span>
-            {t.pct && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            animation: "ticker-scroll 40s linear infinite",
+            animationPlayState: isHovered ? 'paused' : 'running',
+            whiteSpace: "nowrap",
+            padding: "8px 0",
+            willChange: "transform",
+            width: "max-content"
+          }}
+        >
+          {items.map((t, i) => (
+            <div
+              key={i}
+              onClick={() => setSelectedSymbol(t.symbol)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                paddingRight: "40px",
+                fontSize: "13px",
+                fontFamily: "'Inter', sans-serif",
+                fontWeight: 500,
+                cursor: "pointer",
+                transition: "opacity 0.2s"
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = "0.7"}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
+            >
+              <span style={{ color: "#9CA3AF", fontSize: "11px", fontWeight: 600, letterSpacing: "0.04em" }}>
+                {t.label}
+              </span>
+              <span style={{ color: "white", fontWeight: 700 }}>{t.value}</span>
               <span
                 style={{
                   color: t.up ? "#4CAF50" : "#D50032",
@@ -67,17 +175,18 @@ export default function TickerStrip() {
               >
                 {t.up ? "▲" : "▼"} {t.pct}
               </span>
-            )}
-            <span style={{ color: "#333", marginLeft: "16px" }}>|</span>
-          </span>
-        ))}
+              <span style={{ color: "#333", marginLeft: "16px" }}>|</span>
+            </div>
+          ))}
+        </div>
+        <style>{`
+          @keyframes ticker-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(calc(-100% / 3)); }
+          }
+        `}</style>
       </div>
-      <style>{`
-        @keyframes ticker-scroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-      `}</style>
-    </div>
+      {typeof document !== 'undefined' && modalContent ? createPortal(modalContent, document.body) : null}
+    </>
   );
 }
