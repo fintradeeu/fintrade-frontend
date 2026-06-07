@@ -1260,7 +1260,7 @@ export default function MarketingHome() {
 
       {/* Ticker Strip - Positioned directly after header in normal flow */}
       {sectionVisibility.show_announcements !== false && (
-        <div className="relative z-[90] bg-[#121212]">
+        <div className="sticky top-[80px] z-[90] bg-[#121212]">
           <TickerStrip />
         </div>
       )}
@@ -1278,9 +1278,9 @@ export default function MarketingHome() {
               {heroBackgrounds.map((img, idx) => (
                 <div
                   key={img + "-" + idx}
-                  className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out"
+                  className="absolute inset-0 bg-[length:100%_auto] bg-no-repeat bg-top md:bg-cover md:bg-center transition-opacity duration-1000 ease-in-out"
                   style={{
-                    backgroundImage: `linear-gradient(to bottom, rgba(11, 15, 25, 0.5), rgba(11, 15, 25, 0.7)), url('${getBgImageUrl(img)}')`,
+                    backgroundImage: `linear-gradient(to bottom, rgba(11, 15, 25, 0.3), rgba(11, 15, 25, 0.95)), url('${getBgImageUrl(img)}')`,
                     opacity: currentBgIdx === idx ? 1 : 0,
                   }}
                 />
@@ -1314,14 +1314,14 @@ export default function MarketingHome() {
                 </p>
 
                 {/* Action Buttons Row */}
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4.5 max-w-4xl mx-auto mb-6">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4.5 max-w-4xl mx-auto mb-6">
                   <Link to="/courses" className="w-full sm:w-auto">
                     <Button
                       size="lg"
-                      className="w-full sm:w-auto bg-[#D50032] hover:bg-black text-white rounded-2xl px-8 py-5 h-auto text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all hover:scale-105 whitespace-nowrap"
+                      className="w-full sm:w-auto bg-[#D50032] hover:bg-black text-white rounded-xl sm:rounded-2xl px-6 sm:px-8 py-3.5 sm:py-5 h-auto text-sm sm:text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all hover:scale-105 whitespace-nowrap"
                     >
                       {heroButtons.btn1_name || "Apply Now"}
-                      <ArrowRight className="ml-2 h-5 w-5" />
+                      <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
                   </Link>
 
@@ -1337,10 +1337,10 @@ export default function MarketingHome() {
                         setVideoOpen(true);
                       }
                     }}
-                    className="w-full sm:w-auto bg-[#D50032] hover:bg-black text-white rounded-2xl px-6 py-5 h-auto text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all inline-flex items-center justify-center gap-2.5 hover:scale-105 whitespace-nowrap"
+                    className="w-full sm:w-auto bg-[#D50032] hover:bg-black text-white rounded-xl sm:rounded-2xl px-5 sm:px-6 py-3.5 sm:py-5 h-auto text-sm sm:text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all inline-flex items-center justify-center gap-2.5 hover:scale-105 whitespace-nowrap"
                   >
-                    <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-sm">
-                      <Play className="h-2.5 w-2.5 text-[#D50032] ml-0.5 fill-[#D50032]" />
+                    <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white flex items-center justify-center shadow-sm">
+                      <Play className="h-2.5 w-2.5 sm:h-2.5 sm:w-2.5 text-[#D50032] ml-0.5 fill-[#D50032]" />
                     </span>
                     {heroButtons.btn2_name || "The FinTrade"}
                   </button>
@@ -1348,9 +1348,9 @@ export default function MarketingHome() {
                   <a
                     href="#"
                     onClick={handleDownloadClick}
-                    className="w-full sm:w-auto bg-[#D50032] hover:bg-black text-white rounded-2xl px-6 py-5 h-auto text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all inline-flex items-center justify-center gap-2.5 hover:scale-105 whitespace-nowrap"
+                    className="w-full sm:w-auto bg-[#D50032] hover:bg-black text-white rounded-xl sm:rounded-2xl px-5 sm:px-6 py-3.5 sm:py-5 h-auto text-sm sm:text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all inline-flex items-center justify-center gap-2.5 hover:scale-105 whitespace-nowrap"
                   >
-                    <Download className="h-4.5 w-4.5 text-white" />
+                    <Download className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-white" />
                     {heroButtons.btn3_name || "Download Brochure"}
                   </a>
                 </div>
@@ -1378,13 +1378,13 @@ export default function MarketingHome() {
                 )}
 
                 {/* Start Your Trading Career Slider Card */}
-                <div className="relative max-w-4xl mx-auto mt-2 bg-[#131b2e]/40 border border-white/10 rounded-[32px] p-8 md:p-10 text-center shadow-[0_30px_70px_rgba(0,0,0,0.4)] overflow-hidden select-none backdrop-blur-xl">
+                <div className="relative max-w-4xl mx-auto mt-2 bg-[#131b2e]/40 border border-white/10 rounded-[24px] sm:rounded-[32px] p-6 pt-10 md:p-10 text-center shadow-[0_30px_70px_rgba(0,0,0,0.4)] overflow-hidden select-none backdrop-blur-xl">
 
                   {/* Subtle Red Top Accent Bar */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-1 bg-[#D50032] rounded-b-full shadow-[0_0_15px_#D50032]" />
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 sm:w-28 h-1 sm:h-1.5 bg-[#D50032] rounded-b-full shadow-[0_0_15px_#D50032]" />
 
                   {/* Slider content wrapper */}
-                  <div className="min-h-[110px] flex flex-col justify-center items-center px-6">
+                  <div className="min-h-[110px] flex flex-col justify-center items-center px-4 sm:px-6">
                     <h3 className="text-2xl md:text-3.5xl font-black tracking-tight text-white mb-2 leading-none font-sans">
                       {slides[activeSlide].title}
                     </h3>

@@ -22,9 +22,15 @@ export default function ExpertProfile({ leaders: _leadersProp }: { leaders?: any
         </div>
 
         {/* Leaders Profile Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto px-4 select-none">
+        <div 
+          className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto px-4 select-none overflow-x-auto snap-x snap-mandatory pb-6"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          <style>{`
+            .overflow-x-auto::-webkit-scrollbar { display: none; }
+          `}</style>
           {leaders.map((leader, i) => (
-            <div key={i} className="p-5 bg-white border border-gray-100 rounded-[28px] shadow-[0_10px_35px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex flex-col justify-between group">
+            <div key={i} className="min-w-[280px] w-[80vw] sm:w-[320px] md:w-auto md:min-w-0 flex-shrink-0 snap-center p-5 bg-white border border-gray-100 rounded-[28px] shadow-[0_10px_35px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex flex-col justify-between group">
               <div>
                 <div className="mb-6 overflow-hidden rounded-[20px] w-full aspect-square bg-gray-50 flex items-center justify-center border border-gray-100 relative group-hover:border-[#D50032]/20 transition-colors">
                   <img 

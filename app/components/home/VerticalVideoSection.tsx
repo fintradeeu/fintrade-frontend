@@ -133,7 +133,7 @@ export default function VerticalVideoSection({ videos: videosProp }: { videos?: 
   };
 
   return (
-    <section className="py-12 bg-white relative z-10 overflow-hidden border-t border-gray-100">
+    <section className={`py-12 bg-white relative overflow-hidden border-t border-gray-100 ${fullscreenVideoId ? "z-[99999]" : "z-10"}`}>
       
       {/* Header and Controls Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -328,14 +328,7 @@ export default function VerticalVideoSection({ videos: videosProp }: { videos?: 
                 />
               </div>
 
-              {/* Big visual "Cancel / Close" button directly below the vertical player */}
-              <button
-                onClick={() => setFullscreenVideoId(null)}
-                className="px-8 py-3 bg-[#D50032] hover:bg-[#FF1A4D] text-white font-extrabold rounded-full flex items-center gap-2 shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 tracking-wider text-xs uppercase cursor-pointer border border-transparent"
-              >
-                <X className="w-4 h-4 text-white stroke-[3]" />
-                Cancel / Close
-              </button>
+
             </div>
           </div>
         );
