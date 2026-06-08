@@ -77,100 +77,102 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
 
   return (
     <div className="fixed inset-0 z-[200] bg-[#0B2A5B]/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <Card className="max-w-2xl w-full p-8 bg-white shadow-xl relative overflow-y-auto max-h-[90vh]">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+      <Card className="max-w-2xl w-full bg-white shadow-xl relative flex flex-col max-h-[90vh] rounded-2xl overflow-hidden">
+        <button onClick={onClose} className="absolute top-4.5 right-4 z-10 text-gray-400 hover:text-gray-600">
           ✕
         </button>
-        <h2 className="text-2xl font-bold text-[#0B2A5B] mb-6">Complete Your Enrollment</h2>
-
-        <div className="bg-[#F4F1EA] rounded-lg p-6 mb-6">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h3 className="text-xl font-bold text-[#0B2A5B] mb-1">{course.title || course.name}</h3>
-              <p className="text-[#0B2A5B]/60 text-sm">Professional Trading Program</p>
-            </div>
-            <div className="text-right">
-              <span className="text-2xl font-bold text-[#0B2A5B]">
-                ₹{initialPrice.toLocaleString("en-IN")}
-              </span>
-            </div>
-          </div>
-
-          <div className="border-t border-[#0B2A5B]/10 pt-4">
-            <label className="text-sm font-semibold text-[#0B2A5B] mb-2 block">
-              Have a distributor code?
-            </label>
-            <div className="flex gap-3">
-              <div className="relative flex-1">
-                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <Input
-                  type="text"
-                  placeholder="Enter code"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                  className="pl-10 uppercase"
-                />
+        <div className="p-6 md:p-8 pb-4 border-b border-gray-100">
+          <h2 className="text-xl md:text-2xl font-bold text-[#0B2A5B]">Complete Your Enrollment</h2>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 min-h-0 scrollbar-thin pr-4 md:pr-6">
+          <div className="bg-[#F4F1EA] rounded-lg p-5 md:p-6">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-lg md:text-xl font-bold text-[#0B2A5B] mb-1">{course.title || course.name}</h3>
+                <p className="text-[#0B2A5B]/60 text-xs md:text-sm">Professional Trading Program</p>
               </div>
-              <Button onClick={applyCoupon} variant="outline" className="border-[#C2A86A] text-[#C2A86A] hover:bg-[#C2A86A] hover:text-white">
-                Apply
-              </Button>
-            </div>
-            {errorMsg && <p className="text-red-500 text-sm mt-2">{errorMsg}</p>}
-            {couponMsg && <p className="text-green-600 text-sm mt-2">{couponMsg}</p>}
-          </div>
-        </div>
-
-        <div className="bg-gray-50 rounded-lg p-6 mb-6">
-          <h3 className="font-semibold text-[#0B2A5B] mb-4">Order Summary</h3>
-          <div className="space-y-3 mb-4">
-            <div className="flex justify-between text-[#0B2A5B]/70">
-              <span>Course Fee</span>
-              <span>₹{initialPrice.toLocaleString("en-IN")}</span>
-            </div>
-            {discount > 0 && (
-              <div className="flex justify-between text-green-600">
-                <span>Discount Applied</span>
-                <span className="font-semibold">-₹{discount.toLocaleString("en-IN")}</span>
+              <div className="text-right">
+                <span className="text-xl md:text-2xl font-bold text-[#0B2A5B]">
+                  ₹{initialPrice.toLocaleString("en-IN")}
+                </span>
               </div>
-            )}
-            <div className="border-t border-[#0B2A5B]/10 pt-3 flex justify-between text-[#0B2A5B]">
-              <span className="text-lg font-semibold">Total Amount</span>
-              <span className="text-2xl font-bold text-[#C2A86A]">
-                ₹{Number(finalPrice).toLocaleString("en-IN")}
-              </span>
+            </div>
+
+            <div className="border-t border-[#0B2A5B]/10 pt-4">
+              <label className="text-sm font-semibold text-[#0B2A5B] mb-2 block">
+                Have a distributor code?
+              </label>
+              <div className="flex gap-3">
+                <div className="relative flex-1">
+                  <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <Input
+                    type="text"
+                    placeholder="Enter code"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    className="pl-10 uppercase"
+                  />
+                </div>
+                <Button onClick={applyCoupon} variant="outline" className="border-[#C2A86A] text-[#C2A86A] hover:bg-[#C2A86A] hover:text-white">
+                  Apply
+                </Button>
+              </div>
+              {errorMsg && <p className="text-red-500 text-sm mt-2">{errorMsg}</p>}
+              {couponMsg && <p className="text-green-600 text-sm mt-2">{couponMsg}</p>}
+            </div>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-5 md:p-6">
+            <h3 className="font-semibold text-sm md:text-base text-[#0B2A5B] mb-4">Order Summary</h3>
+            <div className="space-y-3 mb-4">
+              <div className="flex justify-between text-[#0B2A5B]/70 text-sm">
+                <span>Course Fee</span>
+                <span>₹{initialPrice.toLocaleString("en-IN")}</span>
+              </div>
+              {discount > 0 && (
+                <div className="flex justify-between text-green-600 text-sm">
+                  <span>Discount Applied</span>
+                  <span className="font-semibold">-₹{discount.toLocaleString("en-IN")}</span>
+                </div>
+              )}
+              <div className="border-t border-[#0B2A5B]/10 pt-3 flex justify-between text-[#0B2A5B] items-center">
+                <span className="text-base md:text-lg font-semibold">Total Amount</span>
+                <span className="text-xl md:text-2xl font-bold text-[#C2A86A]">
+                  ₹{Number(finalPrice).toLocaleString("en-IN")}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="font-semibold text-sm md:text-base text-[#0B2A5B]">Payment Method</h3>
+            <div className="grid grid-cols-3 gap-3">
+              <button className="p-3 md:p-4 border-2 border-[#C2A86A] bg-[#C2A86A]/10 rounded-lg font-semibold text-[#0B2A5B] hover:bg-[#C2A86A]/20 transition-colors text-xs md:text-sm">
+                UPI
+              </button>
+              <button className="p-3 md:p-4 border-2 border-[#0B2A5B]/20 rounded-lg font-semibold text-[#0B2A5B] hover:bg-[#F4F1EA] transition-colors text-xs md:text-sm">
+                Card
+              </button>
+              <button className="p-3 md:p-4 border-2 border-[#0B2A5B]/20 rounded-lg font-semibold text-[#0B2A5B] hover:bg-[#F4F1EA] transition-colors text-xs md:text-sm">
+                NetBanking
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <h3 className="font-semibold text-[#0B2A5B]">Payment Method</h3>
-          <div className="grid grid-cols-3 gap-3">
-            <button className="p-4 border-2 border-[#C2A86A] bg-[#C2A86A]/10 rounded-lg font-semibold text-[#0B2A5B] hover:bg-[#C2A86A]/20 transition-colors">
-              UPI
-            </button>
-            <button className="p-4 border-2 border-[#0B2A5B]/20 rounded-lg font-semibold text-[#0B2A5B] hover:bg-[#F4F1EA] transition-colors">
-              Card
-            </button>
-            <button className="p-4 border-2 border-[#0B2A5B]/20 rounded-lg font-semibold text-[#0B2A5B] hover:bg-[#F4F1EA] transition-colors">
-              NetBanking
-            </button>
-          </div>
-        </div>
-
-        <div className="flex gap-4 mt-8">
+        <div className="p-6 md:p-8 pt-4 border-t border-gray-100 bg-gray-50/50 flex gap-4">
           <Button
             onClick={completePayment}
             disabled={loading}
-            className="flex-1 bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] shadow-lg shadow-[#0B2A5B]/20"
-            size="lg"
+            className="flex-1 bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] shadow-lg shadow-[#0B2A5B]/20 py-2.5 md:py-3.5 h-auto text-sm md:text-base font-semibold"
           >
             {loading ? "Processing..." : `Pay ₹${Number(finalPrice).toLocaleString("en-IN")}`}
           </Button>
           <Button
             onClick={onClose}
             variant="outline"
-            className="border-2 border-[#0B2A5B]/20 text-[#0B2A5B]"
-            size="lg"
+            className="border-2 border-[#0B2A5B]/20 text-[#0B2A5B] py-2.5 md:py-3.5 h-auto text-sm md:text-base font-semibold"
           >
             Cancel
           </Button>
