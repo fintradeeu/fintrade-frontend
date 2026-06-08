@@ -13,7 +13,7 @@ import TickerStrip from "../components/TickerStrip";
 import ShareButton from "../components/ShareButton";
 import StudentStats from "../components/home/StudentStats";
 import VerticalVideoSection from "../components/home/VerticalVideoSection";
-import ExpertProfile from "../components/home/ExpertProfile";
+
 import EMIHighlight from "../components/home/EMIHighlight";
 import KeyInsights from "../components/home/KeyInsights";
 import CertificatePreview from "../components/home/CertificatePreview";
@@ -51,11 +51,42 @@ function AmbientGlow() {
 }
 
 // Reusable Framer Motion Scroll Reveal Component
-function ScrollReveal({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+function ScrollReveal({ 
+  children, 
+  className = "", 
+  delay = 0,
+  mobileDirection = "up",
+  desktopDirection = "up"
+}: { 
+  children: React.ReactNode; 
+  className?: string; 
+  delay?: number;
+  mobileDirection?: "up" | "down" | "left" | "right";
+  desktopDirection?: "up" | "down" | "left" | "right";
+}) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  const dir = isMobile ? mobileDirection : desktopDirection;
+
+  const initial = {
+    opacity: 0,
+    x: dir === "left" ? -50 : dir === "right" ? 50 : 0,
+    y: dir === "up" ? 35 : dir === "down" ? -35 : 0
+  };
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 35 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={initial}
+      whileInView={{ opacity: 1, x: 0, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay }}
       className={className}
@@ -1679,6 +1710,7 @@ export default function MarketingHome() {
                   <ScrollReveal
                     key={i}
                     delay={i * 0.12}
+                    mobileDirection="left"
                     className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex"
                   >
                     <CourseCard course={course} onEnroll={() => setSelectedCourseForCheckout(course)} />
@@ -2559,16 +2591,7 @@ export default function MarketingHome() {
           </section>
         )}
 
-        {/* Leadership Section */}
-        {sectionVisibility.show_leadership !== false && (
-          <section className="py-12 bg-white relative z-10 border-t border-gray-100">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-              <ScrollReveal>
-                <ExpertProfile leaders={apiLeadership} />
-              </ScrollReveal>
-            </div>
-          </section>
-        )}
+
 
         {/* Testimonials Section */}
         {sectionVisibility.show_testimonials !== false && testimonials.length > 0 && (
@@ -2641,7 +2664,7 @@ export default function MarketingHome() {
         {sectionVisibility.show_cta !== false && (
           <section className="py-6 md:py-8 bg-white relative z-10 overflow-hidden">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-              <ScrollReveal>
+              <ScrollReveal mobileDirection="left">
                 <div className="relative bg-white border border-[#D50032]/8 rounded-[32px] p-8 md:p-12 text-center shadow-[0_15px_40px_rgba(213,0,50,0.02)] overflow-hidden select-none">
 
                   {/* Top glowing red gradient bar */}
