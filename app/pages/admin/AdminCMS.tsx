@@ -261,6 +261,16 @@ export default function AdminCMS() {
   const [articles, setArticles] = useState<any[]>([]);
   const [articlesLoading, setArticlesLoading] = useState(false);
 
+  // About Us CMS state
+  const [aboutUsConfig, setAboutUsConfig] = useState<any>({
+    slides: [],
+    stats: [],
+    text: [],
+    vision: { title: "", content: "" },
+    mission: { title: "", content: "" }
+  });
+  const [aboutUsLoading, setAboutUsLoading] = useState(true);
+
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
@@ -308,6 +318,21 @@ export default function AdminCMS() {
     finally { setArticlesLoading(false); }
   }, []);
 
+  const fetchAboutUsConfig = useCallback(async () => {
+    try {
+      setAboutUsLoading(true);
+      const res = await api.get("/settings/about-us");
+      setAboutUsConfig(res.data || {
+        slides: [],
+        stats: [],
+        text: [],
+        vision: { title: "", content: "" },
+        mission: { title: "", content: "" }
+      });
+    } catch { /* silent */ }
+    finally { setAboutUsLoading(false); }
+  }, []);
+
   const toggleArticleVisibility = async (id: number, currentStatus: string) => {
     try {
       const newStatus = currentStatus === "published" ? "draft" : "published";
@@ -346,7 +371,8 @@ export default function AdminCMS() {
     fetchConfig();
     fetchReviews();
     fetchArticles();
-  }, [fetchAnnouncements, fetchCourses, fetchConfig, fetchReviews, fetchArticles]);
+    fetchAboutUsConfig();
+  }, [fetchAnnouncements, fetchCourses, fetchConfig, fetchReviews, fetchArticles, fetchAboutUsConfig]);
 
   // ── Announcements CRUD ──────────────────────────────────────────────
   const createAnnouncement = async () => {
@@ -415,6 +441,20 @@ export default function AdminCMS() {
       showToast("Saved!", "success");
     } catch {
       showToast("Failed to save", "error");
+    }
+  };
+
+  const saveAboutUsConfig = async (updatedFields: any) => {
+    try {
+      const res = await api.put("/admin/settings/about-us", updatedFields);
+      if (res.data) {
+        setAboutUsConfig(res.data);
+      } else {
+        fetchAboutUsConfig();
+      }
+      showToast("About Us content saved!", "success");
+    } catch {
+      showToast("Failed to save About Us content", "error");
     }
   };
 
@@ -3553,35 +3593,36 @@ export default function AdminCMS() {
       )}
 
       {/* ── TAB: About Us Page ─────────────────────────────────────── */}
-      {activeTab === "about_us" && !configLoading && (
+      {activeTab === "about_us" && !aboutUsLoading && (
         <div className="space-y-6">
           <Card className="p-4 border border-blue-100 bg-blue-50/50">
             <div className="flex items-start gap-3">
               <Info size={18} className="text-blue-500 mt-0.5 flex-shrink-0" />
               <p className="text-sm text-blue-700">
-                Manage the <strong>About Us</strong> page content, including the Hero Slider images, statistics counters, and company vision/mission.
+                Manage the <strong>About Us</strong> page content, including the Hero Slider images, statistics counters, company vision, and mission.
               </p>
             </div>
           </Card>
 
+          {/* Slider Background Images */}
           <Card className="p-6 border border-gray-100 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold" style={{ color: "#121212" }}>Slider Background Images</h2>
-              <Button onClick={() => saveConfig({ about_us_slides: config.about_us_slides })} className="bg-[#E53935] text-white hover:bg-[#b71c1c]">
+              <Button onClick={() => saveAboutUsConfig({ slides: aboutUsConfig.slides })} className="bg-[#E53935] text-white hover:bg-[#b71c1c]">
                 <Save size={16} className="mr-2" /> Save Slides
               </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-              {(config.about_us_slides || []).map((slideUrl, idx) => (
+              {(aboutUsConfig.slides || []).map((slideUrl: string, idx: number) => (
                 <div key={idx} className="relative group rounded-xl overflow-hidden border border-gray-200 shadow-sm aspect-video">
                   <img src={getImageUrl(slideUrl)} alt={`Slide ${idx + 1}`} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button
                       onClick={() => {
-                        const newSlides = [...(config.about_us_slides || [])];
+                        const newSlides = [...(aboutUsConfig.slides || [])];
                         newSlides.splice(idx, 1);
-                        setConfig(p => ({ ...p, about_us_slides: newSlides }));
+                        setAboutUsConfig((p: any) => ({ ...p, slides: newSlides }));
                       }}
                       className="p-3 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors transform hover:scale-110"
                       title="Remove this slide"
@@ -3614,8 +3655,8 @@ export default function AdminCMS() {
                         headers: { "Content-Type": "multipart/form-data" }
                       });
                       if (res.data && res.data.url) {
-                        const newSlides = [...(config.about_us_slides || []), res.data.url];
-                        setConfig(p => ({ ...p, about_us_slides: newSlides }));
+                        const newSlides = [...(aboutUsConfig.slides || []), res.data.url];
+                        setAboutUsConfig((p: any) => ({ ...p, slides: newSlides }));
                         showToast("Slide uploaded successfully!", "success");
                       }
                     } catch {
@@ -3627,49 +3668,35 @@ export default function AdminCMS() {
               </div>
             </div>
           </Card>
-        </div>
-      )}
-
-      {/* ── TAB: About Us Details ─────────────────────────────────── */}
-      {activeTab === "about_us_details" && !configLoading && (
-        <div className="space-y-6">
-          <Card className="p-4 border border-blue-100 bg-blue-50/50">
-            <div className="flex items-start gap-3">
-              <Info size={18} className="text-blue-500 mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-blue-700">
-                Manage the details for the <strong>About Us</strong> page, including Statistics Counters, Main Description text, Vision, and Mission.
-              </p>
-            </div>
-          </Card>
 
           {/* Stats Counters */}
           <Card className="p-6 border border-gray-100 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold" style={{ color: "#121212" }}>Statistics Counters</h2>
-              <Button onClick={() => saveConfig({ about_us_stats: config.about_us_stats })} className="bg-[#E53935] text-white hover:bg-[#b71c1c]">
+              <Button onClick={() => saveAboutUsConfig({ stats: aboutUsConfig.stats })} className="bg-[#E53935] text-white hover:bg-[#b71c1c]">
                 <Save size={16} className="mr-2" /> Save Stats
               </Button>
             </div>
             <div className="grid md:grid-cols-3 gap-6">
               {[0, 1, 2].map(idx => {
                 const defaultStats = [
-                  { val: "1,200+", lbl: "Students Trained" },
-                  { val: "₹50 Cr+", lbl: "Trading Capital" },
-                  { val: "90 Days", lbl: "To Get Funded" }
+                  { value: "10k+", label: "Students Trained" },
+                  { value: "₹50Cr+", label: "Capital Managed" },
+                  { value: "90 Days", label: "To Get Funded" }
                 ];
-                const stats = config.about_us_stats && config.about_us_stats.length === 3 ? config.about_us_stats : defaultStats;
+                const stats = aboutUsConfig.stats && aboutUsConfig.stats.length === 3 ? aboutUsConfig.stats : defaultStats;
                 const stat = stats[idx];
                 return (
                   <div key={idx} className="space-y-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
                     <Label className="text-xs font-bold text-gray-500">Stat #{idx + 1}</Label>
                     <div>
-                      <Label className="text-[10px]">Value (e.g. 1,200+)</Label>
+                      <Label className="text-[10px]">Value (e.g. 10k+)</Label>
                       <Input
-                        value={stat.val}
+                        value={stat.value || stat.val || ""}
                         onChange={e => {
                           const newStats = [...stats];
-                          newStats[idx] = { ...stat, val: e.target.value };
-                          setConfig(p => ({ ...p, about_us_stats: newStats }));
+                          newStats[idx] = { ...stat, value: e.target.value };
+                          setAboutUsConfig((p: any) => ({ ...p, stats: newStats }));
                         }}
                         className="bg-white mt-1 h-8"
                       />
@@ -3677,11 +3704,11 @@ export default function AdminCMS() {
                     <div>
                       <Label className="text-[10px]">Label (e.g. Students Trained)</Label>
                       <Input
-                        value={stat.lbl}
+                        value={stat.label || stat.lbl || ""}
                         onChange={e => {
                           const newStats = [...stats];
-                          newStats[idx] = { ...stat, lbl: e.target.value };
-                          setConfig(p => ({ ...p, about_us_stats: newStats }));
+                          newStats[idx] = { ...stat, label: e.target.value };
+                          setAboutUsConfig((p: any) => ({ ...p, stats: newStats }));
                         }}
                         className="bg-white mt-1 h-8"
                       />
@@ -3696,25 +3723,25 @@ export default function AdminCMS() {
           <Card className="p-6 border border-gray-100 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold" style={{ color: "#121212" }}>Main Description</h2>
-              <Button onClick={() => saveConfig({ about_us_text: config.about_us_text })} className="bg-[#E53935] text-white hover:bg-[#b71c1c]">
+              <Button onClick={() => saveAboutUsConfig({ text: aboutUsConfig.text })} className="bg-[#E53935] text-white hover:bg-[#b71c1c]">
                 <Save size={16} className="mr-2" /> Save Description
               </Button>
             </div>
             <div className="space-y-4">
               {(() => {
                 const defaultText = [
-                  "The FinTrade is an initiative by Junomoneta Finsol Pvt Ltd, a leading financial institution known for robust trading ecosystem and market expertise.",
-                  "We believe that anyone with discipline and the right framework can master the markets. Our prop trading academy bridges the gap between education and capital allocation."
+                  "FinTrade is a results-driven prop trading academy focused on developing skilled and disciplined traders. We combine practical learning, live market exposure, and structured mentorship to bridge the gap between knowledge and real trading performance.",
+                  "Our programs are designed to build consistency, confidence, and profitability, guiding students from basics to professional-level trading."
                 ];
-                const texts = config.about_us_text && config.about_us_text.length > 0 ? config.about_us_text : defaultText;
-                return texts.map((txt, idx) => (
+                const texts = aboutUsConfig.text && aboutUsConfig.text.length > 0 ? aboutUsConfig.text : defaultText;
+                return texts.map((txt: string, idx: number) => (
                   <div key={idx} className="relative group">
                     <textarea
                       value={txt}
                       onChange={e => {
                         const newTexts = [...texts];
                         newTexts[idx] = e.target.value;
-                        setConfig(p => ({ ...p, about_us_text: newTexts }));
+                        setAboutUsConfig((p: any) => ({ ...p, text: newTexts }));
                       }}
                       className="w-full rounded-xl border border-gray-200 p-4 text-sm min-h-[100px] focus:outline-none focus:ring-2 focus:ring-[#E53935]/50"
                       placeholder="Enter description paragraph..."
@@ -3723,7 +3750,7 @@ export default function AdminCMS() {
                       onClick={() => {
                         const newTexts = [...texts];
                         newTexts.splice(idx, 1);
-                        setConfig(p => ({ ...p, about_us_text: newTexts }));
+                        setAboutUsConfig((p: any) => ({ ...p, text: newTexts }));
                       }}
                       className="absolute top-2 right-2 p-1.5 bg-red-100 text-red-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
                     >
@@ -3736,8 +3763,8 @@ export default function AdminCMS() {
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  const texts = config.about_us_text || [];
-                  setConfig(p => ({ ...p, about_us_text: [...texts, ""] }));
+                  const texts = aboutUsConfig.text || [];
+                  setAboutUsConfig((p: any) => ({ ...p, text: [...texts, ""] }));
                 }}
                 className="border border-[#E53935] text-[#E53935] hover:bg-[#E53935]/5"
               >
@@ -3752,42 +3779,34 @@ export default function AdminCMS() {
             <Card className="p-6 border border-gray-100 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold" style={{ color: "#121212" }}>Our Vision</h2>
-                <Button onClick={() => saveConfig({ about_us_vision: config.about_us_vision })} size="sm" className="bg-[#E53935] text-white hover:bg-[#b71c1c]">
-                  <Save size={14} />
+                <Button onClick={() => saveAboutUsConfig({ vision: aboutUsConfig.vision })} size="sm" className="bg-[#E53935] text-white hover:bg-[#b71c1c]">
+                  <Save size={14} className="mr-2" /> Save Vision
                 </Button>
               </div>
               <div className="space-y-4">
                 {(() => {
                   const defaultVision = {
-                    text: "To democratize professional trading by providing world-class education, proprietary strategies, and capital allocation to aspiring traders.",
-                    bullets: ["Accessible Institutional Training", "Performance-Based Capital Funding"]
+                    title: "Our Vision",
+                    content: "To build India's most trusted, full-stack Prop Trading Education & Capital Allocation ecosystem — transforming retail traders into consistently profitable, funded professionals."
                   };
-                  const vision = config.about_us_vision || defaultVision;
+                  const vision = aboutUsConfig.vision || defaultVision;
                   return (
                     <>
                       <div>
-                        <Label className="text-xs">Vision Description</Label>
-                        <textarea
-                          value={vision.text}
-                          onChange={e => setConfig(p => ({ ...p, about_us_vision: { ...vision, text: e.target.value } }))}
-                          className="w-full rounded-xl border border-gray-200 p-3 text-sm min-h-[80px] mt-1"
+                        <Label className="text-xs">Vision Title</Label>
+                        <Input
+                          value={vision.title || ""}
+                          onChange={e => setAboutUsConfig((p: any) => ({ ...p, vision: { ...vision, title: e.target.value } }))}
+                          className="bg-white mt-1 h-8"
                         />
                       </div>
                       <div>
-                        <Label className="text-xs">Vision Bullets (Up to 3)</Label>
-                        {[0, 1, 2].map(idx => (
-                          <Input
-                            key={idx}
-                            value={vision.bullets[idx] || ""}
-                            onChange={e => {
-                              const newBullets = [...(vision.bullets || [])];
-                              newBullets[idx] = e.target.value;
-                              setConfig(p => ({ ...p, about_us_vision: { ...vision, bullets: newBullets } }));
-                            }}
-                            placeholder={`Bullet ${idx + 1}`}
-                            className="mt-2 h-8"
-                          />
-                        ))}
+                        <Label className="text-xs">Vision Description</Label>
+                        <textarea
+                          value={vision.content || ""}
+                          onChange={e => setAboutUsConfig((p: any) => ({ ...p, vision: { ...vision, content: e.target.value } }))}
+                          className="w-full rounded-xl border border-gray-200 p-3 text-sm min-h-[80px] mt-1"
+                        />
                       </div>
                     </>
                   );
@@ -3799,42 +3818,34 @@ export default function AdminCMS() {
             <Card className="p-6 border border-gray-100 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold" style={{ color: "#121212" }}>Our Mission</h2>
-                <Button onClick={() => saveConfig({ about_us_mission: config.about_us_mission })} size="sm" className="bg-[#E53935] text-white hover:bg-[#b71c1c]">
-                  <Save size={14} />
+                <Button onClick={() => saveAboutUsConfig({ mission: aboutUsConfig.mission })} size="sm" className="bg-[#E53935] text-white hover:bg-[#b71c1c]">
+                  <Save size={14} className="mr-2" /> Save Mission
                 </Button>
               </div>
               <div className="space-y-4">
                 {(() => {
                   const defaultMission = {
-                    text: "To build India's largest community of funded professional traders by transforming raw talent through rigorous training and mentorship.",
-                    bullets: ["Hands-on Live Trading", "Strict Risk Management Rules"]
+                    title: "Our Mission",
+                    content: "To empower aspiring traders by providing them with the right knowledge, discipline, and capital required to succeed in global markets and achieve lasting financial freedom."
                   };
-                  const mission = config.about_us_mission || defaultMission;
+                  const mission = aboutUsConfig.mission || defaultMission;
                   return (
                     <>
                       <div>
-                        <Label className="text-xs">Mission Description</Label>
-                        <textarea
-                          value={mission.text}
-                          onChange={e => setConfig(p => ({ ...p, about_us_mission: { ...mission, text: e.target.value } }))}
-                          className="w-full rounded-xl border border-gray-200 p-3 text-sm min-h-[80px] mt-1"
+                        <Label className="text-xs">Mission Title</Label>
+                        <Input
+                          value={mission.title || ""}
+                          onChange={e => setAboutUsConfig((p: any) => ({ ...p, mission: { ...mission, title: e.target.value } }))}
+                          className="bg-white mt-1 h-8"
                         />
                       </div>
                       <div>
-                        <Label className="text-xs">Mission Bullets (Up to 3)</Label>
-                        {[0, 1, 2].map(idx => (
-                          <Input
-                            key={idx}
-                            value={mission.bullets[idx] || ""}
-                            onChange={e => {
-                              const newBullets = [...(mission.bullets || [])];
-                              newBullets[idx] = e.target.value;
-                              setConfig(p => ({ ...p, about_us_mission: { ...mission, bullets: newBullets } }));
-                            }}
-                            placeholder={`Bullet ${idx + 1}`}
-                            className="mt-2 h-8"
-                          />
-                        ))}
+                        <Label className="text-xs">Mission Description</Label>
+                        <textarea
+                          value={mission.content || ""}
+                          onChange={e => setAboutUsConfig((p: any) => ({ ...p, mission: { ...mission, content: e.target.value } }))}
+                          className="w-full rounded-xl border border-gray-200 p-3 text-sm min-h-[80px] mt-1"
+                        />
                       </div>
                     </>
                   );

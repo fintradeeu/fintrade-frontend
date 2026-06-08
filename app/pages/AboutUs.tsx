@@ -52,15 +52,40 @@ export default function AboutUs() {
   const [dynamicMission, setDynamicMission] = useState<any>(null);
   
   useEffect(() => {
-    api.get("/settings/landing-page").then(res => {
+    api.get("/settings/about-us").then(res => {
       if (res.data) {
-        if (res.data.about_us_slides?.length > 0) {
-          setDynamicSlides(res.data.about_us_slides.map(getImageUrl));
+        const slides = res.data.slides || res.data.about_us_slides;
+        if (slides?.length > 0) {
+          setDynamicSlides(slides.map(getImageUrl));
         }
-        if (res.data.about_us_stats?.length > 0) setDynamicStats(res.data.about_us_stats);
-        if (res.data.about_us_text?.length > 0) setDynamicText(res.data.about_us_text);
-        if (res.data.about_us_vision) setDynamicVision(res.data.about_us_vision);
-        if (res.data.about_us_mission) setDynamicMission(res.data.about_us_mission);
+        
+        const stats = res.data.stats || res.data.about_us_stats;
+        if (stats?.length > 0) {
+          setDynamicStats(stats);
+        }
+        
+        const text = res.data.text || res.data.about_us_text;
+        if (text?.length > 0) {
+          setDynamicText(text);
+        }
+        
+        const vision = res.data.vision || res.data.about_us_vision;
+        if (vision) {
+          setDynamicVision({
+            title: vision.title || "",
+            text: vision.content || vision.text || "",
+            bullets: vision.bullets || []
+          });
+        }
+        
+        const mission = res.data.mission || res.data.about_us_mission;
+        if (mission) {
+          setDynamicMission({
+            title: mission.title || "",
+            text: mission.content || mission.text || "",
+            bullets: mission.bullets || []
+          });
+        }
       }
     }).catch(console.error);
   }, []);
@@ -157,10 +182,10 @@ export default function AboutUs() {
               ]).map((m, idx) => (
                 <Card key={idx} className="flex flex-row md:flex-col items-center justify-center text-center gap-2 md:gap-3 p-3.5 md:p-8 bg-[#D50032] border-none rounded-xl md:rounded-2xl shadow-lg md:shadow-xl transition-all hover:bg-black hover:scale-105 duration-300 group cursor-pointer w-auto flex-1 min-w-[140px] sm:min-w-[180px] md:min-w-0 md:w-full">
                   <span className="text-base sm:text-lg md:text-5xl font-black text-white leading-none font-sans transition-colors duration-300 whitespace-nowrap">
-                    {m.val}
+                    {m.val || m.value}
                   </span>
                   <span className="text-[10px] sm:text-xs font-black text-white/90 uppercase tracking-wider md:tracking-widest leading-tight transition-colors duration-300">
-                    {m.lbl}
+                    {m.lbl || m.label}
                   </span>
                 </Card>
               ))}
@@ -212,7 +237,9 @@ export default function AboutUs() {
                 >
                   <Card className="p-8 bg-white border border-gray-100 rounded-[36px] shadow-[0_12px_45px_rgba(0,0,0,0.015)] flex gap-4 items-start mx-auto max-w-5xl transition-all hover:shadow-[0_20px_50px_rgba(0,0,0,0.03)] hover:border-[#D50032]/10">
                     <div className="flex-1">
-                      <h3 className="font-black text-gray-950 text-2xl tracking-tight mb-3">Our Vision</h3>
+                      <h3 className="font-black text-gray-950 text-2xl tracking-tight mb-3">
+                        {dynamicVision?.title || "Our Vision"}
+                      </h3>
                       <p className="text-gray-600 text-base md:text-lg leading-relaxed mb-6">
                         {dynamicVision?.text || "To build India's most trusted, full-stack Prop Trading Education & Capital Allocation ecosystem — transforming retail traders into consistently profitable, funded professionals."}
                       </p>
@@ -242,7 +269,9 @@ export default function AboutUs() {
                 >
                   <Card className="p-8 bg-white border border-gray-100 rounded-[36px] shadow-[0_12px_45px_rgba(0,0,0,0.015)] flex gap-4 items-start mx-auto max-w-5xl transition-all hover:shadow-[0_20px_50px_rgba(0,0,0,0.03)] hover:border-[#D50032]/10">
                     <div className="flex-1">
-                      <h3 className="font-black text-gray-950 text-2xl tracking-tight mb-3">Our Mission</h3>
+                      <h3 className="font-black text-gray-950 text-2xl tracking-tight mb-3">
+                        {dynamicMission?.title || "Our Mission"}
+                      </h3>
                       <p className="text-gray-600 text-base md:text-lg leading-relaxed mb-6">
                         {dynamicMission?.text || "To empower aspiring traders by providing them with the right knowledge, discipline, and capital required to succeed in global markets and achieve lasting financial freedom."}
                       </p>
