@@ -420,75 +420,38 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
   // Modules count fallback
   const modulesCount = course.modules?.length || (course.name.includes("FMF") ? 6 : course.name.includes("CARP") ? 12 : 18);
 
+  const getIcon = () => {
+    if (!course.icon) return BookOpen;
+    if (typeof course.icon === 'function') return course.icon;
+    const map: Record<string, any> = { BookOpen, LineChart, Trophy };
+    return map[course.icon] || BookOpen;
+  };
+  const IconComponent = getIcon();
+
   return (
     <>
       <div
-        className={`w-full h-full flex flex-col group transition-all duration-300 relative bg-white rounded-[32px] p-5 sm:p-8 ${isMostPopular
-          ? "border-2 border-[#FFD2D6] shadow-[0_15px_40px_rgba(213,0,50,0.04)]"
-          : "border border-gray-100 shadow-[0_10px_35px_rgba(0,0,0,0.015)]"
-          } hover:shadow-2xl hover:scale-[1.01]`}
+        className="w-full h-full flex flex-col justify-between bg-white rounded-3xl border border-gray-100 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-2xl hover:scale-[1.01] transition-all duration-300 min-h-[280px] text-left select-none relative group"
       >
-        {/* Most Popular overlapping badge */}
-        {isMostPopular && (
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full text-[11px] font-black text-white bg-[#D50032] shadow-[0_4px_12px_rgba(213,0,50,0.25)] uppercase tracking-wider z-20">
-            Most Popular
+        <div className="flex flex-col items-start w-full">
+          {/* Red outline Icon */}
+          <div className="text-[#D50032] mb-6">
+            <IconComponent className="w-12 h-12 stroke-[1.5]" />
           </div>
-        )}
 
-        {/* Top Badges and Duration */}
-        <div className="flex flex-col items-start w-full mb-4">
-          <span className="px-3.5 py-1 rounded-full text-xs font-bold text-[#D50032] bg-[#FFF5F6] border border-[#D50032]/8 inline-block mb-3.5">
-            {levelBadge}
-          </span>
-          <div className="flex items-center gap-2 text-2xl sm:text-3.5xl font-black text-[#D50032] tracking-tight leading-none">
-            <Clock className="w-6.5 h-6.5 text-[#D50032] stroke-[2.5]" />
-            <span>{displayDuration}</span>
-          </div>
-        </div>
-
-        {/* Title and description */}
-        <div className="flex flex-col mb-5">
-          <h3 className="text-xl sm:text-2xl font-black text-[#121212] mb-3 leading-snug tracking-tight">
+          {/* Title */}
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 tracking-tight leading-snug">
             {course.name}
           </h3>
-          <p className="text-sm text-gray-500 font-medium leading-relaxed">
-            {course.shortDescription}
-          </p>
         </div>
 
-        {/* Price block - gray rounded container */}
-        <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-2.5 mb-5">
-          <div className="flex flex-wrap items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-[#121212] tracking-tight leading-none">
-              {course.price}
-            </span>
-            {course.originalPrice && (
-              <span className="text-sm sm:text-base text-gray-400 line-through font-semibold leading-none">
-                {course.originalPrice}
-              </span>
-            )}
-          </div>
-          <span className="bg-green-50 text-emerald-600 border border-emerald-100 px-2.5 py-1 text-xs font-black rounded-lg uppercase tracking-wider flex-shrink-0">
-            {discountPercentage}% OFF
-          </span>
-        </div>
-
-
-
-        {/* Divider */}
-        <hr className="border-gray-100 w-full mb-5" />
-
-        {/* Card Footer Actions */}
+        {/* Learn More Button */}
         <button
           onClick={() => { setIsDetailsOpen(true); }}
-          className="flex items-center justify-between w-full mt-auto pt-1 text-left cursor-pointer group/footer"
+          className="inline-flex items-center justify-center gap-2 border border-[#D50032] text-[#D50032] hover:bg-[#D50032] hover:text-white transition-all duration-300 bg-white rounded-lg px-5 py-2.5 text-sm font-semibold tracking-wide self-start cursor-pointer group/btn"
         >
-          <span className="text-[#D50032] font-extrabold text-sm sm:text-base group-hover/footer:text-[#FF3D00] transition-colors leading-none">
-            View Program Details
-          </span>
-          <div className="w-9 h-9 rounded-full bg-[#FFF5F6] group-hover/footer:bg-[#D50032] group-hover/footer:scale-105 flex items-center justify-center text-[#D50032] group-hover/footer:text-white transition-all duration-300">
-            <ChevronRight className="w-4.5 h-4.5 stroke-[2.5]" />
-          </div>
+          <span>Learn More</span>
+          <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
         </button>
       </div>
 
@@ -1605,13 +1568,10 @@ export default function MarketingHome() {
           <section id="courses" className="pt-6 pb-2 md:py-8 relative z-10 bg-transparent" style={{ fontFamily: "sans-serif" }}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <ScrollReveal>
-                <div className="text-center mb-10">
-                  <div className="inline-block px-4 py-2 rounded-full mb-4 border border-[#D50032]/30" style={{ background: "rgba(213,0,50, 0.08)" }}>
-                    <span className="text-[#D50032] font-semibold text-sm">🎓 Professional Certifications</span>
-                  </div>
-                  <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: "#121212" }}>Our Professional Programs</h2>
-                  <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                    Master trading with our industry-leading certifications
+                <div className="text-left mb-10">
+                  <h2 className="text-4xl md:text-5.5xl font-extrabold mb-3 text-gray-900 tracking-tight">Our Courses</h2>
+                  <p className="text-lg md:text-xl text-gray-500 max-w-3xl font-medium leading-relaxed">
+                    Industry-driven curriculum designed to transform learners into professionals
                   </p>
                 </div>
               </ScrollReveal>
