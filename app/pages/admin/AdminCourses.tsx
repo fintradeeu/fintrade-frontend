@@ -495,33 +495,39 @@ export default function AdminCourses() {
       {/* Create Course Modal */}
       {showCourseModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-2xl bg-white p-6 shadow-xl relative">
-            <button onClick={() => setShowCourseModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><X size={20} /></button>
-            <h2 className="text-2xl font-bold text-[#0B2A5B] mb-4">{editCourseId ? "Edit Course" : "Create New Course"}</h2>
-            <form onSubmit={handleCreateCourse} className="space-y-4">
-              <div><label className="text-sm font-medium text-[#0B2A5B]">Title *</label><Input required value={newCourse.title} onChange={(e) => setNewCourse({ ...newCourse, title: e.target.value })} className="bg-[#F4F1EA]" /></div>
-              <div><label className="text-sm font-medium text-[#0B2A5B]">Short Description</label><Input value={newCourse.short_description} onChange={(e) => setNewCourse({ ...newCourse, short_description: e.target.value })} className="bg-[#F4F1EA]" /></div>
-              <div><label className="text-sm font-medium text-[#0B2A5B]">Full Description</label><textarea className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" rows={3} value={newCourse.description} onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })} /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-sm font-medium text-[#0B2A5B]">Difficulty *</label><select className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" value={newCourse.difficulty_level} onChange={(e) => setNewCourse({ ...newCourse, difficulty_level: e.target.value })}><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select></div>
-                <div><label className="text-sm font-medium text-[#0B2A5B]">Duration (days) *</label><Input type="number" min="0" value={newCourse.duration_days} onChange={(e) => setNewCourse({ ...newCourse, duration_days: parseInt(e.target.value) || 0 })} className="bg-[#F4F1EA]" /></div>
+          <Card className="w-full max-w-2xl bg-white shadow-xl relative flex flex-col max-h-[90vh] rounded-2xl overflow-hidden">
+            <button onClick={() => setShowCourseModal(false)} className="absolute top-4.5 right-4 z-10 text-gray-400 hover:text-gray-600"><X size={20} /></button>
+            <div className="p-6 pb-4 border-b border-gray-100">
+              <h2 className="text-xl md:text-2xl font-bold text-[#0B2A5B]">{editCourseId ? "Edit Course" : "Create New Course"}</h2>
+            </div>
+            <form onSubmit={handleCreateCourse} className="flex-1 flex flex-col min-h-0">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0 pr-4 scrollbar-thin">
+                <div><label className="text-sm font-medium text-[#0B2A5B]">Title *</label><Input required value={newCourse.title} onChange={(e) => setNewCourse({ ...newCourse, title: e.target.value })} className="bg-[#F4F1EA]" /></div>
+                <div><label className="text-sm font-medium text-[#0B2A5B]">Short Description</label><Input value={newCourse.short_description} onChange={(e) => setNewCourse({ ...newCourse, short_description: e.target.value })} className="bg-[#F4F1EA]" /></div>
+                <div><label className="text-sm font-medium text-[#0B2A5B]">Full Description</label><textarea className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" rows={3} value={newCourse.description} onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })} /></div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><label className="text-sm font-medium text-[#0B2A5B]">Difficulty *</label><select className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" value={newCourse.difficulty_level} onChange={(e) => setNewCourse({ ...newCourse, difficulty_level: e.target.value })}><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select></div>
+                  <div><label className="text-sm font-medium text-[#0B2A5B]">Duration (days) *</label><Input type="number" min="0" value={newCourse.duration_days} onChange={(e) => setNewCourse({ ...newCourse, duration_days: parseInt(e.target.value) || 0 })} className="bg-[#F4F1EA]" /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><label className="text-sm font-medium text-[#0B2A5B]">Actual Price (₹) <span className="text-gray-400 font-normal">(Strikethrough)</span></label><Input type="number" min="0" value={newCourse.original_price} onChange={(e) => setNewCourse({ ...newCourse, original_price: parseFloat(e.target.value) || 0 })} className="bg-[#F4F1EA]" /></div>
+                  <div><label className="text-sm font-medium text-[#0B2A5B]">Discounted Price (₹) *</label><Input type="number" min="0" value={newCourse.price} onChange={(e) => setNewCourse({ ...newCourse, price: parseFloat(e.target.value) || 0 })} className="bg-[#F4F1EA]" /></div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-[#0B2A5B]">Status</label>
+                  <Button
+                    type="button"
+                    variant={newCourse.is_published ? "default" : "outline"}
+                    onClick={() => setNewCourse({ ...newCourse, is_published: !newCourse.is_published })}
+                    className={newCourse.is_published ? "bg-green-600 hover:bg-green-700 text-white" : "text-gray-500"}
+                  >
+                    {newCourse.is_published ? "Published" : "Draft"}
+                  </Button>
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-sm font-medium text-[#0B2A5B]">Actual Price (₹) <span className="text-gray-400 font-normal">(Strikethrough)</span></label><Input type="number" min="0" value={newCourse.original_price} onChange={(e) => setNewCourse({ ...newCourse, original_price: parseFloat(e.target.value) || 0 })} className="bg-[#F4F1EA]" /></div>
-                <div><label className="text-sm font-medium text-[#0B2A5B]">Discounted Price (₹) *</label><Input type="number" min="0" value={newCourse.price} onChange={(e) => setNewCourse({ ...newCourse, price: parseFloat(e.target.value) || 0 })} className="bg-[#F4F1EA]" /></div>
+              <div className="p-6 pt-4 border-t border-gray-100 bg-gray-50/50">
+                <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Saving..." : editCourseId ? "Save Changes" : "Create Course"}</Button>
               </div>
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-[#0B2A5B]">Status</label>
-                <Button
-                  type="button"
-                  variant={newCourse.is_published ? "default" : "outline"}
-                  onClick={() => setNewCourse({ ...newCourse, is_published: !newCourse.is_published })}
-                  className={newCourse.is_published ? "bg-green-600 hover:bg-green-700 text-white" : "text-gray-500"}
-                >
-                  {newCourse.is_published ? "Published" : "Draft"}
-                </Button>
-              </div>
-              <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Saving..." : editCourseId ? "Save Changes" : "Create Course"}</Button>
             </form>
           </Card>
         </div>
@@ -530,24 +536,30 @@ export default function AdminCourses() {
       {/* Module Modal (Create + Edit) */}
       {showModuleModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md p-6 bg-white shadow-xl relative">
-            <button onClick={resetModuleModal} className="absolute top-4 right-4 text-gray-500 hover:text-black"><X size={20} /></button>
-            <h2 className="text-2xl font-bold text-[#0B2A5B] mb-4">{editModuleId ? "Edit Module" : "Add Module"}</h2>
-            <form onSubmit={handleCreateModule} className="space-y-4">
-              <div><label className="text-sm font-medium text-[#0B2A5B]">Title *</label><Input required value={newModule.title} onChange={(e) => setNewModule({ ...newModule, title: e.target.value })} className="bg-[#F4F1EA]" /></div>
-              <div><label className="text-sm font-medium text-[#0B2A5B]">Description</label><textarea className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" rows={2} value={newModule.description} onChange={(e) => setNewModule({ ...newModule, description: e.target.value })} /></div>
-              <div className="flex items-center justify-between mt-4">
-                <label className="text-sm font-medium text-[#0B2A5B]">Status</label>
-                <Button
-                  type="button"
-                  variant={newModule.is_published ? "default" : "outline"}
-                  onClick={() => setNewModule({ ...newModule, is_published: !newModule.is_published })}
-                  className={newModule.is_published ? "bg-green-600 hover:bg-green-700 text-white" : "text-gray-500"}
-                >
-                  {newModule.is_published ? "Published" : "Draft"}
-                </Button>
+          <Card className="w-full max-w-md bg-white shadow-xl relative flex flex-col max-h-[90vh] rounded-2xl overflow-hidden">
+            <button onClick={resetModuleModal} className="absolute top-4.5 right-4 z-10 text-gray-500 hover:text-black"><X size={20} /></button>
+            <div className="p-6 pb-4 border-b border-gray-100">
+              <h2 className="text-xl font-bold text-[#0B2A5B]">{editModuleId ? "Edit Module" : "Add Module"}</h2>
+            </div>
+            <form onSubmit={handleCreateModule} className="flex-1 flex flex-col min-h-0">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0 pr-4 scrollbar-thin">
+                <div><label className="text-sm font-medium text-[#0B2A5B]">Title *</label><Input required value={newModule.title} onChange={(e) => setNewModule({ ...newModule, title: e.target.value })} className="bg-[#F4F1EA]" /></div>
+                <div><label className="text-sm font-medium text-[#0B2A5B]">Description</label><textarea className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" rows={2} value={newModule.description} onChange={(e) => setNewModule({ ...newModule, description: e.target.value })} /></div>
+                <div className="flex items-center justify-between mt-4">
+                  <label className="text-sm font-medium text-[#0B2A5B]">Status</label>
+                  <Button
+                    type="button"
+                    variant={newModule.is_published ? "default" : "outline"}
+                    onClick={() => setNewModule({ ...newModule, is_published: !newModule.is_published })}
+                    className={newModule.is_published ? "bg-green-600 hover:bg-green-700 text-white" : "text-gray-500"}
+                  >
+                    {newModule.is_published ? "Published" : "Draft"}
+                  </Button>
+                </div>
               </div>
-              <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Saving..." : editModuleId ? "Save Changes" : "Add Module"}</Button>
+              <div className="p-6 pt-4 border-t border-gray-100 bg-gray-50/50">
+                <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Saving..." : editModuleId ? "Save Changes" : "Add Module"}</Button>
+              </div>
             </form>
           </Card>
         </div>
@@ -555,138 +567,144 @@ export default function AdminCourses() {
 
       {/* Lesson Modal (Create + Edit) */}
       {showLessonModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <Card className="w-full max-w-lg p-6 bg-white shadow-xl relative my-8">
-            <button onClick={resetLessonModal} className="absolute top-4 right-4 text-gray-500 hover:text-black"><X size={20} /></button>
-            <h2 className="text-2xl font-bold text-[#0B2A5B] mb-4">{editLessonId ? "Edit Lesson" : "Add Lesson"}</h2>
-            <form onSubmit={handleCreateLesson} className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-[#0B2A5B]">Title *</label>
-                <Input required value={newLesson.title} onChange={(e) => setNewLesson({ ...newLesson, title: e.target.value })} className="bg-[#F4F1EA]" />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-[#0B2A5B]">Content Type *</label>
-                <select className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" value={newLesson.content_type} onChange={(e) => setNewLesson({ ...newLesson, content_type: e.target.value })}>
-                  <option value="text">Text</option>
-                  <option value="video">Video</option>
-                  <option value="audio">Audio</option>
-                  <option value="quiz">Quiz</option>
-                  <option value="pdf">PDF</option>
-                </select>
-              </div>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-lg bg-white shadow-xl relative flex flex-col max-h-[90vh] rounded-2xl overflow-hidden">
+            <button onClick={resetLessonModal} className="absolute top-4.5 right-4 z-10 text-gray-500 hover:text-black"><X size={20} /></button>
+            <div className="p-6 pb-4 border-b border-gray-100">
+              <h2 className="text-xl md:text-2xl font-bold text-[#0B2A5B]">{editLessonId ? "Edit Lesson" : "Add Lesson"}</h2>
+            </div>
+            <form onSubmit={handleCreateLesson} className="flex-1 flex flex-col min-h-0">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0 pr-4 scrollbar-thin">
+                <div>
+                  <label className="text-sm font-medium text-[#0B2A5B]">Title *</label>
+                  <Input required value={newLesson.title} onChange={(e) => setNewLesson({ ...newLesson, title: e.target.value })} className="bg-[#F4F1EA]" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-[#0B2A5B]">Content Type *</label>
+                  <select className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" value={newLesson.content_type} onChange={(e) => setNewLesson({ ...newLesson, content_type: e.target.value })}>
+                    <option value="text">Text</option>
+                    <option value="video">Video</option>
+                    <option value="audio">Audio</option>
+                    <option value="quiz">Quiz</option>
+                    <option value="pdf">PDF</option>
+                  </select>
+                </div>
 
-              {/* ── QUIZ FIELDS ── */}
-              {newLesson.content_type === "quiz" && (
-                <div className="space-y-3 border border-purple-200 rounded-lg p-4 bg-purple-50/30">
-                  <div>
-                    <label className="text-sm font-medium text-[#0B2A5B]">Question Type</label>
-                    <select className="w-full p-2 border rounded mt-1 bg-white" value={quizType} onChange={(e) => { setQuizType(e.target.value); setQuizCorrect("a"); }}>
-                      <option value="mcq">Multiple Choice (A/B/C/D)</option>
-                      <option value="true_false">True / False</option>
-                      <option value="fill_blank">Fill in the Blank</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-[#0B2A5B]">Question *</label>
-                    <textarea className="w-full p-2 border rounded mt-1 bg-white" rows={2} placeholder="Enter question text..." value={quizQuestion} onChange={(e) => setQuizQuestion(e.target.value)} required />
-                  </div>
+                {/* ── QUIZ FIELDS ── */}
+                {newLesson.content_type === "quiz" && (
+                  <div className="space-y-3 border border-purple-200 rounded-lg p-4 bg-purple-50/30">
+                    <div>
+                      <label className="text-sm font-medium text-[#0B2A5B]">Question Type</label>
+                      <select className="w-full p-2 border rounded mt-1 bg-white" value={quizType} onChange={(e) => { setQuizType(e.target.value); setQuizCorrect("a"); }}>
+                        <option value="mcq">Multiple Choice (A/B/C/D)</option>
+                        <option value="true_false">True / False</option>
+                        <option value="fill_blank">Fill in the Blank</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-[#0B2A5B]">Question *</label>
+                      <textarea className="w-full p-2 border rounded mt-1 bg-white" rows={2} placeholder="Enter question text..." value={quizQuestion} onChange={(e) => setQuizQuestion(e.target.value)} required />
+                    </div>
 
-                  {quizType === "mcq" && (
-                    <>
-                      <div className="grid grid-cols-1 gap-2">
-                        {["A", "B", "C", "D"].map((letter, i) => (
-                          <div key={letter} className="flex items-center gap-2">
-                            <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${quizCorrect === letter.toLowerCase() ? "bg-green-500 text-white" : "bg-gray-200 text-gray-600"}`}>{letter}</span>
-                            <Input
-                              placeholder={`Option ${letter}`}
-                              value={quizOptions[i]}
-                              onChange={(e) => { const upd = [...quizOptions]; upd[i] = e.target.value; setQuizOptions(upd); }}
-                              className="bg-white flex-1"
-                            />
-                          </div>
-                        ))}
-                      </div>
+                    {quizType === "mcq" && (
+                      <>
+                        <div className="grid grid-cols-1 gap-2">
+                          {["A", "B", "C", "D"].map((letter, i) => (
+                            <div key={letter} className="flex items-center gap-2">
+                              <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${quizCorrect === letter.toLowerCase() ? "bg-green-500 text-white" : "bg-gray-200 text-gray-600"}`}>{letter}</span>
+                              <Input
+                                placeholder={`Option ${letter}`}
+                                value={quizOptions[i]}
+                                onChange={(e) => { const upd = [...quizOptions]; upd[i] = e.target.value; setQuizOptions(upd); }}
+                                className="bg-white flex-1"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-[#0B2A5B]">Correct Answer</label>
+                          <select className="w-full p-2 border rounded mt-1 bg-white" value={quizCorrect} onChange={(e) => setQuizCorrect(e.target.value)}>
+                            <option value="a">A</option>
+                            <option value="b">B</option>
+                            <option value="c">C</option>
+                            <option value="d">D</option>
+                          </select>
+                        </div>
+                      </>
+                    )}
+
+                    {quizType === "true_false" && (
                       <div>
                         <label className="text-sm font-medium text-[#0B2A5B]">Correct Answer</label>
                         <select className="w-full p-2 border rounded mt-1 bg-white" value={quizCorrect} onChange={(e) => setQuizCorrect(e.target.value)}>
-                          <option value="a">A</option>
-                          <option value="b">B</option>
-                          <option value="c">C</option>
-                          <option value="d">D</option>
+                          <option value="a">True</option>
+                          <option value="b">False</option>
                         </select>
                       </div>
-                    </>
-                  )}
+                    )}
 
-                  {quizType === "true_false" && (
-                    <div>
-                      <label className="text-sm font-medium text-[#0B2A5B]">Correct Answer</label>
-                      <select className="w-full p-2 border rounded mt-1 bg-white" value={quizCorrect} onChange={(e) => setQuizCorrect(e.target.value)}>
-                        <option value="a">True</option>
-                        <option value="b">False</option>
-                      </select>
-                    </div>
-                  )}
+                    {quizType === "fill_blank" && (
+                      <div>
+                        <label className="text-sm font-medium text-[#0B2A5B]">Expected Answer</label>
+                        <Input placeholder="Type the correct answer..." value={quizOptions[0]} onChange={(e) => { const upd = [...quizOptions]; upd[0] = e.target.value; setQuizOptions(upd); }} className="bg-white" />
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                  {quizType === "fill_blank" && (
-                    <div>
-                      <label className="text-sm font-medium text-[#0B2A5B]">Expected Answer</label>
-                      <Input placeholder="Type the correct answer..." value={quizOptions[0]} onChange={(e) => { const upd = [...quizOptions]; upd[0] = e.target.value; setQuizOptions(upd); }} className="bg-white" />
-                    </div>
-                  )}
-                </div>
-              )}
+                {/* ── NON-QUIZ FIELDS ── */}
+                {newLesson.content_type !== "quiz" && (
+                  <div>
+                    <label className="text-sm font-medium text-[#0B2A5B]">Content</label>
+                    <textarea className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" rows={3} value={newLesson.content} onChange={(e) => setNewLesson({ ...newLesson, content: e.target.value })} />
+                  </div>
+                )}
 
-              {/* ── NON-QUIZ FIELDS ── */}
-              {newLesson.content_type !== "quiz" && (
-                <div>
-                  <label className="text-sm font-medium text-[#0B2A5B]">Content</label>
-                  <textarea className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" rows={3} value={newLesson.content} onChange={(e) => setNewLesson({ ...newLesson, content: e.target.value })} />
-                </div>
-              )}
-
-              {(newLesson.content_type === "video" || newLesson.content_type === "audio" || newLesson.content_type === "pdf") && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-[#0B2A5B]">Upload Media OR enter URL</label>
-                  <div className="flex gap-2">
-                    <Input 
-                      type="text" 
-                      placeholder="https://... or /uploads/..." 
-                      value={newLesson.video_url} 
-                      onChange={(e) => setNewLesson({ ...newLesson, video_url: e.target.value })} 
-                      className="bg-[#F4F1EA] flex-1" 
-                    />
-                    <div className="relative overflow-hidden inline-block shrink-0">
-                      <Button type="button" variant="outline" className="border-[#0B2A5B]/20 bg-gray-50 text-[#0B2A5B] pointer-events-none" disabled={uploadingMedia}>
-                        <Upload size={16} className="mr-2" /> {uploadingMedia ? "Uploading..." : "Upload"}
-                      </Button>
-                      <input 
-                        type="file" 
-                        accept={newLesson.content_type === "video" ? "video/*" : newLesson.content_type === "audio" ? "audio/*" : "application/pdf"}
-                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                        disabled={uploadingMedia}
-                        onChange={(e) => e.target.files && e.target.files[0] && handleMediaUpload(e.target.files[0])}
+                {(newLesson.content_type === "video" || newLesson.content_type === "audio" || newLesson.content_type === "pdf") && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#0B2A5B]">Upload Media OR enter URL</label>
+                    <div className="flex gap-2">
+                      <Input 
+                        type="text" 
+                        placeholder="https://... or /uploads/..." 
+                        value={newLesson.video_url} 
+                        onChange={(e) => setNewLesson({ ...newLesson, video_url: e.target.value })} 
+                        className="bg-[#F4F1EA] flex-1" 
                       />
+                      <div className="relative overflow-hidden inline-block shrink-0">
+                        <Button type="button" variant="outline" className="border-[#0B2A5B]/20 bg-gray-50 text-[#0B2A5B] pointer-events-none" disabled={uploadingMedia}>
+                          <Upload size={16} className="mr-2" /> {uploadingMedia ? "Uploading..." : "Upload"}
+                        </Button>
+                        <input 
+                          type="file" 
+                          accept={newLesson.content_type === "video" ? "video/*" : newLesson.content_type === "audio" ? "audio/*" : "application/pdf"}
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                          disabled={uploadingMedia}
+                          onChange={(e) => e.target.files && e.target.files[0] && handleMediaUpload(e.target.files[0])}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              <div className="grid grid-cols-1 gap-4">
-                <div><label className="text-sm font-medium text-[#0B2A5B]">Duration (min)</label><Input type="number" min="1" value={newLesson.duration_minutes} onChange={(e) => setNewLesson({ ...newLesson, duration_minutes: parseInt(e.target.value) })} className="bg-[#F4F1EA]" /></div>
+                <div className="grid grid-cols-1 gap-4">
+                  <div><label className="text-sm font-medium text-[#0B2A5B]">Duration (min)</label><Input type="number" min="1" value={newLesson.duration_minutes} onChange={(e) => setNewLesson({ ...newLesson, duration_minutes: parseInt(e.target.value) })} className="bg-[#F4F1EA]" /></div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-[#0B2A5B]">Status</label>
+                  <Button
+                    type="button"
+                    variant={newLesson.is_published ? "default" : "outline"}
+                    onClick={() => setNewLesson({ ...newLesson, is_published: !newLesson.is_published })}
+                    className={newLesson.is_published ? "bg-green-600 hover:bg-green-700 text-white" : "text-gray-500"}
+                  >
+                    {newLesson.is_published ? "Published" : "Draft"}
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-[#0B2A5B]">Status</label>
-                <Button
-                  type="button"
-                  variant={newLesson.is_published ? "default" : "outline"}
-                  onClick={() => setNewLesson({ ...newLesson, is_published: !newLesson.is_published })}
-                  className={newLesson.is_published ? "bg-green-600 hover:bg-green-700 text-white" : "text-gray-500"}
-                >
-                  {newLesson.is_published ? "Published" : "Draft"}
-                </Button>
+              <div className="p-6 pt-4 border-t border-gray-100 bg-gray-50/50">
+                <Button type="submit" disabled={saving || uploadingMedia} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Saving..." : editLessonId ? "Save Changes" : "Add Lesson"}</Button>
               </div>
-              <Button type="submit" disabled={saving || uploadingMedia} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Saving..." : editLessonId ? "Save Changes" : "Add Lesson"}</Button>
             </form>
           </Card>
         </div>
