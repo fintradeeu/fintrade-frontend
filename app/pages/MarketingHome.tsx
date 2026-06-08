@@ -333,92 +333,8 @@ const servicesCards = [
   { icon: LineChart, title: 'AI-Analytics', desc: 'Leverage AI-driven analytics for smarter market insights.' },
 ];
 
-// Course Card Component to handle local state for Program Details Dialog
 export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () => void }) {
-  const isAuthenticated = !!localStorage.getItem("token");
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [enrollLoading, setEnrollLoading] = useState(false);
-  const [showKycModal, setShowKycModal] = useState(false);
-
-  const courseKey = course.name.includes("FMF") ? "FMF" : course.name.includes("CARP") ? "CARP" : "CPTP";
-  const details = courseDetails[courseKey];
-
-  const handleEnrollClick = async () => {
-    if (!isAuthenticated) {
-      window.location.href = "/register";
-      return;
-    }
-
-    setEnrollLoading(true);
-    try {
-      // Single API call to check if student passed entrance exam for this course
-      const checkRes = await api.get(`/exams/check-enrollment?course_id=${course.id}`);
-      const { has_entrance_exam, passed } = checkRes.data;
-
-      setIsDetailsOpen(false);
-
-      if (!has_entrance_exam) {
-        // No entrance exam — go straight to payment/checkout
-        onEnroll?.();
-        return;
-      }
-
-      if (passed) {
-        // Passed entrance exam — check KYC status
-        try {
-          const kycRes = await api.get("/kyc/status");
-          const kycStatus = kycRes.data?.status;
-          if (kycStatus === "verified" || kycStatus === "approved") {
-            onEnroll?.(); // KYC done — go to checkout
-          } else {
-            setShowKycModal(true); // Show KYC required popup
-          }
-        } catch {
-          setShowKycModal(true);
-        }
-      } else {
-        // Not passed — redirect to entrance exam page
-        window.location.href = `/student/entrance-exam?course_id=${course.id}`;
-      }
-    } catch {
-      window.location.href = `/student/entrance-exam?course_id=${course.id}`;
-    } finally {
-      setEnrollLoading(false);
-    }
-  };
-
-  // Format level badge to match mockup (Foundation -> Beginner)
-  let levelBadge = course.level || "Beginner";
-  if (levelBadge === "Foundation") levelBadge = "Beginner";
-
-  // Format duration to Days
-  let displayDuration = "30 Days";
-  if (course.duration) {
-    if (course.duration.toLowerCase().includes("day") || course.duration.toLowerCase().includes("hour")) {
-      displayDuration = course.duration;
-    } else {
-      const match = course.duration.match(/\d+/);
-      if (match) {
-        displayDuration = `${match[0]} Days`;
-      } else {
-        displayDuration = course.duration;
-      }
-    }
-  }
-
-  // Calculate discount percentage dynamically
-  const priceNum = parseFloat(course.price?.replace(/[^\d]/g, "") || "0");
-  const originalPriceNum = course.originalPrice ? parseFloat(course.originalPrice.replace(/[^\d]/g, "") || "0") : 0;
-  let discountPercentage = 40; // Default
-  if (originalPriceNum && priceNum && originalPriceNum > priceNum) {
-    discountPercentage = Math.round(((originalPriceNum - priceNum) / originalPriceNum) * 100);
-  }
-
-  // Determine if this is the "Most Popular" card
-  const isMostPopular = course.is_popular || (course.is_popular === undefined && (course.name.includes("CARP") || levelBadge === "Intermediate"));
-
-  // Modules count fallback
-  const modulesCount = course.modules?.length || (course.name.includes("FMF") ? 6 : course.name.includes("CARP") ? 12 : 18);
+  const navigate = useNavigate();
 
   const getIcon = () => {
     if (!course.icon) return BookOpen;
@@ -429,270 +345,30 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
   const IconComponent = getIcon();
 
   return (
-    <>
-      <div
-        className="w-full h-full flex flex-col justify-between bg-white rounded-3xl border border-gray-100 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-2xl hover:scale-[1.01] transition-all duration-300 min-h-[280px] text-left select-none relative group"
-      >
-        <div className="flex flex-col items-start w-full">
-          {/* Red outline Icon */}
-          <div className="text-[#D50032] mb-6">
-            <IconComponent className="w-12 h-12 stroke-[1.5]" />
-          </div>
-
-          {/* Title */}
-          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 tracking-tight leading-snug">
-            {course.name}
-          </h3>
+    <div
+      className="w-full h-full flex flex-col justify-between bg-white rounded-3xl border border-gray-100 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-2xl hover:scale-[1.01] transition-all duration-300 min-h-[280px] text-left select-none relative group"
+    >
+      <div className="flex flex-col items-start w-full">
+        {/* Red outline Icon */}
+        <div className="text-[#D50032] mb-6">
+          <IconComponent className="w-12 h-12 stroke-[1.5]" />
         </div>
 
-        {/* Learn More Button */}
-        <button
-          onClick={() => { setIsDetailsOpen(true); }}
-          className="inline-flex items-center justify-center gap-2 border border-[#D50032] text-[#D50032] hover:bg-[#D50032] hover:text-white transition-all duration-300 bg-white rounded-lg px-5 py-2.5 text-sm font-semibold tracking-wide self-start cursor-pointer group/btn"
-        >
-          <span>Learn More</span>
-          <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
-        </button>
+        {/* Title */}
+        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 tracking-tight leading-snug">
+          {course.name}
+        </h3>
       </div>
 
-      {/* Program Details Dialog */}
-      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="sm:max-w-2xl bg-white text-[#121212] rounded-3xl overflow-hidden border border-gray-100 shadow-2xl p-0 z-[10000] max-h-[90vh] flex flex-col">
-          {/* Header Gradient (Fixed) */}
-          <div className="relative px-8 py-8 text-white flex-shrink-0 overflow-hidden bg-gradient-to-br from-[#D50032] via-[#E60036] to-[#FF3366]">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/20 bg-white/10 shadow-sm backdrop-blur-md">
-                  {course.level} Program
-                </span>
-                <span className="px-3 py-1 rounded-full text-xs font-bold text-white border border-white/20 bg-white/10 shadow-sm backdrop-blur-md">
-                  {course.duration}
-                </span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight">{course.name || course.title}</h2>
-              <p className="text-white/80 text-sm mt-2 font-medium tracking-wide">{course.shortDescription || "Complete Program Overview & Course Curriculum"}</p>
-            </div>
-          </div>
-
-          {/* Sticky Key Highlights */}
-          <div className="px-8 py-6 bg-white border-b border-gray-100 flex-shrink-0 z-20 relative shadow-sm">
-            <h4 className="font-bold text-[#121212] text-sm uppercase tracking-wider mb-3">Key Highlights</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-stretch">
-              {((course.marketing_highlights && Array.isArray(course.marketing_highlights) && course.marketing_highlights.some((h: any) => h && h.trim()))
-                ? course.marketing_highlights.filter((h: any) => h && h.trim())
-                : details.highlights).map((highlight: string, idx: number) => (
-                  <div key={idx} className="flex flex-col p-4 rounded-2xl bg-gray-50 border border-gray-100 text-center hover:shadow-md transition-shadow h-full justify-center items-center">
-                    <CheckCircle className="w-6 h-6 text-emerald-500 mb-2.5" strokeWidth={2.5} />
-                    <span className="text-xs font-semibold text-gray-800 leading-snug">{highlight}</span>
-                  </div>
-                ))}
-            </div>
-          </div>
-
-          {/* Body & Actions (Scrollable if content is taller than viewport) */}
-          <div className="p-8 flex-1 overflow-y-auto">
-            <div className="space-y-6">
-              <div>
-                <h4 className="font-bold text-[#121212] text-sm uppercase tracking-wider mb-2.5">About this Program</h4>
-                <p className="text-gray-600 text-sm leading-relaxed font-medium whitespace-pre-wrap">{course.fullDescription}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Sticky Actions Footer */}
-          <div className="p-4 sm:px-8 sm:py-5 bg-white border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-0 z-20 shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
-            <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
-              <div>
-                <span className="text-xs text-gray-400 font-medium block mb-0.5">Program Enrollment Fee</span>
-                <div className="text-2xl sm:text-3xl font-extrabold text-[#121212] tracking-tight leading-none">
-                  {course.price}
-                  <span className="text-xs sm:text-sm font-normal text-gray-500 ml-1">+ GST</span>
-                </div>
-              </div>
-              {course.savings && (
-                <div className="px-3 py-1.5 rounded-lg bg-green-50 border border-green-200 text-green-700 flex flex-col items-end sm:items-start shadow-sm">
-                  <span className="text-[9px] font-bold text-green-600 uppercase tracking-widest leading-none mb-1">You Save</span>
-                  <span className="text-sm font-extrabold leading-none">{course.savings}</span>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <Button
-                onClick={() => setIsDetailsOpen(false)}
-                variant="outline"
-                className="flex-1 sm:flex-none sm:w-auto h-12 text-sm font-semibold rounded-xl border-gray-200 text-gray-600 hover:border-[#D50032] hover:text-[#D50032] hover:bg-[#D50032]/5 transition-all duration-300"
-              >
-                Close Details
-              </Button>
-              <Button
-                onClick={handleEnrollClick}
-                disabled={enrollLoading}
-                className="flex-1 sm:flex-none sm:w-auto h-12 text-sm font-semibold rounded-xl px-8 shadow-lg hover:shadow-xl bg-[#D50032] hover:bg-black text-white transition-all duration-300"
-              >
-                {enrollLoading ? "Opening Exam..." : "Enroll Now"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* KYC Verification Required Dialog */}
-      <Dialog open={showKycModal} onOpenChange={setShowKycModal}>
-        <DialogContent className="sm:max-w-lg bg-transparent border-none shadow-none p-0 z-[10001] overflow-visible">
-          <div
-            style={{
-              background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)",
-              borderRadius: "24px",
-              padding: "0",
-              overflow: "hidden",
-              boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.07)",
-              position: "relative",
-            }}
-          >
-            {/* Decorative top gradient bar */}
-            <div style={{ height: "4px", background: "linear-gradient(90deg, #22c55e, #16a34a, #4ade80)", width: "100%" }} />
-
-            {/* Subtle background glow */}
-            <div style={{
-              position: "absolute", top: "-60px", left: "50%", transform: "translateX(-50%)",
-              width: "300px", height: "300px",
-              background: "radial-gradient(circle, rgba(34,197,94,0.12) 0%, transparent 70%)",
-              pointerEvents: "none",
-            }} />
-
-            <div style={{ padding: "40px 36px 36px", textAlign: "center", position: "relative" }}>
-              {/* Animated success badge */}
-              <div style={{
-                width: "88px", height: "88px",
-                background: "linear-gradient(135deg, rgba(34,197,94,0.2), rgba(22,163,74,0.15))",
-                borderRadius: "50%",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                margin: "0 auto 24px",
-                border: "2px solid rgba(34,197,94,0.4)",
-                boxShadow: "0 0 40px rgba(34,197,94,0.25)",
-                animation: "pulse 2s infinite",
-              }}>
-                <div style={{
-                  width: "60px", height: "60px",
-                  background: "linear-gradient(135deg, #22c55e, #16a34a)",
-                  borderRadius: "50%",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: "0 8px 24px rgba(34,197,94,0.4)",
-                }}>
-                  <CheckCircle style={{ color: "white", width: "32px", height: "32px" }} />
-                </div>
-              </div>
-
-              {/* Status pill */}
-              <div style={{
-                display: "inline-flex", alignItems: "center", gap: "6px",
-                background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)",
-                borderRadius: "999px", padding: "4px 14px", marginBottom: "16px",
-              }}>
-                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e" }} />
-                <span style={{ color: "#4ade80", fontSize: "12px", fontWeight: 600, letterSpacing: "0.05em" }}>
-                  EXAM CLEARED
-                </span>
-              </div>
-
-              <h3 style={{ color: "white", fontSize: "26px", fontWeight: 800, marginBottom: "8px", lineHeight: 1.2 }}>
-                Congratulations! 🎉
-              </h3>
-              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px", marginBottom: "28px", lineHeight: 1.6 }}>
-                You've successfully passed the entrance exam. One final step before you begin your journey.
-              </p>
-
-              {/* Steps indicator */}
-              <div style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: "16px",
-                padding: "20px",
-                marginBottom: "28px",
-                textAlign: "left",
-              }}>
-                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "11px", fontWeight: 600, letterSpacing: "0.1em", marginBottom: "16px" }}>
-                  NEXT STEPS
-                </p>
-                {[
-                  { icon: "✅", label: "Entrance Exam", done: true },
-                  { icon: "📋", label: "KYC & Contract Signing", done: false, active: true },
-                  { icon: "💳", label: "Payment & Enrollment", done: false },
-                ].map((step, i) => (
-                  <div key={i} style={{
-                    display: "flex", alignItems: "center", gap: "12px",
-                    padding: "8px 12px",
-                    borderRadius: "10px",
-                    marginBottom: i < 2 ? "6px" : 0,
-                    background: step.active ? "rgba(34,197,94,0.1)" : "transparent",
-                    border: step.active ? "1px solid rgba(34,197,94,0.2)" : "1px solid transparent",
-                  }}>
-                    <span style={{ fontSize: "16px" }}>{step.icon}</span>
-                    <span style={{
-                      color: step.done ? "rgba(255,255,255,0.35)" : step.active ? "#4ade80" : "rgba(255,255,255,0.5)",
-                      fontSize: "13px",
-                      fontWeight: step.active ? 700 : 500,
-                      textDecoration: step.done ? "line-through" : "none",
-                    }}>
-                      {step.label}
-                    </span>
-                    {step.active && (
-                      <span style={{
-                        marginLeft: "auto", fontSize: "10px", fontWeight: 700,
-                        color: "#22c55e", letterSpacing: "0.05em",
-                      }}>
-                        → NOW
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Action buttons */}
-              <div style={{ display: "flex", gap: "12px" }}>
-                <button
-                  onClick={() => setShowKycModal(false)}
-                  style={{
-                    flex: 1, height: "48px", borderRadius: "12px",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    background: "rgba(255,255,255,0.06)",
-                    color: "rgba(255,255,255,0.6)",
-                    fontSize: "14px", fontWeight: 600, cursor: "pointer",
-                    transition: "all 0.2s",
-                  }}
-                  onMouseOver={e => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
-                  onMouseOut={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
-                >
-                  Maybe Later
-                </button>
-                <button
-                  onClick={() => {
-                    setShowKycModal(false);
-                    window.location.href = `/student/contract-kyc?course_id=${course.id}`;
-                  }}
-                  style={{
-                    flex: 2, height: "48px", borderRadius: "12px",
-                    border: "none",
-                    background: "linear-gradient(135deg, #22c55e, #16a34a)",
-                    color: "white",
-                    fontSize: "14px", fontWeight: 700, cursor: "pointer",
-                    boxShadow: "0 8px 24px rgba(34,197,94,0.35)",
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-                    transition: "all 0.2s",
-                  }}
-                  onMouseOver={e => (e.currentTarget.style.transform = "translateY(-1px)")}
-                  onMouseOut={e => (e.currentTarget.style.transform = "translateY(0)")}
-                >
-                  Complete KYC Now →
-                </button>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+      {/* Learn More Button */}
+      <button
+        onClick={() => navigate(`/courses/${course.id}`)}
+        className="inline-flex items-center justify-center gap-2 border border-[#D50032] text-[#D50032] hover:bg-[#D50032] hover:text-white transition-all duration-300 bg-white rounded-lg px-5 py-2.5 text-sm font-semibold tracking-wide self-start cursor-pointer group/btn"
+      >
+        <span>Learn More</span>
+        <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
+      </button>
+    </div>
   );
 }
 

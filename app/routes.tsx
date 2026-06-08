@@ -15,6 +15,7 @@ import BlogPage from "./pages/BlogPage";
 import AboutUs from "./pages/AboutUs";
 import LeaderProfile from "./pages/LeaderProfile";
 import MarketingLayout from "./components/MarketingLayout";
+import CourseDetailPage from "./pages/CourseDetailPage";
 
 // Student Pages
 import StudentDashboard from "./pages/student/StudentDashboard";
@@ -110,6 +111,10 @@ export const router = createBrowserRouter([
       {
         path: "/article/:id",
         Component: ArticleDetail,
+      },
+      {
+        path: "/courses/:id",
+        Component: CourseDetailPage,
       },
     ]
   },
