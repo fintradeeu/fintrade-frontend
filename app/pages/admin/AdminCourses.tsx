@@ -358,17 +358,23 @@ export default function AdminCourses() {
       <div className="space-y-4">
         {courses.map((course) => (
           <Card key={course.id} className="bg-white shadow-lg overflow-hidden">
-            <div className="p-6 flex items-start justify-between cursor-pointer" onClick={() => toggleExpand(course.id)}>
-              <div className="flex items-start gap-4 flex-1">
-                <div className="w-12 h-12 bg-[#C2A86A]/10 rounded-lg flex items-center justify-center flex-shrink-0"><BookOpen className="text-[#C2A86A]" size={24} /></div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-lg font-semibold text-[#0B2A5B]">{course.title}</h3>
-                    <Badge className={course.is_published ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}>{course.is_published ? "Published" : "Draft"}</Badge>
-                    <Badge className="bg-blue-100 text-blue-700">{course.difficulty_level}</Badge>
+            <div className="p-4 md:p-6 flex flex-col md:flex-row md:items-start justify-between cursor-pointer gap-4" onClick={() => toggleExpand(course.id)}>
+              <div className="flex items-start gap-3 md:gap-4 flex-1 min-w-0">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-[#C2A86A]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="text-[#C2A86A]" size={20} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h3 className="text-base md:text-lg font-semibold text-[#0B2A5B] break-words">{course.title}</h3>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Badge className={course.is_published ? "bg-green-100 text-green-700 text-[10px] md:text-xs" : "bg-orange-100 text-orange-700 text-[10px] md:text-xs"}>
+                        {course.is_published ? "Published" : "Draft"}
+                      </Badge>
+                      <Badge className="bg-blue-100 text-blue-700 text-[10px] md:text-xs">{course.difficulty_level}</Badge>
+                    </div>
                   </div>
-                  <p className="text-sm text-[#0B2A5B]/60 line-clamp-1">{course.short_description || course.description || "No description"}</p>
-                  <div className="flex items-center gap-4 mt-2 text-xs text-[#0B2A5B]/50">
+                  <p className="text-xs md:text-sm text-[#0B2A5B]/60 line-clamp-2">{course.short_description || course.description || "No description"}</p>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[10px] md:text-xs text-[#0B2A5B]/50">
                     {course.duration_hours && <span>{course.duration_hours} Days</span>}
                     {course.modules && <span>{course.modules.length} modules</span>}
                     <div className="flex items-center gap-1 font-semibold">
@@ -380,25 +386,27 @@ export default function AdminCourses() {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2 shrink-0 ml-4">
-                <Button size="sm" variant="outline" className={course.is_published ? "border-orange-400 text-orange-500" : "border-green-500 text-green-600"} onClick={(e) => { e.stopPropagation(); togglePublish(course.id, course.is_published); }}>
-                    {course.is_published ? "Unpublish" : "Publish"}
-                  </Button>
-                  <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B]" onClick={(e) => { e.stopPropagation(); setModuleForCourse(course.id); setShowModuleModal(true); setEditModuleId(null); setNewModule({ title: "", description: "", order: 0, is_published: false }); }}>
-                  <Layers size={14} className="mr-1" />Add Module
+              <div className="flex flex-wrap gap-2 md:shrink-0 md:ml-4 items-center justify-start md:justify-end">
+                <Button size="sm" variant="outline" className={course.is_published ? "border-orange-400 text-orange-500 text-xs py-1 h-8" : "border-green-500 text-green-600 text-xs py-1 h-8"} onClick={(e) => { e.stopPropagation(); togglePublish(course.id, course.is_published); }}>
+                  {course.is_published ? "Unpublish" : "Publish"}
                 </Button>
-                <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B]" onClick={(e) => { e.stopPropagation(); openEditCourse(course); }}>
-                  <Pencil size={14} className="mr-1" />Edit
+                <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B] text-xs py-1 h-8" onClick={(e) => { e.stopPropagation(); setModuleForCourse(course.id); setShowModuleModal(true); setEditModuleId(null); setNewModule({ title: "", description: "", order: 0, is_published: false }); }}>
+                  <Layers size={12} className="mr-1" />Add Module
                 </Button>
-                <Button size="sm" variant="outline" className="border-red-400 text-red-500 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id, course.title); }}>
-                  <Trash2 size={14} className="mr-1" />Delete
+                <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B] text-xs py-1 h-8" onClick={(e) => { e.stopPropagation(); openEditCourse(course); }}>
+                  <Pencil size={12} className="mr-1" />Edit
                 </Button>
-                {expandedCourse === course.id ? <ChevronUp size={20} className="text-[#0B2A5B]/40" /> : <ChevronDown size={20} className="text-[#0B2A5B]/40" />}
+                <Button size="sm" variant="outline" className="border-red-400 text-red-500 hover:bg-red-50 text-xs py-1 h-8" onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id, course.title); }}>
+                  <Trash2 size={12} className="mr-1" />Delete
+                </Button>
+                <div className="ml-auto md:ml-0">
+                  {expandedCourse === course.id ? <ChevronUp size={20} className="text-[#0B2A5B]/40" /> : <ChevronDown size={20} className="text-[#0B2A5B]/40" />}
+                </div>
               </div>
             </div>
 
             {expandedCourse === course.id && (
-              <div className="border-t border-[#0B2A5B]/10 bg-[#F4F1EA]/30 p-6">
+              <div className="border-t border-[#0B2A5B]/10 bg-[#F4F1EA]/30 p-4 md:p-6">
                 {(course.modules || []).length === 0 ? (
                   <p className="text-sm text-[#0B2A5B]/50 text-center py-4">No modules yet. Click "Add Module" to create one.</p>
                 ) : (
@@ -412,56 +420,62 @@ export default function AdminCourses() {
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={(e) => handleModuleDrop(e, course.id, mod.id)}
                       >
-                        <div className="flex items-center justify-between mb-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 pb-2 border-b border-[#0B2A5B]/5 sm:border-none sm:pb-0">
                           <div className="flex items-center gap-3">
                             <div className="cursor-move text-[#0B2A5B]/40 hover:text-[#0B2A5B]"><GripVertical size={20} /></div>
-                            <div className="w-8 h-8 bg-[#0B2A5B]/10 rounded flex items-center justify-center"><Layers size={16} className="text-[#0B2A5B]" /></div>
-                            <div>
-                              <h4 className="font-semibold text-[#0B2A5B]">{mod.title}</h4>
+                            <div className="w-8 h-8 bg-[#0B2A5B]/10 rounded flex items-center justify-center flex-shrink-0">
+                              <Layers size={16} className="text-[#0B2A5B]" />
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="font-semibold text-sm md:text-base text-[#0B2A5B] break-words">{mod.title}</h4>
                               <p className="text-xs text-[#0B2A5B]/50">{mod.description || "No description"} • Order: {mod.order}</p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1.5 self-end sm:self-auto">
                             <Button size="sm" variant="ghost" className="text-[#0B2A5B]/50 hover:text-[#0B2A5B] h-8 w-8 p-0" onClick={(e) => { e.stopPropagation(); openEditModule(mod, course.id); }} title="Edit Module">
                               <Pencil size={14} />
                             </Button>
                             <Button size="sm" variant="ghost" className="text-red-400 hover:text-red-600 h-8 w-8 p-0" onClick={(e) => { e.stopPropagation(); handleDeleteModule(course.id, mod.id, mod.title); }} title="Delete Module">
                               <Trash2 size={14} />
                             </Button>
-                            <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B]" onClick={() => { setEditModuleId(null); setLessonForModule(mod.id); setNewModule({ title: "", description: "", order: 0, is_published: false }); setModuleForCourse(course.id); setShowLessonModal(true); setEditLessonId(null); setNewLesson({ title: "", content: "", content_type: "text", video_url: "", duration_minutes: 15, order: 0, is_published: false }); setQuizQuestion(""); setQuizOptions(["", "", "", ""]); setQuizCorrect("a"); setQuizType("mcq"); }}>
-                              <FileText size={14} className="mr-1" />Add Lesson
+                            <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B] text-xs h-8 py-1" onClick={() => { setEditModuleId(null); setLessonForModule(mod.id); setNewModule({ title: "", description: "", order: 0, is_published: false }); setModuleForCourse(course.id); setShowLessonModal(true); setEditLessonId(null); setNewLesson({ title: "", content: "", content_type: "text", video_url: "", duration_minutes: 15, order: 0, is_published: false }); setQuizQuestion(""); setQuizOptions(["", "", "", ""]); setQuizCorrect("a"); setQuizType("mcq"); }}>
+                              <FileText size={12} className="mr-1" />Add Lesson
                             </Button>
                           </div>
                         </div>
                         {(mod.lessons || []).length > 0 && (
-                          <div className="ml-11 space-y-2">
+                          <div className="ml-0 sm:ml-11 space-y-2">
                             {(mod.lessons || []).sort((a: any, b: any) => a.order - b.order).map((lesson: any) => (
                               <div 
                                 key={lesson.id} 
-                                className="flex items-center gap-3 p-2 bg-[#F4F1EA] rounded border border-transparent hover:border-[#C2A86A]/50 transition-colors group"
+                                className="flex flex-col sm:flex-row sm:items-center gap-3 p-2 bg-[#F4F1EA] rounded border border-transparent hover:border-[#C2A86A]/50 transition-colors group"
                                 draggable
                                 onDragStart={(e) => { e.stopPropagation(); setDraggedLesson(lesson.id); }}
                                 onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
                                 onDrop={(e) => handleLessonDrop(e, course.id, mod.id, lesson.id)}
                               >
-                                <div className="cursor-move text-[#0B2A5B]/40 hover:text-[#0B2A5B]"><GripVertical size={16} /></div>
-                                <FileText size={14} className="text-[#C2A86A]" />
-                                <span className="flex-1 text-sm text-[#0B2A5B]">{lesson.title}</span>
-                                <Badge className={
-                                  lesson.content_type === "quiz" ? "bg-purple-100 text-purple-700 text-xs" :
-                                  lesson.content_type === "video" ? "bg-blue-100 text-blue-700 text-xs" :
-                                  lesson.content_type === "audio" ? "bg-teal-100 text-teal-700 text-xs" :
-                                  lesson.content_type === "pdf" ? "bg-orange-100 text-orange-700 text-xs" :
-                                  "bg-gray-100 text-gray-600 text-xs"
-                                }>{lesson.content_type}</Badge>
-                                {lesson.duration_minutes && <span className="text-xs text-[#0B2A5B]/50">{lesson.duration_minutes} min</span>}
-                                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button onClick={(e) => { e.stopPropagation(); openEditLesson(lesson); }} className="p-1 rounded hover:bg-[#0B2A5B]/10 text-[#0B2A5B]/50 hover:text-[#0B2A5B]" title="Edit Lesson">
-                                    <Pencil size={13} />
-                                  </button>
-                                  <button onClick={(e) => { e.stopPropagation(); handleDeleteLesson(course.id, lesson.id, lesson.title); }} className="p-1 rounded hover:bg-red-100 text-red-400 hover:text-red-600" title="Delete Lesson">
-                                    <Trash2 size={13} />
-                                  </button>
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                  <div className="cursor-move text-[#0B2A5B]/40 hover:text-[#0B2A5B]"><GripVertical size={16} /></div>
+                                  <FileText size={14} className="text-[#C2A86A]" />
+                                  <span className="flex-1 text-sm text-[#0B2A5B] break-words">{lesson.title}</span>
+                                </div>
+                                <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 mt-1 sm:mt-0">
+                                  <Badge className={
+                                    lesson.content_type === "quiz" ? "bg-purple-100 text-purple-700 text-[10px] md:text-xs" :
+                                    lesson.content_type === "video" ? "bg-blue-100 text-blue-700 text-[10px] md:text-xs" :
+                                    lesson.content_type === "audio" ? "bg-teal-100 text-teal-700 text-[10px] md:text-xs" :
+                                    lesson.content_type === "pdf" ? "bg-orange-100 text-orange-700 text-[10px] md:text-xs" :
+                                    "bg-gray-100 text-gray-600 text-[10px] md:text-xs"
+                                  }>{lesson.content_type}</Badge>
+                                  {lesson.duration_minutes && <span className="text-xs text-[#0B2A5B]/50">{lesson.duration_minutes} min</span>}
+                                  <div className="flex items-center gap-0.5 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                    <button onClick={(e) => { e.stopPropagation(); openEditLesson(lesson); }} className="p-1 rounded hover:bg-[#0B2A5B]/10 text-[#0B2A5B]/50 hover:text-[#0B2A5B]" title="Edit Lesson">
+                                      <Pencil size={13} />
+                                    </button>
+                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteLesson(course.id, lesson.id, lesson.title); }} className="p-1 rounded hover:bg-red-100 text-red-400 hover:text-red-600" title="Delete Lesson">
+                                      <Trash2 size={13} />
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                             ))}
