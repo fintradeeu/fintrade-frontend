@@ -346,16 +346,16 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
 
   return (
     <div
-      className="w-full h-full flex flex-col justify-between bg-white rounded-3xl border border-gray-100 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-2xl hover:scale-[1.01] transition-all duration-300 min-h-[280px] text-left select-none relative group"
+      className="w-full h-full flex flex-col justify-between bg-[#F9FAFB]/60 rounded-2xl border border-gray-200/60 p-8 hover:bg-white hover:border-[#D50032]/30 hover:shadow-lg transition-all duration-300 min-h-[240px] text-left select-none relative group"
     >
       <div className="flex flex-col items-start w-full">
         {/* Red outline Icon */}
         <div className="text-[#D50032] mb-6">
-          <IconComponent className="w-12 h-12 stroke-[1.5]" />
+          <IconComponent className="w-10 h-10 stroke-[1.5]" />
         </div>
 
         {/* Title */}
-        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 tracking-tight leading-snug">
+        <h3 className="text-xl font-bold text-gray-900 mb-6 tracking-tight leading-snug">
           {course.name}
         </h3>
       </div>
@@ -363,10 +363,10 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
       {/* Learn More Button */}
       <button
         onClick={() => navigate(`/courses/${course.id}`)}
-        className="inline-flex items-center justify-center gap-2 border border-[#D50032] text-[#D50032] hover:bg-[#D50032] hover:text-white transition-all duration-300 bg-white rounded-lg px-5 py-2.5 text-sm font-semibold tracking-wide self-start cursor-pointer group/btn"
+        className="inline-flex items-center justify-center gap-1.5 border border-[#D50032] text-[#D50032] hover:bg-[#D50032] hover:text-white transition-all duration-300 bg-white rounded px-5 py-2 text-sm font-semibold tracking-wide self-start cursor-pointer group/btn"
       >
         <span>Learn More</span>
-        <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
+        <ChevronRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
       </button>
     </div>
   );
@@ -635,7 +635,7 @@ export default function MarketingHome() {
     if (!coursesContainerRef.current) return;
     const container = coursesContainerRef.current;
     const cardWidth = container.firstElementChild?.getBoundingClientRect().width || 0;
-    const gap = 24; // gap-6
+    const gap = window.innerWidth >= 768 ? 32 : 24;
     const scrollLeft = container.scrollLeft;
     const currentIdx = Math.round(scrollLeft / (cardWidth + gap));
     if (currentIdx !== activeCourseIdx && currentIdx >= 0 && currentIdx < coursesCount) {
@@ -643,24 +643,24 @@ export default function MarketingHome() {
     }
   };
 
-  // Autoslide Timer on Mobile
+  // Autoslide Timer for Courses (Autoplays slide transition like Shivalik)
   useEffect(() => {
     if (isCoursesPaused) return;
 
     const timer = setInterval(() => {
-      if (window.innerWidth < 768 && coursesContainerRef.current) {
+      if (coursesContainerRef.current) {
         const nextIdx = (activeCourseIdx + 1) % coursesCount;
         setActiveCourseIdx(nextIdx);
 
         const container = coursesContainerRef.current;
         const cardWidth = container.firstElementChild?.getBoundingClientRect().width || 0;
-        const gap = 24;
+        const gap = window.innerWidth >= 768 ? 32 : 24;
         container.scrollTo({
           left: nextIdx * (cardWidth + gap),
           behavior: "smooth"
         });
       }
-    }, 4000);
+    }, 4500);
 
     return () => clearInterval(timer);
   }, [activeCourseIdx, isCoursesPaused, coursesCount]);
@@ -1245,8 +1245,8 @@ export default function MarketingHome() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <ScrollReveal>
                 <div className="text-left mb-10">
-                  <h2 className="text-4xl md:text-5.5xl font-extrabold mb-3 text-gray-900 tracking-tight">Our Courses</h2>
-                  <p className="text-lg md:text-xl text-gray-500 max-w-3xl font-medium leading-relaxed">
+                  <h2 className="text-4xl md:text-5xl lg:text-[54px] font-light text-gray-900 mb-3 tracking-tight">Our Courses</h2>
+                  <p className="text-base lg:text-xl text-gray-500 max-w-2xl mt-2 leading-relaxed">
                     Industry-driven curriculum designed to transform learners into professionals
                   </p>
                 </div>
@@ -1266,7 +1266,7 @@ export default function MarketingHome() {
                     setIsCoursesPaused(false);
                   }, 5000);
                 }}
-                className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible pt-5 pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
+                className="flex gap-6 md:gap-8 overflow-x-auto pt-5 pb-6 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
               >
                 {(apiCourses.length > 0
@@ -1358,12 +1358,41 @@ export default function MarketingHome() {
                     key={i}
                     delay={i * 0.12}
                     mobileDirection="left"
-                    className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex"
+                    className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-[calc((100%-64px)/3)] snap-center flex"
                   >
                     <CourseCard course={course} onEnroll={() => setSelectedCourseForCheckout(course)} />
                   </ScrollReveal>
                 ))}
               </div>
+
+              {/* Swiper-style pagination dots (Visible on Mobile & Desktop to match Shivalik) */}
+              {coursesCount > 1 && (
+                <div className={`justify-center items-center gap-2 mt-6 ${coursesCount > 3 ? "flex" : "flex md:hidden"}`}>
+                  {Array.from({ length: coursesCount }).map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setActiveCourseIdx(idx);
+                        const container = coursesContainerRef.current;
+                        if (container) {
+                          const cardWidth = container.firstElementChild?.getBoundingClientRect().width || 0;
+                          const gap = window.innerWidth >= 768 ? 32 : 24;
+                          container.scrollTo({
+                            left: idx * (cardWidth + gap),
+                            behavior: "smooth"
+                          });
+                        }
+                      }}
+                      className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                        activeCourseIdx === idx 
+                          ? "bg-[#D50032] w-6" 
+                          : "bg-[#D50032]/20 w-2.5 hover:bg-[#D50032]/40"
+                      }`}
+                      aria-label={`Go to slide ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
 
               {((apiCourses.length > 3) || (apiCourses.length === 0)) && (
                 <ScrollReveal delay={0.2}>

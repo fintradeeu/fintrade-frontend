@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
-import MarketingLayout from "../components/MarketingLayout";
-import { CourseCard } from "../components/MarketingHome"; // reuse existing CourseCard component
+import { CourseCard } from "./MarketingHome"; // reuse existing CourseCard component
+import { motion } from "motion/react";
 
-// New page to display all courses with the same premium styling as MarketingLayout
+// New page to display all courses
 export default function Courses() {
   const [apiCourses, setApiCourses] = useState<any[]>([]);
   const isAuthenticated = !!localStorage.getItem("token");
@@ -36,7 +36,7 @@ export default function Courses() {
   }, []);
 
   return (
-    <MarketingLayout>
+    <div className="flex-1 bg-white font-sans relative overflow-hidden">
       {/* SEO Title */}
       <title>All Courses – FinTrade</title>
       <meta name="description" content="Explore all FinTrade professional programs and enroll in the course that fits your trading journey." />
@@ -48,16 +48,47 @@ export default function Courses() {
             Browse the complete catalog of FinTrade programs – from fundamentals to advanced professional certifications.
           </p>
         </div>
-        <div className="flex flex-wrap gap-6 justify-center">
+        <motion.div
+          variants={{
+            hidden: { opacity: 0 },
+            show: {
+              opacity: 1,
+              transition: {
+                staggerChildren: 0.1,
+              },
+            },
+          }}
+          initial="hidden"
+          animate="show"
+          className="flex flex-wrap gap-6 justify-center"
+        >
           {apiCourses.length > 0 ? (
-            apiCourses.map((c: any) => (
-              <CourseCard key={c.id} course={c} />
+            apiCourses.map((c: any, i: number) => (
+              <motion.div
+                key={c.id || i}
+                variants={{
+                  hidden: { opacity: 0, y: 25, scale: 0.96 },
+                  show: {
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                    transition: {
+                      type: "spring",
+                      stiffness: 90,
+                      damping: 14,
+                    },
+                  },
+                }}
+                className="flex"
+              >
+                <CourseCard course={c} />
+              </motion.div>
             ))
           ) : (
             <p className="text-gray-500">Loading courses…</p>
           )}
-        </div>
+        </motion.div>
       </section>
-    </MarketingLayout>
+    </div>
   );
 }

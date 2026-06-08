@@ -3,6 +3,7 @@ import api from "../services/api";
 import { CourseCard } from "./MarketingHome";
 import CourseCheckoutModal from "../components/CourseCheckoutModal";
 import { BookOpen, LineChart, Trophy } from "lucide-react";
+import { motion } from "motion/react";
 
 export default function CoursesPage() {
   const [apiCourses, setApiCourses] = useState<any[]>([]);
@@ -58,7 +59,20 @@ export default function CoursesPage() {
             </p>
           </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <motion.div
+          variants={{
+            hidden: { opacity: 0 },
+            show: {
+              opacity: 1,
+              transition: {
+                staggerChildren: 0.1,
+              },
+            },
+          }}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+        >
           {apiCourses.map((c: any, i: number) => {
             const diff = (c.difficulty_level || "beginner").toLowerCase();
             const course = {
@@ -75,12 +89,28 @@ export default function CoursesPage() {
                 modules: (c.modules || []).sort((a: any, b: any) => a.order - b.order),
             };
             return (
-              <div key={i} className="flex-shrink-0 flex">
+              <motion.div
+                key={i}
+                variants={{
+                  hidden: { opacity: 0, y: 30, scale: 0.95 },
+                  show: {
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                    transition: {
+                      type: "spring",
+                      stiffness: 90,
+                      damping: 14,
+                    },
+                  },
+                }}
+                className="flex-shrink-0 flex animate-duration-500"
+              >
                 <CourseCard course={course} onEnroll={() => setSelectedCourseForCheckout(course)} />
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
       </div>
 

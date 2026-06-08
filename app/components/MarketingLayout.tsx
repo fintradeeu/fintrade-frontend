@@ -8,6 +8,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import logo from "../../imports/fintrade_logo.png";
 import api from "../services/api";
+import { motion, AnimatePresence } from "motion/react";
 
 export default function MarketingLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -374,15 +375,14 @@ export default function MarketingLayout() {
       <nav className="sticky top-0 z-[100] bg-white/90 border-b border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.05)] backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            <div className="flex-shrink-0 flex items-center h-[50px] w-[140px] md:h-[60px] md:w-[220px] -translate-x-4 md:-translate-x-8">
-              <Link to="/" className="flex items-center justify-center h-full w-full overflow-hidden">
+            <div className="flex-shrink-0 flex items-center h-16 w-[180px] md:w-[220px]">
+              <Link to="/" className="flex items-center h-full w-full">
                 <img
                   src={logo}
                   alt="FinTrade"
-                  className="h-full w-full object-contain scale-[2.5] md:scale-[3.5] -translate-x-2 md:-translate-x-6 -translate-y-1 md:-translate-y-1.5"
+                  className="h-10 w-auto object-contain scale-[1.5] md:scale-[1.8] origin-left"
                   style={{
-                    filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.08))",
-                    transformOrigin: "center center"
+                    filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.08))"
                   }}
                 />
               </Link>
@@ -511,8 +511,19 @@ export default function MarketingLayout() {
         </aside>
       </div>
 
-      <main className="flex-1 flex flex-col">
-        <Outlet />
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="flex-1 flex flex-col"
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
