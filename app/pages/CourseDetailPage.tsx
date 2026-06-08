@@ -5,6 +5,36 @@ import CourseCheckoutModal from "../components/CourseCheckoutModal";
 import { Dialog, DialogContent } from "../components/ui/dialog";
 import { ChevronLeft, BookOpen, Clock, Users, Award, Shield, CheckCircle, ArrowRight, Play, LineChart, Trophy } from "lucide-react";
 import { Button } from "../components/ui/button";
+import { motion } from "motion/react";
+
+// Reusable scroll reveal component using framer motion (slow 0.5s time get)
+function ScrollReveal({ 
+  children, 
+  className = "", 
+  delay = 0,
+  duration = 0.5,
+  y = 20,
+  x = 0
+}: { 
+  children: React.ReactNode; 
+  className?: string; 
+  delay?: number;
+  duration?: number;
+  y?: number;
+  x?: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y, x }}
+      whileInView={{ opacity: 1, y: 0, x: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration, ease: [0.16, 1, 0.3, 1], delay }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 // Static course details fallback
 const staticCourseDetails: Record<string, { description: string; highlights: string[]; outcomes: string[]; modules: { title: string; lessons: string[] }[] }> = {
@@ -377,65 +407,74 @@ export default function CourseDetailPage() {
       <section className="py-12 md:py-16 my-4 bg-gray-50/50">
         <div className="w-full max-w-7xl mx-auto px-6 lg:px-8">
           {/* Back Button */}
-          <div className="mb-8">
-            <button
-              onClick={() => navigate("/")}
-              className="flex items-center cursor-pointer space-x-1 text-[#666666] hover:text-[#D50032] transition-colors duration-200 font-light"
-            >
-              <ChevronLeft className="w-5 h-5" />
-              <span className="lg:text-lg text-base">Back to Home</span>
-            </button>
-          </div>
+          <ScrollReveal delay={0.05} y={-10}>
+            <div className="mb-8">
+              <button
+                onClick={() => navigate("/")}
+                className="flex items-center cursor-pointer space-x-1 text-[#666666] hover:text-[#D50032] transition-colors duration-200 font-light"
+              >
+                <ChevronLeft className="w-5 h-5" />
+                <span className="lg:text-lg text-base">Back to Home</span>
+              </button>
+            </div>
+          </ScrollReveal>
 
           {/* Hero details */}
           <div className="grid lg:grid-cols-1 gap-8">
             <div className="space-y-6 text-left">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="px-3.5 py-1 rounded-full text-xs font-bold text-[#D50032] bg-[#FFF5F6] border border-[#D50032]/8 inline-block">
-                    {levelBadge} Program
-                  </span>
-                  <span className="px-3.5 py-1 rounded-full text-xs font-bold text-[#D50032] bg-[#FFF5F6] border border-[#D50032]/8 inline-block">
-                    {displayDuration}
-                  </span>
-                </div>
-                <h1 className="text-4xl md:text-5xl lg:text-[54px] leading-tight font-extrabold text-gray-900 tracking-tight">
-                  {course.title}
-                </h1>
-                <p className="text-lg md:text-2xl font-semibold text-[#D50032]">
-                  Become a Professional Trader.
-                </p>
-              </div>
-              <p className="lg:text-xl text-lg leading-relaxed font-light text-[#666666] max-w-3xl whitespace-pre-line">
-                {course.description || course.short_description || "Elite trading program delivering institutional grade research and strategies. Prepared to act, not just plan."}
-              </p>
-
-              {/* Action and Pricing */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-6 pt-4">
-                <div className="bg-white border border-gray-100 rounded-2xl p-4 px-6 flex items-center gap-4 shadow-sm w-fit">
-                  <div>
-                    <span className="text-xs text-gray-400 font-medium block">Enrollment Fee</span>
-                    <span className="text-2xl md:text-3xl font-black text-gray-900">
-                      ₹{priceNum.toLocaleString("en-IN")}
-                      <span className="text-xs font-normal text-gray-400 ml-1">+ GST</span>
+              <ScrollReveal delay={0.1} y={20}>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="px-3.5 py-1 rounded-full text-xs font-bold text-[#D50032] bg-[#FFF5F6] border border-[#D50032]/8 inline-block">
+                      {levelBadge} Program
+                    </span>
+                    <span className="px-3.5 py-1 rounded-full text-xs font-bold text-[#D50032] bg-[#FFF5F6] border border-[#D50032]/8 inline-block">
+                      {displayDuration}
                     </span>
                   </div>
-                  {discountPercentage > 0 && (
-                    <div className="bg-green-50 text-emerald-600 border border-emerald-100 px-2.5 py-1 text-xs font-black rounded-lg">
-                      {discountPercentage}% OFF
-                    </div>
-                  )}
+                  <h1 className="text-4xl md:text-5xl lg:text-[54px] leading-tight font-extrabold text-gray-900 tracking-tight">
+                    {course.title}
+                  </h1>
+                  <p className="text-lg md:text-2xl font-semibold text-[#D50032]">
+                    Become a Professional Trader.
+                  </p>
                 </div>
+              </ScrollReveal>
+              
+              <ScrollReveal delay={0.2} y={25}>
+                <p className="lg:text-xl text-lg leading-relaxed font-light text-[#666666] max-w-3xl whitespace-pre-line">
+                  {course.description || course.short_description || "Elite trading program delivering institutional grade research and strategies. Prepared to act, not just plan."}
+                </p>
+              </ScrollReveal>
 
-                <Button
-                  onClick={handleEnrollClick}
-                  disabled={enrollLoading}
-                  className="bg-[#D50032] hover:bg-black text-white px-8 py-4 text-base font-bold transition-all duration-200 ease-in-out hover:scale-105 flex items-center justify-center gap-2 rounded-xl h-auto"
-                >
-                  {enrollLoading ? "Checking Enrollment..." : "Enroll Now"}
-                  <ArrowRight className="w-5 h-5" />
-                </Button>
-              </div>
+              {/* Action and Pricing */}
+              <ScrollReveal delay={0.3} y={30}>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-6 pt-4">
+                  <div className="bg-white border border-gray-100 rounded-2xl p-4 px-6 flex items-center gap-4 shadow-sm w-fit">
+                    <div>
+                      <span className="text-xs text-gray-400 font-medium block">Enrollment Fee</span>
+                      <span className="text-2xl md:text-3xl font-black text-gray-900">
+                        ₹{priceNum.toLocaleString("en-IN")}
+                        <span className="text-xs font-normal text-gray-400 ml-1">+ GST</span>
+                      </span>
+                    </div>
+                    {discountPercentage > 0 && (
+                      <div className="bg-green-50 text-emerald-600 border border-emerald-100 px-2.5 py-1 text-xs font-black rounded-lg">
+                        {discountPercentage}% OFF
+                      </div>
+                    )}
+                  </div>
+
+                  <Button
+                    onClick={handleEnrollClick}
+                    disabled={enrollLoading}
+                    className="bg-[#D50032] hover:bg-black text-white px-8 py-4 text-base font-bold transition-all duration-200 ease-in-out hover:scale-105 flex items-center justify-center gap-2 rounded-xl h-auto"
+                  >
+                    {enrollLoading ? "Checking Enrollment..." : "Enroll Now"}
+                    <ArrowRight className="w-5 h-5" />
+                  </Button>
+                </div>
+              </ScrollReveal>
             </div>
           </div>
         </div>
@@ -444,9 +483,11 @@ export default function CourseDetailPage() {
       {/* Program Highlights Section (Grid like shivalik) */}
       <section className="py-12 md:py-16 bg-white border-t border-gray-100">
         <div className="w-full max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="mb-10 text-left">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Program Highlights</h2>
-          </div>
+          <ScrollReveal delay={0.05} y={15}>
+            <div className="mb-10 text-left">
+              <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Program Highlights</h2>
+            </div>
+          </ScrollReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {(course.marketing_highlights && Array.isArray(course.marketing_highlights) && course.marketing_highlights.some((h: any) => h && h.trim())
@@ -455,19 +496,20 @@ export default function CourseDetailPage() {
             ).map((highlight: string, idx: number) => {
               const HighlightIcon = highlightIcons[idx % highlightIcons.length];
               return (
-                <div
-                  key={idx}
-                  className="flex items-start gap-4 border border-gray-100 rounded-2xl p-5 hover:border-[#D50032] hover:-translate-y-1 group transition-all duration-300 shadow-sm"
-                >
-                  <div className="flex-shrink-0">
-                    <div className="w-10 h-10 rounded-xl bg-[#FFF5F6] border border-[#D50032]/8 flex items-center justify-center">
-                      <HighlightIcon className="w-5 h-5 text-[#D50032]" strokeWidth={2} />
+                <ScrollReveal key={idx} delay={idx * 0.05} y={20}>
+                  <div
+                    className="flex items-start gap-4 border border-gray-100 rounded-2xl p-5 hover:border-[#D50032] hover:-translate-y-1 group transition-all duration-300 shadow-sm"
+                  >
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-[#FFF5F6] border border-[#D50032]/8 flex items-center justify-center">
+                        <HighlightIcon className="w-5 h-5 text-[#D50032]" strokeWidth={2} />
+                      </div>
                     </div>
+                    <h3 className="text-base sm:text-lg font-bold text-gray-800 leading-snug mt-1.5 text-left">
+                      {highlight}
+                    </h3>
                   </div>
-                  <h3 className="text-base sm:text-lg font-bold text-gray-800 leading-snug mt-1.5 text-left">
-                    {highlight}
-                  </h3>
-                </div>
+                </ScrollReveal>
               );
             })}
           </div>
@@ -478,35 +520,39 @@ export default function CourseDetailPage() {
       {course.modules && course.modules.length > 0 && (
         <section className="py-12 md:py-16 bg-gray-50/30 border-t border-gray-100">
           <div className="w-full max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="mb-10 text-left">
-              <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Course Curriculum</h2>
-              <p className="text-sm text-gray-400 mt-2 font-medium">Deconstructed structural modules covering strategies and risk management.</p>
-            </div>
+            <ScrollReveal delay={0.05} y={15}>
+              <div className="mb-10 text-left">
+                <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Course Curriculum</h2>
+                <p className="text-sm text-gray-400 mt-2 font-medium">Deconstructed structural modules covering strategies and risk management.</p>
+              </div>
+            </ScrollReveal>
 
             <div className="max-w-4xl mx-auto space-y-6">
               {course.modules.map((module: any, idx: number) => (
-                <div key={module.id || idx} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row gap-6 hover:border-[#D50032]/10 transition-colors">
-                  <div className="w-10 h-10 rounded-xl bg-[#FFF5F6] border border-[#D50032]/8 flex items-center justify-center flex-shrink-0 font-black text-[#D50032]">
-                    {idx + 1}
+                <ScrollReveal key={module.id || idx} delay={idx * 0.05} y={20}>
+                  <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row gap-6 hover:border-[#D50032]/10 transition-colors">
+                    <div className="w-10 h-10 rounded-xl bg-[#FFF5F6] border border-[#D50032]/8 flex items-center justify-center flex-shrink-0 font-black text-[#D50032]">
+                      {idx + 1}
+                    </div>
+                    <div className="flex-grow text-left">
+                      <h3 className="text-lg font-bold text-gray-900 mb-3">{module.title || module.name}</h3>
+                      {module.description && (
+                        <p className="text-sm text-gray-500 font-medium mb-4 whitespace-pre-line">{module.description}</p>
+                      )}
+                      {module.lessons && module.lessons.length > 0 && (
+                        <div className="space-y-2.5">
+                          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">Lessons Covered</span>
+                          {module.lessons.map((lesson: any, lIdx: number) => (
+                            <div key={lesson.id || lIdx} className="flex items-center gap-2.5 text-sm text-gray-600 font-medium">
+                              <div className="w-1.5 h-1.5 rounded-full bg-[#D50032]/40" />
+                              <span>{lesson.title || lesson.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-grow text-left">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3">{module.title || module.name}</h3>
-                    {module.description && (
-                      <p className="text-sm text-gray-500 font-medium mb-4 whitespace-pre-line">{module.description}</p>
-                    )}
-                    {module.lessons && module.lessons.length > 0 && (
-                      <div className="space-y-2.5">
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">Lessons Covered</span>
-                        {module.lessons.map((lesson: any, lIdx: number) => (
-                          <div key={lesson.id || lIdx} className="flex items-center gap-2.5 text-sm text-gray-600 font-medium">
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#D50032]/40" />
-                            <span>{lesson.title || lesson.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                </ScrollReveal>
               ))}
             </div>
           </div>
@@ -516,17 +562,22 @@ export default function CourseDetailPage() {
       {/* Course Outcomes Section (Same as shivalik) */}
       <section className="py-12 md:py-16 bg-white border-t border-gray-100">
         <div className="w-full max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="mb-8 text-left">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight mb-4">Outcomes</h2>
-          </div>
+          <ScrollReveal delay={0.05} y={15}>
+            <div className="mb-8 text-left">
+              <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight mb-4">Outcomes</h2>
+            </div>
+          </ScrollReveal>
+          
           <ul className="space-y-5 pl-1">
             {staticDetails.outcomes.map((outcome: string, idx: number) => (
-              <li key={idx} className="flex items-start gap-3">
-                <span className="flex-shrink-0 w-2.5 h-2.5 mt-2 rounded-full bg-[#D50032]" aria-hidden="true" />
-                <span className="text-lg lg:text-xl font-medium text-[#666666] text-left">
-                  {outcome}
-                </span>
-              </li>
+              <ScrollReveal key={idx} delay={idx * 0.05} x={-15} y={0}>
+                <li className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-2.5 h-2.5 mt-2 rounded-full bg-[#D50032]" aria-hidden="true" />
+                  <span className="text-lg lg:text-xl font-medium text-[#666666] text-left">
+                    {outcome}
+                  </span>
+                </li>
+              </ScrollReveal>
             ))}
           </ul>
         </div>
