@@ -1192,12 +1192,21 @@ export default function MarketingHome() {
 
   const handleDownloadClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      triggerBrochureDownload();
-    } else {
-      setBrochureOpen(true);
+    try {
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        const u = JSON.parse(userStr);
+        setLeadData({
+          name: u.full_name || u.name || "",
+          email: u.email || "",
+          contact: u.phone || u.mobile_no || u.contact || "",
+          city: u.city || ""
+        });
+      }
+    } catch (err) {
+      console.error("Error autofilling brochure lead details:", err);
     }
+    setBrochureOpen(true);
   };
 
   const sendOTP = () => {
@@ -2841,7 +2850,15 @@ export default function MarketingHome() {
             )}
 
             <DialogFooter>
-              {!otpSent ? (
+              {isAuthenticated ? (
+                <Button className="w-full" style={{ background: "#D50032", color: "white" }} onClick={() => {
+                  alert("Your brochure download will start shortly.");
+                  setBrochureOpen(false);
+                  triggerBrochureDownload();
+                }} disabled={!leadData.name || !leadData.contact}>
+                  Download Now
+                </Button>
+              ) : !otpSent ? (
                 <Button className="w-full" style={{ background: "#D50032", color: "white" }} onClick={sendOTP} disabled={!leadData.name || !leadData.contact}>
                   Get OTP
                 </Button>
