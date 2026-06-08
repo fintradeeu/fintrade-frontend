@@ -390,7 +390,7 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
   return (
     <>
       <div
-        className={`w-full h-full flex flex-col group transition-all duration-300 relative bg-white rounded-[32px] p-8 ${isMostPopular
+        className={`w-full h-full flex flex-col group transition-all duration-300 relative bg-white rounded-[32px] p-5 sm:p-8 ${isMostPopular
           ? "border-2 border-[#FFD2D6] shadow-[0_15px_40px_rgba(213,0,50,0.04)]"
           : "border border-gray-100 shadow-[0_10px_35px_rgba(0,0,0,0.015)]"
           } hover:shadow-2xl hover:scale-[1.01]`}
@@ -424,8 +424,8 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
         </div>
 
         {/* Price block - gray rounded container */}
-        <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 flex items-center justify-between gap-4 mb-5">
-          <div className="flex items-baseline gap-2.5">
+        <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-2.5 mb-5">
+          <div className="flex flex-wrap items-baseline gap-2">
             <span className="text-2xl sm:text-3xl font-black text-[#121212] tracking-tight leading-none">
               {course.price}
             </span>
@@ -435,7 +435,7 @@ export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () =>
               </span>
             )}
           </div>
-          <span className="bg-green-50 text-emerald-600 border border-emerald-100 px-2.5 py-1 text-xs font-black rounded-lg uppercase tracking-wider">
+          <span className="bg-green-50 text-emerald-600 border border-emerald-100 px-2.5 py-1 text-xs font-black rounded-lg uppercase tracking-wider flex-shrink-0">
             {discountPercentage}% OFF
           </span>
         </div>
@@ -1572,115 +1572,122 @@ export default function MarketingHome() {
                     Master trading with our industry-leading certifications
                   </p>
                 </div>
-                <div
-                  ref={coursesContainerRef}
-                  onScroll={handleCoursesScroll}
-                  onMouseEnter={() => setIsCoursesPaused(true)}
-                  onMouseLeave={() => setIsCoursesPaused(false)}
-                  onTouchStart={() => {
-                    setIsCoursesPaused(true);
-                    if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
-                  }}
-                  onTouchEnd={() => {
-                    touchTimeoutRef.current = setTimeout(() => {
-                      setIsCoursesPaused(false);
-                    }, 5000);
-                  }}
-                  className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible pt-5 pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
-                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                >
-                  {(apiCourses.length > 0
-                    ? apiCourses.map((c: any) => {
-                      const diff = c.difficulty_level || "beginner";
-                      return {
-                        ...c,
-                        name: c.title,
-                        level: diff.charAt(0).toUpperCase() + diff.slice(1),
-                        duration: c.duration_hours ? `${c.duration_hours} Days` : "Self-paced",
-                        originalPrice: c.original_price && Number(c.original_price) > 0 ? `\u20B9${Number(c.original_price).toLocaleString("en-IN")}` : null,
-                        price: `\u20B9${Number(c.price).toLocaleString("en-IN")}`,
-                        savings: c.original_price && Number(c.original_price) > Number(c.price) ? `\u20B9${(Number(c.original_price) - Number(c.price)).toLocaleString("en-IN")}` : null,
-                        shortDescription: c.short_description || c.description || "Professional trading course",
-                        fullDescription: c.description || c.short_description || "Professional trading course.",
-                        icon: diff === "beginner" ? BookOpen : diff === "intermediate" ? LineChart : Trophy,
+              </ScrollReveal>
 
-                      };
-                    })
-                    : [
-                      {
-                        id: 13,
-                        name: "Course 2",
-                        level: "Beginner",
-                        duration: "10 Days",
-                        price: "₹1,299",
-                        originalPrice: null,
-                        savings: null,
-                        shortDescription: "Course 2",
-                        fullDescription: "Course 2.",
-                        icon: BookOpen,
+              <div
+                ref={coursesContainerRef}
+                onScroll={handleCoursesScroll}
+                onMouseEnter={() => setIsCoursesPaused(true)}
+                onMouseLeave={() => setIsCoursesPaused(false)}
+                onTouchStart={() => {
+                  setIsCoursesPaused(true);
+                  if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
+                }}
+                onTouchEnd={() => {
+                  touchTimeoutRef.current = setTimeout(() => {
+                    setIsCoursesPaused(false);
+                  }, 5000);
+                }}
+                className="flex md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible pt-5 pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              >
+                {(apiCourses.length > 0
+                  ? apiCourses.map((c: any) => {
+                    const diff = c.difficulty_level || "beginner";
+                    return {
+                      ...c,
+                      name: c.title,
+                      level: diff.charAt(0).toUpperCase() + diff.slice(1),
+                      duration: c.duration_hours ? `${c.duration_hours} Days` : "Self-paced",
+                      originalPrice: c.original_price && Number(c.original_price) > 0 ? `\u20B9${Number(c.original_price).toLocaleString("en-IN")}` : null,
+                      price: `\u20B9${Number(c.price).toLocaleString("en-IN")}`,
+                      savings: c.original_price && Number(c.original_price) > Number(c.price) ? `\u20B9${(Number(c.original_price) - Number(c.price)).toLocaleString("en-IN")}` : null,
+                      shortDescription: c.short_description || c.description || "Professional trading course",
+                      fullDescription: c.description || c.short_description || "Professional trading course.",
+                      icon: diff === "beginner" ? BookOpen : diff === "intermediate" ? LineChart : Trophy,
 
-                      },
-                      {
-                        id: 11,
-                        name: "c2",
-                        level: "Beginner",
-                        duration: "20 Days",
-                        price: "₹23,233",
-                        originalPrice: "₹199",
-                        savings: null,
-                        shortDescription: "asdfgh",
-                        fullDescription: "asdfgh.",
-                        icon: BookOpen,
+                    };
+                  })
+                  : [
+                    {
+                      id: 13,
+                      name: "Course 2",
+                      level: "Beginner",
+                      duration: "10 Days",
+                      price: "₹1,299",
+                      originalPrice: null,
+                      savings: null,
+                      shortDescription: "Course 2",
+                      fullDescription: "Course 2.",
+                      icon: BookOpen,
 
-                      },
-                      {
-                        id: 10,
-                        name: "Course1",
-                        level: "Beginner",
-                        duration: "30 Days",
-                        price: "₹4,999",
-                        originalPrice: null,
-                        savings: null,
-                        shortDescription: "Course1",
-                        fullDescription: "Course1.",
-                        icon: BookOpen,
-                        modules: [],
-                      },
-                      {
-                        id: 9,
-                        name: "c1",
-                        level: "Beginner",
-                        duration: "10 Days",
-                        price: "₹20",
-                        originalPrice: "₹299",
-                        savings: "₹279",
-                        shortDescription: "abcdefgh",
-                        fullDescription: "abcdefgh.",
-                        icon: BookOpen,
-                        modules: [],
-                      },
-                      {
-                        id: 8,
-                        name: "a",
-                        level: "Beginner",
-                        duration: "10 Days",
-                        price: "₹500",
-                        originalPrice: "₹1,000",
-                        savings: "₹500",
-                        shortDescription: "a",
-                        fullDescription: "a.",
-                        icon: BookOpen,
-                        modules: [],
-                      }
-                    ]
-                  ).slice(0, isCoursesExpanded ? undefined : 3).map((course, i) => (
-                    <div key={i} className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex">
-                      <CourseCard course={course} onEnroll={() => setSelectedCourseForCheckout(course)} />
-                    </div>
-                  ))}
-                </div>
+                    },
+                    {
+                      id: 11,
+                      name: "c2",
+                      level: "Beginner",
+                      duration: "20 Days",
+                      price: "₹23,233",
+                      originalPrice: "₹199",
+                      savings: null,
+                      shortDescription: "asdfgh",
+                      fullDescription: "asdfgh.",
+                      icon: BookOpen,
 
-                {((apiCourses.length > 3) || (apiCourses.length === 0)) && (
+                    },
+                    {
+                      id: 10,
+                      name: "Course1",
+                      level: "Beginner",
+                      duration: "30 Days",
+                      price: "₹4,999",
+                      originalPrice: null,
+                      savings: null,
+                      shortDescription: "Course1",
+                      fullDescription: "Course1.",
+                      icon: BookOpen,
+                      modules: [],
+                    },
+                    {
+                      id: 9,
+                      name: "c1",
+                      level: "Beginner",
+                      duration: "10 Days",
+                      price: "₹20",
+                      originalPrice: "₹299",
+                      savings: "₹279",
+                      shortDescription: "abcdefgh",
+                      fullDescription: "abcdefgh.",
+                      icon: BookOpen,
+                      modules: [],
+                    },
+                    {
+                      id: 8,
+                      name: "a",
+                      level: "Beginner",
+                      duration: "10 Days",
+                      price: "₹500",
+                      originalPrice: "₹1,000",
+                      savings: "₹500",
+                      shortDescription: "a",
+                      fullDescription: "a.",
+                      icon: BookOpen,
+                      modules: [],
+                    }
+                  ]
+                ).slice(0, isCoursesExpanded ? undefined : 3).map((course, i) => (
+                  <ScrollReveal
+                    key={i}
+                    delay={i * 0.12}
+                    className="flex-shrink-0 w-[290px] sm:w-[350px] md:w-full md:flex-shrink snap-center flex"
+                  >
+                    <CourseCard course={course} onEnroll={() => setSelectedCourseForCheckout(course)} />
+                  </ScrollReveal>
+                ))}
+              </div>
+
+              {((apiCourses.length > 3) || (apiCourses.length === 0)) && (
+                <ScrollReveal delay={0.2}>
                   <div className="mt-8 text-center">
                     <Button
                       onClick={() => {
@@ -1694,8 +1701,8 @@ export default function MarketingHome() {
                       {isCoursesExpanded ? "View Less" : "View More Courses"}
                     </Button>
                   </div>
-                )}
-              </ScrollReveal>
+                </ScrollReveal>
+              )}
             </div>
           </section>
         )}
@@ -2232,9 +2239,22 @@ export default function MarketingHome() {
                   </Link>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
+                <div
+                  ref={blogScrollRef}
+                  onScroll={handleBlogScroll}
+                  onTouchStart={() => {
+                    setIsBlogPaused(true);
+                    if (blogTouchTimeoutRef.current) clearTimeout(blogTouchTimeoutRef.current);
+                  }}
+                  onTouchEnd={() => {
+                    if (blogTouchTimeoutRef.current) clearTimeout(blogTouchTimeoutRef.current);
+                    blogTouchTimeoutRef.current = setTimeout(() => setIsBlogPaused(false), 8000);
+                  }}
+                  className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch overflow-x-auto md:overflow-x-visible pb-4 md:pb-0 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
                   {/* Featured Video (Card 1) */}
-                  <div className="flex flex-col h-full">
+                  <div className="flex flex-col h-full flex-shrink-0 w-[85vw] sm:w-[360px] md:w-full snap-center">
                     {marketUpdates.length > 0 ? (
                       <Card
                         onClick={() => { setActiveVideoIdx(0); setVideoOpen(true); }}
@@ -2288,7 +2308,7 @@ export default function MarketingHome() {
 
                   {/* Blog Stories (Cards 2-6) */}
                   {blogStories.length > 0 ? blogStories.slice(0, 5).map((story, i) => (
-                    <div key={i} className="flex flex-col h-full">
+                    <div key={i} className="flex flex-col h-full flex-shrink-0 w-[85vw] sm:w-[360px] md:w-full snap-center">
                       <Card onClick={() => navigate(`/article/${story.id}`)} className="flex-1 flex flex-col border-0 shadow-md group hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                         <div className="aspect-[16/10] overflow-hidden relative bg-gray-100 flex items-center justify-center">
                           <img src={getImageUrl(story.thumbnail_url) || "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80"} alt={story.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -2345,7 +2365,7 @@ export default function MarketingHome() {
                       desc: "Protect your capital with these essential risk management rules."
                     }
                   ].map((post, i) => (
-                    <div key={i} className="flex flex-col h-full">
+                    <div key={i} className="flex flex-col h-full flex-shrink-0 w-[85vw] sm:w-[360px] md:w-full snap-center">
                       <Card className="flex-1 flex flex-col border-0 shadow-md group hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                         <div className="aspect-[16/10] overflow-hidden relative">
                           <img src={post.img} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -2366,6 +2386,32 @@ export default function MarketingHome() {
                       </Card>
                     </div>
                   ))}
+                </div>
+
+                {/* Mobile Dot Indicators for Blog Section */}
+                <div className="flex md:hidden gap-1.5 justify-center items-center mt-5 w-full">
+                  {Array.from({ length: 1 + (blogStories.length > 0 ? Math.min(blogStories.length, 5) : 5) }).map((_, idx) => {
+                    const isActive = idx === blogActiveIndex;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setIsBlogPaused(true);
+                          setBlogActiveIndex(idx);
+                          const container = blogScrollRef.current;
+                          if (container) {
+                            const cardWidth = container.firstElementChild?.getBoundingClientRect().width || 0;
+                            container.scrollTo({ left: idx * (cardWidth + 20), behavior: "smooth" });
+                          }
+                          if (blogTouchTimeoutRef.current) clearTimeout(blogTouchTimeoutRef.current);
+                          blogTouchTimeoutRef.current = setTimeout(() => setIsBlogPaused(false), 8000);
+                        }}
+                        className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                          isActive ? "w-5 bg-[#D50032]" : "w-1.5 bg-gray-300 hover:bg-gray-400"
+                        }`}
+                      />
+                    );
+                  })}
                 </div>
               </ScrollReveal>
             </div>

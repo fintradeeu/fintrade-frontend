@@ -57,7 +57,7 @@ export default function AboutUs() {
   useEffect(() => {
     const vmTimer = setInterval(() => {
       setVmSlide((prev) => (prev === 0 ? 1 : 0));
-    }, 2000);
+    }, 6000);
     return () => clearInterval(vmTimer);
   }, []);
 
@@ -65,7 +65,7 @@ export default function AboutUs() {
     <div className="bg-white min-h-screen relative select-none">
       
       {/* Hero Section Wrapper with background slider */}
-      <div className="relative w-full overflow-hidden pb-20">
+      <div className="relative w-full overflow-hidden pb-10 md:pb-20">
         <div className="absolute inset-0 z-0">
           {slides.map((slide, index) => (
             <div
@@ -88,10 +88,10 @@ export default function AboutUs() {
         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#D50032]/5 blur-[120px] pointer-events-none z-0" />
         <div className="absolute top-[30%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#D50032]/5 blur-[150px] pointer-events-none z-0" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-6 md:pt-16">
           
           {/* Header Block */}
-        <div className="text-center mb-16 pt-8">
+        <div className="text-center mb-8 md:mb-16 pt-2 md:pt-8">
           <div className="inline-flex items-center gap-1.5 px-4.5 py-1.5 rounded-full mb-4 border border-white/20 bg-white/10 backdrop-blur-md shadow-sm">
             <span className="text-white font-black text-xs tracking-wider uppercase">
               📢 Who We Are
@@ -139,7 +139,7 @@ export default function AboutUs() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-10 pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-6 pb-10 md:pt-10 md:pb-20">
         {/* Main Section */}
         <div className="max-w-6xl mx-auto mb-6 items-stretch px-4">
           
