@@ -1278,7 +1278,7 @@ export default function MarketingHome() {
               {heroBackgrounds.map((img, idx) => (
                 <div
                   key={img + "-" + idx}
-                  className="absolute inset-0 bg-[length:100%_auto] bg-no-repeat bg-top md:bg-cover md:bg-center transition-opacity duration-1000 ease-in-out"
+                  className="absolute inset-0 bg-cover bg-no-repeat bg-center transition-opacity duration-1000 ease-in-out"
                   style={{
                     backgroundImage: `linear-gradient(to bottom, rgba(11, 15, 25, 0.3), rgba(11, 15, 25, 0.95)), url('${getBgImageUrl(img)}')`,
                     opacity: currentBgIdx === idx ? 1 : 0,
@@ -1314,8 +1314,8 @@ export default function MarketingHome() {
                 </p>
 
                 {/* Action Buttons Row */}
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4.5 max-w-4xl mx-auto mb-6">
-                  <Link to="/courses" className="w-full sm:w-auto">
+                <div className="flex flex-row flex-wrap justify-center gap-3 sm:gap-4.5 max-w-4xl mx-auto mb-6">
+                  <Link to="/courses" className=" w-auto">
                     <Button
                       size="lg"
                       className="w-full sm:w-auto bg-[#D50032] hover:bg-black text-white rounded-xl sm:rounded-2xl px-6 sm:px-8 py-3.5 sm:py-5 h-auto text-sm sm:text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all hover:scale-105 whitespace-nowrap"
@@ -1337,7 +1337,7 @@ export default function MarketingHome() {
                         setVideoOpen(true);
                       }
                     }}
-                    className="w-full sm:w-auto bg-[#D50032] hover:bg-black text-white rounded-xl sm:rounded-2xl px-5 sm:px-6 py-3.5 sm:py-5 h-auto text-sm sm:text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all inline-flex items-center justify-center gap-2.5 hover:scale-105 whitespace-nowrap"
+                    className=" sm:w-auto   bg-[#D50032] hover:bg-black text-white rounded-xl sm:rounded-2xl px-5 sm:px-6 py-3.5 sm:py-5 h-auto text-sm sm:text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all inline-flex items-center justify-center gap-2.5 hover:scale-105 whitespace-nowrap"
                   >
                     <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white flex items-center justify-center shadow-sm">
                       <Play className="h-2.5 w-2.5 sm:h-2.5 sm:w-2.5 text-[#D50032] ml-0.5 fill-[#D50032]" />
@@ -1348,7 +1348,7 @@ export default function MarketingHome() {
                   <a
                     href="#"
                     onClick={handleDownloadClick}
-                    className="w-full sm:w-auto bg-[#D50032] hover:bg-black text-white rounded-xl sm:rounded-2xl px-5 sm:px-6 py-3.5 sm:py-5 h-auto text-sm sm:text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all inline-flex items-center justify-center gap-2.5 hover:scale-105 whitespace-nowrap"
+                    className="w-auto bg-[#D50032] hover:bg-black text-white rounded-xl sm:rounded-2xl px-5 sm:px-6 py-3.5 sm:py-5 h-auto text-sm sm:text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all inline-flex items-center justify-center gap-2.5 hover:scale-105 whitespace-nowrap"
                   >
                     <Download className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-white" />
                     {heroButtons.btn3_name || "Download Brochure"}
@@ -1888,7 +1888,9 @@ export default function MarketingHome() {
         )}
 
         {sectionVisibility.show_modules !== false && (
-          <ProgramModules apiCourses={apiCourses.length > 0 ? apiCourses : null} />
+          <ScrollReveal>
+            <ProgramModules apiCourses={apiCourses.length > 0 ? apiCourses : null} />
+          </ScrollReveal>
         )}
 
         {/* Program Benefits Section */}
@@ -1911,62 +1913,64 @@ export default function MarketingHome() {
             </div>
 
             {/* Marquee Wrapper */}
-            <div className="relative w-full flex overflow-x-hidden py-4">
-              <div className="animate-marquee flex gap-6 whitespace-nowrap" style={{ display: 'flex', minWidth: '100%' }}>
-                {benefitsList.concat(benefitsList).map((b, idx) => {
-                  const IconComponent = typeof b.icon === 'function' ? b.icon : (iconMap[b.icon] || BookOpen);
-                  return (
-                    <div
-                      key={idx}
-                      className="w-[280px] sm:w-[320px] p-6 bg-white border border-gray-100 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_40px_rgba(213,0,50,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex-shrink-0 flex flex-col group select-none whitespace-normal text-left"
-                    >
-                      <div className="flex items-start justify-between mb-5">
-                        {/* Number Badge */}
-                        <span className="text-2xl font-black text-[#D50032]/15 group-hover:text-[#D50032]/30 transition-colors duration-300">
-                          {b.num}
-                        </span>
-                        {/* Icon Box */}
-                        <div className="w-10 h-10 rounded-xl bg-[#D50032]/5 text-[#D50032] flex items-center justify-center shadow-sm border border-[#D50032]/10 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                          {typeof b.icon === 'string' && b.icon.startsWith("/uploads") ? (
-                            <img src={getImageUrl(b.icon)} alt={b.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <IconComponent className="h-5 w-5" />
-                          )}
+            <ScrollReveal>
+              <div className="relative w-full flex overflow-x-hidden py-4">
+                <div className="animate-marquee flex gap-6 whitespace-nowrap" style={{ display: 'flex', minWidth: '100%' }}>
+                  {benefitsList.concat(benefitsList).map((b, idx) => {
+                    const IconComponent = typeof b.icon === 'function' ? b.icon : (iconMap[b.icon] || BookOpen);
+                    return (
+                      <div
+                        key={idx}
+                        className="w-[280px] sm:w-[320px] p-6 bg-white border border-gray-100 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_40px_rgba(213,0,50,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex-shrink-0 flex flex-col group select-none whitespace-normal text-left"
+                      >
+                        <div className="flex items-start justify-between mb-5">
+                          {/* Number Badge */}
+                          <span className="text-2xl font-black text-[#D50032]/15 group-hover:text-[#D50032]/30 transition-colors duration-300">
+                            {b.num}
+                          </span>
+                          {/* Icon Box */}
+                          <div className="w-10 h-10 rounded-xl bg-[#D50032]/5 text-[#D50032] flex items-center justify-center shadow-sm border border-[#D50032]/10 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                            {typeof b.icon === 'string' && b.icon.startsWith("/uploads") ? (
+                              <img src={getImageUrl(b.icon)} alt={b.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <IconComponent className="h-5 w-5" />
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="font-extrabold text-gray-900 text-base sm:text-lg mb-2 group-hover:text-[#D50032] transition-colors duration-300">
+                            {b.title}
+                          </h3>
+                          <p className="text-gray-500 text-xs sm:text-sm leading-relaxed font-medium">
+                            {b.desc}
+                          </p>
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
 
-                      <div>
-                        <h3 className="font-extrabold text-gray-900 text-base sm:text-lg mb-2 group-hover:text-[#D50032] transition-colors duration-300">
-                          {b.title}
-                        </h3>
-                        <p className="text-gray-500 text-xs sm:text-sm leading-relaxed font-medium">
-                          {b.desc}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
+                <style>{`
+                @keyframes marquee {
+                  0% { transform: translate3d(0, 0, 0); }
+                  100% { transform: translate3d(-50%, 0, 0); }
+                }
+                .animate-marquee {
+                  animation: marquee 18s linear infinite;
+                }
+                .animate-marquee:hover {
+                  animation-play-state: paused;
+                }
+
+                @keyframes pathFlow {
+                  0% { stroke-dashoffset: var(--path-length); }
+                  50% { stroke-dashoffset: 0; }
+                  100% { stroke-dashoffset: var(--path-length); }
+                }
+              `}</style>
               </div>
-
-              <style>{`
-              @keyframes marquee {
-                0% { transform: translate3d(0, 0, 0); }
-                100% { transform: translate3d(-50%, 0, 0); }
-              }
-              .animate-marquee {
-                animation: marquee 18s linear infinite;
-              }
-              .animate-marquee:hover {
-                animation-play-state: paused;
-              }
-
-              @keyframes pathFlow {
-                0% { stroke-dashoffset: var(--path-length); }
-                50% { stroke-dashoffset: 0; }
-                100% { stroke-dashoffset: var(--path-length); }
-              }
-            `}</style>
-            </div>
+            </ScrollReveal>
           </section>
         )}
 
@@ -2165,57 +2169,63 @@ export default function MarketingHome() {
         {sectionVisibility.show_services !== false && (
           <section className="pt-6 pb-2 md:py-8 bg-transparent relative z-10 overflow-hidden border-t border-gray-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 text-center">
-              <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-4 border border-[#D50032]/20 bg-[#D50032]/5">
-                <span className="text-xs font-bold text-[#D50032] flex items-center gap-1">
-                  ⚙️ What We Offer
-                </span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4 text-gray-900 tracking-tight text-center uppercase">
-                Our <span className="text-[#D50032]">Services</span>
-              </h2>
-              <p className="text-base sm:text-lg text-gray-500 max-w-3xl mx-auto font-medium text-center leading-relaxed">
-                We provide dynamic, modern tools and programs to support your journey.
-              </p>
+              <ScrollReveal>
+                <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full mb-4 border border-[#D50032]/25 bg-[#D50032]/5">
+                  <span className="text-xs font-bold text-[#D50032] flex items-center gap-1">
+                    ⚙️ What We Offer
+                  </span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4 text-gray-900 tracking-tight text-center uppercase">
+                  Our <span className="text-[#D50032]">Services</span>
+                </h2>
+                <p className="text-base sm:text-lg text-gray-500 max-w-3xl mx-auto font-medium text-center leading-relaxed">
+                  We provide dynamic, modern tools and programs to support your journey.
+                </p>
+              </ScrollReveal>
             </div>
 
             {/* Single marquee */}
-            <div className="relative w-full flex flex-col gap-6 overflow-x-hidden py-4 select-none">
-              {/* Row 1 - Forward */}
-              <div className="animate-marquee flex gap-6 whitespace-nowrap" style={{ display: 'flex', minWidth: '100%' }}>
-                {servicesList.concat(servicesList).map((s, idx) => {
-                  const IconComponent = typeof s.icon === 'function' ? s.icon : (iconMap[s.icon] || UserCheck);
-                  return (
-                    <div
-                      key={idx}
-                      className="w-[280px] sm:w-[320px] p-6 bg-white border border-gray-100 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_40px_rgba(213,0,50,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex-shrink-0 flex flex-col group select-none whitespace-normal text-left"
-                    >
-                      <div className="w-12 h-12 rounded-2xl bg-[#FFF5F6] border border-[#D50032]/8 text-[#D50032] flex items-center justify-center mb-5 group-hover:scale-105 transition-transform duration-300 overflow-hidden">
-                        {typeof s.icon === 'string' && s.icon.startsWith("/uploads") ? (
-                          <img src={getImageUrl(s.icon)} alt={s.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <IconComponent className="h-6 w-6 stroke-[2.5]" />
-                        )}
-                      </div>
+            <ScrollReveal>
+              <div className="relative w-full flex flex-col gap-6 overflow-x-hidden py-4 select-none">
+                {/* Row 1 - Forward */}
+                <div className="animate-marquee flex gap-6 whitespace-nowrap" style={{ display: 'flex', minWidth: '100%' }}>
+                  {servicesList.concat(servicesList).map((s, idx) => {
+                    const IconComponent = typeof s.icon === 'function' ? s.icon : (iconMap[s.icon] || UserCheck);
+                    return (
+                      <div
+                        key={idx}
+                        className="w-[280px] sm:w-[320px] p-6 bg-white border border-gray-100 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_40px_rgba(213,0,50,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex-shrink-0 flex flex-col group select-none whitespace-normal text-left"
+                      >
+                        <div className="w-12 h-12 rounded-2xl bg-[#FFF5F6] border border-[#D50032]/8 text-[#D50032] flex items-center justify-center mb-5 group-hover:scale-105 transition-transform duration-300 overflow-hidden">
+                          {typeof s.icon === 'string' && s.icon.startsWith("/uploads") ? (
+                            <img src={getImageUrl(s.icon)} alt={s.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <IconComponent className="h-6 w-6 stroke-[2.5]" />
+                          )}
+                        </div>
 
-                      <div>
-                        <h3 className="font-extrabold text-gray-950 text-base sm:text-lg mb-2 group-hover:text-[#D50032] transition-colors duration-300">
-                          {s.title}
-                        </h3>
-                        <p className="text-gray-500 text-xs sm:text-sm leading-relaxed font-medium">
-                          {s.desc}
-                        </p>
+                        <div>
+                          <h3 className="font-extrabold text-gray-950 text-base sm:text-lg mb-2 group-hover:text-[#D50032] transition-colors duration-300">
+                            {s.title}
+                          </h3>
+                          <p className="text-gray-500 text-xs sm:text-sm leading-relaxed font-medium">
+                            {s.desc}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            </ScrollReveal>
           </section>
         )}
 
         {/* 4. Vertical Video Section */}
         {sectionVisibility.show_quick_tips !== false && (
-          <VerticalVideoSection videos={apiQuickTips} />
+          <ScrollReveal>
+            <VerticalVideoSection videos={apiQuickTips} />
+          </ScrollReveal>
         )}
 
         {/* 5. FinTrade Blog Section */}
@@ -2406,9 +2416,8 @@ export default function MarketingHome() {
                           if (blogTouchTimeoutRef.current) clearTimeout(blogTouchTimeoutRef.current);
                           blogTouchTimeoutRef.current = setTimeout(() => setIsBlogPaused(false), 8000);
                         }}
-                        className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                          isActive ? "w-5 bg-[#D50032]" : "w-1.5 bg-gray-300 hover:bg-gray-400"
-                        }`}
+                        className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${isActive ? "w-5 bg-[#D50032]" : "w-1.5 bg-gray-300 hover:bg-gray-400"
+                          }`}
                       />
                     );
                   })}
@@ -2420,17 +2429,23 @@ export default function MarketingHome() {
 
         {/* 6.5 Certification Section (Moved below Modules) */}
         {sectionVisibility.show_certificate !== false && (
-          <CertificatePreview certConfig={certConfig} />
+          <ScrollReveal>
+            <CertificatePreview certConfig={certConfig} />
+          </ScrollReveal>
         )}
 
         {/* EMI & Payment Plans Section */}
         {sectionVisibility.show_emi !== false && (
-          <EMIHighlight emiConfig={emiConfig} />
+          <ScrollReveal>
+            <EMIHighlight emiConfig={emiConfig} />
+          </ScrollReveal>
         )}
 
         {/* Placement & Career Opportunities Orbit Section */}
         {sectionVisibility.show_career_pathways !== false && (
-          <CareerPathways />
+          <ScrollReveal>
+            <CareerPathways />
+          </ScrollReveal>
         )}
 
         {/* 8. Why Choose FinTrade */}
@@ -2682,7 +2697,7 @@ export default function MarketingHome() {
             <DialogHeader>
               <DialogTitle>Register for {selectedLectureForReg?.title || "Live Class"}</DialogTitle>
               <DialogDescription>
-                {isRegOtpSent 
+                {isRegOtpSent
                   ? `Enter the 6-digit OTP sent to ${regForm.email}`
                   : "Please fill in your details to reserve your spot."}
               </DialogDescription>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, Outlet, useNavigate } from "react-router";
+import { Link, Outlet, useNavigate, useLocation } from "react-router";
 import { Search, Phone, Instagram, Facebook, Youtube, Linkedin, X, Download, UserCircle, Save, Mail, Smartphone, AlertTriangle, Menu, LogIn, BookOpen } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
@@ -16,6 +16,11 @@ export default function MarketingLayout() {
   const [showViolationModal, setShowViolationModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   // Search states and logic
   const [searchQuery, setSearchQuery] = useState("");
