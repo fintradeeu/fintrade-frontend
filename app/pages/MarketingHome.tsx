@@ -55,12 +55,14 @@ function ScrollReveal({
   children, 
   className = "", 
   delay = 0,
+  duration = 1.5,
   mobileDirection = "up",
   desktopDirection = "up"
 }: { 
   children: React.ReactNode; 
   className?: string; 
   delay?: number;
+  duration?: number;
   mobileDirection?: "up" | "down" | "left" | "right";
   desktopDirection?: "up" | "down" | "left" | "right";
 }) {
@@ -80,7 +82,7 @@ function ScrollReveal({
   const initial = {
     opacity: 0,
     x: dir === "left" ? -50 : dir === "right" ? 50 : 0,
-    y: dir === "up" ? 35 : dir === "down" ? -35 : 0
+    y: dir === "up" ? 20 : dir === "down" ? -20 : 0
   };
 
   return (
@@ -88,7 +90,7 @@ function ScrollReveal({
       initial={initial}
       whileInView={{ opacity: 1, x: 0, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay }}
+      transition={{ duration, ease: [0.16, 1, 0.3, 1], delay }}
       className={className}
     >
       {children}

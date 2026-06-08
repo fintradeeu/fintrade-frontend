@@ -18,13 +18,23 @@ const getImageUrl = (path?: string) => {
 
 
 // Reusable Framer Motion Scroll Reveal Component
-function ScrollReveal({ children, className = "", delay = 0 }: { children: any; className?: string; delay?: number }) {
+function ScrollReveal({ 
+  children, 
+  className = "", 
+  delay = 0,
+  duration = 1.5
+}: { 
+  children: any; 
+  className?: string; 
+  delay?: number;
+  duration?: number;
+}) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 35 }}
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay }}
+      transition={{ duration, ease: [0.16, 1, 0.3, 1], delay }}
       className={className}
     >
       {children}
