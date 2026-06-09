@@ -214,7 +214,7 @@ export default function MarketingLayout() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col font-sans" style={{ background: "radial-gradient(circle at 50% 50%, #FFFFFF 0%, #F8F8F8 50%, #F4F4F4 100%)" }}>
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col font-sans" style={{ background: "radial-gradient(circle at 50% 50%, #FFFFFF 0%, #F8F8F8 50%, #F4F4F4 100%)" }}>
 
       {/* Premium Preloader Intro Screen */}
       {shouldRenderLoader && (
@@ -366,7 +366,7 @@ export default function MarketingLayout() {
               <span className="text-gray-400 hidden sm:inline">Support & Info</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2">
                 {[
                   { icon: Instagram, href: "https://www.instagram.com/the.fintrade/", label: "Instagram" },
                   { icon: Facebook, href: "https://www.facebook.com/profile.php?id=61589528075521", label: "Facebook" },
@@ -379,9 +379,9 @@ export default function MarketingLayout() {
                   </a>
                 ))}
               </div>
-              <span className="text-gray-600">|</span>
+              <span className="text-gray-600 hidden sm:inline">|</span>
               <a href="#" className="flex items-center gap-2 text-gray-300 hover:text-[#D50032] transition-colors font-medium">
-                <Download className="h-4 w-4" /> Download App
+                <Download className="h-4 w-4" /> <span className="hidden xs:inline">Download App</span><span className="xs:hidden">App</span>
               </a>
             </div>
           </div>

@@ -973,7 +973,7 @@ export default function MarketingHome() {
 
 
                 {/* Main Headline */}
-                <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black mb-6 tracking-tight leading-none text-white font-sans max-w-4xl mx-auto uppercase whitespace-nowrap">
+                <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black mb-6 tracking-tight leading-none text-white font-sans max-w-4xl mx-auto uppercase sm:whitespace-nowrap">
                   India&apos;s Trading <span className="text-[#D50032]">Powerhouse</span>
                 </h1>
 
@@ -983,7 +983,7 @@ export default function MarketingHome() {
                 </p>
 
                 {/* Action Buttons Row */}
-                <div className="flex flex-row justify-center items-center gap-1.5 sm:gap-3 max-w-full mx-auto mb-6 flex-nowrap px-1">
+                <div className="flex flex-row flex-wrap justify-center items-center gap-1.5 sm:gap-3 max-w-full mx-auto mb-6 px-1">
                   <Link to="/courses" className="inline-block">
                     <Button
                       className="bg-[#D50032] hover:bg-black text-white rounded-lg sm:rounded-xl px-2.5 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs md:text-sm font-bold shadow-lg shadow-[#D50032]/20 transition-all hover:scale-105 whitespace-nowrap inline-flex items-center justify-center gap-1.5 sm:gap-2 border-0 cursor-pointer h-9 sm:h-11"
@@ -1052,7 +1052,7 @@ export default function MarketingHome() {
 
                   {/* Slider content wrapper */}
                   <div className="min-h-auto md:min-h-[110px] flex flex-col justify-center items-center px-4 sm:px-6">
-                    <h3 className="text-base xs:text-lg sm:text-2xl md:text-3.5xl font-black tracking-tight text-white mb-1.5 md:mb-2 leading-none font-sans whitespace-nowrap">
+                    <h3 className="text-base xs:text-lg sm:text-2xl md:text-3.5xl font-black tracking-tight text-white mb-1.5 md:mb-2 leading-none font-sans sm:whitespace-nowrap">
                       {slides[activeSlide].title}
                     </h3>
                     <p className="text-[10px] sm:text-xs md:text-sm text-gray-400 font-semibold mb-3 md:mb-6 max-w-lg">
