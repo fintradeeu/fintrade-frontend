@@ -1037,6 +1037,7 @@ export default function AdminCMS() {
                   {/* Custom Thumbnail Image Uploader */}
                   <div className="md:col-span-12">
                     <Label className="text-gray-700 font-bold">Class Thumbnail Image</Label>
+                    <p className="text-[10px] text-gray-500 mb-1">Recommended: Widescreen thumbnail (16:9 ratio), e.g., 1280x720 pixels.</p>
                     <div className="flex items-center gap-3 mt-2">
                       <Input
                         type="file"
@@ -1338,6 +1339,7 @@ export default function AdminCMS() {
               {/* Uploader Cert 1 */}
               <div>
                 <Label className="text-gray-700 font-bold">Certificate 1 Image</Label>
+                <p className="text-[10px] text-gray-500 mb-1">Recommended: Landscape certificate image (e.g. 1024x768 px).</p>
                 <div className="flex items-center gap-3 mt-1">
                   <Input
                     type="file"
@@ -1373,6 +1375,7 @@ export default function AdminCMS() {
               {/* Uploader Cert 2 */}
               <div>
                 <Label className="text-gray-700 font-bold">Certificate 2 Image</Label>
+                <p className="text-[10px] text-gray-500 mb-1">Recommended: Landscape certificate image (e.g. 1024x768 px).</p>
                 <div className="flex items-center gap-3 mt-1">
                   <Input
                     type="file"
@@ -2135,6 +2138,7 @@ export default function AdminCMS() {
 
                       <div className="flex flex-col gap-2">
                         <Label className="text-xs text-gray-500 font-bold">Custom Image Upload</Label>
+                        <p className="text-[10px] text-gray-400 font-normal">Recommended: Square logo/icon (1:1 ratio) with transparent background, e.g., 128x128 px.</p>
                         <div className="flex items-center gap-3">
                           <Input
                             key={benefit.icon}
@@ -2331,6 +2335,7 @@ export default function AdminCMS() {
 
                       <div className="flex flex-col gap-2">
                         <Label className="text-xs text-gray-500 font-bold">Custom Image Upload</Label>
+                        <p className="text-[10px] text-gray-400 font-normal">Recommended: Square logo/icon (1:1 ratio) with transparent background, e.g., 128x128 px.</p>
                         <div className="flex items-center gap-3">
                           <Input
                             key={service.icon}
@@ -2547,6 +2552,7 @@ export default function AdminCMS() {
                   {/* Thumbnail Uploader */}
                   <div className="md:col-span-6">
                     <Label htmlFor={`qt-thumb-${idx}`}>Thumbnail Image</Label>
+                    <p className="text-[10px] text-gray-500 mb-1">Recommended: Vertical short video thumbnail (9:16 ratio), e.g., 1080x1920 pixels.</p>
                     <Input
                       id={`qt-thumb-${idx}`}
                       type="file"
@@ -2735,6 +2741,7 @@ export default function AdminCMS() {
 
                       <div className="flex flex-col gap-2">
                         <Label className="text-xs text-gray-500 font-bold">Custom Image Upload</Label>
+                        <p className="text-[10px] text-gray-400 font-normal">Recommended: Square logo/icon (1:1 ratio) with transparent background, e.g., 128x128 px.</p>
                         <div className="flex items-center gap-3">
                           <Input
                             key={item.icon}
@@ -2917,10 +2924,14 @@ export default function AdminCMS() {
                   </div>
 
                   {/* Profile Image Uploader */}
-                  <div className="md:col-span-2">
-                    <Label>Profile Portrait</Label>
-                    <div className="flex items-center gap-2 mt-1">
+                  <div className="md:col-span-12 border-t border-gray-100 pt-4 mt-2">
+                    <Label className="text-gray-700 font-bold">Profile Portrait</Label>
+                    <p className="text-xs text-gray-500 mb-2">
+                      Recommended: Square image (1:1 aspect ratio), e.g., 512x512 pixels. Ensure the face is centered with some space (headroom padding) at the top so the head does not get cropped.
+                    </p>
+                    <div className="flex items-center gap-3">
                       <Input
+                        key={leader.profile_image}
                         type="file"
                         accept="image/*"
                         onChange={async (e) => {
@@ -2943,8 +2954,22 @@ export default function AdminCMS() {
                             showToast("Upload failed.", "error");
                           }
                         }}
-                        className="cursor-pointer h-10 py-1.5 text-xs flex-1"
+                        className="cursor-pointer h-10 py-1.5 text-xs flex-1 max-w-md"
                       />
+                      {leader.profile_image && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            const list = [...(config.leadership || [])];
+                            list[idx] = { ...list[idx], profile_image: "" };
+                            setConfig(p => ({ ...p, leadership: list }));
+                          }}
+                          className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 h-10 px-3 flex items-center gap-1.5"
+                        >
+                          <Trash2 size={14} /> Remove Image
+                        </Button>
+                      )}
                       {leader.profile_image && (
                         <div className="relative w-10 h-10 rounded-full overflow-hidden border border-gray-200 flex-shrink-0">
                           <img src={getImageUrl(leader.profile_image)} alt="preview" className="w-full h-full object-cover" />
