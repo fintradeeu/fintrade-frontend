@@ -332,13 +332,12 @@ export default function LoginPage() {
             <span>Back to Home</span>
           </Link>
           <div className="mb-8 flex flex-col gap-4">
-            <div className="flex items-center h-[85px] w-[240px] pb-3 overflow-hidden">
+            <div className="flex items-center h-[110px] w-[300px] overflow-hidden">
               <img
-                src={logo}
+                src="/fintrade_logo_dark.png"
                 alt="FinTrade"
-                className="h-full w-full object-contain scale-[3.5] -translate-x-4 -translate-y-1.5"
+                className="h-full w-full object-contain scale-[4.5] -translate-x-6 -translate-y-2"
                 style={{
-                  filter: "invert(1) hue-rotate(180deg) brightness(1.35) contrast(1.05) drop-shadow(0 4px 12px rgba(255,255,255,0.08))",
                   transformOrigin: "center center"
                 }}
               />

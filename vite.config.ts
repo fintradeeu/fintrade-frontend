@@ -13,6 +13,18 @@ try {
   // Silent fallback
 }
 
+try {
+  const filesToCleanup = ['remove_bg.py', 'success_log.txt', 'error_log.txt'];
+  filesToCleanup.forEach(file => {
+    const filePath = path.resolve(__dirname, file);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  });
+} catch (err) {
+  // Silent fallback
+}
+
 
 function figmaAssetResolver() {
   return {

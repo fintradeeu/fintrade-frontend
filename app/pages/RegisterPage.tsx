@@ -88,8 +88,17 @@ export default function RegisterPage() {
             <ArrowLeft size={20} />
             <span>Back to Home</span>
           </Link>
-          <div className="mb-8">
-            <img src={logo} alt="FinTrade" className="h-16 mb-6" />
+          <div className="mb-8 flex flex-col gap-4">
+            <div className="flex items-center h-[110px] w-[300px] overflow-hidden">
+              <img
+                src="/fintrade_logo_dark.png"
+                alt="FinTrade"
+                className="h-full w-full object-contain scale-[4.5] -translate-x-6 -translate-y-2"
+                style={{
+                  transformOrigin: "center center"
+                }}
+              />
+            </div>
             <p className="text-gray-300">Professional Trading Education Platform</p>
           </div>
           <h2 className="text-3xl font-bold mb-4">Start Your Journey</h2>
@@ -120,11 +129,22 @@ export default function RegisterPage() {
 
         {/* Right Side - Register Form */}
         <Card className="p-8 bg-white shadow-2xl border-none">
-          <div className="lg:hidden mb-6">
+          <div className="lg:hidden mb-6 flex justify-between items-center">
             <Link to="/" className="inline-flex items-center gap-2 hover:text-[#D50032] transition-colors" style={{ color: '#121212' }}>
               <ArrowLeft size={20} />
               <span>Back to Home</span>
             </Link>
+            <div className="flex items-center h-[30px] w-[100px] overflow-hidden">
+              <img
+                src={logo}
+                alt="FinTrade"
+                className="h-full w-full object-contain scale-[2.5] -translate-x-1"
+                style={{
+                  filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.08))",
+                  transformOrigin: "center center"
+                }}
+              />
+            </div>
           </div>
 
           <h2 className="text-3xl font-bold mb-2" style={{ color: '#121212' }}>Create an Account</h2>
