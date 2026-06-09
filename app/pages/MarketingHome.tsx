@@ -50,16 +50,16 @@ function AmbientGlow() {
 }
 
 // Reusable Framer Motion Scroll Reveal Component
-function ScrollReveal({ 
-  children, 
-  className = "", 
+function ScrollReveal({
+  children,
+  className = "",
   delay = 0,
   duration = 1.5,
   mobileDirection = "up",
   desktopDirection = "up"
-}: { 
-  children: React.ReactNode; 
-  className?: string; 
+}: {
+  children: React.ReactNode;
+  className?: string;
   delay?: number;
   duration?: number;
   mobileDirection?: "up" | "down" | "left" | "right";
@@ -952,9 +952,9 @@ export default function MarketingHome() {
               {heroBackgrounds.map((img, idx) => (
                 <div
                   key={img + "-" + idx}
-                  className="absolute inset-0 bg-cover bg-no-repeat bg-center transition-opacity duration-1000 ease-in-out"
+                  className="absolute inset-0 bg-contain bg-no-repeat bg-top transition-opacity duration-1000 ease-in-out"
                   style={{
-                    backgroundImage: `linear-gradient(to bottom, rgba(11, 15, 25, 0.3), rgba(11, 15, 25, 0.95)), url('${getBgImageUrl(img)}')`,
+                    backgroundImage: `linear-gradient(to bottom, rgba(11, 15, 25, 0), rgba(11, 15, 25, 0.95)), url('${getBgImageUrl(img)}')`,
                     opacity: currentBgIdx === idx ? 1 : 0,
                   }}
                 />
@@ -970,32 +970,25 @@ export default function MarketingHome() {
               <ScrollReveal>
 
                 {/* Top Pill Badge */}
-                <div className="inline-flex items-center px-4.5 py-1.5 rounded-full mb-6 border border-white/10 bg-white/5 backdrop-blur-md">
-                  <span className="w-2 h-2 rounded-full bg-[#D50032] mr-2 inline-block animate-pulse" />
-                  <span className="text-[10px] md:text-xs font-black tracking-widest uppercase text-white/80">
-                    India's First Structured Prop Trading Academy
-                  </span>
-                </div>
+
 
                 {/* Main Headline */}
-                <h1 className="text-4xl sm:text-5xl md:text-6.5xl font-black mb-6 tracking-tight leading-none text-white font-sans max-w-4xl mx-auto uppercase">
+                <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black mb-6 tracking-tight leading-none text-white font-sans max-w-4xl mx-auto uppercase whitespace-nowrap">
                   India&apos;s Trading <span className="text-[#D50032]">Powerhouse</span>
                 </h1>
 
                 {/* Subtitle */}
-                <p className="text-sm sm:text-base md:text-lg text-gray-300 max-w-3xl mx-auto leading-relaxed mb-10 font-medium">
+                <p className="text-xs sm:text-sm md:text-base text-gray-300 max-w-2xl mx-auto leading-relaxed mb-4 font-medium">
                   Learn to Earn — India's first structured Prop Trading Academy with paper trading capital. Build consistency, confidence, and profitability from basics to professional-level trading.
                 </p>
 
                 {/* Action Buttons Row */}
-                <div className="flex flex-row flex-wrap justify-center gap-3 sm:gap-4.5 max-w-4xl mx-auto mb-6">
-                  <Link to="/courses" className=" w-auto">
+                <div className="flex flex-row justify-center items-center gap-1.5 sm:gap-3 max-w-full mx-auto mb-6 flex-nowrap px-1">
+                  <Link to="/courses" className="inline-block">
                     <Button
-                      size="lg"
-                      className="w-full sm:w-auto bg-[#D50032] hover:bg-black text-white rounded-xl sm:rounded-2xl px-6 sm:px-8 py-3.5 sm:py-5 h-auto text-sm sm:text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all hover:scale-105 whitespace-nowrap"
+                      className="bg-[#D50032] hover:bg-black text-white rounded-lg sm:rounded-xl px-2.5 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs md:text-sm font-bold shadow-lg shadow-[#D50032]/20 transition-all hover:scale-105 whitespace-nowrap inline-flex items-center justify-center gap-1.5 sm:gap-2 border-0 cursor-pointer h-9 sm:h-11"
                     >
                       {heroButtons.btn1_name || "Apply Now"}
-                      <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
                   </Link>
 
@@ -1011,21 +1004,21 @@ export default function MarketingHome() {
                         setVideoOpen(true);
                       }
                     }}
-                    className=" sm:w-auto   bg-[#D50032] hover:bg-black text-white rounded-xl sm:rounded-2xl px-5 sm:px-6 py-3.5 sm:py-5 h-auto text-sm sm:text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all inline-flex items-center justify-center gap-2.5 hover:scale-105 whitespace-nowrap"
+                    className="bg-[#D50032] hover:bg-black text-white rounded-lg sm:rounded-xl px-2.5 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs md:text-sm font-bold shadow-lg shadow-[#D50032]/20 transition-all hover:scale-105 whitespace-nowrap inline-flex items-center justify-center gap-1.5 sm:gap-2 border-0 cursor-pointer h-9 sm:h-11"
                   >
-                    <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white flex items-center justify-center shadow-sm">
-                      <Play className="h-2.5 w-2.5 sm:h-2.5 sm:w-2.5 text-[#D50032] ml-0.5 fill-[#D50032]" />
+                    <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white flex items-center justify-center shadow-sm flex-shrink-0">
+                      <Play className="h-2 w-2 sm:h-2.5 sm:w-2.5 text-[#D50032] ml-0.5 fill-[#D50032]" />
                     </span>
-                    {heroButtons.btn2_name || "The FinTrade"}
+                    <span>{heroButtons.btn2_name || "The FinTrade"}</span>
                   </button>
 
                   <a
                     href="#"
                     onClick={handleDownloadClick}
-                    className="w-auto bg-[#D50032] hover:bg-black text-white rounded-xl sm:rounded-2xl px-5 sm:px-6 py-3.5 sm:py-5 h-auto text-sm sm:text-base font-bold shadow-lg shadow-[#D50032]/20 transition-all inline-flex items-center justify-center gap-2.5 hover:scale-105 whitespace-nowrap"
+                    className="bg-[#D50032] hover:bg-black text-white rounded-lg sm:rounded-xl px-2.5 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs md:text-sm font-bold shadow-lg shadow-[#D50032]/20 transition-all hover:scale-105 whitespace-nowrap inline-flex items-center justify-center gap-1.5 sm:gap-2 border-0 cursor-pointer h-9 sm:h-11 text-center"
                   >
-                    <Download className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-white" />
-                    {heroButtons.btn3_name || "Download Brochure"}
+                    <Download className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5 text-white flex-shrink-0" />
+                    <span>{heroButtons.btn3_name || "Download Brochure"}</span>
                   </a>
                 </div>
 
@@ -1052,25 +1045,24 @@ export default function MarketingHome() {
                 )}
 
                 {/* Start Your Trading Career Slider Card */}
-                <div className="relative max-w-4xl mx-auto mt-2 bg-[#131b2e]/40 border border-white/10 rounded-[24px] sm:rounded-[32px] p-6 pt-10 md:p-10 text-center shadow-[0_30px_70px_rgba(0,0,0,0.4)] overflow-hidden select-none backdrop-blur-xl">
+                <div className="relative max-w-4xl mx-auto mt-2 bg-[#131b2e]/40 border border-white/10 rounded-[24px] sm:rounded-[32px] p-4 pt-6 md:p-10 text-center shadow-[0_30px_70px_rgba(0,0,0,0.4)] overflow-hidden select-none backdrop-blur-xl">
 
                   {/* Subtle Red Top Accent Bar */}
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 sm:w-28 h-1 sm:h-1.5 bg-[#D50032] rounded-b-full shadow-[0_0_15px_#D50032]" />
 
                   {/* Slider content wrapper */}
-                  <div className="min-h-[110px] flex flex-col justify-center items-center px-4 sm:px-6">
-                    <h3 className="text-2xl md:text-3.5xl font-black tracking-tight text-white mb-2 leading-none font-sans">
+                  <div className="min-h-auto md:min-h-[110px] flex flex-col justify-center items-center px-4 sm:px-6">
+                    <h3 className="text-base xs:text-lg sm:text-2xl md:text-3.5xl font-black tracking-tight text-white mb-1.5 md:mb-2 leading-none font-sans whitespace-nowrap">
                       {slides[activeSlide].title}
                     </h3>
-                    <p className="text-xs sm:text-sm text-gray-400 font-semibold mb-6 max-w-lg">
+                    <p className="text-[10px] sm:text-xs md:text-sm text-gray-400 font-semibold mb-3 md:mb-6 max-w-lg">
                       {slides[activeSlide].subtitle}
                     </p>
                     <Link to={slides[activeSlide].link}>
                       <Button
-                        className="bg-[#D50032] hover:bg-black text-white rounded-xl px-7 py-3 h-auto text-xs md:text-sm font-bold shadow-md shadow-[#D50032]/10 transition-all hover:scale-105"
+                        className="bg-[#D50032] hover:bg-black text-white rounded-lg sm:rounded-xl px-4 sm:px-5 py-2 sm:py-2 text-[10px] sm:text-xs md:text-sm font-bold shadow-md shadow-[#D50032]/10 transition-all hover:scale-105 h-8 sm:h-10 border-0 cursor-pointer"
                       >
                         {slides[activeSlide].buttonText}
-                        <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                       </Button>
                     </Link>
                   </div>
@@ -1096,7 +1088,7 @@ export default function MarketingHome() {
                   </button>
 
                   {/* Slider Pagination Dots */}
-                  <div className="flex justify-center items-center gap-1.5 mt-8">
+                  <div className="flex justify-center items-center gap-1.5 mt-4 md:mt-8">
                     {slides.map((_, dotIdx) => (
                       <button
                         key={dotIdx}
@@ -1376,11 +1368,10 @@ export default function MarketingHome() {
                           });
                         }
                       }}
-                      className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                        activeCourseIdx === idx 
-                          ? "bg-[#D50032] w-6" 
-                          : "bg-[#D50032]/20 w-2.5 hover:bg-[#D50032]/40"
-                      }`}
+                      className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${activeCourseIdx === idx
+                        ? "bg-[#D50032] w-6"
+                        : "bg-[#D50032]/20 w-2.5 hover:bg-[#D50032]/40"
+                        }`}
                       aria-label={`Go to slide ${idx + 1}`}
                     />
                   ))}
@@ -1969,49 +1960,59 @@ export default function MarketingHome() {
                     {marketUpdates.length > 0 ? (
                       <Card
                         onClick={() => { setActiveVideoIdx(0); setVideoOpen(true); }}
-                        className="overflow-hidden border-0 shadow-md relative group h-full flex flex-col cursor-pointer"
+                        className="flex-1 flex flex-col overflow-hidden border-0 shadow-md relative group cursor-pointer"
                       >
-                        <div className="relative flex-1 min-h-[180px]">
+                        <div className="aspect-[16/10] overflow-hidden relative bg-gray-100 flex items-center justify-center">
                           <img
                             src={getImageUrl(marketUpdates[0].thumbnail_url) || "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80"}
                             className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                             alt={marketUpdates[0].title}
                           />
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <div className="absolute inset-0 bg-black/45 flex items-center justify-center group-hover:bg-black/35 transition-colors">
                             <div className="w-14 h-14 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl" style={{ background: "#D50032", boxShadow: "0 0 30px rgba(213,0,50,0.5)" }}>
-                              <Play className="h-5 w-5 text-white ml-0.5" />
+                              <Play className="h-5 w-5 text-white ml-0.5 fill-white" />
                             </div>
                           </div>
                         </div>
-                        <div className="p-4 bg-white">
+                        <div className="p-4 bg-white flex flex-col flex-1">
                           <div className="flex items-center justify-between text-[11px] text-gray-500 mb-1.5">
                             <span className="flex items-center gap-1"><Video size={12} /> Video</span>
                             <span>10 min watch</span>
                           </div>
-                          <h3 className="text-base font-bold mb-1" style={{ color: "#121212" }}>{marketUpdates[0].title}</h3>
-                          <p className="text-xs text-gray-500 line-clamp-2">{marketUpdates[0].description || marketUpdates[0].content}</p>
+                          <h3 className="font-bold text-sm mb-2 line-clamp-2 hover:text-[#D50032] transition-colors" style={{ color: "#121212" }}>{marketUpdates[0].title}</h3>
+                          <p className="text-xs text-gray-500 line-clamp-2 mb-3 flex-1">{marketUpdates[0].description || marketUpdates[0].content}</p>
+                          <div className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all mt-auto self-start">
+                            Watch Video <ChevronRight size={16} />
+                          </div>
                         </div>
                       </Card>
                     ) : (
                       <Card
                         onClick={() => { setActiveVideoIdx(0); setVideoOpen(true); }}
-                        className="overflow-hidden border-0 shadow-md relative group h-full flex flex-col cursor-pointer"
+                        className="flex-1 flex flex-col overflow-hidden border-0 shadow-md relative group cursor-pointer"
                       >
-                        <div className="relative flex-1 min-h-[180px]">
+                        <div className="aspect-[16/10] overflow-hidden relative bg-gray-100 flex items-center justify-center">
                           <img
                             src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80"
                             className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                             alt="Featured Video"
                           />
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <div className="absolute inset-0 bg-black/45 flex items-center justify-center group-hover:bg-black/35 transition-colors">
                             <div className="w-14 h-14 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl" style={{ background: "#D50032", boxShadow: "0 0 30px rgba(213,0,50,0.5)" }}>
-                              <Play className="h-5 w-5 text-white ml-0.5" />
+                              <Play className="h-5 w-5 text-white ml-0.5 fill-white" />
                             </div>
                           </div>
                         </div>
-                        <div className="p-4 bg-white">
-                          <h3 className="text-base font-bold mb-1" style={{ color: "#121212" }}>FinTrade: Master the Market Dynamics</h3>
-                          <p className="text-xs text-gray-500">Watch our exclusive masterclass on market analysis and risk management techniques for 2026.</p>
+                        <div className="p-4 bg-white flex flex-col flex-1">
+                          <div className="flex items-center justify-between text-[11px] text-gray-500 mb-1.5">
+                            <span className="flex items-center gap-1"><Video size={12} /> Video</span>
+                            <span>15 min watch</span>
+                          </div>
+                          <h3 className="font-bold text-sm mb-2 line-clamp-2 hover:text-[#D50032] transition-colors" style={{ color: "#121212" }}>FinTrade: Master the Market Dynamics</h3>
+                          <p className="text-xs text-gray-500 line-clamp-2 mb-3 flex-1">Watch our exclusive masterclass on market analysis and risk management techniques for 2026.</p>
+                          <div className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all mt-auto self-start">
+                            Watch Video <ChevronRight size={16} />
+                          </div>
                         </div>
                       </Card>
                     )}
