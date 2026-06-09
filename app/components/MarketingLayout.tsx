@@ -9,6 +9,7 @@ import { Label } from "./ui/label";
 import logo from "../../imports/fintrade_logo.png";
 import api from "../services/api";
 import { motion, AnimatePresence } from "motion/react";
+import TickerStrip from "./TickerStrip";
 
 export default function MarketingLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -18,6 +19,22 @@ export default function MarketingLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const [showAnnouncements, setShowAnnouncements] = useState(true);
+
+  useEffect(() => {
+    const fetchVisibility = async () => {
+      try {
+        const res = await api.get("/settings/landing-page");
+        if (res.data && res.data.section_visibility) {
+          setShowAnnouncements(res.data.section_visibility.show_announcements !== false);
+        }
+      } catch (err) {
+        console.error("Failed to fetch section visibility", err);
+      }
+    };
+    fetchVisibility();
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -371,6 +388,9 @@ export default function MarketingLayout() {
         </div>
       </div>
 
+      {/* Ticker Strip */}
+      {showAnnouncements && <TickerStrip />}
+
       {/* Navbar */}
       <nav className="sticky top-0 z-[100] bg-white/90 border-b border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.05)] backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -380,7 +400,7 @@ export default function MarketingLayout() {
                 <img
                   src={logo}
                   alt="FinTrade"
-                  className="h-10 w-auto object-contain scale-[1.5] md:scale-[1.8] origin-left"
+                  className="h-12 w-auto object-contain scale-[2.4] md:scale-[2.8] origin-left"
                   style={{
                     filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.08))"
                   }}

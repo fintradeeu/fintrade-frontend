@@ -9,7 +9,6 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../components/ui/input-otp";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../components/ui/accordion";
-import TickerStrip from "../components/TickerStrip";
 import ShareButton from "../components/ShareButton";
 import StudentStats from "../components/home/StudentStats";
 import VerticalVideoSection from "../components/home/VerticalVideoSection";
@@ -939,12 +938,6 @@ export default function MarketingHome() {
         </div>
       )}
 
-      {/* Ticker Strip - Positioned directly after header in normal flow */}
-      {sectionVisibility.show_announcements !== false && (
-        <div className="sticky top-[80px] z-[90] bg-[#121212]">
-          <TickerStrip />
-        </div>
-      )}
 
       <div className="relative z-[50]">
 
