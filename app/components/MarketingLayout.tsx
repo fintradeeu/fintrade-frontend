@@ -388,9 +388,6 @@ export default function MarketingLayout() {
         </div>
       </div>
 
-      {/* Ticker Strip */}
-      {showAnnouncements && <TickerStrip />}
-
       {/* Navbar */}
       <nav className="sticky top-0 z-[100] bg-white/90 border-b border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.05)] backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -452,6 +449,13 @@ export default function MarketingLayout() {
           </div>
         </div>
       </nav>
+
+      {/* Ticker Strip */}
+      {showAnnouncements && (
+        <div className="sticky top-[80px] z-[90] bg-[#121212]">
+          <TickerStrip />
+        </div>
+      )}
 
       {/* Mobile Navigation Drawer */}
       <div
