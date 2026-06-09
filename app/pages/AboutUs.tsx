@@ -50,6 +50,7 @@ export default function AboutUs() {
   const [dynamicText, setDynamicText] = useState<string[]>([]);
   const [dynamicVision, setDynamicVision] = useState<any>(null);
   const [dynamicMission, setDynamicMission] = useState<any>(null);
+  const [dynamicLeaders, setDynamicLeaders] = useState<any[]>([]);
   
   useEffect(() => {
     api.get("/settings/about-us").then(res => {
@@ -85,6 +86,11 @@ export default function AboutUs() {
             text: mission.content || mission.text || "",
             bullets: mission.bullets || []
           });
+        }
+
+        const leadership = res.data.leadership;
+        if (leadership?.length > 0) {
+          setDynamicLeaders(leadership);
         }
       }
     }).catch(console.error);
@@ -304,7 +310,7 @@ export default function AboutUs() {
         {/* Leadership Section */}
         <ScrollReveal>
           <div className="border-t border-gray-100 pt-12">
-            <ExpertProfile />
+            <ExpertProfile leaders={dynamicLeaders} />
           </div>
         </ScrollReveal>
 

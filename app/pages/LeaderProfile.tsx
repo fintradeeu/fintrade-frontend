@@ -1,10 +1,77 @@
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router";
 import { ArrowLeft } from "lucide-react";
-import { leaders } from "../data/leaders";
+import { leaders as staticLeaders } from "../data/leaders";
+import api from "../services/api";
+
+const getImageUrl = (path?: string) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
+  const base = api.defaults.baseURL || "";
+  const cleanBase = base.endsWith("/") ? base.slice(0, -1) : base;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `${cleanBase}${cleanPath}`;
+};
+
+const getLeaderId = (leader: any) => {
+  if (leader.id) return leader.id;
+  if (leader.name) {
+    return leader.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-");
+  }
+  return "";
+};
 
 export default function LeaderProfile() {
   const { id } = useParams();
-  const leader = leaders.find((l) => l.id === id);
+  const [leader, setLeader] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get("/settings/about-us")
+      .then((res) => {
+        const leadership = res.data?.leadership || [];
+        let found = leadership.find((l: any) => getLeaderId(l) === id);
+
+        if (!found) {
+          found = staticLeaders.find((l) => getLeaderId(l) === id);
+        }
+
+        if (found) {
+          const imagePath = found.profile_image || found.image;
+          const imageUrl = imagePath 
+            ? getImageUrl(imagePath) 
+            : `https://ui-avatars.com/api/?name=${encodeURIComponent(found.name || found.monogram || "FT")}&background=FFF0F2&color=D50032&size=512&font-size=0.33&bold=true`;
+
+          setLeader({
+            ...found,
+            id: getLeaderId(found),
+            role: found.role || found.title || "Leadership",
+            image: imageUrl,
+            fullBio: found.fullBio || found.bio || "",
+            tags: found.tags || []
+          });
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch leaders dynamically", err);
+        const found = staticLeaders.find((l) => getLeaderId(l) === id);
+        if (found) {
+          setLeader(found);
+        }
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
+        <div className="w-12 h-12 rounded-full border-4 border-[#D50032]/20 border-t-[#D50032] animate-spin mb-4" />
+        <p className="text-gray-500 font-medium text-sm">Loading profile...</p>
+      </div>
+    );
+  }
 
   if (!leader) {
     return (
@@ -57,7 +124,7 @@ export default function LeaderProfile() {
             <div>
               <h3 className="font-black text-gray-900 mb-4 text-sm tracking-widest uppercase text-gray-400">Expertise & Achievements</h3>
               <div className="flex flex-wrap gap-3">
-                {leader.tags.map((tag, tIdx) => (
+                {leader.tags.map((tag: string, tIdx: number) => (
                   <span key={tIdx} className="px-4 py-2 rounded-full text-sm font-bold text-gray-700 bg-gray-50 border border-gray-100 shadow-sm">
                     {tag}
                   </span>
