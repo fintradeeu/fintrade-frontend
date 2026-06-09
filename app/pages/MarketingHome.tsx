@@ -948,11 +948,11 @@ export default function MarketingHome() {
             style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }}
           >
             {/* Auto Slider Background */}
-            <div className="absolute inset-0 z-0">
+            <div className="absolute top-0 left-0 right-0 h-[240px] md:h-[400px] z-0 overflow-hidden">
               {heroBackgrounds.map((img, idx) => (
                 <div
                   key={img + "-" + idx}
-                  className="absolute inset-0 bg-contain md:bg-cover bg-no-repeat bg-top transition-opacity duration-1000 ease-in-out"
+                  className="absolute inset-0 bg-cover bg-no-repeat bg-top transition-opacity duration-1000 ease-in-out"
                   style={{
                     backgroundImage: `linear-gradient(to bottom, rgba(11, 15, 25, 0), rgba(11, 15, 25, 0.95)), url('${getBgImageUrl(img)}')`,
                     opacity: currentBgIdx === idx ? 1 : 0,
