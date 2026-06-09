@@ -2137,6 +2137,7 @@ export default function AdminCMS() {
                         <Label className="text-xs text-gray-500 font-bold">Custom Image Upload</Label>
                         <div className="flex items-center gap-3">
                           <Input
+                            key={benefit.icon}
                             type="file"
                             accept="image/*"
                             onChange={async (e) => {
@@ -2163,7 +2164,21 @@ export default function AdminCMS() {
                             className="flex-1 cursor-pointer h-10 py-1.5"
                           />
                           {benefit.icon.startsWith("/uploads") && (
-                            <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-gray-200">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                const list = [...(config.benefits || [])];
+                                list[idx] = { ...list[idx], icon: "BookOpen" };
+                                setConfig(p => ({ ...p, benefits: list }));
+                              }}
+                              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 h-10 px-3 flex items-center gap-1.5"
+                            >
+                              <Trash2 size={14} /> Remove Image
+                            </Button>
+                          )}
+                          {benefit.icon.startsWith("/uploads") && (
+                            <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
                               <img src={getImageUrl(benefit.icon)} alt="icon preview" className="w-full h-full object-cover" />
                             </div>
                           )}
@@ -2318,6 +2333,7 @@ export default function AdminCMS() {
                         <Label className="text-xs text-gray-500 font-bold">Custom Image Upload</Label>
                         <div className="flex items-center gap-3">
                           <Input
+                            key={service.icon}
                             type="file"
                             accept="image/*"
                             onChange={async (e) => {
@@ -2344,7 +2360,21 @@ export default function AdminCMS() {
                             className="flex-1 cursor-pointer h-10 py-1.5"
                           />
                           {service.icon.startsWith("/uploads") && (
-                            <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-gray-200">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                const list = [...(config.services || [])];
+                                list[idx] = { ...list[idx], icon: "UserCheck" };
+                                setConfig(p => ({ ...p, services: list }));
+                              }}
+                              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 h-10 px-3 flex items-center gap-1.5"
+                            >
+                              <Trash2 size={14} /> Remove Image
+                            </Button>
+                          )}
+                          {service.icon.startsWith("/uploads") && (
+                            <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
                               <img src={getImageUrl(service.icon)} alt="icon preview" className="w-full h-full object-cover" />
                             </div>
                           )}
@@ -2707,6 +2737,7 @@ export default function AdminCMS() {
                         <Label className="text-xs text-gray-500 font-bold">Custom Image Upload</Label>
                         <div className="flex items-center gap-3">
                           <Input
+                            key={item.icon}
                             type="file"
                             accept="image/*"
                             onChange={async (e) => {
@@ -2733,7 +2764,21 @@ export default function AdminCMS() {
                             className="flex-1 cursor-pointer h-10 py-1.5"
                           />
                           {item.icon.startsWith("/uploads") && (
-                            <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-gray-200">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                const list = [...(config.why_choose || [])];
+                                list[idx] = { ...list[idx], icon: "Brain" };
+                                setConfig(p => ({ ...p, why_choose: list }));
+                              }}
+                              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 h-10 px-3 flex items-center gap-1.5"
+                            >
+                              <Trash2 size={14} /> Remove Image
+                            </Button>
+                          )}
+                          {item.icon.startsWith("/uploads") && (
+                            <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
                               <img src={getImageUrl(item.icon)} alt="icon preview" className="w-full h-full object-cover" />
                             </div>
                           )}
