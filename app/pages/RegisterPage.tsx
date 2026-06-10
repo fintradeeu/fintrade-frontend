@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { GoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin } from "@react-oauth/google";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -19,6 +19,36 @@ export default function RegisterPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const googleRegister = useGoogleLogin({
+    flow: "implicit",
+    scope: [
+      "openid",
+      "email",
+      "profile",
+      "https://www.googleapis.com/auth/user.phonenumbers.read",
+      "https://www.googleapis.com/auth/user.addresses.read",
+    ].join(" "),
+    onSuccess: async (tokenResponse) => {
+      setErrorMsg("");
+      setLoading(true);
+
+      try {
+        const response = await api.post("/auth/google", {
+          access_token: tokenResponse.access_token,
+        });
+        const { access_token, user } = response.data;
+        localStorage.setItem("token", access_token);
+        localStorage.setItem("user", JSON.stringify(user));
+        navigate("/");
+      } catch (err: any) {
+        setErrorMsg(err.response?.data?.detail || "Google sign-in failed. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: () => setErrorMsg("Google sign-in failed. Please try again."),
+  });
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,25 +79,6 @@ export default function RegisterPage() {
         }
       }
       setErrorMsg(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleSuccess = async (credentialResponse: any) => {
-    setErrorMsg("");
-    setLoading(true);
-    try {
-      const response = await api.post("/auth/google", {
-        token: credentialResponse.credential,
-        phone,
-      });
-      const { access_token, user } = response.data;
-      localStorage.setItem("token", access_token);
-      localStorage.setItem("user", JSON.stringify(user));
-      navigate("/");
-    } catch (err: any) {
-      setErrorMsg(err.response?.data?.detail || "Google sign-in failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -261,15 +272,16 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div className="flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => setErrorMsg("Google sign-in failed. Please try again.")}
-              size="large"
-              width="100%"
-              text="signup_with"
-            />
-          </div>
+          <Button
+            type="button"
+            className="w-full text-white shadow-lg"
+            style={{ background: "#121212", boxShadow: "0 0 20px rgba(18,18,18,0.18)" }}
+            size="lg"
+            disabled={loading}
+            onClick={() => googleRegister()}
+          >
+            {loading ? "Signing in..." : "Sign up with Google"}
+          </Button>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
