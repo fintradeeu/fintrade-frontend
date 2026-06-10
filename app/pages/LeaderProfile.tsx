@@ -7,6 +7,7 @@ import api from "../services/api";
 const getImageUrl = (path?: string) => {
   if (!path) return "";
   if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
+  if (path === "/shankar_goenka.png") return path;
   const base = api.defaults.baseURL || "";
   const cleanBase = base.endsWith("/") ? base.slice(0, -1) : base;
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
@@ -107,8 +108,8 @@ export default function LeaderProfile() {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <h1 className="text-3xl font-black text-gray-900 mb-4">Leader Not Found</h1>
-        <Link to="/about" className="text-[#D50032] font-bold hover:underline flex items-center gap-2">
-          <ArrowLeft className="w-4 h-4" /> Back to About Us
+        <Link to="/our-advisors" className="text-[#D50032] font-bold hover:underline flex items-center gap-2">
+          <ArrowLeft className="w-4 h-4" /> Back to Advisors
         </Link>
       </div>
     );
@@ -119,9 +120,9 @@ export default function LeaderProfile() {
   return (
     <div className="bg-white min-h-screen relative pt-24 pb-20 select-none">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link to="/about" className="inline-flex items-center gap-2 text-gray-500 hover:text-[#D50032] transition-colors font-bold text-sm mb-10 group">
+        <Link to="/our-advisors" className="inline-flex items-center gap-2 text-gray-500 hover:text-[#D50032] transition-colors font-bold text-sm mb-10 group">
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          Back to Team
+          Back to Advisors
         </Link>
 
         <div className="flex flex-col md:flex-row gap-12 lg:gap-20 items-start">

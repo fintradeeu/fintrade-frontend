@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router";
+import { ArrowRight } from "lucide-react";
 import { leaders as staticLeaders } from "../data/leaders";
 import api from "../services/api";
 
 const getImageUrl = (path?: string) => {
   if (!path) return "";
   if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
+  if (path === "/shankar_goenka.png") return path;
   const base = api.defaults.baseURL || "";
   const cleanBase = base.endsWith("/") ? base.slice(0, -1) : base;
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
@@ -19,74 +22,45 @@ const getLeaderId = (leader: any) => {
   return "";
 };
 
-const getInitials = (name?: string) => {
-  if (!name) return "HV";
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-};
-
 export default function OurAdvisors() {
-  const [leader, setLeader] = useState<any>(null);
+  const [advisors, setAdvisors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api.get("/settings/about-us")
       .then((res) => {
         const leadership = res.data?.leadership || [];
-        let found: any = leadership.find(
-          (l: any) => getLeaderId(l) === "het-vyas" || (l.name && l.name.toLowerCase().includes("het vyas"))
-        );
-
-        const staticFound = staticLeaders.find((l) => getLeaderId(l) === "het-vyas") as any;
-
-        if (!found) {
-          found = staticFound;
-        }
-
-        if (found) {
-          const imagePath = found.profile_image || found.image || (staticFound && (staticFound.profile_image || staticFound.image));
+        // Combine static leaders with dynamic configurations
+        const list = staticLeaders.map((sl: any) => {
+          const dl = leadership.find((l: any) => getLeaderId(l) === sl.id);
+          if (!dl) return sl;
+          const imagePath = dl.profile_image || dl.image || sl.profile_image || sl.image;
           const imageUrl = imagePath 
             ? getImageUrl(imagePath) 
-            : `https://ui-avatars.com/api/?name=${encodeURIComponent(found.name || found.monogram || "HV")}&background=FFF0F2&color=D50032&size=512&font-size=0.33&bold=true`;
+            : `https://ui-avatars.com/api/?name=${encodeURIComponent(dl.name || sl.name || "FT")}&background=FFF0F2&color=D50032&size=512&font-size=0.33&bold=true`;
 
-          const rawTags = found.tags || (staticFound && staticFound.tags) || [];
+          const rawTags = dl.tags || sl.tags || [];
           const parsedTags = Array.isArray(rawTags)
             ? rawTags
             : typeof rawTags === "string"
               ? rawTags.split(",").map((t: string) => t.trim()).filter(Boolean)
               : [];
 
-          setLeader({
-            ...staticFound,
-            ...found,
-            id: getLeaderId(found),
-            role: found.role || found.title || (staticFound && (staticFound.role || staticFound.title)) || "Founder & COO",
+          return {
+            ...sl,
+            ...dl,
+            id: sl.id,
             image: imageUrl,
-            fullBio: found.fullBio || found.bio || (staticFound && (staticFound.fullBio || staticFound.bio)) || "",
-            tags: parsedTags,
-            initials: found.initials || (staticFound && staticFound.initials) || getInitials(found.name)
-          });
-        }
+            role: dl.role || dl.title || sl.role,
+            fullBio: dl.fullBio || dl.bio || sl.fullBio,
+            tags: parsedTags
+          };
+        });
+        setAdvisors(list);
       })
       .catch((err) => {
-        console.error("Failed to fetch dynamic advisor data", err);
-        const found = staticLeaders.find((l) => getLeaderId(l) === "het-vyas") as any;
-        if (found) {
-          setLeader({
-            ...found,
-            id: getLeaderId(found),
-            role: found.role || found.title || "Founder & COO",
-            image: found.image || "",
-            fullBio: found.fullBio || found.bio || "",
-            tags: Array.isArray(found.tags) ? found.tags : [],
-            initials: found.initials || getInitials(found.name)
-          });
-        }
+        console.error("Failed to fetch dynamic advisors list", err);
+        setAdvisors(staticLeaders);
       })
       .finally(() => {
         setLoading(false);
@@ -97,74 +71,74 @@ export default function OurAdvisors() {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
         <div className="w-12 h-12 rounded-full border-4 border-[#D50032]/20 border-t-[#D50032] animate-spin mb-4" />
-        <p className="text-gray-500 font-medium text-sm">Loading advisor profile...</p>
+        <p className="text-gray-500 font-medium text-sm">Loading advisors...</p>
       </div>
     );
   }
-
-  if (!leader) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <h1 className="text-3xl font-black text-gray-900 mb-4">Advisor Not Found</h1>
-      </div>
-    );
-  }
-
-  const isMonogram = !leader.profile_image && (!leader.image || leader.image.includes("ui-avatars.com"));
 
   return (
     <div className="bg-white min-h-screen relative pt-24 pb-20 select-none">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row gap-12 lg:gap-20 items-start">
-          {/* Big Image/Monogram Section */}
-          <div className="w-full md:w-1/3 flex-shrink-0">
-            {isMonogram ? (
-              <div className="w-full aspect-square rounded-[32px] bg-[#FFF0F2] flex items-center justify-center shadow-lg relative border border-[#D50032]/5 select-none">
-                <span className="text-[#D50032] font-semibold text-[8rem] sm:text-[10rem] md:text-[6rem] lg:text-[8rem] xl:text-[10rem] leading-none tracking-tight">
-                  {leader.initials || "HV"}
-                </span>
-              </div>
-            ) : (
-              <div className="w-full aspect-[4/5] rounded-[32px] overflow-hidden shadow-2xl relative group bg-gray-100 border border-gray-100">
-                <img 
-                  src={leader.image} 
-                  alt={leader.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 border-2 border-white/20 rounded-[32px] pointer-events-none" />
-              </div>
-            )}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Section Header */}
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-1.5 px-4.5 py-1.5 rounded-full mb-4 border border-[#D50032]/25 bg-[#D50032]/5">
+            <span className="text-[#D50032] font-black text-xs tracking-wider uppercase">
+              👥 Our Advisors
+            </span>
           </div>
+          <h2 className="text-3xl md:text-5xl font-black mb-4 text-gray-900 tracking-tight">
+            Meet Our <span className="text-[#D50032]">Advisors</span>
+          </h2>
+          <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto font-medium">
+            Renowned experts guiding FinTrade's academic structure and strategic vision
+          </p>
+        </div>
 
-          {/* Details Section */}
-          <div className="flex-1 pt-4">
-            <div className="inline-flex items-center gap-1.5 px-4.5 py-1.5 rounded-full mb-6 border border-[#D50032]/25 bg-[#D50032]/5">
-              <span className="text-[#D50032] font-bold text-xs tracking-wider uppercase">
-                {leader.role}
-              </span>
-            </div>
-            
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#0B2A5B] mb-6 tracking-tight">
-              {leader.name}
-            </h1>
+        {/* Advisors Grid - 4 Columns */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 max-w-7xl mx-auto select-none">
+          {advisors.map((leader, i) => {
+            const leaderId = leader.id;
+            const isMonogram = !leader.profile_image && (!leader.image || leader.image.includes("ui-avatars.com"));
+            const initials = leader.initials || "FT";
 
-            <p className="text-lg md:text-xl text-gray-600 leading-relaxed font-medium mb-10">
-              {leader.fullBio}
-            </p>
+            return (
+              <div 
+                key={i} 
+                className="p-5 bg-white border border-gray-100 rounded-[28px] shadow-[0_10px_35px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex flex-col justify-between group"
+              >
+                <div>
+                  <div className="mb-6 overflow-hidden rounded-[20px] w-full aspect-square bg-gray-50 flex items-center justify-center border border-gray-100 relative group-hover:border-[#D50032]/20 transition-colors">
+                    {isMonogram ? (
+                      <div className="w-full h-full bg-[#FFF0F2] flex items-center justify-center select-none">
+                        <span className="text-[#D50032] font-bold text-5xl tracking-tight">
+                          {initials}
+                        </span>
+                      </div>
+                    ) : (
+                      <img 
+                        src={leader.image} 
+                        alt={leader.name} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      />
+                    )}
+                  </div>
+                  
+                  <div className="text-center mb-6">
+                    <h3 className="font-extrabold text-gray-950 text-xl leading-snug">{leader.name}</h3>
+                    <p className="text-[#D50032] text-xs font-black tracking-wide uppercase mt-1.5">{leader.role}</p>
+                  </div>
+                </div>
 
-            <div>
-              <h3 className="font-extrabold text-slate-800 mb-4 text-xs tracking-wider uppercase">
-                Expertise & Achievements
-              </h3>
-              <div className="flex flex-wrap gap-3">
-                {leader.tags.map((tag: string, tIdx: number) => (
-                  <span key={tIdx} className="px-4 py-2 rounded-full text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-100 shadow-sm">
-                    {tag}
-                  </span>
-                ))}
+                <Link 
+                  to={`/leader/${leaderId}`} 
+                  className="text-[#D50032] font-black text-xs tracking-wider uppercase flex items-center justify-center gap-1 group-hover:gap-2 transition-all w-full py-3.5 rounded-xl bg-gray-50 group-hover:bg-[#FFF0F2] mt-auto"
+                >
+                  Read Full Profile <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
               </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
       </div>
     </div>

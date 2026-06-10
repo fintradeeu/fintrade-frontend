@@ -21,7 +21,8 @@ const getLeaderId = (leader: any) => {
 };
 
 export default function ExpertProfile({ leaders: leadersProp }: { leaders?: any[] }) {
-  const displayLeaders = (leadersProp && leadersProp.length > 0) ? leadersProp : staticLeaders;
+  const displayLeaders = ((leadersProp && leadersProp.length > 0) ? leadersProp : staticLeaders)
+    .filter((l: any) => l.id !== "dr-shankar-goenka" && l.name?.toLowerCase() !== "dr. shankar goenka");
 
   return (
     <div className="w-full bg-transparent relative z-10">
