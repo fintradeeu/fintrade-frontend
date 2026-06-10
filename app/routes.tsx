@@ -14,6 +14,7 @@ import MarketUpdatesPage from "./pages/MarketUpdatesPage";
 import BlogPage from "./pages/BlogPage";
 import AboutUs from "./pages/AboutUs";
 import LeaderProfile from "./pages/LeaderProfile";
+import OurAdvisors from "./pages/OurAdvisors";
 import MarketingLayout from "./components/MarketingLayout";
 import CourseDetailPage from "./pages/CourseDetailPage";
 
@@ -95,6 +96,10 @@ export const router = createBrowserRouter([
       {
         path: "/updates",
         Component: MarketUpdatesPage,
+      },
+      {
+        path: "/our-advisors",
+        Component: OurAdvisors,
       },
       {
         path: "/blog",
