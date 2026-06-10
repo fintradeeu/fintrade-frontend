@@ -6,7 +6,6 @@ import { Card } from "./ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import logo from "../../imports/fintrade_logo.png";
 import api from "../services/api";
 import { motion, AnimatePresence } from "motion/react";
 import TickerStrip from "./TickerStrip";
@@ -263,7 +262,7 @@ export default function MarketingLayout() {
               />
               <button onClick={() => setSearchOpen(false)} className="text-gray-400 hover:text-gray-600 text-sm font-medium px-2 py-1 rounded bg-gray-100 cursor-pointer">ESC</button>
             </div>
-            
+
             {loadingSearch ? (
               <div className="p-8 text-center text-gray-500 flex items-center justify-center gap-2">
                 <div className="w-4 h-4 border-2 border-[#D50032] border-t-transparent rounded-full animate-spin"></div>
@@ -392,14 +391,14 @@ export default function MarketingLayout() {
       <nav className="sticky top-0 z-[100] bg-white/90 border-b border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.05)] backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            <div className="flex-shrink-0 flex items-center h-16 w-[180px] md:w-[220px]">
+            <div className="flex-shrink-0 flex items-center h-20 w-[180px] md:w-[220px] overflow-visible">
               <Link to="/" className="flex items-center h-full w-full">
                 <img
-                  src={logo}
+                  src="/TheFinTrade Final Logo (1).png"
                   alt="FinTrade"
-                  className="h-12 w-auto object-contain scale-[2.4] md:scale-[2.8] origin-left"
+                  className="h-16 md:h-24 w-auto object-contain scale-[2.2] md:scale-[2.6] origin-left transition-transform duration-300"
                   style={{
-                    filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.08))"
+                    filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.06))"
                   }}
                 />
               </Link>
@@ -409,7 +408,7 @@ export default function MarketingLayout() {
               <Link to="/courses" className="text-gray-700 hover:text-[#D50032] transition-colors font-medium">Courses</Link>
               <Link to="/markets" className="text-gray-700 hover:text-[#D50032] transition-colors font-medium">Markets</Link>
               <Link to="/category/all" className="text-gray-700 hover:text-[#D50032] transition-colors font-medium">Categories</Link>
-              <Link to="/updates" className="text-gray-700 hover:text-[#D50032] transition-colors font-medium">Update</Link>
+              <Link to="/our-advisors" className="text-gray-700 hover:text-[#D50032] transition-colors font-medium">Our Advisors</Link>
               <Link to="/blog" className="text-gray-700 hover:text-[#D50032] transition-colors font-medium">Blog</Link>
               <Link to="/about" className="text-gray-700 hover:text-[#D50032] transition-colors font-medium">About</Link>
             </div>
@@ -473,12 +472,11 @@ export default function MarketingLayout() {
         >
           {/* Drawer Header */}
           <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-            <div className="h-[40px] w-[100px] overflow-hidden flex items-center justify-start">
+            <div className="h-[48px] w-[140px] flex items-center justify-start">
               <img
-                src={logo}
+                src="/TheFinTrade Final Logo (1).png"
                 alt="FinTrade"
-                className="h-full w-full object-contain scale-[2.2] -translate-x-2 -translate-y-0.5"
-                style={{ transformOrigin: "left center" }}
+                className="h-10 w-auto object-contain"
               />
             </div>
             <button
@@ -496,7 +494,7 @@ export default function MarketingLayout() {
               { label: "Courses", path: "/courses" },
               { label: "Markets", path: "/markets" },
               { label: "Categories", path: "/category/all" },
-              { label: "Update", path: "/updates" },
+              { label: "Our Advisors", path: "/our-advisors" },
               { label: "Blog", path: "/blog" },
               { label: "About", path: "/about" },
             ].map((link) => (

@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router";
-import { ArrowLeft } from "lucide-react";
 import { leaders as staticLeaders } from "../data/leaders";
 import api from "../services/api";
 
@@ -22,7 +20,7 @@ const getLeaderId = (leader: any) => {
 };
 
 const getInitials = (name?: string) => {
-  if (!name) return "FT";
+  if (!name) return "HV";
   return name
     .split(" ")
     .filter(Boolean)
@@ -32,8 +30,7 @@ const getInitials = (name?: string) => {
     .toUpperCase();
 };
 
-export default function LeaderProfile() {
-  const { id } = useParams();
+export default function OurAdvisors() {
   const [leader, setLeader] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -41,9 +38,11 @@ export default function LeaderProfile() {
     api.get("/settings/about-us")
       .then((res) => {
         const leadership = res.data?.leadership || [];
-        let found: any = leadership.find((l: any) => getLeaderId(l) === id);
+        let found: any = leadership.find(
+          (l: any) => getLeaderId(l) === "het-vyas" || (l.name && l.name.toLowerCase().includes("het vyas"))
+        );
 
-        const staticFound = staticLeaders.find((l) => getLeaderId(l) === id) as any;
+        const staticFound = staticLeaders.find((l) => getLeaderId(l) === "het-vyas") as any;
 
         if (!found) {
           found = staticFound;
@@ -53,7 +52,7 @@ export default function LeaderProfile() {
           const imagePath = found.profile_image || found.image || (staticFound && (staticFound.profile_image || staticFound.image));
           const imageUrl = imagePath 
             ? getImageUrl(imagePath) 
-            : `https://ui-avatars.com/api/?name=${encodeURIComponent(found.name || found.monogram || "FT")}&background=FFF0F2&color=D50032&size=512&font-size=0.33&bold=true`;
+            : `https://ui-avatars.com/api/?name=${encodeURIComponent(found.name || found.monogram || "HV")}&background=FFF0F2&color=D50032&size=512&font-size=0.33&bold=true`;
 
           const rawTags = found.tags || (staticFound && staticFound.tags) || [];
           const parsedTags = Array.isArray(rawTags)
@@ -66,7 +65,7 @@ export default function LeaderProfile() {
             ...staticFound,
             ...found,
             id: getLeaderId(found),
-            role: found.role || found.title || (staticFound && (staticFound.role || staticFound.title)) || "Leadership",
+            role: found.role || found.title || (staticFound && (staticFound.role || staticFound.title)) || "Founder & COO",
             image: imageUrl,
             fullBio: found.fullBio || found.bio || (staticFound && (staticFound.fullBio || staticFound.bio)) || "",
             tags: parsedTags,
@@ -75,13 +74,13 @@ export default function LeaderProfile() {
         }
       })
       .catch((err) => {
-        console.error("Failed to fetch leaders dynamically", err);
-        const found = staticLeaders.find((l) => getLeaderId(l) === id) as any;
+        console.error("Failed to fetch dynamic advisor data", err);
+        const found = staticLeaders.find((l) => getLeaderId(l) === "het-vyas") as any;
         if (found) {
           setLeader({
             ...found,
             id: getLeaderId(found),
-            role: found.role || found.title || "Leadership",
+            role: found.role || found.title || "Founder & COO",
             image: found.image || "",
             fullBio: found.fullBio || found.bio || "",
             tags: Array.isArray(found.tags) ? found.tags : [],
@@ -92,13 +91,13 @@ export default function LeaderProfile() {
       .finally(() => {
         setLoading(false);
       });
-  }, [id]);
+  }, []);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
         <div className="w-12 h-12 rounded-full border-4 border-[#D50032]/20 border-t-[#D50032] animate-spin mb-4" />
-        <p className="text-gray-500 font-medium text-sm">Loading profile...</p>
+        <p className="text-gray-500 font-medium text-sm">Loading advisor profile...</p>
       </div>
     );
   }
@@ -106,10 +105,7 @@ export default function LeaderProfile() {
   if (!leader) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <h1 className="text-3xl font-black text-gray-900 mb-4">Leader Not Found</h1>
-        <Link to="/about" className="text-[#D50032] font-bold hover:underline flex items-center gap-2">
-          <ArrowLeft className="w-4 h-4" /> Back to About Us
-        </Link>
+        <h1 className="text-3xl font-black text-gray-900 mb-4">Advisor Not Found</h1>
       </div>
     );
   }
@@ -119,18 +115,13 @@ export default function LeaderProfile() {
   return (
     <div className="bg-white min-h-screen relative pt-24 pb-20 select-none">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link to="/about" className="inline-flex items-center gap-2 text-gray-500 hover:text-[#D50032] transition-colors font-bold text-sm mb-10 group">
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          Back to Team
-        </Link>
-
         <div className="flex flex-col md:flex-row gap-12 lg:gap-20 items-start">
           {/* Big Image/Monogram Section */}
           <div className="w-full md:w-1/3 flex-shrink-0">
             {isMonogram ? (
               <div className="w-full aspect-square rounded-[32px] bg-[#FFF0F2] flex items-center justify-center shadow-lg relative border border-[#D50032]/5 select-none">
                 <span className="text-[#D50032] font-semibold text-[8rem] sm:text-[10rem] md:text-[6rem] lg:text-[8rem] xl:text-[10rem] leading-none tracking-tight">
-                  {leader.initials || "FT"}
+                  {leader.initials || "HV"}
                 </span>
               </div>
             ) : (
