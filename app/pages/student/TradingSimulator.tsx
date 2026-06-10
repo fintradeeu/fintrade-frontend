@@ -48,7 +48,20 @@ export default function TradingSimulator() {
 
   useEffect(() => {
     loadData();
+    fetchMarketData();
+    const interval = setInterval(fetchMarketData, 5000);
+    return () => clearInterval(interval);
   }, []);
+
+  const fetchMarketData = async () => {
+    try {
+      const res = await api.get("/simulator/market-data");
+      setMarketData(res.data);
+      setSelectedInstrument((prev: any) => prev || res.data[0]);
+    } catch (err) {
+      console.error("Failed to fetch market data", err);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -135,7 +148,7 @@ export default function TradingSimulator() {
     pnl: t.pnl || 0,
   }));
 
-  if (loading) {
+  if (loading || marketData.length === 0) {
     return (
       <DashboardLayout role="student">
         <div className="text-center py-12 text-[#0B2A5B]/60">Loading simulator...</div>
@@ -224,7 +237,10 @@ export default function TradingSimulator() {
               >
                 <p className="font-semibold text-[#0B2A5B] text-sm">{instrument.symbol}</p>
                 <div className="flex items-center justify-between mt-1">
-                  <span className="text-sm">₹{instrument.price.toLocaleString("en-IN")}</span>
+                  <span className="text-sm">
+                    {['BITCOIN', 'GOLD', 'SILVER', 'CRUDE OIL'].includes(instrument.symbol) ? '$' : '₹'}
+                    {instrument.price.toLocaleString(['BITCOIN', 'GOLD', 'SILVER', 'CRUDE OIL'].includes(instrument.symbol) ? 'en-US' : 'en-IN')}
+                  </span>
                   <span className={`text-xs flex items-center gap-1 ${instrument.change >= 0 ? "text-green-600" : "text-red-600"}`}>
                     {instrument.change >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                     {Math.abs(instrument.change)}%
@@ -278,7 +294,11 @@ export default function TradingSimulator() {
                 </div>
                 <div>
                   <Label>Price</Label>
-                  <Input value={`₹${selectedInstrument.price.toLocaleString("en-IN")}`} disabled className="mt-2 bg-[#F4F1EA] border-[#0B2A5B]/20" />
+                  <Input 
+                    value={`${['BITCOIN', 'GOLD', 'SILVER', 'CRUDE OIL'].includes(selectedInstrument.symbol) ? '$' : '₹'}${selectedInstrument.price.toLocaleString(['BITCOIN', 'GOLD', 'SILVER', 'CRUDE OIL'].includes(selectedInstrument.symbol) ? 'en-US' : 'en-IN')}`} 
+                    disabled 
+                    className="mt-2 bg-[#F4F1EA] border-[#0B2A5B]/20" 
+                  />
                 </div>
               </div>
               <div className="space-y-4">
@@ -290,7 +310,10 @@ export default function TradingSimulator() {
                     <div className="flex justify-between"><span className="text-[#0B2A5B]/70">Quantity:</span><span className="font-semibold text-[#0B2A5B]">{quantity} units</span></div>
                     <div className="border-t border-[#0B2A5B]/10 pt-2 flex justify-between">
                       <span className="text-[#0B2A5B]">Total Value:</span>
-                      <span className="font-bold text-[#C2A86A]">₹{(selectedInstrument.price * parseFloat(quantity || "0")).toLocaleString("en-IN")}</span>
+                      <span className="font-bold text-[#C2A86A]">
+                        {['BITCOIN', 'GOLD', 'SILVER', 'CRUDE OIL'].includes(selectedInstrument.symbol) ? '$' : '₹'}
+                        {(selectedInstrument.price * parseFloat(quantity || "0")).toLocaleString(['BITCOIN', 'GOLD', 'SILVER', 'CRUDE OIL'].includes(selectedInstrument.symbol) ? 'en-US' : 'en-IN')}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -315,7 +338,10 @@ export default function TradingSimulator() {
                   <div key={pos.id} className="flex items-center justify-between p-3 bg-[#F4F1EA] rounded-lg">
                     <div>
                       <p className="font-semibold text-[#0B2A5B] text-sm">{pos.symbol}</p>
-                      <p className="text-xs text-[#0B2A5B]/60">{(pos.side || '').toUpperCase()} {pos.quantity} @ ₹{pos.entry_price.toLocaleString("en-IN")}</p>
+                      <p className="text-xs text-[#0B2A5B]/60">
+                        {(pos.side || '').toUpperCase()} {pos.quantity} @ {['BITCOIN', 'GOLD', 'SILVER', 'CRUDE OIL'].includes(pos.symbol) ? '$' : '₹'}
+                        {pos.entry_price.toLocaleString(['BITCOIN', 'GOLD', 'SILVER', 'CRUDE OIL'].includes(pos.symbol) ? 'en-US' : 'en-IN')}
+                      </p>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className={`text-sm font-semibold ${pos.unrealized_pnl >= 0 ? "text-green-600" : "text-red-600"}`}>
@@ -354,7 +380,10 @@ export default function TradingSimulator() {
                     <div key={trade.id} className="flex items-center justify-between p-3 bg-[#F4F1EA] rounded-lg">
                       <div>
                         <p className="font-semibold text-[#0B2A5B] text-sm">{trade.symbol}</p>
-                        <p className="text-xs text-[#0B2A5B]/60">{(trade.side || '').toUpperCase()} {trade.quantity} @ ₹{trade.entry_price}</p>
+                        <p className="text-xs text-[#0B2A5B]/60">
+                          {(trade.side || '').toUpperCase()} {trade.quantity} @ {['BITCOIN', 'GOLD', 'SILVER', 'CRUDE OIL'].includes(trade.symbol) ? '$' : '₹'}
+                          {trade.entry_price.toLocaleString(['BITCOIN', 'GOLD', 'SILVER', 'CRUDE OIL'].includes(trade.symbol) ? 'en-US' : 'en-IN')}
+                        </p>
                       </div>
                       <div className="text-right">
                         {trade.status === "closed" ? (

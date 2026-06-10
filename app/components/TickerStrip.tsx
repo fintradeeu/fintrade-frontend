@@ -1,20 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import api from '../services/api';
 
 // Baseline data
 const fallbackTickers = [
   { label: "SENSEX", value: "74,243.34", change: "-116.67", pct: "-0.16%", up: false, symbol: "BSE:SENSEX" },
-  { label: "SBI", value: "834.50", change: "+12.30", pct: "+1.5%", up: true, symbol: "BSE:SBIN" },
-  { label: "RELIANCE", value: "2,934.10", change: "+45.20", pct: "+1.6%", up: true, symbol: "BSE:RELIANCE" },
-  { label: "HDFC BANK", value: "1,520.40", change: "-5.60", pct: "-0.4%", up: false, symbol: "BSE:HDFCBANK" },
-  { label: "TCS", value: "3,890.00", change: "+25.40", pct: "+0.7%", up: true, symbol: "BSE:TCS" },
-  { label: "INFOSYS", value: "1,450.20", change: "+15.10", pct: "+1.1%", up: true, symbol: "BSE:INFY" },
-  { label: "GOLD", value: "71,450", change: "+430", pct: "+0.6%", up: true, symbol: "TVC:GOLD" },
-  { label: "SILVER", value: "84,200", change: "+610", pct: "+0.7%", up: true, symbol: "TVC:SILVER" },
-  { label: "CRUDE OIL", value: "6,840", change: "-25", pct: "-0.3%", up: false, symbol: "TVC:USOIL" },
+  { label: "SBI", value: "1,002.70", change: "+12.30", pct: "+1.5%", up: true, symbol: "NSE:SBIN" },
+  { label: "RELIANCE", value: "2,934.10", change: "+45.20", pct: "+1.6%", up: true, symbol: "NSE:RELIANCE" },
+  { label: "HDFC BANK", value: "1,520.40", change: "-5.60", pct: "-0.4%", up: false, symbol: "NSE:HDFCBANK" },
+  { label: "TCS", value: "3,890.00", change: "+25.40", pct: "+0.7%", up: true, symbol: "NSE:TCS" },
+  { label: "INFOSYS", value: "1,450.20", change: "+15.10", pct: "+1.1%", up: true, symbol: "NSE:INFY" },
+  { label: "GOLD", value: "$2,350.00", change: "+15.20", pct: "+0.65%", up: true, symbol: "TVC:GOLD" },
+  { label: "SILVER", value: "$63.50", change: "-1.80", pct: "-2.75%", up: false, symbol: "TVC:SILVER" },
+  { label: "CRUDE OIL", value: "$78.50", change: "-0.25", pct: "-0.32%", up: false, symbol: "NYMEX:CL1!" },
   { label: "USD/INR", value: "83.45", change: "-0.09", pct: "-0.1%", up: false, symbol: "FX_IDC:USDINR" },
-  { label: "BITCOIN", value: "$64,230", change: "+1,200", pct: "+1.9%", up: true, symbol: "CRYPTO:BTCUSD" }
+  { label: "BITCOIN", value: "$61,250.00", change: "+1,200.00", pct: "+1.90%", up: true, symbol: "CRYPTO:BTCUSD" }
 ];
 
 export default function TickerStrip() {
@@ -23,7 +24,44 @@ export default function TickerStrip() {
   const [tickers, setTickers] = useState(fallbackTickers);
   const [isHovered, setIsHovered] = useState(false);
 
-  // We could add an API fetch here later if we want real-time updates for the strip numbers
+  useEffect(() => {
+    const fetchMarketData = async () => {
+      try {
+        const res = await api.get('/simulator/market-data');
+        if (res.data && Array.isArray(res.data)) {
+          const mapped = res.data.map((item: any) => {
+            const changePct = item.change_pct ?? 0;
+            const price = item.price ?? 0;
+            const changeVal = item.change ?? 0;
+            const up = changePct >= 0;
+            const sign = changePct >= 0 ? '+' : '';
+            
+            const isUSD = ['BITCOIN', 'GOLD', 'SILVER', 'CRUDE OIL'].includes(item.symbol);
+            
+            return {
+              label: item.symbol,
+              value: isUSD 
+                ? `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+                : price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+              change: `${sign}${isUSD 
+                ? changeVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
+                : changeVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+              pct: `${sign}${changePct.toFixed(2)}%`,
+              up: up,
+              symbol: item.tv_symbol
+            };
+          });
+          setTickers(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch live tickers from API, using fallback data:", err);
+      }
+    };
+
+    fetchMarketData();
+    const interval = setInterval(fetchMarketData, 10000); // refresh every 10 seconds
+    return () => clearInterval(interval);
+  }, []);
   
   // Effect to load the advanced chart when a symbol is selected
   useEffect(() => {
