@@ -377,6 +377,7 @@ export default function MarketingHome() {
   const [activeVideoIdx, setActiveVideoIdx] = useState<number | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const isAuthenticated = !!localStorage.getItem("token");
+  const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(null);
 
   const [isRegModalOpen, setIsRegModalOpen] = useState(false);
   const [selectedLectureForReg, setSelectedLectureForReg] = useState<any>(null);
@@ -2326,6 +2327,100 @@ export default function MarketingHome() {
                   ))}
                 </div>
               </ScrollReveal>
+            </div>
+          </section>
+        )}
+
+        {/* FAQ Section */}
+        {sectionVisibility.show_faq !== false && (
+          <section className="py-20 bg-gray-50 relative z-10 overflow-hidden">
+            {/* Glowing background details */}
+            <div className="absolute top-1/2 left-0 -translate-y-1/2 w-72 h-72 bg-[#D50032]/5 rounded-full filter blur-[80px] -z-10 pointer-events-none" />
+            <div className="absolute top-1/3 right-0 w-80 h-80 bg-red-500/5 rounded-full filter blur-[100px] -z-10 pointer-events-none" />
+
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              
+              {/* Section Header */}
+              <div className="text-center mb-16">
+                <ScrollReveal mobileDirection="up">
+                  <span className="px-3.5 py-1 rounded-full text-xs font-bold text-[#D50032] bg-[#D50032]/5 border border-[#D50032]/10 uppercase tracking-widest">
+                    Support & Policies
+                  </span>
+                  <h2 className="text-3xl md:text-5xl font-black tracking-tight text-gray-950 mt-4 leading-tight font-sans uppercase">
+                    Frequently Asked <span className="text-[#D50032]">Questions</span>
+                  </h2>
+                  <p className="text-gray-500 font-semibold text-sm sm:text-base mt-3 max-w-xl mx-auto">
+                    Return & Refund Policy Guidelines
+                  </p>
+                </ScrollReveal>
+              </div>
+
+              {/* Accordion Questions */}
+              <ScrollReveal mobileDirection="up" delay={0.2}>
+                <div className="space-y-4">
+                  {[
+                    {
+                      q: "Can I request a refund after purchasing a course?",
+                      a: "No. All course purchases made through FinTrade are final. We do not offer refunds, returns, or cancellations once the payment has been successfully processed."
+                    },
+                    {
+                      q: "Why does FinTrade not provide refunds?",
+                      a: "Our courses provide immediate access to proprietary educational content, learning resources, and training materials. As these digital services are made available upon enrollment, we are unable to offer refunds after purchase."
+                    },
+                    {
+                      q: "What if I am unable to attend the course after enrollment?",
+                      a: "We recommend reviewing the course details carefully before enrolling. In case of genuine concerns, you may contact our support team, and we will evaluate available options at our discretion. However, refunds will not be provided."
+                    },
+                    {
+                      q: "Can I transfer my course enrollment to another person?",
+                      a: "Course enrollments are generally non-transferable and are intended solely for the registered participant. Any exceptional requests will be reviewed on a case-by-case basis by FinTrade management."
+                    },
+                    {
+                      q: "What should I do if I made a payment by mistake?",
+                      a: "If you believe a payment was made in error or you were charged incorrectly, please contact our support team immediately. We will investigate the issue and provide appropriate assistance. However, completed course purchases are not eligible for refunds."
+                    }
+                  ].map((faq, index) => {
+                    const isOpen = faqOpenIndex === index;
+                    return (
+                      <div
+                        key={index}
+                        className={`bg-white border rounded-2xl transition-all duration-300 overflow-hidden ${
+                          isOpen 
+                            ? "border-[#D50032] shadow-[0_8px_30px_rgba(213,0,50,0.04)]" 
+                            : "border-gray-200/80 hover:border-gray-300 hover:shadow-sm"
+                        }`}
+                      >
+                        <button
+                          onClick={() => setFaqOpenIndex(isOpen ? null : index)}
+                          className="w-full text-left px-6 py-5 flex items-center justify-between gap-4 font-semibold text-gray-950 cursor-pointer focus:outline-none select-none"
+                        >
+                          <span className={`text-base md:text-lg transition-colors duration-300 ${isOpen ? "text-[#D50032]" : "text-gray-900"}`}>
+                            {faq.q}
+                          </span>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${
+                            isOpen ? "bg-[#D50032] text-white rotate-180" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                          }`}>
+                            <ChevronDown className="w-4 h-4" />
+                          </div>
+                        </button>
+
+                        <div
+                          className="transition-all duration-300 ease-in-out overflow-hidden"
+                          style={{
+                            maxHeight: isOpen ? "200px" : "0px",
+                            opacity: isOpen ? 1 : 0
+                          }}
+                        >
+                          <div className="px-6 pb-6 pt-1 text-sm md:text-base text-gray-600 leading-relaxed font-medium border-t border-slate-50">
+                            {faq.a}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollReveal>
+
             </div>
           </section>
         )}

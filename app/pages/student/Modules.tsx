@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Progress } from "../../components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
-import { FileText, Play, FileAudio, FileVideo, Download, CheckCircle, Lock, Volume2, Settings, HelpCircle, CheckCircle2 } from "lucide-react";
+import { FileText, Play, FileAudio, FileVideo, Download, CheckCircle, Lock, Volume2, Settings, HelpCircle, CheckCircle2, Clock, BookOpen, ChevronLeft } from "lucide-react";
 import { Input } from "../../components/ui/input";
 
 // ── Inline quiz renderer for quiz-type lessons ──
@@ -244,13 +244,72 @@ export default function Modules() {
     }
   };
 
-  const getTypeIcon = (type: string) => {
+  const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
+
+  // Apply playback speed to the active video/audio element
+  useEffect(() => {
+    if (mediaRef.current) {
+      mediaRef.current.playbackRate = playbackSpeed;
+    }
+  }, [playbackSpeed, activeLesson]);
+
+  const getDifficultyPill = (level: string) => {
+    const l = (level || "").toLowerCase();
+    if (l === "advanced") {
+      return <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-red-50 text-red-600 border border-red-100 uppercase tracking-wider">Advanced</span>;
+    } else if (l === "intermediate") {
+      return <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-amber-50 text-amber-600 border border-amber-100 uppercase tracking-wider">Intermediate</span>;
+    } else {
+      return <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase tracking-wider">{level || "Beginner"}</span>;
+    }
+  };
+
+  const getLessonIcon = (type: string, isCompleted: boolean, isUnlocked: boolean) => {
+    if (!isUnlocked) {
+      return (
+        <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center border border-slate-200">
+          <Lock size={14} />
+        </div>
+      );
+    }
+    if (isCompleted) {
+      return (
+        <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 shadow-sm">
+          <CheckCircle2 size={16} />
+        </div>
+      );
+    }
     switch (type) {
-      case "video": return <FileVideo className="text-[#C2A86A]" size={18} />;
-      case "audio": return <FileAudio className="text-[#0B2A5B]" size={18} />;
-      case "quiz": return <HelpCircle className="text-purple-500" size={18} />;
-      case "pdf": return <Download className="text-orange-500" size={18} />;
-      default: return <FileText className="text-[#1a3d7a]" size={18} />;
+      case "video":
+        return (
+          <div className="w-8 h-8 rounded-full bg-red-50 text-[#D50032] flex items-center justify-center border border-red-100 shadow-sm">
+            <FileVideo size={14} />
+          </div>
+        );
+      case "audio":
+        return (
+          <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shadow-sm">
+            <FileAudio size={14} />
+          </div>
+        );
+      case "quiz":
+        return (
+          <div className="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-100 shadow-sm">
+            <HelpCircle size={14} />
+          </div>
+        );
+      case "pdf":
+        return (
+          <div className="w-8 h-8 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-100 shadow-sm">
+            <Download size={14} />
+          </div>
+        );
+      default:
+        return (
+          <div className="w-8 h-8 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center border border-slate-100 shadow-sm">
+            <FileText size={14} />
+          </div>
+        );
     }
   };
 
@@ -270,104 +329,198 @@ export default function Modules() {
 
   return (
     <DashboardLayout role="student">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[#0B2A5B] mb-2">Course Modules</h1>
-        <p className="text-[#0B2A5B]/70">Complete all modules to unlock your certificate</p>
+      <div className="mb-8 border-b border-slate-200/60 pb-5">
+        <h1 className="text-3xl font-extrabold text-[#0B2A5B] tracking-tight mb-2">Course Modules</h1>
+        <p className="text-slate-500 text-sm">Complete all modules to unlock your certificate</p>
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-[#0B2A5B]/60">Loading your courses...</div>
+        <div className="flex items-center justify-center py-20 text-slate-400 font-medium gap-3">
+          <div className="w-6 h-6 border-2 border-slate-300 border-t-[#D50032] rounded-full animate-spin"></div>
+          Loading your courses...
+        </div>
       ) : courses.length === 0 ? (
-        <Card className="p-8 bg-white shadow-lg text-center">
-          <p className="text-[#0B2A5B]/60 mb-4">You haven't enrolled in any courses yet.</p>
-          <a href="/student/courses"><Button className="bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">Browse Courses</Button></a>
+        <Card className="p-10 bg-white border border-slate-200 shadow-xl rounded-2xl text-center max-w-lg mx-auto">
+          <div className="w-16 h-16 bg-red-50 text-[#D50032] rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
+            <BookOpen size={28} />
+          </div>
+          <p className="text-slate-600 mb-6 font-medium">You haven't enrolled in any courses yet.</p>
+          <a href="/student/courses">
+            <Button className="bg-[#D50032] text-white hover:bg-[#FF0000] shadow-md font-bold px-6 py-2.5 rounded-xl transition-all">
+              Browse Courses
+            </Button>
+          </a>
         </Card>
       ) : (
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-8 items-start">
           {/* Course/Module List */}
           <div className="lg:col-span-1 space-y-4">
-            {courses.map((course) => (
-              <Card
-                key={course.id}
-                className={`p-4 cursor-pointer transition-all ${selectedCourse?.id === course.id ? "bg-[#C2A86A]/10 border-2 border-[#C2A86A] shadow-lg" : "bg-white hover:shadow-md"}`}
-                onClick={() => { setSelectedCourse(course); setActiveLesson(null); }}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-sm font-semibold text-[#0B2A5B]/60">{course.difficulty_level}</span>
-                      {course.progress_percent >= 100 && <CheckCircle className="text-green-600" size={16} />}
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 px-1 mb-2">Your Enrolled Courses</h3>
+            {courses.map((course) => {
+              const isSelected = selectedCourse?.id === course.id;
+              return (
+                <Card
+                  key={course.id}
+                  className={`p-5 cursor-pointer transition-all duration-300 rounded-2xl border-2 ${
+                    isSelected 
+                      ? "bg-white border-[#D50032] shadow-xl ring-4 ring-[#D50032]/5 scale-[1.01]" 
+                      : "bg-white border-transparent hover:border-slate-200 hover:shadow-lg hover:scale-[1.005]"
+                  }`}
+                  onClick={() => { setSelectedCourse(course); setActiveLesson(null); }}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        {getDifficultyPill(course.difficulty_level)}
+                        {course.progress_percent >= 100 && (
+                          <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md border border-green-100">
+                            <CheckCircle2 size={12} /> Passed
+                          </span>
+                        )}
+                      </div>
+                      <h3 className={`font-bold text-[#0B2A5B] text-base leading-snug mb-1 transition-colors ${isSelected ? "text-[#D50032]" : ""}`}>{course.title}</h3>
+                      <p className="text-xs text-slate-500 font-medium">{course.modules?.length || 0} modules • {course.duration_hours || "—"} hours</p>
                     </div>
-                    <h3 className="font-semibold text-[#0B2A5B] mb-1">{course.title}</h3>
-                    <p className="text-xs text-[#0B2A5B]/60">{course.modules?.length || 0} modules • {course.duration_hours || "—"} hours</p>
                   </div>
-                </div>
-                <Progress value={course.progress_percent || 0} className="h-2 mb-2" />
-                <p className="text-xs text-[#0B2A5B]/70">{Math.round(course.progress_percent || 0)}% Complete</p>
-              </Card>
-            ))}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-400 font-medium">Course Progress</span>
+                      <span className="font-bold text-[#0B2A5B]">{Math.round(course.progress_percent || 0)}%</span>
+                    </div>
+                    <Progress value={course.progress_percent || 0} className="h-1.5" />
+                  </div>
+                </Card>
+              );
+            })}
           </div>
 
           {/* Module Content */}
-          <Card className="lg:col-span-2 p-6 bg-white shadow-lg">
+          <Card className="lg:col-span-2 p-6 md:p-8 bg-white border border-slate-200/80 shadow-xl rounded-2xl">
             {selectedCourse ? (
               <>
-                <div className="mb-6">
-                  <Badge className={`mb-3 ${selectedCourse.progress_percent >= 100 ? "bg-green-100 text-green-700" : selectedCourse.progress_percent > 0 ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"}`}>
-                    {selectedCourse.progress_percent >= 100 ? "Completed" : selectedCourse.progress_percent > 0 ? "In Progress" : "Not Started"}
-                  </Badge>
-                  <h2 className="text-2xl font-bold text-[#0B2A5B] mb-2">{selectedCourse.title}</h2>
-                  <p className="text-[#0B2A5B]/70 mb-4 whitespace-pre-wrap">{selectedCourse.description || selectedCourse.short_description || "No description"}</p>
-                  <div className="flex items-center gap-6 text-sm text-[#0B2A5B]/60">
-                    <span>{totalModules} Modules</span>
-                    <span>{selectedCourse.duration_hours || "—"} hours</span>
-                    <span>{Math.round(selectedCourse.progress_percent || 0)}% Complete</span>
+                <div className="mb-6 border-b border-slate-100 pb-6">
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                    <Badge className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      selectedCourse.progress_percent >= 100 
+                        ? "bg-green-50 text-green-700 border border-green-200 hover:bg-green-50" 
+                        : selectedCourse.progress_percent > 0 
+                        ? "bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-50" 
+                        : "bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-50"
+                    }`}>
+                      {selectedCourse.progress_percent >= 100 ? "Completed" : selectedCourse.progress_percent > 0 ? "In Progress" : "Not Started"}
+                    </Badge>
+                  </div>
+                  
+                  <h2 className="text-2xl md:text-3xl font-extrabold text-[#0B2A5B] leading-tight mb-4">{selectedCourse.title}</h2>
+                  
+                  {/* Styled Course Description */}
+                  {(selectedCourse.description || selectedCourse.short_description) && (
+                    <div className="bg-slate-50/70 border border-slate-200/50 rounded-xl p-4 mb-6">
+                      <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">About this Program</h4>
+                      <p className="text-sm leading-relaxed text-slate-600 whitespace-pre-wrap font-medium">{selectedCourse.description || selectedCourse.short_description}</p>
+                    </div>
+                  )}
+
+                  {/* Gorgeous Grid Row of Stats */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="flex items-center gap-3 bg-slate-50/60 border border-slate-100 rounded-xl p-3">
+                      <div className="w-10 h-10 rounded-lg bg-red-50 text-[#D50032] flex items-center justify-center border border-red-100">
+                        <BookOpen size={18} />
+                      </div>
+                      <div>
+                        <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Modules</p>
+                        <p className="text-sm font-extrabold text-[#0B2A5B]">{totalModules}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 bg-slate-50/60 border border-slate-100 rounded-xl p-3">
+                      <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
+                        <Clock size={18} />
+                      </div>
+                      <div>
+                        <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Duration</p>
+                        <p className="text-sm font-extrabold text-[#0B2A5B]">{selectedCourse.duration_hours || "—"} hrs</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 bg-slate-50/60 border border-slate-100 rounded-xl p-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${
+                        selectedCourse.progress_percent >= 100 
+                          ? "bg-green-50 text-green-600 border-green-100" 
+                          : "bg-blue-50 text-blue-600 border-blue-100"
+                      }`}>
+                        <CheckCircle2 size={18} />
+                      </div>
+                      <div>
+                        <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Complete</p>
+                        <p className="text-sm font-extrabold text-[#0B2A5B]">{Math.round(selectedCourse.progress_percent || 0)}%</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 {activeLesson ? (
                   <div className="space-y-6">
-                    <Button variant="ghost" onClick={() => setActiveLesson(null)} className="text-[#0B2A5B]/60 hover:text-[#0B2A5B] p-0 h-auto mb-4">
-                      &larr; Back to Modules
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => setActiveLesson(null)} 
+                      className="text-slate-500 hover:text-[#D50032] hover:bg-slate-100/50 p-2 pl-0.5 rounded-lg h-auto flex items-center gap-1.5 transition-all text-xs font-semibold"
+                    >
+                      <ChevronLeft size={16} /> Back to Modules Overview
                     </Button>
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-2xl font-bold text-[#0B2A5B]">{activeLesson.title}</h3>
-                      <div className="flex items-center gap-2">
-                        {getTypeIcon(activeLesson.content_type)}
-                        <span className="text-sm font-medium text-[#0B2A5B] capitalize">{activeLesson.content_type}</span>
+                    
+                    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                      <h3 className="text-xl md:text-2xl font-extrabold text-[#0B2A5B]">{activeLesson.title}</h3>
+                      <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg text-slate-700">
+                        {getLessonIcon(activeLesson.content_type, false, true)}
+                        <span className="text-xs font-bold text-[#0B2A5B] capitalize">{activeLesson.content_type}</span>
                       </div>
                     </div>
                     
-                    <div className="bg-[#F4F1EA] rounded-xl p-6 min-h-[300px]">
+                    <div className="bg-slate-50 border border-slate-200/50 rounded-2xl p-6 min-h-[300px] shadow-inner">
                       {activeLesson.content_type === "video" && activeLesson.video_url ? (
-                        <div className="w-full aspect-video rounded-lg overflow-hidden bg-black relative">
+                        <div className="w-full aspect-video rounded-xl overflow-hidden bg-black relative shadow-lg">
                           {activeLesson.video_url.includes("youtube") || activeLesson.video_url.includes("vimeo") || activeLesson.video_url.includes("mediadelivery.net") || activeLesson.video_url.includes("bunny") ? (
                             <iframe src={activeLesson.video_url} className="w-full h-full" allowFullScreen></iframe>
                           ) : (
-                            <video src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || ''}${activeLesson.video_url}`} controls className="w-full h-full" onEnded={() => markCompleted(activeLesson.id)}></video>
+                            <video 
+                              ref={mediaRef}
+                              src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || ''}${activeLesson.video_url}`} 
+                              controls 
+                              className="w-full h-full" 
+                              onEnded={() => markCompleted(activeLesson.id)}
+                            />
                           )}
                         </div>
                       ) : activeLesson.content_type === "audio" && activeLesson.video_url ? (
-                        <div className="flex flex-col items-center justify-center h-full py-12">
-                          <FileAudio size={64} className="text-[#0B2A5B] mb-6" />
-                          <audio src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || ''}${activeLesson.video_url}`} controls className="w-full max-w-md" onEnded={() => markCompleted(activeLesson.id)}></audio>
+                        <div className="flex flex-col items-center justify-center h-full py-12 bg-white rounded-xl border border-slate-100 shadow-sm">
+                          <div className="w-16 h-16 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 mb-4">
+                            <FileAudio size={32} />
+                          </div>
+                          <audio 
+                            ref={mediaRef}
+                            src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || ''}${activeLesson.video_url}`} 
+                            controls 
+                            className="w-full max-w-md" 
+                            onEnded={() => markCompleted(activeLesson.id)}
+                          />
                         </div>
                       ) : activeLesson.content_type === "pdf" && activeLesson.video_url ? (
-                        <div className="w-full rounded-lg overflow-hidden bg-white" style={{ minHeight: 500 }}>
+                        <div className="w-full rounded-xl overflow-hidden bg-white shadow-sm border border-slate-200" style={{ minHeight: 500 }}>
                           <iframe
                             src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || 'https://api.thefintrade.com'}${activeLesson.video_url}`}
                             className="w-full border-0"
                             style={{ height: 600 }}
                             title={activeLesson.title}
                           />
-                          <div className="flex justify-center mt-4">
+                          <div className="flex justify-center mt-4 p-4 border-t border-slate-100 bg-slate-50">
                             <a
                               href={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || 'https://api.thefintrade.com'}${activeLesson.video_url}`}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
-                              <Button variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B]">
-                                <Download size={16} className="mr-2" /> Open in New Tab
+                              <Button variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B] bg-white hover:bg-slate-50 rounded-xl">
+                                <Download size={16} className="mr-2" /> Open PDF in New Tab
                               </Button>
                             </a>
                           </div>
@@ -375,36 +528,71 @@ export default function Modules() {
                       ) : activeLesson.content_type === "text" ? (
                         <div className="space-y-6">
                           {activeLesson.video_url ? (
-                            <div className="bg-white p-4 rounded-lg shadow-sm border border-[#0B2A5B]/10 flex flex-col items-center">
-                              <p className="text-sm font-semibold text-[#0B2A5B] mb-2">Listen to this lesson:</p>
-                              <audio src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || 'https://api.thefintrade.com'}${activeLesson.video_url}`} controls className="w-full max-w-md" onEnded={() => markCompleted(activeLesson.id)}></audio>
+                            <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col items-center">
+                              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                <Volume2 size={14} className="text-[#D50032]" /> Listen to this lesson:
+                              </p>
+                              <audio 
+                                ref={mediaRef}
+                                src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || 'https://api.thefintrade.com'}${activeLesson.video_url}`} 
+                                controls 
+                                className="w-full max-w-md" 
+                                onEnded={() => markCompleted(activeLesson.id)}
+                              />
                             </div>
                           ) : (
                             <div className="flex justify-end">
-                              <Button size="sm" onClick={handleGenerateAudio} disabled={generatingAudio} className="bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a]">
+                              <Button size="sm" onClick={handleGenerateAudio} disabled={generatingAudio} className="bg-[#D50032] text-white hover:bg-[#FF0000] rounded-xl font-bold shadow-md transition-all hover:scale-105 active:scale-95">
                                 <Volume2 size={16} className="mr-2" />
-                                {generatingAudio ? "Generating..." : "Generate Audio"}
+                                {generatingAudio ? "Generating..." : "Generate Audio Version"}
                               </Button>
                             </div>
                           )}
                           {activeLesson.content && (
-                            <div className="prose max-w-none text-[#0B2A5B]">
+                            <div className="prose max-w-none text-[#0B2A5B] bg-white p-6 md:p-8 rounded-xl border border-slate-200/60 shadow-sm leading-relaxed">
                               <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
                             </div>
                           )}
                         </div>
                       ) : activeLesson.content_type === "quiz" ? (
-                        <QuizRenderer key={activeLesson.id} content={activeLesson.content} onComplete={() => markCompleted(activeLesson.id)} />
+                        <div className="bg-white p-6 md:p-8 rounded-xl border border-slate-200 shadow-sm">
+                          <QuizRenderer key={activeLesson.id} content={activeLesson.content} onComplete={() => markCompleted(activeLesson.id)} />
+                        </div>
                       ) : activeLesson.content ? (
-                        <div className="prose max-w-none text-[#0B2A5B]">
+                        <div className="prose max-w-none text-[#0B2A5B] bg-white p-6 md:p-8 rounded-xl border border-slate-200 shadow-sm leading-relaxed">
                           <div dangerouslySetInnerHTML={{ __html: activeLesson.content }} />
                         </div>
                       ) : (
-                        <div className="flex items-center justify-center h-full min-h-[200px] text-[#0B2A5B]/60">
+                        <div className="flex items-center justify-center h-full min-h-[200px] text-slate-400 font-medium">
                           Content is being processed or not available.
                         </div>
                       )}
                       
+                      {/* Playback speed controls inside the player container for video/audio */}
+                      {(activeLesson.content_type === "video" || activeLesson.content_type === "audio" || (activeLesson.content_type === "text" && activeLesson.video_url)) && (
+                        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200/60 shadow-sm max-w-md mx-auto">
+                          <div className="flex items-center gap-2 text-slate-700">
+                            <Settings className="text-[#D50032]" size={16} />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Speed Control</span>
+                          </div>
+                          <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
+                            {[0.75, 1.0, 1.25, 1.5, 2.0].map((speed) => (
+                              <button
+                                key={speed}
+                                onClick={() => setPlaybackSpeed(speed)}
+                                className={`px-2.5 py-1 rounded-md text-xs font-extrabold transition-all ${
+                                  playbackSpeed === speed
+                                    ? "bg-[#D50032] text-white shadow-sm"
+                                    : "text-slate-500 hover:text-slate-800"
+                                }`}
+                              >
+                                {speed}x
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Manual Complete Button (Fallback for embedded iframes or text) */}
                       {!completedLessonIds.has(activeLesson.id) ? (
                         (() => {
@@ -412,23 +600,23 @@ export default function Modules() {
                           const isVideoWatchMandatory = activePolicy ? activePolicy.mandatory : true;
                           if ((activeLesson.content_type === "video" || activeLesson.content_type === "audio") && isVideoWatchMandatory) {
                             return (
-                              <div className="mt-8 p-4 bg-orange-50 border border-orange-200 rounded-xl text-orange-700 text-sm text-center font-semibold max-w-md mx-auto">
-                                ⚠️ You must watch/listen to this entire lesson to mark it as completed.
+                              <div className="mt-8 p-4 bg-amber-50 border border-amber-200/60 rounded-xl text-amber-800 text-xs text-center font-semibold max-w-md mx-auto flex items-center justify-center gap-2 shadow-sm">
+                                ⚠️ You must watch/listen to the entire lesson to unlock progress.
                               </div>
                             );
                           }
                           return (
                             <div className="mt-8 flex justify-center">
-                              <Button onClick={() => markCompleted(activeLesson.id)} className="bg-green-600 text-white hover:bg-green-700">
+                              <Button onClick={() => markCompleted(activeLesson.id)} className="bg-emerald-600 text-white hover:bg-emerald-700 shadow-md font-bold px-6 py-2.5 rounded-xl transition-all hover:scale-105 active:scale-95">
                                 <CheckCircle2 size={16} className="mr-2" /> Mark as Complete & Continue
                               </Button>
                             </div>
                           );
                         })()
                       ) : (
-                        <div className="mt-8 space-y-3">
-                          <div className="flex justify-center items-center gap-2 text-green-600 font-bold">
-                            <CheckCircle2 size={20} /> Lesson Completed
+                        <div className="mt-8 space-y-4">
+                          <div className="flex justify-center items-center gap-2 text-emerald-600 font-extrabold text-base">
+                            <CheckCircle2 size={22} className="animate-pulse" /> Lesson Completed Successfully
                           </div>
                           {(() => {
                             const currentIndex = orderedLessons.findIndex(l => l.id === activeLesson.id);
@@ -437,7 +625,7 @@ export default function Modules() {
                               const isNextUnlocked = completedLessonIds.has(activeLesson.id);
                               return isNextUnlocked ? (
                                 <div className="flex justify-center">
-                                  <Button onClick={() => setActiveLesson(nextLesson)} className="bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">
+                                  <Button onClick={() => setActiveLesson(nextLesson)} className="bg-[#D50032] text-white hover:bg-[#FF0000] shadow-md font-bold px-6 py-2.5 rounded-xl transition-all hover:scale-105 active:scale-95">
                                     <Play size={16} className="mr-2" /> Next: {nextLesson.title}
                                   </Button>
                                 </div>
@@ -445,8 +633,8 @@ export default function Modules() {
                             } else {
                               return (
                                 <div className="flex justify-center">
-                                  <Button onClick={() => setActiveLesson(null)} variant="outline" className="border-[#C2A86A] text-[#C2A86A]">
-                                    🎉 All Lessons Complete — Back to Overview
+                                  <Button onClick={() => setActiveLesson(null)} variant="outline" className="border-[#D50032] text-[#D50032] hover:bg-[#D50032]/5 font-bold px-6 py-2.5 rounded-xl transition-all">
+                                    🎉 All Lessons Completed — Back to Overview
                                   </Button>
                                 </div>
                               );
@@ -459,124 +647,187 @@ export default function Modules() {
                 ) : (
                   <>
                     <Tabs defaultValue="lessons" className="w-full">
-                      <TabsList className="grid w-full grid-cols-2 mb-6">
-                        <TabsTrigger value="lessons">Modules & Lessons</TabsTrigger>
-                        <TabsTrigger value="resources">Study Materials</TabsTrigger>
+                      <TabsList className="grid w-full grid-cols-2 p-1 bg-slate-100 rounded-xl h-12 mb-6 border border-slate-200/40">
+                        <TabsTrigger 
+                          value="lessons"
+                          className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#D50032] py-2 text-sm font-semibold rounded-lg text-[#0B2A5B] transition-all"
+                        >
+                          Modules & Lessons
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="resources"
+                          className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#D50032] py-2 text-sm font-semibold rounded-lg text-[#0B2A5B] transition-all"
+                        >
+                          Study Materials
+                        </TabsTrigger>
                       </TabsList>
 
-                      <TabsContent value="lessons" className="space-y-4">
+                      <TabsContent value="lessons" className="space-y-6">
                         {(selectedCourse.modules || []).length === 0 ? (
-                          <p className="text-[#0B2A5B]/60 text-center py-8">No modules available yet for this course.</p>
+                          <div className="text-slate-400 text-center py-12 font-medium">
+                            No modules available yet for this course.
+                          </div>
                         ) : (
                           (selectedCourse.modules || []).sort((a: any, b: any) => a.order - b.order).map((mod: any, idx: number) => (
-                            <Card key={mod.id} className="p-4 bg-[#F4F1EA]">
-                              <h4 className="font-semibold text-[#0B2A5B] mb-3">Module {idx + 1}: {mod.title}</h4>
-                              {mod.description && <p className="text-xs text-[#0B2A5B]/60 mb-3">{mod.description}</p>}
-                                <div className="space-y-2">
-                                  {(mod.lessons || []).sort((a: any, b: any) => a.order - b.order).map((lesson: any) => {
-                                    const globalIndex = orderedLessons.findIndex(l => l.id === lesson.id);
-                                    let isUnlocked = true;
-                                    if (globalIndex > 0) {
-                                      const prevLesson = orderedLessons[globalIndex - 1];
-                                      isUnlocked = completedLessonIds.has(prevLesson.id);
-                                    }
-                                    const isCompleted = completedLessonIds.has(lesson.id);
+                            <Card key={mod.id} className="p-5 bg-white border border-slate-200 shadow-sm rounded-2xl">
+                              <div className="border-b border-slate-100 pb-3 mb-4 flex items-center justify-between">
+                                <div>
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#D50032]">Module {idx + 1}</span>
+                                  <h4 className="font-extrabold text-base text-[#0B2A5B] mt-0.5">{mod.title}</h4>
+                                </div>
+                              </div>
+                              {mod.description && (
+                                <p className="text-xs text-slate-500 mb-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                  {mod.description}
+                                </p>
+                              )}
+                              <div className="space-y-3">
+                                {(mod.lessons || []).sort((a: any, b: any) => a.order - b.order).map((lesson: any) => {
+                                  const globalIndex = orderedLessons.findIndex(l => l.id === lesson.id);
+                                  let isUnlocked = true;
+                                  if (globalIndex > 0) {
+                                    const prevLesson = orderedLessons[globalIndex - 1];
+                                    isUnlocked = completedLessonIds.has(prevLesson.id);
+                                  }
+                                  const isCompleted = completedLessonIds.has(lesson.id);
 
-                                    return (
-                                      <div key={lesson.id} className={`flex items-center justify-between p-3 rounded-lg border transition-all ${isUnlocked ? 'bg-white hover:shadow-sm border-gray-100' : 'bg-gray-50 border-gray-200 opacity-75'}`}>
-                                        <div className="flex items-center gap-3 flex-1">
-                                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isCompleted ? 'bg-green-100 text-green-600' : 'bg-[#F4F1EA]'}`}>
-                                            {isCompleted ? <CheckCircle2 size={16} /> : getTypeIcon(lesson.content_type)}
-                                          </div>
-                                          <div className="flex-1">
-                                            <p className={`font-medium text-sm ${isUnlocked ? 'text-[#0B2A5B]' : 'text-gray-500'}`}>
-                                              {globalIndex + 1}. {lesson.title}
-                                            </p>
-                                            <div className="flex items-center gap-2 text-xs text-gray-500">
-                                              <span className="capitalize">{lesson.content_type}</span>
-                                              {lesson.duration_minutes && <><span>•</span><span>{lesson.duration_minutes} min</span></>}
-                                            </div>
+                                  return (
+                                    <div 
+                                      key={lesson.id} 
+                                      className={`flex items-center justify-between p-3.5 rounded-xl border transition-all duration-200 ${
+                                        isUnlocked 
+                                          ? 'bg-white border-slate-100 hover:border-slate-200 hover:shadow-md hover:translate-x-0.5' 
+                                          : 'bg-slate-50/50 border-slate-100 opacity-60'
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-3.5 flex-1 mr-4">
+                                        {getLessonIcon(lesson.content_type, isCompleted, isUnlocked)}
+                                        <div className="flex-1 min-w-0">
+                                          <p className={`font-semibold text-sm truncate ${isUnlocked ? 'text-[#0B2A5B]' : 'text-slate-400'}`}>
+                                            {globalIndex + 1}. {lesson.title}
+                                          </p>
+                                          <div className="flex items-center gap-2 text-xs text-slate-400 font-medium mt-0.5">
+                                            <span className="capitalize">{lesson.content_type}</span>
+                                            {lesson.duration_minutes && (
+                                              <>
+                                                <span>•</span>
+                                                <span className="flex items-center gap-0.5"><Clock size={10} />{lesson.duration_minutes} min</span>
+                                              </>
+                                            )}
                                           </div>
                                         </div>
-                                        {isUnlocked ? (
-                                          <Button onClick={() => setActiveLesson(lesson)} size="sm" className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a]">
-                                            {isCompleted ? "Review" : <><Play size={14} className="mr-1" />Start</>}
-                                          </Button>
-                                        ) : (
-                                          <div className="px-3 py-1.5 flex items-center gap-1.5 bg-gray-100 text-gray-500 text-xs font-semibold rounded-lg">
-                                            <Lock size={12} /> Locked
-                                          </div>
-                                        )}
                                       </div>
-                                    );
-                                  })}
-                                  {(mod.lessons || []).length === 0 && <p className="text-xs text-[#0B2A5B]/50 text-center py-2">No lessons yet</p>}
-                                </div>
+                                      
+                                      {isUnlocked ? (
+                                        <Button 
+                                          onClick={() => setActiveLesson(lesson)} 
+                                          size="sm" 
+                                          className={`rounded-xl font-bold transition-all px-4 ${
+                                            isCompleted 
+                                              ? "border-slate-200 text-[#0B2A5B] hover:bg-slate-50 bg-white border" 
+                                              : "bg-[#D50032] text-white hover:bg-[#FF0000] shadow-sm hover:scale-[1.03]"
+                                          }`}
+                                        >
+                                          {isCompleted ? "Review" : <><Play size={12} className="mr-1 fill-white text-white" />Start</>}
+                                        </Button>
+                                      ) : (
+                                        <div className="px-3 py-1.5 flex items-center gap-1.5 bg-slate-100 text-slate-400 text-xs font-bold rounded-lg border border-slate-200/50">
+                                          <Lock size={12} /> Locked
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                                {(mod.lessons || []).length === 0 && (
+                                  <p className="text-xs text-slate-400 text-center py-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">No lessons published yet</p>
+                                )}
+                              </div>
                             </Card>
                           ))
                         )}
                       </TabsContent>
 
-                      <TabsContent value="resources">
-                    <div className="space-y-3">
-                      {(() => {
-                        // Collect real downloadable resources from lessons (PDFs, files)
-                        const resources: any[] = [];
-                        (selectedCourse.modules || []).forEach((mod: any) => {
-                          (mod.lessons || []).forEach((lesson: any) => {
-                            if (lesson.content_type === "pdf" && lesson.video_url) {
-                              resources.push({ title: lesson.title, type: "PDF", url: lesson.video_url });
-                            }
-                            if (lesson.content_type === "video" && lesson.video_url) {
-                              resources.push({ title: lesson.title, type: "Video", url: lesson.video_url });
-                            }
-                            if (lesson.content_type === "audio" && lesson.video_url) {
-                              resources.push({ title: lesson.title, type: "Audio", url: lesson.video_url });
-                            }
-                          });
-                        });
+                      <TabsContent value="resources" className="space-y-4">
+                        <div className="space-y-3">
+                          {(() => {
+                            // Collect real downloadable resources from lessons (PDFs, files)
+                            const resources: any[] = [];
+                            (selectedCourse.modules || []).forEach((mod: any) => {
+                              (mod.lessons || []).forEach((lesson: any) => {
+                                if (lesson.content_type === "pdf" && lesson.video_url) {
+                                  resources.push({ title: lesson.title, type: "PDF", url: lesson.video_url });
+                                }
+                                if (lesson.content_type === "video" && lesson.video_url) {
+                                  resources.push({ title: lesson.title, type: "Video", url: lesson.video_url });
+                                }
+                                if (lesson.content_type === "audio" && lesson.video_url) {
+                                  resources.push({ title: lesson.title, type: "Audio", url: lesson.video_url });
+                                }
+                              });
+                            });
 
-                        if (resources.length === 0) {
-                          return <p className="text-[#0B2A5B]/60 text-center py-8">No downloadable study materials available for this course yet.</p>;
-                        }
-
-                        return resources.map((res, i) => (
-                          <Card key={i} className="p-4 bg-[#F4F1EA]">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <FileText className="text-[#C2A86A]" size={20} />
-                                <div>
-                                  <p className="font-semibold text-[#0B2A5B]">{res.title}</p>
-                                  <p className="text-xs text-[#0B2A5B]/60">{res.type} study material</p>
+                            if (resources.length === 0) {
+                              return (
+                                <div className="text-slate-400 text-center py-12 font-medium">
+                                  No study materials available for download yet.
                                 </div>
-                              </div>
-                              <a href={res.url.startsWith('http') ? res.url : `${api.defaults.baseURL}${res.url}`} target="_blank" rel="noreferrer">
-                                <Button size="sm" variant="outline" className="border-[#0B2A5B]/20"><Download size={16} className="mr-2" />Download</Button>
-                              </a>
-                            </div>
-                          </Card>
-                        ));
-                      })()}
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                              );
+                            }
 
-                <div className="mt-4 flex items-center gap-4">
-                  <Settings className="text-[#0B2A5B]" size={20} />
-                  <span className="text-sm text-[#0B2A5B]">Playback Speed:</span>
-                  <div className="flex gap-2">
-                    {[0.75, 1.0, 1.25, 1.5, 2.0].map((speed) => (
-                      <button key={speed} onClick={() => setPlaybackSpeed(speed)} className={`px-3 py-1 rounded-lg text-sm font-semibold transition-colors ${playbackSpeed === speed ? "bg-[#C2A86A] text-[#0B2A5B]" : "bg-white text-[#0B2A5B] hover:bg-[#F4F1EA]"}`}>{speed}x</button>
-                    ))}
-                  </div>
-                </div>
+                            return resources.map((res, i) => (
+                              <Card key={i} className="p-4 bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-100 shadow-sm">
+                                      <FileText size={18} />
+                                    </div>
+                                    <div>
+                                      <p className="font-bold text-[#0B2A5B] text-sm">{res.title}</p>
+                                      <p className="text-xs text-slate-400 font-semibold">{res.type} Study Resource</p>
+                                    </div>
+                                  </div>
+                                  <a href={res.url.startsWith('http') ? res.url : `${api.defaults.baseURL}${res.url}`} target="_blank" rel="noreferrer">
+                                    <Button size="sm" variant="outline" className="border-slate-200 text-[#0B2A5B] bg-white hover:bg-slate-50 rounded-xl font-bold shadow-sm">
+                                      <Download size={14} className="mr-1.5" />Download
+                                    </Button>
+                                  </a>
+                                </div>
+                              </Card>
+                            ));
+                          })()}
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+
+                    {/* General/Default Playback speed settings */}
+                    <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-5">
+                      <div className="flex items-center gap-2 text-slate-700">
+                        <Settings className="text-[#D50032]" size={18} />
+                        <span className="text-xs font-semibold uppercase tracking-wider">Default Playback Speed</span>
+                      </div>
+                      <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
+                        {[0.75, 1.0, 1.25, 1.5, 2.0].map((speed) => (
+                          <button 
+                            key={speed} 
+                            onClick={() => setPlaybackSpeed(speed)} 
+                            className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
+                              playbackSpeed === speed 
+                                ? "bg-[#D50032] text-white shadow-sm" 
+                                : "text-slate-500 hover:text-slate-800"
+                            }`}
+                          >
+                            {speed}x
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </>
+            ) : (
+              <p className="text-center text-slate-400 font-medium py-12">Select a course to view modules</p>
             )}
-          </>
-        ) : (
-          <p className="text-center text-[#0B2A5B]/60 py-8">Select a course to view modules</p>
-        )}
-      </Card>
+          </Card>
         </div>
       )}
     </DashboardLayout>
