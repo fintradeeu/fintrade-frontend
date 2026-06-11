@@ -2378,6 +2378,10 @@ export default function MarketingHome() {
                     {
                       q: "What should I do if I made a payment by mistake?",
                       a: "If you believe a payment was made in error or you were charged incorrectly, please contact our support team immediately. We will investigate the issue and provide appropriate assistance. However, completed course purchases are not eligible for refunds."
+                    },
+                    {
+                      q: "What law governs disputes related to FinTrade?",
+                      a: "All disputes shall be governed and construed in accordance with the laws of India, and shall be subject to the exclusive jurisdiction of the competent courts at Ahmedabad, Gujarat."
                     }
                   ].map((faq, index) => {
                     const isOpen = faqOpenIndex === index;

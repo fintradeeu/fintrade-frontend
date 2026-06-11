@@ -660,12 +660,16 @@ export default function MarketingLayout() {
             </div>
             <div>
               <h4 className="font-bold mb-4">Connect</h4>
-              <div className="flex gap-4">
+              <div className="flex gap-4 mb-4">
                 <a href="https://www.facebook.com/profile.php?id=61589528075521" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#D50032] transition-colors"><Facebook className="h-5 w-5" /></a>
                 <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#D50032] transition-colors"><X className="h-5 w-5" /></a>
                 <a href="https://www.linkedin.com/in/the-fintrade-7230b040a/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#D50032] transition-colors"><Linkedin className="h-5 w-5" /></a>
                 <a href="https://www.instagram.com/the.fintrade/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#D50032] transition-colors"><Instagram className="h-5 w-5" /></a>
                 <a href="https://www.youtube.com/@The_FinTrade" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#D50032] transition-colors"><Youtube className="h-5 w-5" /></a>
+              </div>
+              <div className="text-gray-400 text-sm leading-relaxed mt-4">
+                <p className="font-semibold text-white mb-1">Office Address:</p>
+                <p className="text-xs">10th floor, Shivalik complex, nr. Panchvati Circle, opposite Bank of Baroda, Panchavati Society, Ambawadi, Ahmedabad, Gujarat 380006</p>
               </div>
             </div>
           </div>
