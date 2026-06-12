@@ -208,7 +208,7 @@ export default function SubmitFeedback() {
           </div>
 
           <div className="hidden md:block pt-8 border-t border-slate-200 mt-8 text-xs text-slate-400">
-            © {new Date().getFullYear()} FinTrade. All rights reserved. Safe and secure review collection.
+            © {new Date().getFullYear()} FinTrade. All rights reserved. | Powered by FT EDUTECH LLP | Safe and secure review collection.
           </div>
         </div>
 

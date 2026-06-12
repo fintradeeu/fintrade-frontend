@@ -333,7 +333,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-[#F4F1EA]/10 pt-8 text-center text-sm text-[#F4F1EA]/70">
-            <p>© 2026 FinTrade. All rights reserved. | Built for professional trading education.</p>
+            <p>© 2026 FinTrade. All rights reserved. | Powered by FT EDUTECH LLP | Built for professional trading education.</p>
           </div>
         </div>
       </footer>

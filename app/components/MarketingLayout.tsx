@@ -674,7 +674,7 @@ export default function MarketingLayout() {
             </div>
           </div>
           <div className="pt-8 border-t border-white/10 text-center text-gray-500 text-sm">
-            <p>&copy; {new Date().getFullYear()} FinTrade. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} FinTrade. All rights reserved. | Powered by FT EDUTECH LLP</p>
           </div>
         </div>
       </footer>
