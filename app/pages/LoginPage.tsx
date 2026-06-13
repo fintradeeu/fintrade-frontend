@@ -8,6 +8,7 @@ import { Label } from "../components/ui/label";
 import { Eye, EyeOff, ArrowLeft, ShieldCheck, Mail, Smartphone } from "lucide-react";
 import logo from "../../imports/fintrade_logo.png";
 import api from "../services/api";
+import { isGoogleAuthConfigured } from "../config/googleAuth";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -479,24 +480,28 @@ export default function LoginPage() {
                 </Button>
               </form>
 
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-500">Or continue with</span>
-                </div>
-              </div>
+              {isGoogleAuthConfigured && (
+                <>
+                  <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200" />
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-4 bg-white text-gray-500">Or continue with</span>
+                    </div>
+                  </div>
 
-              <div className="flex justify-center">
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => setErrorMsg("Google sign-in failed. Please try again.")}
-                  size="large"
-                  width="100%"
-                  text="signin_with"
-                />
-              </div>
+                  <div className="flex justify-center">
+                    <GoogleLogin
+                      onSuccess={handleGoogleSuccess}
+                      onError={() => setErrorMsg("Google sign-in failed. Please try again.")}
+                      size="large"
+                      width="100%"
+                      text="signin_with"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="mt-6 text-center">
                 <p className="text-sm text-gray-600">

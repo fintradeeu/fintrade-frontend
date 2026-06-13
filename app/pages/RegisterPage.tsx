@@ -8,6 +8,59 @@ import { Label } from "../components/ui/label";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import logo from "../../imports/fintrade_logo.png";
 import api from "../services/api";
+import { isGoogleAuthConfigured } from "../config/googleAuth";
+
+type GoogleRegisterButtonProps = {
+  loading: boolean;
+  onLoadingChange: (loading: boolean) => void;
+  onError: (message: string) => void;
+};
+
+function GoogleRegisterButton({ loading, onLoadingChange, onError }: GoogleRegisterButtonProps) {
+  const navigate = useNavigate();
+  const googleRegister = useGoogleLogin({
+    flow: "implicit",
+    scope: [
+      "openid",
+      "email",
+      "profile",
+      "https://www.googleapis.com/auth/user.phonenumbers.read",
+      "https://www.googleapis.com/auth/user.addresses.read",
+    ].join(" "),
+    onSuccess: async (tokenResponse) => {
+      onError("");
+      onLoadingChange(true);
+
+      try {
+        const response = await api.post("/auth/google", {
+          access_token: tokenResponse.access_token,
+        });
+        const { access_token, user } = response.data;
+        localStorage.setItem("token", access_token);
+        localStorage.setItem("user", JSON.stringify(user));
+        navigate("/");
+      } catch (err: any) {
+        onError(err.response?.data?.detail || "Google sign-in failed. Please try again.");
+      } finally {
+        onLoadingChange(false);
+      }
+    },
+    onError: () => onError("Google sign-in failed. Please try again."),
+  });
+
+  return (
+    <Button
+      type="button"
+      className="w-full text-white shadow-lg"
+      style={{ background: "#121212", boxShadow: "0 0 20px rgba(18,18,18,0.18)" }}
+      size="lg"
+      disabled={loading}
+      onClick={() => googleRegister()}
+    >
+      {loading ? "Signing in..." : "Sign up with Google"}
+    </Button>
+  );
+}
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,36 +72,6 @@ export default function RegisterPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  const googleRegister = useGoogleLogin({
-    flow: "implicit",
-    scope: [
-      "openid",
-      "email",
-      "profile",
-      "https://www.googleapis.com/auth/user.phonenumbers.read",
-      "https://www.googleapis.com/auth/user.addresses.read",
-    ].join(" "),
-    onSuccess: async (tokenResponse) => {
-      setErrorMsg("");
-      setLoading(true);
-
-      try {
-        const response = await api.post("/auth/google", {
-          access_token: tokenResponse.access_token,
-        });
-        const { access_token, user } = response.data;
-        localStorage.setItem("token", access_token);
-        localStorage.setItem("user", JSON.stringify(user));
-        navigate("/");
-      } catch (err: any) {
-        setErrorMsg(err.response?.data?.detail || "Google sign-in failed. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    },
-    onError: () => setErrorMsg("Google sign-in failed. Please try again."),
-  });
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,25 +286,24 @@ export default function RegisterPage() {
             </Button>
           </form>
 
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500">Or continue with</span>
-            </div>
-          </div>
+          {isGoogleAuthConfigured && (
+            <>
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-white text-gray-500">Or continue with</span>
+                </div>
+              </div>
 
-          <Button
-            type="button"
-            className="w-full text-white shadow-lg"
-            style={{ background: "#121212", boxShadow: "0 0 20px rgba(18,18,18,0.18)" }}
-            size="lg"
-            disabled={loading}
-            onClick={() => googleRegister()}
-          >
-            {loading ? "Signing in..." : "Sign up with Google"}
-          </Button>
+              <GoogleRegisterButton
+                loading={loading}
+                onLoadingChange={setLoading}
+                onError={setErrorMsg}
+              />
+            </>
+          )}
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
