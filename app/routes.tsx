@@ -62,6 +62,7 @@ import AdminSimulator from "./pages/admin/AdminSimulator";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminNews from "./pages/admin/AdminNews";
+import AdminAdvisors from "./pages/admin/AdminAdvisors";
 import AdminRoles from "./pages/admin/AdminRoles";
 import AdminLoginDetails from "./pages/admin/AdminLoginDetails";
 import AdminCMS from "./pages/admin/AdminCMS";
@@ -287,6 +288,10 @@ export const router = createBrowserRouter([
   {
     path: "/admin/news",
     Component: AdminNews,
+  },
+  {
+    path: "/admin/advisors",
+    Component: AdminAdvisors,
   },
   {
     path: "/admin/login-details",

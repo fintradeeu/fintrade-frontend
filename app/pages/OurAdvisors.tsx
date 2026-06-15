@@ -30,37 +30,51 @@ export default function OurAdvisors() {
     api.get("/settings/about-us")
       .then((res) => {
         const leadership = res.data?.leadership || [];
-        // Combine static leaders with dynamic configurations
-        const list = staticLeaders.map((sl: any) => {
-          const dl = leadership.find((l: any) => getLeaderId(l) === sl.id);
-          if (!dl) return sl;
-          const imagePath = dl.profile_image || dl.image || sl.profile_image || sl.image;
-          const imageUrl = imagePath 
-            ? getImageUrl(imagePath) 
-            : `https://ui-avatars.com/api/?name=${encodeURIComponent(dl.name || sl.name || "FT")}&background=FFF0F2&color=D50032&size=512&font-size=0.33&bold=true`;
+        if (leadership && leadership.length > 0) {
+          const list = leadership.map((dl: any) => {
+            const imagePath = dl.profile_image || dl.image;
+            const imageUrl = imagePath 
+              ? getImageUrl(imagePath) 
+              : `https://ui-avatars.com/api/?name=${encodeURIComponent(dl.name || "FT")}&background=FFF0F2&color=D50032&size=512&font-size=0.33&bold=true`;
 
-          const rawTags = dl.tags || sl.tags || [];
-          const parsedTags = Array.isArray(rawTags)
-            ? rawTags
-            : typeof rawTags === "string"
-              ? rawTags.split(",").map((t: string) => t.trim()).filter(Boolean)
-              : [];
+            const rawTags = dl.tags || [];
+            const parsedTags = Array.isArray(rawTags)
+              ? rawTags
+              : typeof rawTags === "string"
+                ? rawTags.split(",").map((t: string) => t.trim()).filter(Boolean)
+                : [];
 
-          return {
-            ...sl,
-            ...dl,
-            id: sl.id,
-            image: imageUrl,
-            role: dl.role || dl.title || sl.role,
-            fullBio: dl.fullBio || dl.bio || sl.fullBio,
-            tags: parsedTags
-          };
-        });
-        setAdvisors(list);
+            return {
+              ...dl,
+              id: getLeaderId(dl),
+              image: imageUrl,
+              role: dl.role || dl.title || "",
+              fullBio: dl.fullBio || dl.bio || "",
+              tags: parsedTags
+            };
+          });
+          setAdvisors(list);
+        } else {
+          const list = staticLeaders.map((sl: any) => {
+            return {
+              ...sl,
+              image: getImageUrl(sl.image),
+              tags: sl.tags || []
+            };
+          });
+          setAdvisors(list);
+        }
       })
       .catch((err) => {
         console.error("Failed to fetch dynamic advisors list", err);
-        setAdvisors(staticLeaders);
+        const list = staticLeaders.map((sl: any) => {
+          return {
+            ...sl,
+            image: getImageUrl(sl.image),
+            tags: sl.tags || []
+          };
+        });
+        setAdvisors(list);
       })
       .finally(() => {
         setLoading(false);

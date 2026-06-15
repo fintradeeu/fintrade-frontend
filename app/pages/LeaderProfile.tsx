@@ -64,7 +64,7 @@ export default function LeaderProfile() {
               : [];
 
           setLeader({
-            ...staticFound,
+            ...(staticFound || {}),
             ...found,
             id: getLeaderId(found),
             role: found.role || found.title || (staticFound && (staticFound.role || staticFound.title)) || "Leadership",
