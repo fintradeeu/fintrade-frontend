@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
@@ -45,6 +45,55 @@ export default function TradingSimulator() {
   const [loading, setLoading] = useState(true);
   const [placing, setPlacing] = useState(false);
   const [startingAccount, setStartingAccount] = useState(false);
+
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selectedInstrument && selectedInstrument.tv_symbol && chartContainerRef.current) {
+      chartContainerRef.current.innerHTML = '';
+      const containerId = `tv_chart_${selectedInstrument.symbol.replace(/[^a-zA-Z0-9]/g, '_')}`;
+      
+      const chartDiv = document.createElement("div");
+      chartDiv.id = containerId;
+      chartDiv.style.width = "100%";
+      chartDiv.style.height = "100%";
+      chartContainerRef.current.appendChild(chartDiv);
+
+      const script = document.createElement("script");
+      script.src = "https://s3.tradingview.com/tv.js";
+      script.type = "text/javascript";
+      script.async = true;
+      script.onload = () => {
+        if (typeof (window as any).TradingView !== 'undefined') {
+          try {
+            new (window as any).TradingView.widget({
+              "width": "100%",
+              "height": 400,
+              "symbol": selectedInstrument.tv_symbol,
+              "interval": "D",
+              "timezone": "Asia/Kolkata",
+              "theme": "light",
+              "style": "1",
+              "locale": "in",
+              "enable_publishing": false,
+              "hide_top_toolbar": false,
+              "save_image": false,
+              "container_id": containerId
+            });
+          } catch (e) {
+            console.error("TradingView widget init error", e);
+          }
+        }
+      };
+      document.body.appendChild(script);
+      
+      return () => {
+        if (document.body.contains(script)) {
+          document.body.removeChild(script);
+        }
+      };
+    }
+  }, [selectedInstrument]);
 
   useEffect(() => {
     loadData();
@@ -253,6 +302,20 @@ export default function TradingSimulator() {
 
         {/* Main Content Area */}
         <div className="lg:col-span-3 space-y-6">
+          {/* Live Market Chart */}
+          {selectedInstrument && (
+            <Card className="p-6 bg-white shadow-lg">
+              <h3 className="text-xl font-semibold text-[#0B2A5B] mb-4">
+                Live Price Chart — {selectedInstrument.symbol}
+              </h3>
+              <div 
+                ref={chartContainerRef} 
+                style={{ height: "400px", width: "100%" }} 
+                className="rounded-lg overflow-hidden border border-gray-100"
+              />
+            </Card>
+          )}
+
           {/* Trade PnL Chart */}
           {chartData.length > 0 && (
             <Card className="p-6 bg-white shadow-lg">

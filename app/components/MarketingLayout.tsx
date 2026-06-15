@@ -233,7 +233,7 @@ export default function MarketingLayout() {
               <div className="absolute inset-0 rounded-full bg-[#D50032]/25 blur-3xl animate-pulse w-40 h-40" />
               <div className="w-28 h-28 flex items-center justify-center relative">
                 <img
-                  src="/F-LOGO--RED.png"
+                  src="/TheFinTrade Final Logo (1).png"
                   alt="FinTrade logo"
                   className="h-24 w-24 object-contain animate-spin"
                   style={{ animationDuration: "2.5s" }}
@@ -388,21 +388,26 @@ export default function MarketingLayout() {
       </div>
 
       {/* Navbar */}
-      <nav className="sticky top-0 z-[100] bg-white/90 border-b border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.05)] backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <div className="flex-shrink-0 flex items-center h-20 w-[180px] md:w-[220px] overflow-visible">
-              <Link to="/" className="flex items-center h-full w-full">
+      <nav className="sticky top-0 z-[100] bg-white/90 border-b border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.05)] backdrop-blur-xl" style={{ overflow: "visible" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ overflow: "visible" }}>
+          <div className="flex items-center justify-between h-24" style={{ overflow: "visible" }}>
+            {/* LOGO AREA */}
+            <div className="flex-shrink-0 flex items-center" style={{ width: "240px", overflow: "visible" }}>
+              <Link to="/" className="flex items-center" style={{ overflow: "visible" }}>
                 <img
                   src="/TheFinTrade Final Logo (1).png"
                   alt="FinTrade"
-                  className="h-16 md:h-24 w-auto object-contain scale-[2.2] md:scale-[2.6] origin-left transition-transform duration-300"
                   style={{
+                    width: "210px",
+                    height: "auto",
+                    display: "block",
                     filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.06))"
                   }}
                 />
               </Link>
             </div>
+
+            {/* NAV LINKS */}
             <div className="hidden md:flex items-center gap-8">
               <Link to="/" className="text-gray-700 hover:text-[#D50032] transition-colors font-medium">Home</Link>
               <Link to="/courses" className="text-gray-700 hover:text-[#D50032] transition-colors font-medium">Courses</Link>
@@ -412,10 +417,17 @@ export default function MarketingLayout() {
               <Link to="/blog" className="text-gray-700 hover:text-[#D50032] transition-colors font-medium">Blog</Link>
               <Link to="/about" className="text-gray-700 hover:text-[#D50032] transition-colors font-medium">About</Link>
             </div>
+
+            {/* RIGHT ACTIONS */}
             <div className="flex items-center gap-3">
-              <button onClick={() => setSearchOpen(true)} className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-gray-600 hover:text-[#D50032] hover:bg-[#D50032]/10 transition-all" title="Search">
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-gray-600 hover:text-[#D50032] hover:bg-[#D50032]/10 transition-all"
+                title="Search"
+              >
                 <Search className="h-4 w-4 md:h-5 md:w-5" />
               </button>
+
               {isAuthenticated ? (
                 <button
                   type="button"
@@ -428,14 +440,13 @@ export default function MarketingLayout() {
                 </button>
               ) : (
                 <Link to="/login" className="inline-block select-none">
-                  <button
-                    className="h-10 px-5 rounded-full bg-[#D50032] hover:bg-[#b00029] text-white font-extrabold text-xs sm:text-sm tracking-wide flex items-center gap-2 transition-all duration-300 shadow-[0_4px_12px_rgba(213,0,50,0.22)] hover:shadow-[0_6px_18px_rgba(213,0,50,0.32)] hover:scale-105 active:scale-95 border-0 cursor-pointer"
-                  >
+                  <button className="h-10 px-5 rounded-full bg-[#D50032] hover:bg-[#b00029] text-white font-extrabold text-xs sm:text-sm tracking-wide flex items-center gap-2 transition-all duration-300 shadow-[0_4px_12px_rgba(213,0,50,0.22)] hover:shadow-[0_6px_18px_rgba(213,0,50,0.32)] hover:scale-105 active:scale-95 border-0 cursor-pointer">
                     <LogIn className="h-3.5 w-3.5 sm:h-4 sm:w-4 stroke-[3]" />
                     <span>Login</span>
                   </button>
                 </Link>
               )}
+
               {/* Mobile menu trigger */}
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
