@@ -45,7 +45,11 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
     try {
       if (Number(finalPrice) > 0) {
         console.log("Initiating payment for course ID:", course.id);
-        const res = await api.post("/payments/create", { course_id: course.id });
+        const res = await api.post("/payments/create", {
+          course_id: course.id,
+          coupon_code: couponCode.trim() || null,
+          discounted_price: discount > 0 ? finalPrice : null,
+        });
         console.log("Payment initiation API response:", res.data);
         if (res.data?.redirect_url) {
           console.log("Redirecting to:", res.data.redirect_url);
