@@ -12,6 +12,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "..
 import ShareButton from "../components/ShareButton";
 import StudentStats from "../components/home/StudentStats";
 import VerticalVideoSection from "../components/home/VerticalVideoSection";
+import { AnimatePresence } from "framer-motion";
 
 import EMIHighlight from "../components/home/EMIHighlight";
 import KeyInsights from "../components/home/KeyInsights";
@@ -332,6 +333,109 @@ const servicesCards = [
   { icon: LineChart, title: 'AI-Analytics', desc: 'Leverage AI-driven analytics for smarter market insights.' },
 ];
 
+const termsList = [
+  {
+    num: "1",
+    title: "Acceptance of Terms",
+    content: "By registering, accessing, or using TheFinTrade platform, you acknowledge that you have read, understood, and agreed to these Terms and Conditions, our Privacy Policy, and any other applicable policies."
+  },
+  {
+    num: "2",
+    title: "Nature of Services",
+    content: "TheFinTrade provides educational content, training programs, webinars, mentorship sessions, assessments, and learning management services related to financial markets, trading, investing, and related subjects.\n\nTheFinTrade is an educational platform and does not provide investment advice, portfolio management services, or guaranteed profit opportunities."
+  },
+  {
+    num: "3",
+    title: "Eligibility",
+    content: "Users must be at least 18 years old to register and purchase courses. By using the platform, you confirm that all information provided is accurate and complete."
+  },
+  {
+    num: "4",
+    title: "User Accounts",
+    content: "Users are responsible for:\n• Maintaining the confidentiality of login credentials.\n• Restricting unauthorized access to their account.\n• Ensuring account information remains accurate and updated.\n• All activities conducted under their account.\n\nTheFinTrade reserves the right to suspend or terminate accounts involved in fraudulent, abusive, or unauthorized activities."
+  },
+  {
+    num: "5",
+    title: "Course Enrollment and Access",
+    content: "Upon successful payment and verification, users will receive access to purchased courses subject to the course validity period.\n\nCourse access is personal and non-transferable.\n\nUsers shall not:\n• Share login credentials.\n• Resell course access.\n• Record, distribute, or reproduce course content without authorization."
+  },
+  {
+    num: "6",
+    title: "KYC Verification",
+    content: "Certain programs may require Know Your Customer (KYC) verification.\n\nUsers agree to provide accurate identification documents when requested.\n\nFailure to complete KYC requirements may result in restricted access to specific services or programs."
+  },
+  {
+    num: "7",
+    title: "Assessments and Entrance Tests",
+    content: "Some courses may require completion of entrance assessments.\n\nTheFinTrade reserves the right to establish qualification criteria, attempt limits, waiting periods, and eligibility requirements for enrollment.\n\nAssessment results are final unless otherwise specified."
+  },
+  {
+    num: "8",
+    title: "Payments and Fees",
+    content: "All payments made through the platform are subject to applicable taxes and payment gateway charges.\n\nUsers agree to pay all applicable fees associated with course enrollment.\n\nTheFinTrade reserves the right to revise pricing at any time without prior notice."
+  },
+  {
+    num: "9",
+    title: "Coupons and Promotional Offers",
+    content: "Promotional offers, discounts, and coupon codes:\n• Are valid only during specified periods.\n• Cannot be combined unless explicitly stated.\n• May be modified or withdrawn without notice.\n• Have no cash value.\n\nTheFinTrade reserves the right to reject or cancel coupons used fraudulently or in violation of promotional terms."
+  },
+  {
+    num: "10",
+    title: "Refund Policy",
+    content: "Refund eligibility shall be governed by the refund policy published on the website.\n\nRefund requests must comply with applicable refund conditions and timelines.\n\nTheFinTrade reserves the right to reject refund requests that do not satisfy the stated policy requirements."
+  },
+  {
+    num: "11",
+    title: "Intellectual Property",
+    content: "All content available on TheFinTrade, including:\n• Videos\n• Documents\n• PDFs\n• Presentations\n• Graphics\n• Logos\n• Course materials\n• Website content\n\nis owned by or licensed to TheFinTrade and protected by applicable intellectual property laws.\n\nUnauthorized copying, redistribution, resale, or commercial use is strictly prohibited."
+  },
+  {
+    num: "12",
+    title: "Educational Disclaimer",
+    content: "TheFinTrade provides educational and informational content only.\n\nNothing on the platform shall be interpreted as:\n• Investment advice\n• Financial advice\n• Trading recommendations\n• Portfolio management services\n• Guaranteed returns\n\nTrading and investing involve substantial risk, including the possible loss of capital.\n\nPast performance does not guarantee future results.\n\nUsers are solely responsible for their investment and trading decisions."
+  },
+  {
+    num: "13",
+    title: "Limitation of Liability",
+    content: "TheFinTrade shall not be liable for:\n• Trading losses\n• Investment losses\n• Business interruptions\n• Loss of profits\n• Indirect or consequential damages\n\narising from the use of educational content, platform services, or reliance upon information provided through the platform."
+  },
+  {
+    num: "14",
+    title: "User Conduct",
+    content: "Users agree not to:\n• Violate any applicable laws.\n• Upload harmful, abusive, or unlawful content.\n• Attempt unauthorized access to systems.\n• Disrupt platform operations.\n• Misrepresent their identity.\n\nViolation may result in suspension or permanent termination of access."
+  },
+  {
+    num: "15",
+    title: "Privacy",
+    content: "The collection and use of personal information shall be governed by the Privacy Policy published on the website."
+  },
+  {
+    num: "16",
+    title: "Suspension and Termination",
+    content: "TheFinTrade may suspend, restrict, or terminate user access without prior notice if:\n• Terms are violated.\n• Fraudulent activity is detected.\n• Payment disputes arise.\n• Platform security is compromised."
+  },
+  {
+    num: "17",
+    title: "Modification of Services",
+    content: "TheFinTrade reserves the right to modify, update, suspend, or discontinue any course, feature, program, or service at any time."
+  },
+  {
+    num: "18",
+    title: "Governing Law",
+    content: "These Terms and Conditions shall be governed by and interpreted in accordance with the laws of India.\n\nAny disputes arising from these Terms shall be subject to the exclusive jurisdiction of the courts located in Ahmedabad, Gujarat, India."
+  },
+  {
+    num: "19",
+    title: "Contact Information",
+    content: "For questions regarding these Terms and Conditions, please contact:\n\nTheFinTrade\nWebsite: www.thefintrade.com\nEmail: info@thefintrade.com\nPhone: +91 92746 75947\nAddress: 10th floor, Shivalik complex, nr. Panchvati Circle, opposite Bank of Baroda, Panchavati Society, Ambawadi, Ahmedabad, Gujarat 380006"
+  },
+  {
+    num: "20",
+    title: "Acceptance",
+    content: "By using TheFinTrade, registering an account, or purchasing a course, you acknowledge and agree to these Terms and Conditions."
+  }
+];
+
 export function CourseCard({ course, onEnroll }: { course: any, onEnroll?: () => void }) {
   const navigate = useNavigate();
 
@@ -378,6 +482,9 @@ export default function MarketingHome() {
   const [searchOpen, setSearchOpen] = useState(false);
   const isAuthenticated = !!localStorage.getItem("token");
   const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(null);
+  const [activeTermIndex, setActiveTermIndex] = useState(0);
+  const [termsSearchQuery, setTermsSearchQuery] = useState("");
+  const [termsMobileOpenIdx, setTermsMobileOpenIdx] = useState<number | null>(null);
 
   const [isRegModalOpen, setIsRegModalOpen] = useState(false);
   const [selectedLectureForReg, setSelectedLectureForReg] = useState<any>(null);
@@ -780,6 +887,13 @@ export default function MarketingHome() {
     { icon: Trophy, title: "Placement Opportunities", desc: "Get access to placement support with leading prop trading firms and financial institutions.", num: "04" },
   ];
   const whyChooseCardsCount = whyChooseList.length;
+
+  const filteredTerms = termsList.filter(
+    (item) =>
+      item.title.toLowerCase().includes(termsSearchQuery.toLowerCase()) ||
+      item.content.toLowerCase().includes(termsSearchQuery.toLowerCase())
+  );
+  const activeTerm = filteredTerms[activeTermIndex] || filteredTerms[0] || termsList[0];
 
   const handleWhyChooseScroll = () => {
     if (!whyChooseScrollRef.current) return;
@@ -2144,11 +2258,188 @@ export default function MarketingHome() {
           </ScrollReveal>
         )}
 
-        {/* Placement & Career Opportunities Orbit Section */}
-        {sectionVisibility.show_career_pathways !== false && (
-          <ScrollReveal>
-            <CareerPathways />
-          </ScrollReveal>
+        {/* Section 15: Terms & Conditions */}
+        {sectionVisibility.show_terms !== false && (
+          <section id="terms" className="py-16 relative z-10 bg-transparent overflow-hidden border-t border-gray-100">
+            {/* Ambient Red Glow */}
+            <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#D50032]/5 rounded-full blur-[140px] pointer-events-none" />
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <ScrollReveal>
+                {/* Section Header */}
+                <div className="text-center mb-12">
+                  <div className="inline-flex items-center gap-1.5 px-4.5 py-1.5 rounded-full mb-3 border border-[#D50032]/25 bg-[#D50032]/5">
+                    <span className="text-[#D50032] font-extrabold text-xs tracking-wider uppercase">📋 LEGAL POLICY</span>
+                  </div>
+                  <h2 className="text-3xl md:text-5xl font-black mb-3 text-gray-900 tracking-tight">
+                    Terms & <span className="text-[#D50032]">Conditions</span>
+                  </h2>
+                  <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed font-medium">
+                    Effective Date: June 16, 2026 • Please review our official terms and guidelines below.
+                  </p>
+                </div>
+
+                {/* Search Bar */}
+                <div className="max-w-xl mx-auto mb-8 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search terms, refund policies, KYC..."
+                    value={termsSearchQuery}
+                    onChange={(e) => {
+                      setTermsSearchQuery(e.target.value);
+                      setActiveTermIndex(0);
+                    }}
+                    className="w-full pl-11 pr-4 py-3 bg-white/80 backdrop-blur-md border border-gray-200/80 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#D50032]/30 focus:border-[#D50032] transition-all shadow-sm text-gray-900"
+                  />
+                  {termsSearchQuery && (
+                    <button
+                      onClick={() => setTermsSearchQuery("")}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-[#D50032] transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Main Content Workspace */}
+                {filteredTerms.length === 0 ? (
+                  <div className="text-center py-16 bg-white/50 backdrop-blur border border-gray-150 rounded-3xl shadow-sm">
+                    <FileText className="mx-auto text-gray-300 mb-3 h-10 w-10 stroke-[1.5]" />
+                    <p className="font-bold text-[#0B2A5B] text-lg">No clauses match your search</p>
+                    <p className="text-sm text-gray-500 mt-1">Try searching for keywords like "refund", "eligibility", or "KYC"</p>
+                  </div>
+                ) : (
+                  <div className="grid lg:grid-cols-12 gap-8 items-start">
+                    {/* Desktop Sidebar (Left Column) - Visible on lg screens */}
+                    <div className="hidden lg:flex lg:col-span-4 flex-col gap-2.5 max-h-[580px] overflow-y-auto pr-3 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+                      {filteredTerms.map((term, index) => {
+                        const isSelected = (filteredTerms[activeTermIndex]?.num === term.num) || (activeTermIndex === index);
+                        return (
+                          <button
+                            key={term.num}
+                            onClick={() => setActiveTermIndex(index)}
+                            className={`w-full text-left p-4 rounded-2xl border transition-all duration-300 flex items-start gap-4 select-none relative overflow-hidden group ${isSelected
+                              ? "bg-white border-[#D50032]/30 shadow-md shadow-[#D50032]/[0.02]"
+                              : "bg-white/40 border-gray-100 hover:border-gray-200 hover:bg-white/70"
+                              }`}
+                          >
+                            {/* Selected Indicator Pill */}
+                            {isSelected && (
+                              <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#D50032] rounded-r-md" />
+                            )}
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-colors ${isSelected ? "bg-[#FFF0F2] text-[#D50032]" : "bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600"
+                              }`}>
+                              {term.num}
+                            </div>
+                            <div className="flex-1">
+                              <h3 className={`font-bold text-sm tracking-tight transition-colors line-clamp-1 ${isSelected ? "text-[#D50032]" : "text-gray-700 group-hover:text-gray-900"
+                                }`}>
+                                {term.title}
+                              </h3>
+                              <p className="text-xs text-gray-400 line-clamp-1 mt-1 font-medium">
+                                {term.content.replace(/\n/g, " ")}
+                              </p>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Desktop Detailed View (Right Column) - Visible on lg screens */}
+                    <div className="hidden lg:block lg:col-span-8 bg-white border border-gray-100/90 rounded-3xl p-8 min-h-[480px] shadow-sm relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-[#D50032]/[0.01] rounded-bl-full pointer-events-none" />
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={activeTerm.num}
+                          initial={{ opacity: 0, y: 15 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -15 }}
+                          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                          className="h-full flex flex-col justify-between"
+                        >
+                          <div>
+                            {/* Top row / Badge */}
+                            <div className="flex items-center gap-2.5 mb-6">
+                              <div className="px-3.5 py-1 bg-[#FFF0F2] text-[#D50032] font-black text-xs rounded-lg uppercase tracking-wider">
+                                Section {activeTerm.num}
+                              </div>
+                              <div className="h-1.5 w-1.5 rounded-full bg-gray-300" />
+                              <span className="text-xs text-gray-400 font-bold">TheFinTrade Legal Framework</span>
+                            </div>
+
+                            {/* Title */}
+                            <h3 className="text-2xl font-black text-gray-950 mb-6 tracking-tight font-sans">
+                              {activeTerm.title}
+                            </h3>
+
+                            {/* Content body */}
+                            <div className="text-gray-600 font-medium text-base leading-relaxed space-y-4 whitespace-pre-line text-left">
+                              {activeTerm.content}
+                            </div>
+                          </div>
+
+                          {/* Footer branding note */}
+                          <div className="mt-12 pt-6 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400 font-semibold">
+                            <span>Copyright &copy; {new Date().getFullYear()} TheFinTrade. All rights reserved.</span>
+                            <span className="text-[#D50032]">Ahmedabad, Gujarat, India</span>
+                          </div>
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Mobile View Accordion Stack - Visible below lg screens */}
+                    <div className="block lg:hidden lg:col-span-12 space-y-4">
+                      {filteredTerms.map((term, index) => {
+                        const isOpen = termsMobileOpenIdx === index;
+                        return (
+                          <div
+                            key={term.num}
+                            className="bg-white border border-gray-100/90 rounded-2xl overflow-hidden shadow-sm transition-all"
+                          >
+                            <button
+                              onClick={() => {
+                                setTermsMobileOpenIdx(isOpen ? null : index);
+                              }}
+                              className="w-full flex items-center justify-between p-5 text-left font-bold"
+                            >
+                              <div className="flex items-center gap-3.5">
+                                <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${isOpen ? "bg-[#FFF0F2] text-[#D50032]" : "bg-gray-100 text-gray-400"
+                                  }`}>
+                                  {term.num}
+                                </span>
+                                <span className={`text-base font-black transition-colors ${isOpen ? "text-[#D50032]" : "text-gray-900"}`}>
+                                  {term.title}
+                                </span>
+                              </div>
+                              <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${isOpen ? "bg-[#D50032] text-white rotate-180 shadow-sm" : "bg-gray-100 text-gray-500 hover:bg-gray-250"
+                                }`}>
+                                <ChevronDown className="w-3.5 h-3.5" />
+                              </div>
+                            </button>
+
+                            <div
+                              className="transition-all duration-300 ease-in-out overflow-hidden animate-none"
+                              style={{
+                                maxHeight: isOpen ? "600px" : "0px",
+                                opacity: isOpen ? 1 : 0
+                              }}
+                            >
+                              <div className="px-5 pb-5 pt-1 text-sm text-gray-600 leading-relaxed font-medium border-t border-slate-50 whitespace-pre-line text-left">
+                                {term.content}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </ScrollReveal>
+            </div>
+          </section>
         )}
 
         {/* 8. Why Choose FinTrade */}
@@ -2339,7 +2630,7 @@ export default function MarketingHome() {
             <div className="absolute top-1/3 right-0 w-80 h-80 bg-red-500/5 rounded-full filter blur-[100px] -z-10 pointer-events-none" />
 
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-              
+
               {/* Section Header */}
               <div className="text-center mb-16">
                 <ScrollReveal mobileDirection="up">
@@ -2388,11 +2679,10 @@ export default function MarketingHome() {
                     return (
                       <div
                         key={index}
-                        className={`bg-white border rounded-2xl transition-all duration-300 overflow-hidden ${
-                          isOpen 
-                            ? "border-[#D50032] shadow-[0_8px_30px_rgba(213,0,50,0.04)]" 
-                            : "border-gray-200/80 hover:border-gray-300 hover:shadow-sm"
-                        }`}
+                        className={`bg-white border rounded-2xl transition-all duration-300 overflow-hidden ${isOpen
+                          ? "border-[#D50032] shadow-[0_8px_30px_rgba(213,0,50,0.04)]"
+                          : "border-gray-200/80 hover:border-gray-300 hover:shadow-sm"
+                          }`}
                       >
                         <button
                           onClick={() => setFaqOpenIndex(isOpen ? null : index)}
@@ -2401,9 +2691,8 @@ export default function MarketingHome() {
                           <span className={`text-base md:text-lg transition-colors duration-300 ${isOpen ? "text-[#D50032]" : "text-gray-900"}`}>
                             {faq.q}
                           </span>
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${
-                            isOpen ? "bg-[#D50032] text-white rotate-180" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                          }`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${isOpen ? "bg-[#D50032] text-white rotate-180" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                            }`}>
                             <ChevronDown className="w-4 h-4" />
                           </div>
                         </button>

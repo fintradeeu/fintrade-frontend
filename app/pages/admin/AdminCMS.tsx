@@ -123,6 +123,7 @@ interface LiveClassItem {
   thumbnail: string;
   is_visible: boolean;
   lecture_link?: string;
+  scheduled_at?: string;
 }
 
 interface SectionVisibilityConfig {
@@ -145,6 +146,7 @@ interface SectionVisibilityConfig {
   show_career_pathways: boolean;
   show_cta: boolean;
   show_testimonials?: boolean;
+  show_terms?: boolean;
 }
 
 interface EMIPaymentItem {
@@ -1018,9 +1020,25 @@ export default function AdminCMS() {
                     <Label htmlFor={`lc-visible-${idx}`} className="cursor-pointer">Show on site</Label>
                   </div>
 
+                  {/* Scheduled Datetime */}
+                  <div className="md:col-span-6">
+                    <Label htmlFor={`lc-scheduled-${idx}`}>Scheduled Datetime (For 1-hour email notification)</Label>
+                    <Input
+                      id={`lc-scheduled-${idx}`}
+                      type="datetime-local"
+                      value={lecture.scheduled_at || ""}
+                      onChange={e => {
+                        const list = [...(config.live_classes || [])];
+                        list[idx] = { ...list[idx], scheduled_at: e.target.value };
+                        setConfig(p => ({ ...p, live_classes: list }));
+                      }}
+                      className="mt-1"
+                    />
+                  </div>
+
                   {/* Lecture Link */}
-                  <div className="md:col-span-12">
-                    <Label htmlFor={`lc-link-${idx}`}>Lecture Link (Sent to student on email upon registration)</Label>
+                  <div className="md:col-span-6">
+                    <Label htmlFor={`lc-link-${idx}`}>Lecture Link (Join URL sent 1 hour before class)</Label>
                     <Input
                       id={`lc-link-${idx}`}
                       value={lecture.lecture_link || ""}
@@ -1140,6 +1158,7 @@ export default function AdminCMS() {
                 { key: "show_cta", label: "CTA (Enrollment Banner)" },
                 { key: "show_showcase_videos", label: "Watch Our Students" },
                 { key: "show_blog", label: "Market Insights (Blog)" },
+                { key: "show_terms", label: "Terms & Conditions (Section 15)" },
               ].map(item => {
                 const checked = config.section_visibility?.[item.key as keyof SectionVisibilityConfig] !== false;
                 return (
@@ -1172,6 +1191,7 @@ export default function AdminCMS() {
                               show_cta: true,
                               show_showcase_videos: true,
                               show_blog: true,
+                              show_terms: true,
                             }),
                             [item.key]: e.target.checked
                           }
