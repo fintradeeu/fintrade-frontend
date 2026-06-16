@@ -191,7 +191,11 @@ export default function CourseEnrollment() {
       if (finalPrice > 0) {
         // Initiate Easebuzz Payment
         console.log("Initiating payment for course ID:", selectedCourse);
-        const res = await api.post("/payments/create", { course_id: selectedCourse });
+        const res = await api.post("/payments/create", {
+          course_id: selectedCourse,
+          coupon_code: couponCode.trim() || null,
+          discounted_price: discount > 0 ? finalPrice : null,
+        });
         console.log("Payment initiation API response:", res.data);
         if (res.data && res.data.redirect_url) {
           console.log("Redirecting to:", res.data.redirect_url);
