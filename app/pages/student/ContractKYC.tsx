@@ -138,8 +138,8 @@ export default function ContractKYC() {
           if (res.data.mobile) setMobile(res.data.mobile);
           if (res.data.aadhaar_number) setAadhaar(res.data.aadhaar_number);
           if (res.data.pan_number) setPan(res.data.pan_number);
-          if (res.data.mobile_verified) setMobileOtp("123456");
-          if (res.data.email_verified) setEmailOtp("654321");
+          if (res.data.mobile_verified) setMobileOtp("");
+          if (res.data.email_verified) setEmailOtp("");
           if (res.data.aadhaar_doc_url) {
             setAadhaarUploaded(true);
             setDbAadhaarDocUrl(res.data.aadhaar_doc_url);
@@ -822,7 +822,7 @@ export default function ContractKYC() {
                   </Button>
                 </div>
               </div>
-              <p className="text-xs text-gray-400">Please enter the 6-digit verification code sent via Twilio SMS. (Dev fallback code: <span className="font-bold text-gray-600">123456</span>)</p>
+              <p className="text-xs text-gray-400">Please enter the 6-digit verification code sent via SMS.</p>
             </div>
           )}
 
