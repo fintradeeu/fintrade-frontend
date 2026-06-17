@@ -90,8 +90,13 @@ export default function AITutor() {
       };
       setMessages((prev) => [...prev, aiResponse]);
       
-      // Basic heuristic to detect if AI couldn't solve it well
-      if (response.data.answer.toLowerCase().includes("cannot answer") || response.data.answer.toLowerCase().includes("don't know")) {
+      // Basic heuristic to detect if AI couldn't solve it well or was blocked by guardrails
+      if (
+        response.data.answer.toLowerCase().includes("cannot answer") ||
+        response.data.answer.toLowerCase().includes("don't know") ||
+        response.data.answer.toLowerCase().includes("can only assist with topics covered") ||
+        response.data.answer.toLowerCase().includes("restricted")
+      ) {
         setCannotSolve(true);
       }
     } catch (err: any) {

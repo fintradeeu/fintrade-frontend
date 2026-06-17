@@ -2314,38 +2314,40 @@ export default function MarketingHome() {
                 ) : (
                   <div className="grid lg:grid-cols-12 gap-8 items-start">
                     {/* Desktop Sidebar (Left Column) - Visible on lg screens */}
-                    <div className="hidden lg:flex lg:col-span-4 flex-col gap-2.5 max-h-[580px] overflow-y-auto pr-3 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
-                      {filteredTerms.map((term, index) => {
-                        const isSelected = (filteredTerms[activeTermIndex]?.num === term.num) || (activeTermIndex === index);
-                        return (
-                          <button
-                            key={term.num}
-                            onClick={() => setActiveTermIndex(index)}
-                            className={`w-full text-left p-4 rounded-2xl border transition-all duration-300 flex items-start gap-4 select-none relative overflow-hidden group ${isSelected
-                              ? "bg-white border-[#D50032]/30 shadow-md shadow-[#D50032]/[0.02]"
-                              : "bg-white/40 border-gray-100 hover:border-gray-200 hover:bg-white/70"
-                              }`}
-                          >
-                            {/* Selected Indicator Pill */}
-                            {isSelected && (
-                              <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#D50032] rounded-r-md" />
-                            )}
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-colors ${isSelected ? "bg-[#FFF0F2] text-[#D50032]" : "bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600"
-                              }`}>
-                              {term.num}
-                            </div>
-                            <div className="flex-1">
-                              <h3 className={`font-bold text-sm tracking-tight transition-colors line-clamp-1 ${isSelected ? "text-[#D50032]" : "text-gray-700 group-hover:text-gray-900"
+                    <div className="hidden lg:block lg:col-span-4 w-full">
+                      <div className="flex flex-col gap-2.5 max-h-[580px] overflow-y-auto overflow-x-hidden pr-3 pl-1.5 py-1.5 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+                        {filteredTerms.map((term, index) => {
+                          const isSelected = (filteredTerms[activeTermIndex]?.num === term.num) || (activeTermIndex === index);
+                          return (
+                            <button
+                              key={term.num}
+                              onClick={() => setActiveTermIndex(index)}
+                              className={`w-full text-left p-4 rounded-2xl border transition-all duration-300 flex items-start gap-4 select-none relative overflow-hidden group ${isSelected
+                                ? "bg-white border-[#D50032]/30 shadow-md shadow-[#D50032]/[0.02]"
+                                : "bg-white/40 border-gray-100 hover:border-gray-200 hover:bg-white/70"
+                                }`}
+                            >
+                              {/* Selected Indicator Pill */}
+                              {isSelected && (
+                                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#D50032] rounded-r-md" />
+                              )}
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-colors ${isSelected ? "bg-[#FFF0F2] text-[#D50032]" : "bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600"
                                 }`}>
-                                {term.title}
-                              </h3>
-                              <p className="text-xs text-gray-400 line-clamp-1 mt-1 font-medium">
-                                {term.content.replace(/\n/g, " ")}
-                              </p>
-                            </div>
-                          </button>
-                        );
-                      })}
+                                {term.num}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h3 className={`font-bold text-sm tracking-tight transition-colors line-clamp-1 ${isSelected ? "text-[#D50032]" : "text-gray-700 group-hover:text-gray-900"
+                                  }`}>
+                                  {term.title}
+                                </h3>
+                                <p className="text-xs text-gray-400 line-clamp-1 mt-1 font-medium">
+                                  {term.content.replace(/\n/g, " ")}
+                                </p>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
                     {/* Desktop Detailed View (Right Column) - Visible on lg screens */}
