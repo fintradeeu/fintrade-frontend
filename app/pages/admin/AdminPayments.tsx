@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import DashboardLayout from "../../components/DashboardLayout";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
@@ -112,7 +113,9 @@ interface Offer {
   );
 
 export default function AdminPayments() {
+  const navigate = useNavigate();
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [checkingRole, setCheckingRole] = useState(true);
   const [coupons, setCoupons] = useState<Offer[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -182,12 +185,31 @@ export default function AdminPayments() {
         const parsed = JSON.parse(stored);
         isSuper = parsed?.roles?.some((r: any) => r.name === "super_admin");
         setIsSuperAdmin(isSuper);
+        if (!isSuper) {
+          navigate("/admin/dashboard");
+          return;
+        }
+      } else {
+        navigate("/admin/dashboard");
+        return;
       }
     } catch (err) {
       console.error(err);
+      navigate("/admin/dashboard");
+      return;
+    } finally {
+      setCheckingRole(false);
     }
     fetchCoupons(isSuper);
   }, []);
+
+  if (checkingRole || !isSuperAdmin) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#D50032]"></div>
+      </div>
+    );
+  }
 
   const handleAddCoupon = async () => {
     try {

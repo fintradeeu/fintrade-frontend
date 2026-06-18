@@ -202,6 +202,7 @@ export default function AdminStudents() {
   const [kycMap, setKycMap] = useState<Record<number, any>>({});
   const [exporting, setExporting] = useState(false);
   const [distributors, setDistributors] = useState<any[]>([]);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   const fetchUsers = async () => {
     try {
@@ -219,7 +220,17 @@ export default function AdminStudents() {
     return distributors.find(d => d.user_id === userId);
   };
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const roles = parsed.roles || [];
+        setIsSuperAdmin(roles.some((r: any) => r.name === "super_admin"));
+      }
+    } catch { /* ignore */ }
+    fetchUsers();
+  }, []);
 
   const handleOpenView = async (user: any) => {
     setSelectedUser(user);
@@ -332,11 +343,17 @@ export default function AdminStudents() {
   };
 
   const filtered = users.filter(u => {
+    if (!isSuperAdmin && u.roles?.some((ro: any) => ro.name === "distributor")) {
+      return false;
+    }
     const s = u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || u.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const r = roleFilter === "all" || u.roles?.some((ro: any) => ro.name === roleFilter);
     return s && r;
   });
-  const countRole = (r: string) => r === "all" ? users.length : users.filter(u => u.roles?.some((ro: any) => ro.name === r)).length;
+  const countRole = (r: string) => {
+    const pool = isSuperAdmin ? users : users.filter(u => !u.roles?.some((ro: any) => ro.name === "distributor"));
+    return r === "all" ? pool.length : pool.filter(u => u.roles?.some((ro: any) => ro.name === r)).length;
+  };
 
   return (
     <DashboardLayout role="admin">
@@ -356,8 +373,8 @@ export default function AdminStudents() {
       </div>
 
       {/* Role filter cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-        {ROLE_FILTERS.map(role => (
+      <div className={`grid grid-cols-2 md:grid-cols-${isSuperAdmin ? 5 : 4} gap-4 mb-6`}>
+        {ROLE_FILTERS.filter(role => isSuperAdmin || role !== "distributor").map(role => (
           <Card key={role} className={`p-4 cursor-pointer transition-all shadow-lg hover:shadow-xl ${roleFilter === role ? "bg-[#0B2A5B] text-[#F4F1EA] ring-2 ring-[#C2A86A]" : "bg-white"}`} onClick={() => setRoleFilter(role)}>
             <p className={`text-xs uppercase tracking-wider mb-1 ${roleFilter === role ? "text-[#F4F1EA]/70" : "text-[#0B2A5B]/60"}`}>{role === "all" ? "All Users" : role === "distributor" ? "Introducing Brokers (IB)" : role.charAt(0).toUpperCase() + role.slice(1) + "s"}</p>
             <p className={`text-2xl font-bold ${roleFilter === role ? "text-[#C2A86A]" : "text-[#0B2A5B]"}`}>{countRole(role)}</p>
@@ -658,7 +675,7 @@ export default function AdminStudents() {
                 <select className="w-full p-2 border rounded mt-1 bg-[#F4F1EA] border-[#0B2A5B]/20" value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}>
                   <option value="admin">Admin</option>
                   <option value="faculty">Faculty / Teacher</option>
-                  <option value="distributor">Introducing Broker (IB)</option>
+                  {isSuperAdmin && <option value="distributor">Introducing Broker (IB)</option>}
                 </select>
               </div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Full Name *</label><Input required minLength={2} value={newUser.full_name} onChange={e => setNewUser({ ...newUser, full_name: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>

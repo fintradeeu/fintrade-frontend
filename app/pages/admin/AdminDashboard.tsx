@@ -14,6 +14,7 @@ export default function AdminDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [userPermissions, setUserPermissions] = useState<any>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
     try {
@@ -21,6 +22,8 @@ export default function AdminDashboard() {
       if (stored) {
         const parsed = JSON.parse(stored);
         setUserPermissions(parsed.permissions);
+        const roles = parsed.roles || [];
+        setIsSuperAdmin(roles.some((r: any) => r.name === "super_admin"));
       }
     } catch { /* ignore */ }
   }, []);
@@ -102,6 +105,9 @@ export default function AdminDashboard() {
               { label: "View Reports", path: "/admin/reports", permission: "canViewRevenue" },
             ]
               .filter((link) => {
+                if (link.path === "/admin/payments" || link.path === "/admin/reports") {
+                  return isSuperAdmin;
+                }
                 if (!userPermissions) return true;
                 return userPermissions[link.permission] !== false;
               })

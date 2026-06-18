@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import DashboardLayout from "../../components/DashboardLayout";
 import { Card } from "../../components/ui/card";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -25,6 +26,9 @@ const examData = [
 ];
 
 export default function AdminReports() {
+  const navigate = useNavigate();
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [checkingRole, setCheckingRole] = useState(true);
   const [stats, setStats] = useState({
     total_students: 0,
     total_courses: 0,
@@ -38,6 +42,29 @@ export default function AdminReports() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isSuper = false;
+    try {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        isSuper = parsed?.roles?.some((r: any) => r.name === "super_admin");
+        setIsSuperAdmin(isSuper);
+        if (!isSuper) {
+          navigate("/admin/dashboard");
+          return;
+        }
+      } else {
+        navigate("/admin/dashboard");
+        return;
+      }
+    } catch (err) {
+      console.error(err);
+      navigate("/admin/dashboard");
+      return;
+    } finally {
+      setCheckingRole(false);
+    }
+
     const fetchReports = async () => {
       try {
         const res = await api.get("/admin/reports");
@@ -50,6 +77,14 @@ export default function AdminReports() {
     };
     fetchReports();
   }, []);
+
+  if (checkingRole || !isSuperAdmin) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#D50032]"></div>
+      </div>
+    );
+  }
 
   return (
     <DashboardLayout role="admin">

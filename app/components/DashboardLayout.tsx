@@ -89,7 +89,6 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "Lectures", path: "/admin/lectures", icon: <Video size={20} /> },
         { label: "Live Class Registrations", path: "/admin/live-class-registrations", icon: <Users size={20} /> },
         { label: "Exams", path: "/admin/exams", icon: <FileQuestion size={20} /> },
-        { label: "Payments & Coupons", path: "/admin/payments", icon: <IndianRupee size={20} /> },
         { label: "Login Details", path: "/admin/login-details", icon: <Users size={20} /> },
         { label: "Blog & CMS", path: "/admin/news", icon: <Newspaper size={20} /> },
         { label: "Advisors", path: "/admin/advisors", icon: <Users size={20} /> },
@@ -98,7 +97,6 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "Admin Roles", path: "/admin/roles", icon: <Shield size={20} /> },
         { label: "AI Chatbot", path: "/admin/ai-chatbot", icon: <Bot size={20} /> },
         { label: "Simulator", path: "/admin/simulator", icon: <TrendingUp size={20} /> },
-        { label: "Reports", path: "/admin/reports", icon: <BarChart3 size={20} /> },
         { label: "Contracts", path: "/admin/contracts", icon: <FileText size={20} /> },
         { label: "Settings", path: "/admin/settings", icon: <Settings size={20} /> },
       ];
@@ -139,11 +137,11 @@ export function DashboardLayout({
   const location = useLocation();
   const navigate = useNavigate();
 
-  const role = roleProp || userRole || "student";
+  const [resolvedRole, setResolvedRole] = useState<string>(roleProp || userRole || "student");
   const [userPermissions, setUserPermissions] = useState<any>(null);
   
-  let baseNavItems = customNavItems || getNavItemsByRole(role);
-  if ((role === "admin" || role === "super_admin") && userPermissions) {
+  let baseNavItems = customNavItems || getNavItemsByRole(resolvedRole);
+  if ((resolvedRole === "admin" || resolvedRole === "super_admin") && userPermissions) {
     baseNavItems = baseNavItems.filter((item) => {
       switch (item.path) {
         case "/admin/dashboard":
@@ -185,7 +183,7 @@ export function DashboardLayout({
           return true;
       }
     });
-  } else if (role === "teacher" && userPermissions) {
+  } else if (resolvedRole === "teacher" && userPermissions) {
     baseNavItems = baseNavItems.filter((item) => {
       switch (item.path) {
         case "/teacher/courses":
@@ -208,7 +206,7 @@ export function DashboardLayout({
     });
   }
   const navItems = baseNavItems;
-  const displayName = userNameProp || autoName || getFallbackName(role);
+  const displayName = userNameProp || autoName || getFallbackName(resolvedRole);
 
   // Load user data from localStorage
   useEffect(() => {
@@ -217,12 +215,19 @@ export function DashboardLayout({
         const stored = localStorage.getItem("user");
         if (stored) {
           const parsed = JSON.parse(stored);
-          setAutoName(parsed.full_name || getFallbackName(role));
+          setAutoName(parsed.full_name || getFallbackName(roleProp || userRole || "student"));
           setUserPermissions(parsed.permissions);
+          
+          const roles = parsed.roles || [];
+          const actualRole = roles.some((r: any) => r.name === "super_admin") ? "super_admin" :
+                             roles.some((r: any) => r.name === "admin") ? "admin" :
+                             roles.some((r: any) => r.name === "faculty") ? "teacher" :
+                             roles.some((r: any) => r.name === "distributor") ? "distributor" : "student";
+          setResolvedRole(actualRole);
         }
       } catch { /* ignore */ }
     }
-  }, [userNameProp, role]);
+  }, [userNameProp, roleProp, userRole]);
 
   // Load profile form when modal opens
   useEffect(() => {
@@ -243,7 +248,7 @@ export function DashboardLayout({
 
   // Restrict access for un-enrolled students
   useEffect(() => {
-    if (role === "student") {
+    if (resolvedRole === "student") {
       api.get("/courses/enrolled")
         .then((res) => {
           setEnrolledCount(res.data.length);
@@ -260,11 +265,11 @@ export function DashboardLayout({
           navigate("/login");
         });
     }
-  }, [role, navigate, location.pathname]);
+  }, [resolvedRole, navigate, location.pathname]);
 
   // Guard teacher routes based on dynamic permissions
   useEffect(() => {
-    if (role === "teacher" && userPermissions) {
+    if (resolvedRole === "teacher" && userPermissions) {
       const path = location.pathname;
       if (path.startsWith("/teacher/courses") && userPermissions.manageCourses === false) {
         navigate("/teacher/dashboard");
@@ -282,7 +287,7 @@ export function DashboardLayout({
         navigate("/teacher/dashboard");
       }
     }
-  }, [role, userPermissions, location.pathname, navigate]);
+  }, [resolvedRole, userPermissions, location.pathname, navigate]);
 
   // Restore sidebar scroll position
   useEffect(() => {
@@ -432,7 +437,7 @@ export function DashboardLayout({
               </Link>
             </div>
             <p className="text-xs text-[#0B2A5B]/60 capitalize mt-2 text-center font-bold tracking-wide">
-              {role === "distributor" ? "Introducing Broker (IB)" : role} Portal
+              {resolvedRole === "distributor" ? "Introducing Broker (IB)" : resolvedRole} Portal
             </p>
           </div>
 
@@ -464,7 +469,7 @@ export function DashboardLayout({
                   "/student/contract-kyc", "/student/exams", "/student/entrance-exam"
                 ];
                 const isLocked =
-                  role === "student" &&
+                  resolvedRole === "student" &&
                   enrolledCount === 0 &&
                   !allowedUnenrolledRoutes.includes(item.path);
 
