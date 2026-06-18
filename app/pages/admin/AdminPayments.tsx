@@ -12,9 +12,6 @@ import { Badge } from "../../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import api from "../../services/api";
 
-const CURRENT_ADMIN_ROLE = "Finance Admin";
-const canViewRevenue = CURRENT_ADMIN_ROLE === "Super Admin" || CURRENT_ADMIN_ROLE === "Finance Admin";
-
 interface Offer {
   id: number;
   title: string;
@@ -115,11 +112,20 @@ interface Offer {
   );
 
 export default function AdminPayments() {
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [coupons, setCoupons] = useState<Offer[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState<Offer | null>(null);
-  const [stats, setStats] = useState({ active_coupons: 0, total_usage: 0 });
+  const [stats, setStats] = useState({ 
+    active_coupons: 0, 
+    total_usage: 0,
+    total_revenue: "₹0.00",
+    monthly_revenue: "₹0.00"
+  });
+
+  const canViewRevenue = isSuperAdmin;
 
   const [formData, setFormData] = useState({
     title: "",
@@ -131,19 +137,56 @@ export default function AdminPayments() {
     is_active: true
   });
 
-  const fetchCoupons = async () => {
+  const fetchTransactions = async () => {
+    try {
+      const res = await api.get("/admin/revenue/details");
+      setTransactions(res.data);
+    } catch (err) {
+      console.error("Failed to load transactions", err);
+    }
+  };
+
+  const fetchCoupons = async (isSuper: boolean) => {
     try {
       const res = await api.get("/admin/offers");
       setCoupons(res.data);
       const statRes = await api.get("/admin/offers/stats");
-      setStats(statRes.data);
+      
+      let revStats = { total_revenue: "₹0.00", monthly_revenue: "₹0.00" };
+      if (isSuper) {
+        try {
+          const revRes = await api.get("/admin/revenue/stats");
+          revStats = revRes.data;
+          fetchTransactions();
+        } catch (err) {
+          console.error("Failed to fetch revenue stats", err);
+        }
+      }
+      
+      setStats({
+        active_coupons: statRes.data.active_coupons || 0,
+        total_usage: statRes.data.total_usage || 0,
+        total_revenue: revStats.total_revenue,
+        monthly_revenue: revStats.monthly_revenue,
+      });
     } catch (err) {
       console.error(err);
     }
   };
 
   useEffect(() => {
-    fetchCoupons();
+    let isSuper = false;
+    try {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        isSuper = parsed?.roles?.some((r: any) => r.name === "super_admin");
+        setIsSuperAdmin(isSuper);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    fetchCoupons(isSuper);
   }, []);
 
   const handleAddCoupon = async () => {
@@ -154,7 +197,7 @@ export default function AdminPayments() {
       });
       setIsAddDialogOpen(false);
       resetForm();
-      fetchCoupons();
+      fetchCoupons(isSuperAdmin);
     } catch (err: any) {
       alert("Error creating offer: " + (err.response?.data?.detail || err.message));
     }
@@ -170,7 +213,7 @@ export default function AdminPayments() {
         setIsEditDialogOpen(false);
         setSelectedCoupon(null);
         resetForm();
-        fetchCoupons();
+        fetchCoupons(isSuperAdmin);
       } catch (err: any) {
         alert("Error updating offer: " + (err.response?.data?.detail || err.message));
       }
@@ -181,7 +224,7 @@ export default function AdminPayments() {
     if (confirm("Are you sure you want to delete this coupon?")) {
       try {
         await api.delete(`/admin/offers/${id}`);
-        fetchCoupons();
+        fetchCoupons(isSuperAdmin);
       } catch (err: any) {
         alert("Error deleting offer: " + (err.response?.data?.detail || err.message));
       }
@@ -213,10 +256,6 @@ export default function AdminPayments() {
       is_active: true
     });
   };
-
-
-  const totalRevenue = "₹2.45Cr";
-  const monthlyRevenue = "₹24.5L";
 
   return (
     <DashboardLayout role="admin">
@@ -254,7 +293,7 @@ export default function AdminPayments() {
             </div>
             <div>
               <div className="font-bold text-lg" style={{ color: "#121212" }}>Revenue Access Restricted</div>
-              <div className="text-gray-600 text-sm mt-1">You do not have permission to view revenue data.</div>
+              <div className="text-gray-600 text-sm mt-1">Only the Super Admin has permission to view revenue data.</div>
             </div>
           </Card>
         ) : (
@@ -265,7 +304,7 @@ export default function AdminPayments() {
                 <IndianRupee className="h-6 w-6" style={{ color: '#4CAF50' }} />
               </div>
               <div>
-                <div className="text-2xl font-bold" style={{ color: '#121212' }}>{totalRevenue}</div>
+                <div className="text-2xl font-bold" style={{ color: '#121212' }}>{stats.total_revenue}</div>
                 <div className="text-sm text-gray-600">Total Revenue</div>
               </div>
             </div>
@@ -277,7 +316,7 @@ export default function AdminPayments() {
                 <TrendingUp className="h-6 w-6" style={{ color: '#D50032' }} />
               </div>
               <div>
-                <div className="text-2xl font-bold" style={{ color: '#121212' }}>{monthlyRevenue}</div>
+                <div className="text-2xl font-bold" style={{ color: '#121212' }}>{stats.monthly_revenue}</div>
                 <div className="text-sm text-gray-600">This Month</div>
               </div>
             </div>
@@ -309,83 +348,156 @@ export default function AdminPayments() {
         </div>
         )}
 
-        {/* Coupons Management */}
-        <Card className="border-2 border-gray-100 p-4">
-          <h2 className="text-xl font-bold mb-4">All Coupons</h2>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50 hover:bg-gray-50">
-                  <TableHead className="font-bold">Code</TableHead>
-                  <TableHead className="font-bold">Discount</TableHead>
-                  <TableHead className="font-bold">Description</TableHead>
-                  <TableHead className="font-bold">Usage</TableHead>
-                  <TableHead className="font-bold">Expiry Date</TableHead>
-                  <TableHead className="font-bold">Status</TableHead>
-                  <TableHead className="font-bold text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {coupons.map((coupon) => (
-                  <TableRow key={coupon.id} className="hover:bg-gray-50">
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
-                          <Tag className="h-4 w-4" style={{ color: '#D50032' }} />
-                        </div>
-                        <span className="font-bold" style={{ color: '#121212' }}>{coupon.code}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-medium" style={{ color: '#D50032' }}>
-                        {coupon.discount_value}%
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-gray-600">{coupon.description}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-medium">{coupon.usage_count}</span>
-                    </TableCell>
-                    <TableCell className="text-gray-600">
-                      {new Date(coupon.valid_until).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        style={{ 
-                          background: coupon.is_active ? '#4CAF50' : '#FF9800', 
-                          color: 'white' 
-                        }}
-                      >
-                        {coupon.is_active ? "Active" : "Disabled"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditDialog(coupon)}
-                          className="border-gray-300 hover:border-[#D50032] hover:text-[#D50032]"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteCoupon(coupon.id)}
-                          className="border-gray-300 hover:border-red-500 hover:text-red-500"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </Card>
+        {/* Tabs for Coupons and Transactions */}
+        <Tabs defaultValue="coupons" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="coupons">Promo Coupons</TabsTrigger>
+            {isSuperAdmin && <TabsTrigger value="transactions">Student Transactions</TabsTrigger>}
+          </TabsList>
+
+          <TabsContent value="coupons">
+            <Card className="border-2 border-gray-100 p-4">
+              <h2 className="text-xl font-bold mb-4">All Coupons</h2>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-50 hover:bg-gray-50">
+                      <TableHead className="font-bold">Code</TableHead>
+                      <TableHead className="font-bold">Discount</TableHead>
+                      <TableHead className="font-bold">Description</TableHead>
+                      <TableHead className="font-bold">Usage</TableHead>
+                      <TableHead className="font-bold">Expiry Date</TableHead>
+                      <TableHead className="font-bold">Status</TableHead>
+                      <TableHead className="font-bold text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {coupons.map((coupon) => (
+                      <TableRow key={coupon.id} className="hover:bg-gray-50">
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
+                              <Tag className="h-4 w-4" style={{ color: '#D50032' }} />
+                            </div>
+                            <span className="font-bold" style={{ color: '#121212' }}>{coupon.code}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium" style={{ color: '#D50032' }}>
+                            {coupon.discount_value}%
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-gray-600">{coupon.description}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium">{coupon.usage_count}</span>
+                        </TableCell>
+                        <TableCell className="text-gray-600">
+                          {new Date(coupon.valid_until).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            style={{ 
+                              background: coupon.is_active ? '#4CAF50' : '#FF9800', 
+                              color: 'white' 
+                            }}
+                          >
+                            {coupon.is_active ? "Active" : "Disabled"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEditDialog(coupon)}
+                              className="border-gray-300 hover:border-[#D50032] hover:text-[#D50032]"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteCoupon(coupon.id)}
+                              className="border-gray-300 hover:border-red-500 hover:text-red-500"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+          </TabsContent>
+
+          {isSuperAdmin && (
+            <TabsContent value="transactions">
+              <Card className="border-2 border-gray-100 p-4">
+                <h2 className="text-xl font-bold mb-4">All Student Payments</h2>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-gray-50 hover:bg-gray-50">
+                        <TableHead className="font-bold">Transaction ID</TableHead>
+                        <TableHead className="font-bold">Student Name</TableHead>
+                        <TableHead className="font-bold">Student Email</TableHead>
+                        <TableHead className="font-bold">Course Title</TableHead>
+                        <TableHead className="font-bold">Amount</TableHead>
+                        <TableHead className="font-bold">Payment Mode</TableHead>
+                        <TableHead className="font-bold">Payment Date</TableHead>
+                        <TableHead className="font-bold">Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {transactions.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center text-gray-500 py-6">
+                            No successful transactions found.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        transactions.map((tx) => (
+                          <TableRow key={tx.id} className="hover:bg-gray-50">
+                            <TableCell className="font-mono text-xs font-bold" style={{ color: '#121212' }}>
+                              {tx.txnid}
+                            </TableCell>
+                            <TableCell className="font-medium" style={{ color: '#121212' }}>
+                              {tx.student_name}
+                            </TableCell>
+                            <TableCell className="text-gray-600">{tx.student_email}</TableCell>
+                            <TableCell className="font-medium">{tx.course_title}</TableCell>
+                            <TableCell>
+                              <span className="font-bold" style={{ color: '#4CAF50' }}>
+                                ₹{tx.amount.toFixed(2)}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="capitalize">
+                                {tx.payment_mode}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-gray-600 text-xs">
+                              {tx.created_at ? new Date(tx.created_at).toLocaleString() : "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              <Badge style={{ background: '#4CAF50', color: 'white' }}>
+                                {tx.status}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </Card>
+            </TabsContent>
+          )}
+        </Tabs>
 
         {/* Edit Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
