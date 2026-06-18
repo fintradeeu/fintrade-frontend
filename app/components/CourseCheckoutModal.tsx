@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../services/api";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -12,7 +12,7 @@ interface CourseCheckoutModalProps {
 }
 
 export default function CourseCheckoutModal({ course, onClose, onSuccess }: CourseCheckoutModalProps) {
-  const [couponCode, setCouponCode] = useState("");
+  const [couponCode, setCouponCode] = useState(() => localStorage.getItem("distributor_code") || "");
   const [discount, setDiscount] = useState(0);
   const parsePrice = (p: any) => parseFloat(String(p).replace(/[^0-9.]/g, '')) || 0;
   const initialPrice = parsePrice(course.price);
@@ -20,6 +20,24 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [couponMsg, setCouponMsg] = useState("");
+
+  // Auto-apply saved coupon code on mount
+  useEffect(() => {
+    const savedCode = localStorage.getItem("distributor_code");
+    if (savedCode) {
+      (async () => {
+        try {
+          const res = await api.post("/offers/apply", { code: savedCode, course_id: course.id });
+          setDiscount(res.data.discount_applied);
+          setFinalPrice(res.data.discounted_price);
+          setCouponMsg(res.data.message || "Referral code applied successfully!");
+          setErrorMsg("");
+        } catch (err: any) {
+          console.warn("Auto-applying distributor code failed:", err);
+        }
+      })();
+    }
+  }, [course.id]);
 
   const applyCoupon = async () => {
     try {

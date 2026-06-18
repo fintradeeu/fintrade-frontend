@@ -137,6 +137,22 @@ export default function CourseEnrollment() {
     }
   };
 
+  const autoApplySavedCoupon = async (courseId: number) => {
+    const savedCode = localStorage.getItem("distributor_code");
+    if (savedCode) {
+      setCouponCode(savedCode);
+      try {
+        const res = await api.post("/offers/apply", { code: savedCode, course_id: courseId });
+        setDiscount(res.data.discount_applied);
+        setFinalPrice(res.data.discounted_price);
+        setCouponMsg(res.data.message || "Referral code applied successfully!");
+        setErrorMsg("");
+      } catch (err: any) {
+        console.warn("Auto-applying distributor code failed:", err);
+      }
+    }
+  };
+
   const handleEnroll = async (courseId: number) => {
     setSelectedCourse(courseId);
     const course = courses.find(c => c.id === courseId);
@@ -146,6 +162,11 @@ export default function CourseEnrollment() {
     setCouponMsg("");
     setErrorMsg("");
 
+    const savedCode = localStorage.getItem("distributor_code") || "";
+    if (savedCode) {
+      setCouponCode(savedCode);
+    }
+
     try {
       // Single API call to check if student passed entrance exam for this course
       const checkRes = await api.get(`/exams/check-enrollment?course_id=${courseId}`);
@@ -154,6 +175,9 @@ export default function CourseEnrollment() {
       if (!has_entrance_exam) {
         // No entrance exam — go straight to payment
         setShowPayment(true);
+        if (savedCode) {
+          await autoApplySavedCoupon(courseId);
+        }
         return;
       }
 
@@ -164,6 +188,9 @@ export default function CourseEnrollment() {
           const kycStatus = kycRes.data?.status;
           if (kycStatus === "verified" || kycStatus === "approved") {
             setShowPayment(true); // KYC done — go to payment
+            if (savedCode) {
+              await autoApplySavedCoupon(courseId);
+            }
           } else {
             setShowKycModal(true); // Show KYC popup
           }
