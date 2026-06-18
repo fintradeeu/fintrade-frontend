@@ -75,6 +75,33 @@ export default function EntranceExam() {
   const navigate = useNavigate();
   const isExamFinishedRef = useRef(false);
 
+  const lastAttempt = pastAttempts[pastAttempts.length - 1];
+  const isCooldownLocked = pastAttempts.length > 0 && pastAttempts.length % 3 === 0 && lastAttempt && 
+    (new Date().getTime() - new Date(lastAttempt.submitted_at).getTime() < 24 * 60 * 60 * 1000);
+
+  const [cooldownText, setCooldownText] = useState("");
+
+  useEffect(() => {
+    if (isCooldownLocked && lastAttempt?.submitted_at) {
+      const updateCooldown = () => {
+        const nextAllowed = new Date(lastAttempt.submitted_at).getTime() + 24 * 60 * 60 * 1000;
+        const diff = nextAllowed - new Date().getTime();
+        if (diff <= 0) {
+          setCooldownText("");
+          window.location.reload();
+          return;
+        }
+        const hours = Math.floor(diff / (3600 * 1000));
+        const minutes = Math.floor((diff % (3600 * 1000)) / (60 * 1000));
+        const seconds = Math.floor((diff % (60 * 1000)) / 1000);
+        setCooldownText(`${hours}h ${minutes}m ${seconds}s`);
+      };
+      updateCooldown();
+      const interval = setInterval(updateCooldown, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [isCooldownLocked, lastAttempt]);
+
   useEffect(() => {
     if (videoRef.current && cameraStream) {
       videoRef.current.srcObject = cameraStream;
@@ -258,8 +285,8 @@ export default function EntranceExam() {
       setErrorMsg("No entrance exams available at the moment.");
       return;
     }
-    if (pastAttempts.length >= 3) {
-      setErrorMsg("Entrance Exam Locked: Maximum 3 attempts reached.");
+    if (isCooldownLocked) {
+      setErrorMsg("Entrance Exam Locked: Cooldown active. Please wait for the cooldown to expire.");
       return;
     }
     setErrorMsg("");
@@ -453,53 +480,56 @@ export default function EntranceExam() {
                   Your Attempt Status
                 </h3>
                 <span className="text-sm font-semibold text-[#0B2A5B]/70">
-                  {pastAttempts.length} / 3 Attempts Used
+                  {pastAttempts.length > 0 && pastAttempts.length % 3 === 0 ? 3 : pastAttempts.length % 3} / 3 Attempts Used
                 </span>
               </div>
-
               {/* Progress dots */}
               <div className="flex gap-3 mb-6">
-                {[1, 2, 3].map((num) => {
-                  const attempt = pastAttempts[num - 1];
-                  const isTaken = !!attempt;
-                  const isPassed = attempt?.passed;
-                  let violationReason = "";
-                  if (attempt) {
-                    try {
-                      const stored = localStorage.getItem("entrance_violations");
-                      if (stored) {
-                        const parsed = JSON.parse(stored);
-                        violationReason = parsed[attempt.id] || "";
+                {(() => {
+                  const currentBlock = Math.floor((pastAttempts.length - (pastAttempts.length > 0 && pastAttempts.length % 3 === 0 ? 1 : 0)) / 3);
+                  const blockAttempts = [currentBlock * 3 + 1, currentBlock * 3 + 2, currentBlock * 3 + 3];
+                  return blockAttempts.map((num) => {
+                    const attempt = pastAttempts[num - 1];
+                    const isTaken = !!attempt;
+                    const isPassed = attempt?.passed;
+                    let violationReason = "";
+                    if (attempt) {
+                      try {
+                        const stored = localStorage.getItem("entrance_violations");
+                        if (stored) {
+                          const parsed = JSON.parse(stored);
+                          violationReason = parsed[attempt.id] || "";
+                        }
+                      } catch (e) {
+                        console.error(e);
                       }
-                    } catch (e) {
-                      console.error(e);
                     }
-                  }
 
-                  return (
-                    <div
-                      key={num}
-                      className={`flex-1 h-3 rounded-full transition-all duration-300 ${
-                        isTaken
-                          ? violationReason
-                            ? "bg-amber-500"
-                            : isPassed
-                            ? "bg-green-600"
-                            : "bg-red-500"
-                          : "bg-gray-200"
-                      }`}
-                      title={
-                        isTaken
-                          ? violationReason
-                            ? `Attempt #${num}: Terminated due to ${violationReason}`
-                            : isPassed
-                            ? `Attempt #${num}: Passed (${attempt.percentage}%)`
-                            : `Attempt #${num}: Failed (${attempt.percentage}%)`
-                          : `Attempt #${num}: Remaining`
-                      }
-                    />
-                  );
-                })}
+                    return (
+                      <div
+                        key={num}
+                        className={`flex-1 h-3 rounded-full transition-all duration-300 ${
+                          isTaken
+                            ? violationReason
+                              ? "bg-amber-500"
+                              : isPassed
+                              ? "bg-green-600"
+                              : "bg-red-500"
+                            : "bg-gray-200"
+                        }`}
+                        title={
+                          isTaken
+                            ? violationReason
+                              ? `Attempt #${num}: Terminated due to ${violationReason}`
+                              : isPassed
+                              ? `Attempt #${num}: Passed (${attempt.percentage}%)`
+                              : `Attempt #${num}: Failed (${attempt.percentage}%)`
+                            : `Attempt #${num}: Remaining`
+                        }
+                      />
+                    );
+                  });
+                })()}
               </div>
 
               {pastAttempts.length > 0 ? (
@@ -582,14 +612,14 @@ export default function EntranceExam() {
               )}
             </div>
 
-            {pastAttempts.length >= 3 && (
+            {isCooldownLocked && (
               <div className="bg-red-50 border-2 border-red-500 rounded-lg p-5 mb-8 shadow-md">
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="text-red-600 flex-shrink-0" size={24} />
                   <div>
-                    <h4 className="font-bold text-red-800 text-base">Entrance Exam Locked</h4>
+                    <h4 className="font-bold text-red-800 text-base">Entrance Exam Cooldown Lock</h4>
                     <p className="text-sm text-red-700 mt-1">
-                      You have used all 3 attempts. You are no longer permitted to take the entrance exam with this account. Please contact student support for further assistance.
+                      You have failed all 3 attempts in this block. You must wait <span className="font-bold text-red-900">{cooldownText || "24 hours"}</span> before you can start another block of attempts.
                     </p>
                   </div>
                 </div>
@@ -609,13 +639,13 @@ export default function EntranceExam() {
             )}
 
             <div className="flex gap-4">
-              {pastAttempts.length >= 3 ? (
+              {isCooldownLocked ? (
                 <Button
                   disabled
                   size="lg"
-                  className="flex-1 bg-red-800/20 text-red-800 border border-red-800/10 cursor-not-allowed shadow-none"
+                  className="flex-1 bg-red-800/20 text-red-800 border border-red-800/10 cursor-not-allowed shadow-none font-bold"
                 >
-                  Entrance Exam Locked (3/3 Attempts Used)
+                  Locked (Cooldown: {cooldownText || "24 hours"})
                 </Button>
               ) : (
                 <Button
