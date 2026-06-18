@@ -754,7 +754,7 @@ export default function AdminStudents() {
                 <select className="w-full p-2 border rounded mt-1 bg-[#F4F1EA] border-[#0B2A5B]/20" value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}>
                   {isSuperAdmin && <option value="admin">Admin</option>}
                   <option value="faculty">Faculty / Teacher</option>
-                  <option value="distributor">Introducing Broker (IB)</option>
+                  {isSuperAdmin && <option value="distributor">Introducing Broker (IB)</option>}
                 </select>
               </div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Full Name *</label><Input required minLength={2} value={newUser.full_name} onChange={e => setNewUser({ ...newUser, full_name: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
