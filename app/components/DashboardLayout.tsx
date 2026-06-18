@@ -21,9 +21,9 @@ interface NavItem {
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  role?: "student" | "teacher" | "admin" | "super_admin";
+  role?: "student" | "teacher" | "admin" | "super_admin" | "distributor";
   /** @deprecated Use `role` instead */
-  userRole?: "student" | "teacher" | "admin" | "super_admin";
+  userRole?: "student" | "teacher" | "admin" | "super_admin" | "distributor";
   userName?: string;
   navItems?: NavItem[];
 }
@@ -102,6 +102,10 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "Contracts", path: "/admin/contracts", icon: <FileText size={20} /> },
         { label: "Settings", path: "/admin/settings", icon: <Settings size={20} /> },
       ];
+    case "distributor":
+      return [
+        { label: "Dashboard", path: "/distributor/dashboard", icon: <Home size={20} /> },
+      ];
     default:
       return [];
   }
@@ -113,6 +117,7 @@ const getFallbackName = (role: string): string => {
     case "teacher": return "Priya Patel";
     case "admin": return "Vikram Desai";
     case "super_admin": return "Super Admin";
+    case "distributor": return "Introducing Broker (IB)";
     default: return "User";
   }
 };
@@ -427,7 +432,7 @@ export function DashboardLayout({
               </Link>
             </div>
             <p className="text-xs text-[#0B2A5B]/60 capitalize mt-2 text-center font-bold tracking-wide">
-              {role} Portal
+              {role === "distributor" ? "Introducing Broker (IB)" : role} Portal
             </p>
           </div>
 

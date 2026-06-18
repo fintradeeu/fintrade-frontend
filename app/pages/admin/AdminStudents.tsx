@@ -359,7 +359,7 @@ export default function AdminStudents() {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         {ROLE_FILTERS.map(role => (
           <Card key={role} className={`p-4 cursor-pointer transition-all shadow-lg hover:shadow-xl ${roleFilter === role ? "bg-[#0B2A5B] text-[#F4F1EA] ring-2 ring-[#C2A86A]" : "bg-white"}`} onClick={() => setRoleFilter(role)}>
-            <p className={`text-xs uppercase tracking-wider mb-1 ${roleFilter === role ? "text-[#F4F1EA]/70" : "text-[#0B2A5B]/60"}`}>{role === "all" ? "All Users" : role === "distributor" ? "Link Builders (LB)" : role.charAt(0).toUpperCase() + role.slice(1) + "s"}</p>
+            <p className={`text-xs uppercase tracking-wider mb-1 ${roleFilter === role ? "text-[#F4F1EA]/70" : "text-[#0B2A5B]/60"}`}>{role === "all" ? "All Users" : role === "distributor" ? "Introducing Brokers (IB)" : role.charAt(0).toUpperCase() + role.slice(1) + "s"}</p>
             <p className={`text-2xl font-bold ${roleFilter === role ? "text-[#C2A86A]" : "text-[#0B2A5B]"}`}>{countRole(role)}</p>
           </Card>
         ))}
@@ -437,7 +437,7 @@ export default function AdminStudents() {
                         <TableCell className="text-[#0B2A5B] text-sm">{u.phone || "—"}</TableCell>
                         <TableCell className="text-[#0B2A5B] text-sm">{u.city || "—"}</TableCell>
                         <TableCell>{u.roles?.map((r: any) => (
-                          <Badge key={r.id} className={`mr-1 ${r.name === "admin" ? "bg-red-100 text-red-700" : r.name === "faculty" ? "bg-purple-100 text-purple-700" : r.name === "distributor" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}`}>{r.name === "distributor" ? "Link Builder (LB)" : r.name}</Badge>
+                          <Badge key={r.id} className={`mr-1 ${r.name === "admin" ? "bg-red-100 text-red-700" : r.name === "faculty" ? "bg-purple-100 text-purple-700" : r.name === "distributor" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}`}>{r.name === "distributor" ? "Introducing Broker (IB)" : r.name}</Badge>
                         ))}</TableCell>
                         <TableCell><KycBadge status={u.kyc_status} /></TableCell>
                       </>
@@ -510,13 +510,13 @@ export default function AdminStudents() {
                     <span className="w-28 text-xs font-semibold text-gray-400 uppercase tracking-wide mt-0.5">Roles</span>
                     <div className="flex flex-wrap gap-1">
                       {selectedUser.roles?.map((r: any) => (
-                        <Badge key={r.id} className={r.name === "admin" ? "bg-red-100 text-red-700" : r.name === "faculty" ? "bg-purple-100 text-purple-700" : r.name === "distributor" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}>{r.name === "distributor" ? "Link Builder (LB)" : r.name}</Badge>
+                        <Badge key={r.id} className={r.name === "admin" ? "bg-red-100 text-red-700" : r.name === "faculty" ? "bg-purple-100 text-purple-700" : r.name === "distributor" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}>{r.name === "distributor" ? "Introducing Broker (IB)" : r.name}</Badge>
                       ))}
                     </div>
                   </div>
                   {selectedUser.roles?.some((r: any) => r.name === "distributor") && selectedUser.distributor_profile && (
                     <div className="mt-4 bg-orange-50 rounded-xl p-4 space-y-2 border border-orange-100">
-                      <p className="text-xs font-bold text-orange-700 uppercase tracking-wider">Distributor Profile</p>
+                      <p className="text-xs font-bold text-orange-700 uppercase tracking-wider">Introducing Broker (IB) Profile</p>
                       {[
                         ["Region", selectedUser.distributor_profile.region],
                         ["Code", selectedUser.distributor_profile.referral_code],
@@ -658,7 +658,7 @@ export default function AdminStudents() {
                 <select className="w-full p-2 border rounded mt-1 bg-[#F4F1EA] border-[#0B2A5B]/20" value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}>
                   <option value="admin">Admin</option>
                   <option value="faculty">Faculty / Teacher</option>
-                  <option value="distributor">Link Builder (LB)</option>
+                  <option value="distributor">Introducing Broker (IB)</option>
                 </select>
               </div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Full Name *</label><Input required minLength={2} value={newUser.full_name} onChange={e => setNewUser({ ...newUser, full_name: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
@@ -685,7 +685,7 @@ export default function AdminStudents() {
                 </div>
               )}
               <Button type="submit" disabled={creating} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a] shadow-lg">
-                {creating ? "Creating..." : `Create ${newUser.role === "distributor" ? "Link Builder" : newUser.role.charAt(0).toUpperCase() + newUser.role.slice(1)}`}
+                {creating ? "Creating..." : `Create ${newUser.role === "distributor" ? "Introducing Broker (IB)" : newUser.role.charAt(0).toUpperCase() + newUser.role.slice(1)}`}
               </Button>
             </form>
           </Card>
@@ -705,7 +705,7 @@ export default function AdminStudents() {
               <div><label className="text-sm font-medium text-[#0B2A5B]">City</label><Input type="text" value={editForm.city} onChange={e => setEditForm({ ...editForm, city: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
               {selectedUser.roles?.some((r: any) => r.name === "distributor") && (
                 <div className="space-y-3 border-t pt-4 mt-4">
-                  <h3 className="font-semibold text-sm text-[#0B2A5B]">Link Builder (LB) Settings</h3>
+                  <h3 className="font-semibold text-sm text-[#0B2A5B]">Introducing Broker (IB) Settings</h3>
                   <div><label className="text-sm font-medium text-[#0B2A5B]">Region *</label><Input required value={editForm.region} onChange={e => setEditForm({ ...editForm, region: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
                   <div><label className="text-sm font-medium text-[#0B2A5B]">Referral Code *</label><Input required minLength={3} value={editForm.referral_code} onChange={e => setEditForm({ ...editForm, referral_code: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
                   <div><label className="text-sm font-medium text-[#0B2A5B]">Discount % *</label><Input required type="number" min="0" max="100" value={editForm.discount_percentage} onChange={e => setEditForm({ ...editForm, discount_percentage: parseFloat(e.target.value) || 0 })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>

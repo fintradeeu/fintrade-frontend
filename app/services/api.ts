@@ -39,11 +39,12 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized (e.g., clear token and redirect to login if needed)
+      // Handle unauthorized (e.g., clear token and redirect to login)
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      // Do not force redirect here to preserve UI state without breaking React Router heavily,
-      // but apps generally dispatch an event or use context.
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
