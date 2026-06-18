@@ -148,7 +148,9 @@ export default function LoginPage() {
         const isFaculty = roles.some((r: any) => r.name === "faculty");
         const isDistributor = roles.some((r: any) => r.name === "distributor");
 
-        if (isSuperAdmin || isAdmin) {
+        if (isSuperAdmin) {
+          navigate("/superadmin/dashboard");
+        } else if (isAdmin) {
           navigate("/admin/dashboard");
         } else if (isFaculty) {
           navigate("/teacher/dashboard");
@@ -203,7 +205,9 @@ export default function LoginPage() {
       const isFaculty = roles.some((r: any) => r.name === "faculty");
       const isDistributor = roles.some((r: any) => r.name === "distributor");
 
-      if (isSuperAdmin || isAdmin) {
+      if (isSuperAdmin) {
+        navigate("/superadmin/dashboard");
+      } else if (isAdmin) {
         navigate("/admin/dashboard");
       } else if (isFaculty) {
         navigate("/teacher/dashboard");
@@ -236,7 +240,9 @@ export default function LoginPage() {
       const isFaculty = roles.some((r: any) => r.name === "faculty");
       const isDistributor = roles.some((r: any) => r.name === "distributor");
 
-      if (isSuperAdmin || isAdmin) {
+      if (isSuperAdmin) {
+        navigate("/superadmin/dashboard");
+      } else if (isAdmin) {
         navigate("/admin/dashboard");
       } else if (isFaculty) {
         navigate("/teacher/dashboard");

@@ -50,6 +50,7 @@ import TeacherReports from "./pages/teacher/TeacherReports";
 import TeacherAssignments from "./pages/teacher/TeacherAssignments";
 
 // Admin Pages
+import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminStudents from "./pages/admin/AdminStudents";
 import AdminCourses from "./pages/admin/AdminCourses";
@@ -257,6 +258,10 @@ export const router = createBrowserRouter([
     Component: TeacherAssignments,
   },
   // Admin Routes
+  {
+    path: "/superadmin/dashboard",
+    Component: SuperAdminDashboard,
+  },
   {
     path: "/admin/dashboard",
     Component: AdminDashboard,

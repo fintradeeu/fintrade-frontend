@@ -21,15 +21,37 @@ interface NavItem {
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  role?: "student" | "teacher" | "admin";
+  role?: "student" | "teacher" | "admin" | "super_admin";
   /** @deprecated Use `role` instead */
-  userRole?: "student" | "teacher" | "admin";
+  userRole?: "student" | "teacher" | "admin" | "super_admin";
   userName?: string;
   navItems?: NavItem[];
 }
 
 const getNavItemsByRole = (role: string): NavItem[] => {
   switch (role) {
+    case "super_admin":
+      return [
+        { label: "Dashboard", path: "/superadmin/dashboard", icon: <Home size={20} /> },
+        { label: "User Management", path: "/admin/students", icon: <Users size={20} /> },
+        { label: "Courses", path: "/admin/courses", icon: <BookOpen size={20} /> },
+        { label: "Module Students", path: "/admin/module-students", icon: <GraduationCap size={20} /> },
+        { label: "Lectures", path: "/admin/lectures", icon: <Video size={20} /> },
+        { label: "Live Class Registrations", path: "/admin/live-class-registrations", icon: <Users size={20} /> },
+        { label: "Exams", path: "/admin/exams", icon: <FileQuestion size={20} /> },
+        { label: "Payments & Coupons", path: "/admin/payments", icon: <IndianRupee size={20} /> },
+        { label: "Login Details", path: "/admin/login-details", icon: <Users size={20} /> },
+        { label: "Blog & CMS", path: "/admin/news", icon: <Newspaper size={20} /> },
+        { label: "Advisors", path: "/admin/advisors", icon: <Users size={20} /> },
+        { label: "Site Content", path: "/admin/cms", icon: <LayoutTemplate size={20} /> },
+        { label: "Feedback Forms", path: "/admin/feedback-forms", icon: <FileText size={20} /> },
+        { label: "Admin Roles", path: "/admin/roles", icon: <Shield size={20} /> },
+        { label: "AI Chatbot", path: "/admin/ai-chatbot", icon: <Bot size={20} /> },
+        { label: "Simulator", path: "/admin/simulator", icon: <TrendingUp size={20} /> },
+        { label: "Reports", path: "/admin/reports", icon: <BarChart3 size={20} /> },
+        { label: "Contracts", path: "/admin/contracts", icon: <FileText size={20} /> },
+        { label: "Settings", path: "/admin/settings", icon: <Settings size={20} /> },
+      ];
     case "student":
       return [
         { label: "Dashboard", path: "/student/dashboard", icon: <Home size={20} /> },
@@ -90,6 +112,7 @@ const getFallbackName = (role: string): string => {
     case "student": return "Rahul Sharma";
     case "teacher": return "Priya Patel";
     case "admin": return "Vikram Desai";
+    case "super_admin": return "Super Admin";
     default: return "User";
   }
 };
@@ -115,10 +138,11 @@ export function DashboardLayout({
   const [userPermissions, setUserPermissions] = useState<any>(null);
   
   let baseNavItems = customNavItems || getNavItemsByRole(role);
-  if (role === "admin" && userPermissions) {
+  if ((role === "admin" || role === "super_admin") && userPermissions) {
     baseNavItems = baseNavItems.filter((item) => {
       switch (item.path) {
         case "/admin/dashboard":
+        case "/superadmin/dashboard":
           return userPermissions.viewDashboard !== false;
         case "/admin/students":
           return userPermissions.manageStudents !== false;
