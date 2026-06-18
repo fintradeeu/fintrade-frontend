@@ -39,11 +39,21 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized (e.g., clear token and redirect to login)
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+      // Skip auto-redirect for auth endpoints — let the UI show the error
+      const url = error.config?.url || '';
+      const isAuthEndpoint = url.includes('/auth/login') ||
+        url.includes('/auth/register') ||
+        url.includes('/auth/verify-otp') ||
+        url.includes('/auth/google') ||
+        url.includes('/auth/forgot-password') ||
+        url.includes('/auth/reset-password');
+
+      if (!isAuthEndpoint) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);

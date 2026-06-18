@@ -733,9 +733,7 @@ export default function MarketingHome() {
     }, 8000);
   };
 
-  const coursesCount = isCoursesExpanded
-    ? (apiCourses.length > 0 ? apiCourses.length : 5)
-    : 3;
+  const coursesCount = isCoursesExpanded ? apiCourses.length : Math.min(apiCourses.length, 3);
 
   // Handle manual scroll synchronization
   const handleCoursesScroll = () => {
@@ -797,7 +795,7 @@ export default function MarketingHome() {
   useEffect(() => {
     const fetchFeatured = async () => {
       try {
-        const res = await api.get("/courses?is_featured=true");
+        const res = await api.get("/courses");
         if (res.data && res.data.length > 0) {
           const detailed = await Promise.all(
             res.data.map(async (c: any) => {
@@ -1369,7 +1367,7 @@ export default function MarketingHome() {
                 className="flex gap-6 md:gap-8 overflow-x-auto pt-5 pb-6 snap-x snap-mandatory scrollbar-hide px-4 -mx-4 md:px-0 md:mx-0 items-stretch"
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
               >
-                {(apiCourses.length > 0
+                {(true
                   ? apiCourses.map((c: any) => {
                     const diff = c.difficulty_level || "beginner";
                     return {

@@ -31,6 +31,58 @@ const getInitialMessage = (name: string) => [{
   time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
 }];
 
+const renderInlineMarkdown = (text: string) => {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    }
+    return <span key={index}>{part}</span>;
+  });
+};
+
+const renderMessageContent = (content: string) => {
+  const normalized = content
+    .replace(/\r\n/g, "\n")
+    .replace(/\s+(\d+\.\s+\*\*)/g, "\n$1")
+    .replace(/\s+([*-]\s+\*\*)/g, "\n$1")
+    .trim();
+
+  const blocks = normalized.split(/\n{2,}/).filter(Boolean);
+
+  return (
+    <div className="space-y-3 text-sm leading-6">
+      {blocks.map((block, blockIndex) => {
+        const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
+        const isNumberedList = lines.every((line) => /^\d+\.\s+/.test(line));
+        const isBulletList = lines.every((line) => /^[-*]\s+/.test(line));
+
+        if (isNumberedList || isBulletList) {
+          const ListTag = isNumberedList ? "ol" : "ul";
+          return (
+            <ListTag
+              key={blockIndex}
+              className={`space-y-2 pl-5 ${isNumberedList ? "list-decimal" : "list-disc"}`}
+            >
+              {lines.map((line, lineIndex) => (
+                <li key={lineIndex}>
+                  {renderInlineMarkdown(line.replace(/^(\d+\.\s+|[-*]\s+)/, ""))}
+                </li>
+              ))}
+            </ListTag>
+          );
+        }
+
+        return lines.map((line, lineIndex) => (
+          <p key={`${blockIndex}-${lineIndex}`} className="leading-6">
+            {renderInlineMarkdown(line)}
+          </p>
+        ));
+      })}
+    </div>
+  );
+};
+
 export default function AITutor() {
   const [userName, setUserName] = useState("Student");
   const [messages, setMessages] = useState(getInitialMessage("Student"));
@@ -179,7 +231,11 @@ export default function AITutor() {
                         : "bg-[#0B2A5B] text-[#F4F1EA]"
                     }`}
                   >
-                    <p className="leading-relaxed">{message.content}</p>
+                    {message.sender === "ai" ? (
+                      renderMessageContent(message.content)
+                    ) : (
+                      <p className="leading-relaxed">{message.content}</p>
+                    )}
                   </div>
                   <span className="text-xs text-[#0B2A5B]/50 mt-1 flex items-center gap-1">
                     <Clock size={12} />
