@@ -187,7 +187,9 @@ export default function AdminStudents() {
 
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [viewTab, setViewTab] = useState<"profile" | "kyc">("profile");
+  const [viewTab, setViewTab] = useState<"profile" | "kyc" | "referrals">("profile");
+  const [distReferrals, setDistReferrals] = useState<any[]>([]);
+  const [referralsLoading, setReferralsLoading] = useState(false);
   const [selectedUserKyc, setSelectedUserKyc] = useState<any | null>(null);
   const [kycLoading, setKycLoading] = useState(false);
 
@@ -261,6 +263,24 @@ export default function AdminStudents() {
     if (!selectedUserKyc && selectedUser) loadKycForUser(selectedUser.id);
   };
 
+  const handleSwitchToReferrals = async () => {
+    setViewTab("referrals");
+    if (!selectedUser) return;
+    const distInfo = getDistributorStats(selectedUser.id);
+    if (!distInfo) return;
+
+    setReferralsLoading(true);
+    try {
+      const res = await api.get(`/admin/distributors/${distInfo.id}/referrals`);
+      setDistReferrals(res.data || []);
+    } catch (err) {
+      console.error("Failed to load IB referrals:", err);
+      toast.error("Failed to load referred students.");
+    } finally {
+      setReferralsLoading(false);
+    }
+  };
+
   const handleExportExcel = async () => {
     setExporting(true);
     toast.info("Fetching KYC data for filtered users...");
@@ -320,7 +340,7 @@ export default function AdminStudents() {
       const base = { email: newUser.email, full_name: newUser.full_name, password: newUser.password, phone: newUser.phone || undefined, city: newUser.city || undefined };
       if (newUser.role === "admin") await api.post("/admin/users/create-admin", base);
       else if (newUser.role === "faculty") await api.post("/admin/users/create-faculty", { ...base, permissions: newUser.permissions });
-      else await api.post("/admin/users/create-distributor", { ...base, region: newUser.region, referral_code: newUser.referral_code, discount_percentage: newUser.discount_percentage });
+      else await api.post("/admin/users/create-distributor", { ...base, region: newUser.region, referral_code: newUser.referral_code.trim() || undefined, discount_percentage: newUser.discount_percentage });
       setShowAddModal(false);
       setNewUser({ role: "faculty", email: "", full_name: "", phone: "", city: "", password: "", region: "", referral_code: "", discount_percentage: 10, permissions: { ...DEFAULT_FACULTY_PERMISSIONS } });
       fetchUsers();
@@ -343,16 +363,12 @@ export default function AdminStudents() {
   };
 
   const filtered = users.filter(u => {
-    if (!isSuperAdmin && u.roles?.some((ro: any) => ro.name === "distributor")) {
-      return false;
-    }
     const s = u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || u.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const r = roleFilter === "all" || u.roles?.some((ro: any) => ro.name === roleFilter);
     return s && r;
   });
   const countRole = (r: string) => {
-    const pool = isSuperAdmin ? users : users.filter(u => !u.roles?.some((ro: any) => ro.name === "distributor"));
-    return r === "all" ? pool.length : pool.filter(u => u.roles?.some((ro: any) => ro.name === r)).length;
+    return r === "all" ? users.length : users.filter(u => u.roles?.some((ro: any) => ro.name === r)).length;
   };
 
   return (
@@ -373,8 +389,8 @@ export default function AdminStudents() {
       </div>
 
       {/* Role filter cards */}
-      <div className={`grid grid-cols-2 md:grid-cols-${isSuperAdmin ? 5 : 4} gap-4 mb-6`}>
-        {ROLE_FILTERS.filter(role => isSuperAdmin || role !== "distributor").map(role => (
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        {ROLE_FILTERS.map(role => (
           <Card key={role} className={`p-4 cursor-pointer transition-all shadow-lg hover:shadow-xl ${roleFilter === role ? "bg-[#0B2A5B] text-[#F4F1EA] ring-2 ring-[#C2A86A]" : "bg-white"}`} onClick={() => setRoleFilter(role)}>
             <p className={`text-xs uppercase tracking-wider mb-1 ${roleFilter === role ? "text-[#F4F1EA]/70" : "text-[#0B2A5B]/60"}`}>{role === "all" ? "All Users" : role === "distributor" ? "Introducing Brokers (IB)" : role.charAt(0).toUpperCase() + role.slice(1) + "s"}</p>
             <p className={`text-2xl font-bold ${roleFilter === role ? "text-[#C2A86A]" : "text-[#0B2A5B]"}`}>{countRole(role)}</p>
@@ -405,6 +421,7 @@ export default function AdminStudents() {
                   <TableHead className="text-[#0B2A5B]">Referral Code</TableHead>
                   <TableHead className="text-[#0B2A5B]">Discount %</TableHead>
                   <TableHead className="text-[#0B2A5B]">Students Referred</TableHead>
+                  <TableHead className="text-[#0B2A5B]">Total Revenue</TableHead>
                   <TableHead className="text-[#0B2A5B]">Referral Link</TableHead>
                 </>
               ) : (
@@ -431,6 +448,7 @@ export default function AdminStudents() {
                         <TableCell className="text-[#0B2A5B] text-sm font-mono font-bold text-orange-600">{distInfo?.referral_code || u.distributor_profile?.referral_code || "—"}</TableCell>
                         <TableCell className="text-[#0B2A5B] text-sm font-semibold">{distInfo?.discount_percentage ?? u.distributor_profile?.discount_percentage ?? 10}%</TableCell>
                         <TableCell className="text-[#0B2A5B] text-sm font-bold">{distInfo?.total_students_referred ?? 0}</TableCell>
+                        <TableCell className="text-[#0B2A5B] text-sm font-bold text-green-700">₹{distInfo?.total_revenue_generated?.toLocaleString("en-IN") ?? 0}</TableCell>
                         <TableCell>
                           {(distInfo?.referral_code || u.distributor_profile?.referral_code) ? (
                             <Button
@@ -495,13 +513,20 @@ export default function AdminStudents() {
 
             {/* Tabs */}
             <div className="flex border-b border-gray-100">
-              {(["profile", "kyc"] as const).map(tab => (
+              {(selectedUser.roles?.some((r: any) => r.name === "distributor")
+                ? ["profile", "kyc", "referrals"]
+                : ["profile", "kyc"]
+              ).map(tab => (
                 <button
                   key={tab}
-                  onClick={() => tab === "kyc" ? handleSwitchToKyc() : setViewTab("profile")}
+                  onClick={() => {
+                    if (tab === "kyc") handleSwitchToKyc();
+                    else if (tab === "referrals") handleSwitchToReferrals();
+                    else setViewTab("profile");
+                  }}
                   className={`flex-1 py-3 text-sm font-semibold transition-all ${viewTab === tab ? "border-b-2 border-[#0B2A5B] text-[#0B2A5B]" : "text-gray-400 hover:text-gray-600"}`}
                 >
-                  {tab === "profile" ? "👤 Profile" : "🪪 KYC Details"}
+                  {tab === "profile" ? "👤 Profile" : tab === "kyc" ? "🪪 KYC Details" : "📈 IB Referrals"}
                 </button>
               ))}
             </div>
@@ -646,12 +671,66 @@ export default function AdminStudents() {
                       <div>
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Signature & Biometric</p>
                         <div className="grid grid-cols-2 gap-3">
-                          <DocTile label="Digital Signature" url={selectedUserKyc.signature_url} icon={<FileText className="h-8 w-8" />} />
-                          <DocTile label="Biometric Selfie" url={selectedUserKyc.biometric_selfie_url} icon={<Camera className="h-8 w-8" />} />
+                           <DocTile label="Digital Signature" url={selectedUserKyc.signature_url} icon={<FileText className="h-8 w-8" />} />
+                           <DocTile label="Biometric Selfie" url={selectedUserKyc.biometric_selfie_url} icon={<Camera className="h-8 w-8" />} />
                         </div>
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+
+              {viewTab === "referrals" && (
+                <div className="space-y-6">
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-center">
+                      <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Total Referred Students</p>
+                      <p className="text-3xl font-bold text-[#0B2A5B] mt-1">{getDistributorStats(selectedUser.id)?.total_students_referred ?? 0}</p>
+                    </div>
+                    <div className="bg-green-50 border border-green-100 rounded-xl p-4 text-center">
+                      <p className="text-xs font-semibold text-green-600 uppercase tracking-wider">Total Revenue Generated</p>
+                      <p className="text-3xl font-bold text-green-700 mt-1">₹{(getDistributorStats(selectedUser.id)?.total_revenue_generated ?? 0).toLocaleString("en-IN")}</p>
+                    </div>
+                  </div>
+
+                  {/* Referrals list */}
+                  <div>
+                    <h3 className="text-sm font-bold text-[#0B2A5B] mb-3 uppercase tracking-wider">Referred Student List</h3>
+                    {referralsLoading ? (
+                      <div className="flex flex-col items-center justify-center py-12 gap-3">
+                        <div className="w-8 h-8 border-4 border-[#0B2A5B]/20 border-t-[#0B2A5B] rounded-full animate-spin" />
+                        <p className="text-xs text-gray-400">Loading referred students...</p>
+                      </div>
+                    ) : distReferrals.length === 0 ? (
+                      <div className="py-8 text-center text-gray-400 text-sm font-medium border border-dashed rounded-xl bg-gray-50/50">
+                        No students have registered under this Introducing Broker yet.
+                      </div>
+                    ) : (
+                      <div className="border border-gray-100 rounded-xl overflow-hidden max-h-[40vh] overflow-y-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-[#F4F1EA] hover:bg-[#F4F1EA]">
+                              <TableHead className="text-[#0B2A5B] text-xs font-bold py-2">Student Name</TableHead>
+                              <TableHead className="text-[#0B2A5B] text-xs font-bold py-2">Email</TableHead>
+                              <TableHead className="text-[#0B2A5B] text-xs font-bold py-2">Enrolled Course</TableHead>
+                              <TableHead className="text-[#0B2A5B] text-xs font-bold py-2">Referral Date</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {distReferrals.map((r) => (
+                              <TableRow key={r.id} className="hover:bg-gray-50">
+                                <TableCell className="font-semibold text-[#0B2A5B] text-xs py-2">{r.student_name || "—"}</TableCell>
+                                <TableCell className="text-[#0B2A5B]/70 text-xs py-2">{r.student_email || "—"}</TableCell>
+                                <TableCell className="text-[#0B2A5B] text-xs py-2">{r.course_title || <span className="text-gray-400 italic">Pending Enrollment</span>}</TableCell>
+                                <TableCell className="text-[#0B2A5B]/80 text-xs py-2">{new Date(r.created_at).toLocaleDateString("en-IN")}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -673,9 +752,9 @@ export default function AdminStudents() {
               <div>
                 <label className="text-sm font-medium text-[#0B2A5B]">Role *</label>
                 <select className="w-full p-2 border rounded mt-1 bg-[#F4F1EA] border-[#0B2A5B]/20" value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}>
-                  <option value="admin">Admin</option>
+                  {isSuperAdmin && <option value="admin">Admin</option>}
                   <option value="faculty">Faculty / Teacher</option>
-                  {isSuperAdmin && <option value="distributor">Introducing Broker (IB)</option>}
+                  <option value="distributor">Introducing Broker (IB)</option>
                 </select>
               </div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Full Name *</label><Input required minLength={2} value={newUser.full_name} onChange={e => setNewUser({ ...newUser, full_name: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
@@ -685,7 +764,7 @@ export default function AdminStudents() {
               <div><label className="text-sm font-medium text-[#0B2A5B]">Password *</label><Input required type="password" minLength={8} placeholder="Min 8 characters" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
               {newUser.role === "distributor" && (<>
                 <div><label className="text-sm font-medium text-[#0B2A5B]">Region *</label><Input required value={newUser.region} onChange={e => setNewUser({ ...newUser, region: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
-                <div><label className="text-sm font-medium text-[#0B2A5B]">Referral Code *</label><Input required minLength={3} value={newUser.referral_code} onChange={e => setNewUser({ ...newUser, referral_code: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
+                <div><label className="text-sm font-medium text-[#0B2A5B]">Referral Code (Optional - Auto-generated if left blank)</label><Input placeholder="e.g. IB-CODE" value={newUser.referral_code} onChange={e => setNewUser({ ...newUser, referral_code: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
                 <div><label className="text-sm font-medium text-[#0B2A5B]">Discount %</label><Input required type="number" min="0" max="100" value={newUser.discount_percentage} onChange={e => setNewUser({ ...newUser, discount_percentage: parseInt(e.target.value) })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
               </>)}
               {newUser.role === "faculty" && (

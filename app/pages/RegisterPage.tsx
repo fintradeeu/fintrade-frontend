@@ -79,12 +79,14 @@ export default function RegisterPage() {
     setLoading(true);
     
     try {
+      const refCode = localStorage.getItem("distributor_code") || new URLSearchParams(window.location.search).get("ref") || undefined;
       const response = await api.post("/auth/register", {
         full_name: fullName,
         email,
         phone,
         city,
-        password
+        password,
+        referral_code: refCode
       });
       const { access_token, user } = response.data;
       

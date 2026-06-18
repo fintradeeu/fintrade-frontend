@@ -12,7 +12,8 @@ const navItems = [
 export default function DistributorDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [referrals, setReferrals] = useState<any[]>([]);
-  const [copied, setCopied] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const [userName, setUserName] = useState("Introducing Broker");
 
   const fetchData = async () => {
@@ -39,11 +40,20 @@ export default function DistributorDashboard() {
     fetchData();
   }, []);
 
-  const handleCopy = () => {
+  const handleCopyCode = () => {
     if (stats?.referral_code) {
       navigator.clipboard.writeText(stats.referral_code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (stats?.referral_code) {
+      const link = `${window.location.origin}/register?ref=${stats.referral_code}`;
+      navigator.clipboard.writeText(link);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
     }
   };
 
@@ -105,18 +115,34 @@ export default function DistributorDashboard() {
               <LinkIcon className="text-[#C2A86A]" size={24} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-[#0B2A5B]/60">IB Referral Code</p>
-              <div className="flex items-center justify-between mt-1 gap-2">
-                <span className="text-2xl font-bold text-[#0B2A5B] tracking-wider truncate">
-                  {stats?.referral_code || "---"}
-                </span>
-                <button
-                  onClick={handleCopy}
-                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-black transition-colors"
-                  title="Copy Code"
-                >
-                  {copied ? <span className="text-xs font-bold text-green-600">Copied!</span> : <Copy size={18} />}
-                </button>
+              <p className="text-sm font-medium text-[#0B2A5B]/60">IB Referral Code & Link</p>
+              <div className="flex flex-col gap-2 mt-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xl font-bold text-[#0B2A5B] tracking-wider truncate">
+                    {stats?.referral_code || "---"}
+                  </span>
+                  <button
+                    onClick={handleCopyCode}
+                    className="p-1.5 hover:bg-gray-100 rounded-lg text-[#0B2A5B]/60 hover:text-black transition-colors flex items-center gap-1"
+                    title="Copy Code"
+                  >
+                    {copiedCode ? <span className="text-xs font-bold text-green-600">Copied!</span> : <Copy size={16} />}
+                  </button>
+                </div>
+                {stats?.referral_code && (
+                  <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-gray-100">
+                    <span className="text-xs text-blue-600 truncate max-w-[120px]" title={`${window.location.origin}/register?ref=${stats.referral_code}`}>
+                      {stats?.referral_code ? `.../register?ref=${stats.referral_code}` : ""}
+                    </span>
+                    <button
+                      onClick={handleCopyLink}
+                      className="p-1 hover:bg-gray-100 rounded text-blue-600 hover:text-blue-800 transition-colors flex items-center"
+                      title="Copy Link"
+                    >
+                      {copiedLink ? <span className="text-[10px] font-bold text-green-600">Copied!</span> : <LinkIcon size={14} />}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
