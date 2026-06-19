@@ -64,6 +64,7 @@ export default function LoginPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [googlePhone, setGooglePhone] = useState("");
+  const [googleCity, setGoogleCity] = useState("");
   const [googlePassword, setGooglePassword] = useState("");
   const [googleConfirmPassword, setGoogleConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -261,6 +262,7 @@ export default function LoginPage() {
 
       if (!user.phone || !user.has_password) {
         setGooglePhone(user.phone || "");
+        setGoogleCity(user.city || "");
         setGooglePassword("");
         setGoogleConfirmPassword("");
         setStep("google_complete");
@@ -295,6 +297,7 @@ export default function LoginPage() {
     try {
       const response = await api.post("/auth/google/complete-profile", {
         phone: googlePhone,
+        city: googleCity,
         password: googlePassword,
       });
       const user = response.data;
@@ -594,6 +597,19 @@ export default function LoginPage() {
                     onChange={(e) => setGooglePhone(e.target.value)}
                     className="mt-2 bg-gray-50 border-gray-300 focus:border-[#E53935] focus:ring-[#E53935]"
                     required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="google-city">City</Label>
+                  <Input
+                    id="google-city"
+                    type="text"
+                    autoComplete="address-level2"
+                    placeholder="e.g., Ahmedabad"
+                    value={googleCity}
+                    onChange={(e) => setGoogleCity(e.target.value)}
+                    className="mt-2 bg-gray-50 border-gray-300 focus:border-[#E53935] focus:ring-[#E53935]"
                   />
                 </div>
 
