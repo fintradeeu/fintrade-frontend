@@ -31,8 +31,28 @@ export default function LoginPage() {
     }
   };
 
+  const redirectAfterLogin = async (user: any) => {
+    const roles = user.roles || [];
+    const isSuperAdmin = roles.some((r: any) => r.name === "super_admin");
+    const isAdmin = roles.some((r: any) => r.name === "admin");
+    const isFaculty = roles.some((r: any) => r.name === "faculty");
+    const isDistributor = roles.some((r: any) => r.name === "distributor");
+
+    if (isSuperAdmin) {
+      navigate("/superadmin/dashboard");
+    } else if (isAdmin) {
+      navigate("/admin/dashboard");
+    } else if (isFaculty) {
+      navigate("/teacher/dashboard");
+    } else if (isDistributor) {
+      navigate("/distributor/dashboard");
+    } else {
+      await handleStudentRedirect();
+    }
+  };
+
   // OTP state
-  const [step, setStep] = useState<"credentials" | "otp" | "forgot_email" | "forgot_reset">("credentials");
+  const [step, setStep] = useState<"credentials" | "otp" | "forgot_email" | "forgot_reset" | "google_complete">("credentials");
   const [otpToken, setOtpToken] = useState("");
   const [otpCode, setOtpCode] = useState(["", "", "", "", "", ""]);
   const [channels, setChannels] = useState<string[]>([]);
@@ -43,8 +63,13 @@ export default function LoginPage() {
   // Password reset state
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [googlePhone, setGooglePhone] = useState("");
+  const [googlePassword, setGooglePassword] = useState("");
+  const [googleConfirmPassword, setGoogleConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showGooglePassword, setShowGooglePassword] = useState(false);
+  const [showGoogleConfirmPassword, setShowGoogleConfirmPassword] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
   // Countdown timer
@@ -234,25 +259,49 @@ export default function LoginPage() {
       localStorage.setItem("token", access_token);
       localStorage.setItem("user", JSON.stringify(user));
 
-      const roles = user.roles || [];
-      const isSuperAdmin = roles.some((r: any) => r.name === "super_admin");
-      const isAdmin = roles.some((r: any) => r.name === "admin");
-      const isFaculty = roles.some((r: any) => r.name === "faculty");
-      const isDistributor = roles.some((r: any) => r.name === "distributor");
-
-      if (isSuperAdmin) {
-        navigate("/superadmin/dashboard");
-      } else if (isAdmin) {
-        navigate("/admin/dashboard");
-      } else if (isFaculty) {
-        navigate("/teacher/dashboard");
-      } else if (isDistributor) {
-        navigate("/distributor/dashboard");
-      } else {
-        await handleStudentRedirect();
+      if (!user.phone || !user.has_password) {
+        setGooglePhone(user.phone || "");
+        setGooglePassword("");
+        setGoogleConfirmPassword("");
+        setStep("google_complete");
+        return;
       }
+      await redirectAfterLogin(user);
     } catch (err: any) {
       setErrorMsg(err.response?.data?.detail || "Google sign-in failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleCompleteProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+
+    if (googlePhone.trim().length < 8) {
+      setErrorMsg("Please enter a valid mobile number.");
+      return;
+    }
+    if (googlePassword.length < 8) {
+      setErrorMsg("Password must be at least 8 characters long.");
+      return;
+    }
+    if (googlePassword !== googleConfirmPassword) {
+      setErrorMsg("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await api.post("/auth/google/complete-profile", {
+        phone: googlePhone,
+        password: googlePassword,
+      });
+      const user = response.data;
+      localStorage.setItem("user", JSON.stringify(user));
+      await redirectAfterLogin(user);
+    } catch (err: any) {
+      setErrorMsg(err.response?.data?.detail || "Failed to save mobile number and password.");
     } finally {
       setLoading(false);
     }
@@ -517,6 +566,93 @@ export default function LoginPage() {
                   </Link>
                 </p>
               </div>
+            </>
+          )}
+
+          {step === "google_complete" && (
+            <>
+              <h2 className="text-3xl font-bold mb-2" style={{ color: '#121212' }}>Complete Your Account</h2>
+              <p className="text-gray-600 mb-8">
+                Add your mobile number and set a password so you can login to your panel anytime.
+              </p>
+
+              {errorMsg && (
+                <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
+                  {errorMsg}
+                </div>
+              )}
+
+              <form onSubmit={handleGoogleCompleteProfile} className="space-y-6">
+                <div>
+                  <Label htmlFor="google-phone">Mobile Number</Label>
+                  <Input
+                    id="google-phone"
+                    type="tel"
+                    autoComplete="tel"
+                    placeholder="e.g., +919408534684"
+                    value={googlePhone}
+                    onChange={(e) => setGooglePhone(e.target.value)}
+                    className="mt-2 bg-gray-50 border-gray-300 focus:border-[#E53935] focus:ring-[#E53935]"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="google-password">Create Password</Label>
+                  <div className="relative mt-2">
+                    <Input
+                      id="google-password"
+                      type={showGooglePassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      placeholder="At least 8 characters"
+                      value={googlePassword}
+                      onChange={(e) => setGooglePassword(e.target.value)}
+                      className="bg-gray-50 border-gray-300 focus:border-[#E53935] focus:ring-[#E53935] pr-12"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowGooglePassword(!showGooglePassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900"
+                    >
+                      {showGooglePassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="google-confirm-password">Confirm Password</Label>
+                  <div className="relative mt-2">
+                    <Input
+                      id="google-confirm-password"
+                      type={showGoogleConfirmPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      placeholder="Confirm password"
+                      value={googleConfirmPassword}
+                      onChange={(e) => setGoogleConfirmPassword(e.target.value)}
+                      className="bg-gray-50 border-gray-300 focus:border-[#E53935] focus:ring-[#E53935] pr-12"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowGoogleConfirmPassword(!showGoogleConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900"
+                    >
+                      {showGoogleConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full text-white shadow-lg"
+                  style={{ background: '#E53935', boxShadow: '0 0 20px rgba(229, 57, 53, 0.3)' }}
+                  size="lg"
+                  disabled={loading}
+                >
+                  {loading ? "Saving..." : "Save & Continue"}
+                </Button>
+              </form>
             </>
           )}
 
