@@ -53,6 +53,8 @@ import TeacherAssignments from "./pages/teacher/TeacherAssignments";
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminStudents from "./pages/admin/AdminStudents";
+import AdminIntroducingBrokers from "./pages/admin/AdminIntroducingBrokers";
+import AdminCommissionManagement from "./pages/admin/AdminCommissionManagement";
 import AdminCourses from "./pages/admin/AdminCourses";
 import AdminModuleStudents from "./pages/admin/AdminModuleStudents";
 import AdminLectures from "./pages/admin/AdminLectures";
@@ -74,6 +76,7 @@ import AdminLiveClassRegistrations from "./pages/admin/AdminLiveClassRegistratio
 
 // Distributor Pages
 import DistributorDashboard from "./pages/distributor/DistributorDashboard";
+import DistributorWallet from "./pages/distributor/DistributorWallet";
 
 export const router = createBrowserRouter([
   {
@@ -271,6 +274,14 @@ export const router = createBrowserRouter([
     Component: AdminStudents,
   },
   {
+    path: "/admin/introducing-brokers",
+    Component: AdminIntroducingBrokers,
+  },
+  {
+    path: "/admin/commissions",
+    Component: AdminCommissionManagement,
+  },
+  {
     path: "/admin/courses",
     Component: AdminCourses,
   },
@@ -346,6 +357,10 @@ export const router = createBrowserRouter([
   {
     path: "/distributor/dashboard",
     Component: DistributorDashboard,
+  },
+  {
+    path: "/distributor/wallet",
+    Component: DistributorWallet,
   },
 ]);
 

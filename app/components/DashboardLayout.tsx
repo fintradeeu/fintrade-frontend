@@ -4,7 +4,7 @@ import {
   Menu, X, LogOut, Home, Users, BookOpen, Video, FileQuestion,
   IndianRupee, Bot, TrendingUp, BarChart3, Settings, Award,
   GraduationCap, MessageCircle, LineChart, Briefcase, Shield,
-  Newspaper, FileText, Trophy, LayoutTemplate, UserCircle
+  Newspaper, FileText, Trophy, LayoutTemplate, UserCircle, Handshake
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent } from "./ui/dialog";
@@ -34,6 +34,8 @@ const getNavItemsByRole = (role: string): NavItem[] => {
       return [
         { label: "Dashboard", path: "/superadmin/dashboard", icon: <Home size={20} /> },
         { label: "User Management", path: "/admin/students", icon: <Users size={20} /> },
+        { label: "IB Management", path: "/admin/introducing-brokers", icon: <Handshake size={20} /> },
+        { label: "Commission Management", path: "/admin/commissions", icon: <IndianRupee size={20} /> },
         { label: "Courses", path: "/admin/courses", icon: <BookOpen size={20} /> },
         { label: "Module Students", path: "/admin/module-students", icon: <GraduationCap size={20} /> },
         { label: "Lectures", path: "/admin/lectures", icon: <Video size={20} /> },
@@ -103,6 +105,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
     case "distributor":
       return [
         { label: "Dashboard", path: "/distributor/dashboard", icon: <Home size={20} /> },
+        { label: "Wallet", path: "/distributor/wallet", icon: <IndianRupee size={20} /> },
       ];
     default:
       return [];
@@ -149,6 +152,10 @@ export function DashboardLayout({
           return userPermissions.viewDashboard !== false;
         case "/admin/students":
           return userPermissions.manageStudents !== false;
+        case "/admin/introducing-brokers":
+          return resolvedRole === "super_admin";
+        case "/admin/commissions":
+          return resolvedRole === "super_admin";
         case "/admin/courses":
           return userPermissions.manageCourses !== false;
         case "/admin/module-students":

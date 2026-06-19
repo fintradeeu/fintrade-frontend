@@ -10,6 +10,7 @@ import {
   AlertTriangle, Info, Users, Award, TrendingUp, Layers, Newspaper, Flame
 } from "lucide-react";
 import api from "../../services/api";
+import { confirmPopup } from "../../utils/popup";
 
 const getImageUrl = (path?: string) => {
   if (!path) return "";
@@ -357,7 +358,7 @@ export default function AdminCMS() {
   };
 
   const deleteReview = async (id: number) => {
-    if (!confirm("Delete this student review?")) return;
+    if (!(await confirmPopup("Delete this student review?"))) return;
     try {
       await api.delete(`/feedback/${id}`);
       fetchReviews();
@@ -390,7 +391,7 @@ export default function AdminCMS() {
   };
 
   const deleteAnnouncement = async (id: number) => {
-    if (!confirm("Delete this announcement?")) return;
+    if (!(await confirmPopup("Delete this announcement?"))) return;
     try {
       await api.delete(`/dashboard/admin/announcements/${id}`);
       fetchAnnouncements();
@@ -620,7 +621,7 @@ export default function AdminCMS() {
                   <img src={getImageUrl(slideUrl)} alt={`Hero Background ${idx + 1}`} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         const newSlides = [...(config.hero_backgrounds || [])];
                         newSlides.splice(idx, 1);
                         setConfig(p => ({ ...p, hero_backgrounds: newSlides }));
@@ -683,8 +684,8 @@ export default function AdminCMS() {
                 <div key={idx} className="p-5 rounded-2xl bg-gray-50 border border-gray-100 relative">
                   <span className="absolute top-4 right-4 bg-gray-200 text-gray-600 px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-wider">Card #{idx + 1}</span>
                   <button
-                    onClick={() => {
-                      if (!confirm("Remove this carousel card?")) return;
+                    onClick={async () => {
+                      if (!(await confirmPopup("Remove this carousel card?"))) return;
                       const list = [...(config.carousel_slides || [])];
                       list.splice(idx, 1);
                       setConfig(p => ({ ...p, carousel_slides: list }));
@@ -752,7 +753,7 @@ export default function AdminCMS() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
+                onClick={async () => {
                   const list = [...(config.carousel_slides || [])];
                   list.push({ title: "", subtitle: "", buttonText: "", link: "" });
                   setConfig(p => ({ ...p, carousel_slides: list }));
@@ -891,8 +892,8 @@ export default function AdminCMS() {
                 <div className="absolute top-4 right-4 flex items-center gap-2">
                   <span className="text-xs font-semibold text-gray-400">Class #{idx + 1}</span>
                   <button
-                    onClick={() => {
-                      if (!confirm("Remove this live class?")) return;
+                    onClick={async () => {
+                      if (!(await confirmPopup("Remove this live class?"))) return;
                       const list = [...(config.live_classes || [])];
                       list.splice(idx, 1);
                       setConfig(p => ({ ...p, live_classes: list }));
@@ -1097,7 +1098,7 @@ export default function AdminCMS() {
 
           <div className="flex gap-4">
             <Button
-              onClick={() => {
+              onClick={async () => {
                 const list = [...(config.live_classes || [])];
                 list.push({
                   title: "",
@@ -1709,7 +1710,7 @@ export default function AdminCMS() {
                         <div className="flex rounded-lg overflow-hidden border border-gray-200 p-0.5 bg-gray-50">
                           <button
                             type="button"
-                            onClick={() => {
+                            onClick={async () => {
                               const vids = [...showcaseVids];
                               vids[idx] = { ...vids[idx], _sourceType: "url" };
                               if (vids[idx].url?.startsWith("/uploads")) {
@@ -1727,7 +1728,7 @@ export default function AdminCMS() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => {
+                            onClick={async () => {
                               const vids = [...showcaseVids];
                               vids[idx] = { ...vids[idx], _sourceType: "file" };
                               if (!vids[idx].url?.startsWith("/uploads")) {
@@ -1805,7 +1806,7 @@ export default function AdminCMS() {
           })()}
 
           <Button
-            onClick={() => {
+            onClick={async () => {
               const defaultShowcaseVideos = [
                 { title: "FinTrade Student Story", subtitle: "From Zero to Prop Trader in 9 Months", thumbnail: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800", url: "", duration: "3:24" },
                 { title: "Trading Simulator Walkthrough", subtitle: "Experience Real Markets, Zero Risk", thumbnail: "https://images.unsplash.com/photo-1612178991541-b48cc8e92a4d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800", url: "", duration: "2:10" },
@@ -1896,8 +1897,8 @@ export default function AdminCMS() {
                       <h3 className="font-bold text-base text-[#0B2A5B]">Stage #{sIdx + 1}</h3>
                       <button
                         type="button"
-                        onClick={() => {
-                          if (!confirm("Remove this entire stage?")) return;
+                        onClick={async () => {
+                          if (!(await confirmPopup("Remove this entire stage?"))) return;
                           const list = [...stagesList];
                           list.splice(sIdx, 1);
                           setConfig(p => ({ ...p, program_modules: list }));
@@ -1945,7 +1946,7 @@ export default function AdminCMS() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => {
+                          onClick={async () => {
                             const list = [...stagesList];
                             const mods = [...(list[sIdx].modules || [])];
                             mods.push({ num: mods.length + 1, title: "", overview: "" });
@@ -1963,7 +1964,7 @@ export default function AdminCMS() {
                           <div key={mIdx} className="p-4 bg-gray-50 rounded-xl border border-gray-150 relative group">
                             <button
                               type="button"
-                              onClick={() => {
+                              onClick={async () => {
                                 const list = [...stagesList];
                                 const mods = [...(list[sIdx].modules || [])];
                                 mods.splice(mIdx, 1);
@@ -2026,7 +2027,7 @@ export default function AdminCMS() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => {
+                    onClick={async () => {
                       const list = [...stagesList];
                       list.push({ title: "", duration: "", modules: [] });
                       setConfig(p => ({ ...p, program_modules: list }));
@@ -2067,8 +2068,8 @@ export default function AdminCMS() {
                 <div className="absolute top-4 right-4 flex items-center gap-2">
                   <span className="text-xs font-semibold text-gray-400">Card #{idx + 1}</span>
                   <button
-                    onClick={() => {
-                      if (!confirm("Remove this benefit card?")) return;
+                    onClick={async () => {
+                      if (!(await confirmPopup("Remove this benefit card?"))) return;
                       const list = [...(config.benefits || [])];
                       list.splice(idx, 1);
                       setConfig(p => ({ ...p, benefits: list }));
@@ -2191,7 +2192,7 @@ export default function AdminCMS() {
                             <Button
                               type="button"
                               variant="outline"
-                              onClick={() => {
+                              onClick={async () => {
                                 const list = [...(config.benefits || [])];
                                 list[idx] = { ...list[idx], icon: "BookOpen" };
                                 setConfig(p => ({ ...p, benefits: list }));
@@ -2234,7 +2235,7 @@ export default function AdminCMS() {
 
           <div className="flex gap-4">
             <Button
-              onClick={() => {
+              onClick={async () => {
                 const list = [...(config.benefits || [])];
                 const nextNum = String(list.length + 1).padStart(2, "0");
                 list.push({
@@ -2279,8 +2280,8 @@ export default function AdminCMS() {
                 <div className="absolute top-4 right-4 flex items-center gap-2">
                   <span className="text-xs font-semibold text-gray-400">Card #{idx + 1}</span>
                   <button
-                    onClick={() => {
-                      if (!confirm("Remove this service card?")) return;
+                    onClick={async () => {
+                      if (!(await confirmPopup("Remove this service card?"))) return;
                       const list = [...(config.services || [])];
                       list.splice(idx, 1);
                       setConfig(p => ({ ...p, services: list }));
@@ -2388,7 +2389,7 @@ export default function AdminCMS() {
                             <Button
                               type="button"
                               variant="outline"
-                              onClick={() => {
+                              onClick={async () => {
                                 const list = [...(config.services || [])];
                                 list[idx] = { ...list[idx], icon: "UserCheck" };
                                 setConfig(p => ({ ...p, services: list }));
@@ -2431,7 +2432,7 @@ export default function AdminCMS() {
 
           <div className="flex gap-4">
             <Button
-              onClick={() => {
+              onClick={async () => {
                 const list = [...(config.services || [])];
                 list.push({
                   title: "",
@@ -2475,8 +2476,8 @@ export default function AdminCMS() {
                 <div className="absolute top-4 right-4 flex items-center gap-2">
                   <span className="text-xs font-semibold text-gray-400">Card #{idx + 1}</span>
                   <button
-                    onClick={() => {
-                      if (!confirm("Remove this quick tip card?")) return;
+                    onClick={async () => {
+                      if (!(await confirmPopup("Remove this quick tip card?"))) return;
                       const list = [...(config.quick_tips || [])];
                       list.splice(idx, 1);
                       setConfig(p => ({ ...p, quick_tips: list }));
@@ -2622,7 +2623,7 @@ export default function AdminCMS() {
 
           <div className="flex gap-4">
             <Button
-              onClick={() => {
+              onClick={async () => {
                 const list = [...(config.quick_tips || [])];
                 const nextNum = `#${list.length + 1}`;
                 list.push({
@@ -2670,8 +2671,8 @@ export default function AdminCMS() {
                 <div className="absolute top-4 right-4 flex items-center gap-2">
                   <span className="text-xs font-semibold text-gray-400">Card #{idx + 1}</span>
                   <button
-                    onClick={() => {
-                      if (!confirm("Remove this card?")) return;
+                    onClick={async () => {
+                      if (!(await confirmPopup("Remove this card?"))) return;
                       const list = [...(config.why_choose || [])];
                       list.splice(idx, 1);
                       setConfig(p => ({ ...p, why_choose: list }));
@@ -2794,7 +2795,7 @@ export default function AdminCMS() {
                             <Button
                               type="button"
                               variant="outline"
-                              onClick={() => {
+                              onClick={async () => {
                                 const list = [...(config.why_choose || [])];
                                 list[idx] = { ...list[idx], icon: "Brain" };
                                 setConfig(p => ({ ...p, why_choose: list }));
@@ -2836,7 +2837,7 @@ export default function AdminCMS() {
 
           <div className="flex gap-4">
             <Button
-              onClick={() => {
+              onClick={async () => {
                 const list = [...(config.why_choose || [])];
                 const nextIdxStr = String(list.length + 1).padStart(2, "0");
                 list.push({
@@ -2881,8 +2882,8 @@ export default function AdminCMS() {
                 <div className="absolute top-4 right-4 flex items-center gap-2">
                   <span className="text-xs font-semibold text-gray-400">Leader #{idx + 1}</span>
                   <button
-                    onClick={() => {
-                      if (!confirm("Remove this leader profile?")) return;
+                    onClick={async () => {
+                      if (!(await confirmPopup("Remove this leader profile?"))) return;
                       const list = [...(config.leadership || [])];
                       list.splice(idx, 1);
                       setConfig(p => ({ ...p, leadership: list }));
@@ -2980,7 +2981,7 @@ export default function AdminCMS() {
                         <Button
                           type="button"
                           variant="outline"
-                          onClick={() => {
+                          onClick={async () => {
                             const list = [...(config.leadership || [])];
                             list[idx] = { ...list[idx], profile_image: "" };
                             setConfig(p => ({ ...p, leadership: list }));
@@ -3106,7 +3107,7 @@ export default function AdminCMS() {
 
           <div className="flex gap-4">
             <Button
-              onClick={() => {
+              onClick={async () => {
                 const list = [...(config.leadership || [])];
                 list.push({
                   name: "",
@@ -3709,7 +3710,7 @@ export default function AdminCMS() {
                   <img src={getImageUrl(slideUrl)} alt={`Slide ${idx + 1}`} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         const newSlides = [...(aboutUsConfig.slides || [])];
                         newSlides.splice(idx, 1);
                         setAboutUsConfig((p: any) => ({ ...p, slides: newSlides }));
@@ -3837,7 +3838,7 @@ export default function AdminCMS() {
                       placeholder="Enter description paragraph..."
                     />
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         const newTexts = [...texts];
                         newTexts.splice(idx, 1);
                         setAboutUsConfig((p: any) => ({ ...p, text: newTexts }));
@@ -3852,7 +3853,7 @@ export default function AdminCMS() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
+                onClick={async () => {
                   const texts = aboutUsConfig.text || [];
                   setAboutUsConfig((p: any) => ({ ...p, text: [...texts, ""] }));
                 }}

@@ -10,6 +10,7 @@ import {
   Link as LinkIcon, CheckCircle2, AlertCircle, ToggleLeft, ToggleRight
 } from "lucide-react";
 import api from "../../services/api";
+import { confirmPopup } from "../../utils/popup";
 
 interface FeedbackFormItem {
   id: number;
@@ -112,7 +113,7 @@ export default function AdminFeedbackForms() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this feedback form? Any submission metrics will remain, but the form will no longer be shareable.")) return;
+    if (!(await confirmPopup("Are you sure you want to delete this feedback form? Any submission metrics will remain, but the form will no longer be shareable."))) return;
     try {
       await api.delete(`/feedback/forms/${id}`);
       toast.success("Feedback form deleted.");
@@ -189,7 +190,7 @@ export default function AdminFeedbackForms() {
                   </span>
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         setSelectedForm({ ...form });
                         setEditOpen(true);
                       }}

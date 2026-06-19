@@ -1,12 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
 import { Card } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Badge } from "../../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Home, Users, BarChart3, Tag, Link as LinkIcon, Copy, Sparkles, Award } from "lucide-react";
 import api from "../../services/api";
 
 const navItems = [
   { label: "Dashboard", path: "/distributor/dashboard", icon: <Home size={20} /> },
+  { label: "Wallet", path: "/distributor/wallet", icon: <Tag size={20} /> },
 ];
 
 export default function DistributorDashboard() {
@@ -15,6 +19,9 @@ export default function DistributorDashboard() {
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [userName, setUserName] = useState("Introducing Broker");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "enrolled">("all");
 
   const fetchData = async () => {
     try {
@@ -55,6 +62,29 @@ export default function DistributorDashboard() {
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
     }
+  };
+
+  const filteredReferrals = useMemo(() => {
+    const start = fromDate ? new Date(`${fromDate}T00:00:00`) : null;
+    const end = toDate ? new Date(`${toDate}T23:59:59`) : null;
+
+    return referrals.filter((referral) => {
+      const referralDate = new Date(referral.created_at);
+      const isEnrolled = Boolean(referral.course_id || referral.course_title);
+
+      if (start && referralDate < start) return false;
+      if (end && referralDate > end) return false;
+      if (statusFilter === "pending" && isEnrolled) return false;
+      if (statusFilter === "enrolled" && !isEnrolled) return false;
+
+      return true;
+    });
+  }, [referrals, fromDate, toDate, statusFilter]);
+
+  const clearFilters = () => {
+    setFromDate("");
+    setToDate("");
+    setStatusFilter("all");
   };
 
   return (
@@ -152,7 +182,35 @@ export default function DistributorDashboard() {
       <div className="grid lg:grid-cols-3 gap-8 mb-8">
         {/* Recent Referrals Table */}
         <Card className="lg:col-span-2 p-6 bg-white shadow-lg rounded-xl overflow-hidden">
-          <h2 className="text-xl font-bold text-[#0B2A5B] mb-4">Recent Referrals</h2>
+          <div className="flex flex-col gap-4 mb-4">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-xl font-bold text-[#0B2A5B]">Recent Referrals</h2>
+              <span className="text-sm font-semibold text-[#0B2A5B]/60">
+                {filteredReferrals.length} of {referrals.length}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3">
+              <div>
+                <label className="text-xs font-semibold text-[#0B2A5B]/70">From Date</label>
+                <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="mt-1 bg-[#F4F1EA]" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-[#0B2A5B]/70">To Date</label>
+                <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="mt-1 bg-[#F4F1EA]" />
+              </div>
+              <div className="flex items-end gap-2">
+                <Button type="button" variant={statusFilter === "pending" ? "default" : "outline"} onClick={() => setStatusFilter(statusFilter === "pending" ? "all" : "pending")} className={statusFilter === "pending" ? "bg-orange-600 text-white hover:bg-orange-700" : "bg-white text-[#0B2A5B]"}>
+                  Pending
+                </Button>
+                <Button type="button" variant={statusFilter === "enrolled" ? "default" : "outline"} onClick={() => setStatusFilter(statusFilter === "enrolled" ? "all" : "enrolled")} className={statusFilter === "enrolled" ? "bg-green-700 text-white hover:bg-green-800" : "bg-white text-[#0B2A5B]"}>
+                  Enrolled
+                </Button>
+                <Button type="button" variant="outline" onClick={clearFilters} className="bg-white text-[#0B2A5B]">
+                  Clear
+                </Button>
+              </div>
+            </div>
+          </div>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -160,23 +218,37 @@ export default function DistributorDashboard() {
                   <TableHead className="text-[#0B2A5B] font-semibold">Student Name</TableHead>
                   <TableHead className="text-[#0B2A5B] font-semibold">Student Email</TableHead>
                   <TableHead className="text-[#0B2A5B] font-semibold">Enrolled Course</TableHead>
+                  <TableHead className="text-[#0B2A5B] font-semibold">Status</TableHead>
                   <TableHead className="text-[#0B2A5B] font-semibold">Date Referred</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {referrals.map((r) => (
+                {filteredReferrals.map((r) => {
+                  const isEnrolled = Boolean(r.course_id || r.course_title);
+                  return (
                   <TableRow key={r.id} className="hover:bg-gray-50">
                     <TableCell className="font-semibold text-[#0B2A5B]">{r.student_name}</TableCell>
                     <TableCell className="text-[#0B2A5B]/70">{r.student_email}</TableCell>
                     <TableCell className="text-[#0B2A5B]">{r.course_title || "Pending Enrollment"}</TableCell>
+                    <TableCell>
+                      <Badge className={isEnrolled ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}>
+                        {isEnrolled ? "Enrolled" : "Pending"}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-[#0B2A5B]">{new Date(r.created_at).toLocaleDateString()}</TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
             {referrals.length === 0 && (
               <div className="py-12 text-center text-gray-500 font-medium">
                 You haven't referred any students yet. Share your referral code to get started!
+              </div>
+            )}
+            {referrals.length > 0 && filteredReferrals.length === 0 && (
+              <div className="py-12 text-center text-gray-500 font-medium">
+                No referrals match the selected filters.
               </div>
             )}
           </div>

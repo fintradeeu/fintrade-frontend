@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../componen
 import { Plus, Edit, Trash2, ArrowUp, ArrowDown, Users, Image as ImageIcon, Sparkles, Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 import api from "../../services/api";
+import { confirmPopup } from "../../utils/popup";
 import { useNavigate } from "react-router";
 import { leaders as staticLeaders } from "../../data/leaders";
 
@@ -162,8 +163,8 @@ export default function AdminAdvisors() {
     setIsModalOpen(false);
   };
 
-  const handleDelete = (index: number) => {
-    if (!confirm(`Are you sure you want to delete ${advisors[index].name}?`)) return;
+  const handleDelete = async (index: number) => {
+    if (!(await confirmPopup(`Are you sure you want to delete ${advisors[index].name}?`))) return;
     const newAdvisors = advisors.filter((_, i) => i !== index);
     setAdvisors(newAdvisors);
     toast.success("Advisor removed locally");

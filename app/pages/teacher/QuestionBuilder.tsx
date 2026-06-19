@@ -12,6 +12,7 @@ import { Badge } from "../../components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../components/ui/dialog";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import api from "../../services/api";
+import { confirmPopup } from "../../utils/popup";
 
 type QuestionData = {
   question_text: string;
@@ -84,7 +85,7 @@ export default function QuestionBuilder() {
   }, [examId, examType]);
 
   const handleDeleteExisting = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this question?")) return;
+    if (!(await confirmPopup("Are you sure you want to delete this question?"))) return;
     try {
       const isCourse = examType !== "entrance";
       await api.delete(`/admin/exams/questions/${id}?is_course=${isCourse}`);
@@ -517,7 +518,7 @@ export default function QuestionBuilder() {
                   <div className="inline-flex items-center gap-3 bg-green-50 text-green-800 px-4 py-2 rounded-lg text-sm font-medium mt-2">
                     <FileSpreadsheet size={16} />
                     {uploadedFile.name}
-                    <button onClick={() => { setUploadedFile(null); setPreviewQuestions([]); }}>
+                    <button onClick={async () => { setUploadedFile(null); setPreviewQuestions([]); }}>
                       <X size={16} className="hover:text-red-500" />
                     </button>
                   </div>

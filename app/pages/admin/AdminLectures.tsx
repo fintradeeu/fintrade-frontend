@@ -6,6 +6,7 @@ import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
 import { Plus, Calendar, Clock, X, Edit, Trash2 } from "lucide-react";
 import api from "../../services/api";
+import { confirmPopup } from "../../utils/popup";
 import { toast } from "sonner";
 
 export default function AdminLectures() {
@@ -97,7 +98,7 @@ export default function AdminLectures() {
   };
 
   const handleDeleteLecture = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this lecture?")) return;
+    if (!(await confirmPopup("Are you sure you want to delete this lecture?"))) return;
     try {
       await api.delete(`/admin/lectures/${id}`);
       toast.success("Lecture deleted successfully");

@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import api from "../../services/api";
+import { confirmPopup } from "../../utils/popup";
 import { useNavigate, Link } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
@@ -248,8 +249,8 @@ export default function EntranceExam() {
     // Push a fake state to the history stack to intercept back button
     window.history.pushState(null, "", window.location.href);
 
-    const handlePopState = () => {
-      const confirmLeave = window.confirm("Warning: Pressing the Back/Exit button will cancel your exam and submit it immediately. Do you want to submit and exit?");
+    const handlePopState = async () => {
+      const confirmLeave = await confirmPopup("Warning: Pressing the Back/Exit button will cancel your exam and submit it immediately. Do you want to submit and exit?");
       if (confirmLeave) {
         handleAutoSubmit("Tab Switched / Screen lost focus");
       } else {
@@ -861,7 +862,7 @@ export default function EntranceExam() {
                 <Button
                   variant="outline"
                   className="border-2 border-[#0B2A5B]/20 text-[#0B2A5B]/60 hover:bg-gray-50"
-                  onClick={() => {
+                  onClick={async () => {
                     setShowKycPopup(false);
                     navigate("/");
                   }}
@@ -870,7 +871,7 @@ export default function EntranceExam() {
                 </Button>
                 <Button
                   className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] font-semibold shadow-lg shadow-[#0B2A5B]/20"
-                  onClick={() => {
+                  onClick={async () => {
                     setShowKycPopup(false);
                     navigate(`/student/contract-kyc?course_id=${passedCourseId}`);
                   }}
@@ -922,7 +923,7 @@ export default function EntranceExam() {
               <div className="flex justify-center">
                 <Button
                   className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] font-semibold shadow-lg shadow-[#0B2A5B]/20 w-full"
-                  onClick={() => {
+                  onClick={async () => {
                     setShowFailPopup(false);
                     navigate("/");
                   }}

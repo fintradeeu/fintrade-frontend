@@ -243,7 +243,7 @@ export default function AdminPayments() {
   };
 
   const handleDeleteCoupon = async (id: number) => {
-    if (confirm("Are you sure you want to delete this coupon?")) {
+    if (await confirmPopup("Are you sure you want to delete this coupon?")) {
       try {
         await api.delete(`/admin/offers/${id}`);
         fetchCoupons(isSuperAdmin);

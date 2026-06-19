@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import api from "../../services/api";
+import { confirmPopup } from "../../utils/popup";
 
 export default function AdminExams() {
   const navigate = useNavigate();
@@ -57,7 +58,7 @@ export default function AdminExams() {
   };
 
   const handleDelete = async (exam: any) => {
-    if (!window.confirm(`Are you sure you want to delete the exam "${exam.title}"? This cannot be undone.`)) return;
+    if (!(await confirmPopup(`Are you sure you want to delete the exam "${exam.title}"? This cannot be undone.`))) return;
     try {
       if (exam.type === "entrance") {
         await api.delete(`/admin/exams/${exam.id}`);

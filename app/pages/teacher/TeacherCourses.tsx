@@ -7,6 +7,7 @@ import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { Plus, X, BookOpen, Layers, FileText, ChevronDown, ChevronUp, FileQuestion, Upload, GripVertical, Pencil, Trash2 } from "lucide-react";
 import api from "../../services/api";
+import { confirmPopup } from "../../utils/popup";
 
 export default function TeacherCourses() {
   const navigate = useNavigate();
@@ -151,7 +152,7 @@ export default function TeacherCourses() {
 
   // ── Delete Module ──
   const handleDeleteModule = async (courseId: number, moduleId: number, moduleTitle: string) => {
-    if (!confirm(`Delete module "${moduleTitle}" and all its lessons? This cannot be undone.`)) return;
+    if (!(await confirmPopup(`Delete module "${moduleTitle}" and all its lessons? This cannot be undone.`))) return;
     try {
       await api.delete(`/admin/modules/${moduleId}`);
       fetchCourseDetail(courseId);
@@ -195,7 +196,7 @@ export default function TeacherCourses() {
 
   // ── Delete Lesson ──
   const handleDeleteLesson = async (courseId: number, lessonId: number, lessonTitle: string) => {
-    if (!confirm(`Delete lesson "${lessonTitle}"? This cannot be undone.`)) return;
+    if (!(await confirmPopup(`Delete lesson "${lessonTitle}"? This cannot be undone.`))) return;
     try {
       await api.delete(`/admin/lessons/${lessonId}`);
       fetchCourseDetail(courseId);
@@ -365,7 +366,7 @@ export default function TeacherCourses() {
                             <Button size="sm" variant="ghost" className="text-red-400 hover:text-red-600 h-8 w-8 p-0" onClick={(e) => { e.stopPropagation(); handleDeleteModule(course.id, mod.id, mod.title); }} title="Delete Module">
                               <Trash2 size={14} />
                             </Button>
-                            <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B]" onClick={() => { setEditModuleId(null); setLessonForModule(mod.id); setNewModule({ title: "", description: "", order: 0, is_published: false }); setModuleForCourse(course.id); setShowLessonModal(true); setEditLessonId(null); setNewLesson({ title: "", content: "", content_type: "text", video_url: "", duration_minutes: 15, order: 0, is_published: false }); setQuizQuestion(""); setQuizOptions(["", "", "", ""]); setQuizCorrect("a"); setQuizType("mcq"); }}>
+                            <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B]" onClick={async () => { setEditModuleId(null); setLessonForModule(mod.id); setNewModule({ title: "", description: "", order: 0, is_published: false }); setModuleForCourse(course.id); setShowLessonModal(true); setEditLessonId(null); setNewLesson({ title: "", content: "", content_type: "text", video_url: "", duration_minutes: 15, order: 0, is_published: false }); setQuizQuestion(""); setQuizOptions(["", "", "", ""]); setQuizCorrect("a"); setQuizType("mcq"); }}>
                               <FileText size={14} className="mr-1" />Add Lesson
                             </Button>
                           </div>

@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/ta
 import { Plus, Edit, Trash2, Video, Newspaper, Info, PhoneCall } from "lucide-react";
 import { toast } from "sonner";
 import api from "../../services/api";
+import { confirmPopup } from "../../utils/popup";
 import { useNavigate } from "react-router";
 
 const getImageUrl = (path?: string) => {
@@ -160,7 +161,7 @@ export default function AdminNews() {
   };
 
   const handleDeleteNews = async (id: number) => {
-    if (!confirm("Are you sure?")) return;
+    if (!(await confirmPopup("Are you sure?"))) return;
     try {
       await api.delete(`/admin/news/${id}`);
       toast.success("Deleted successfully");

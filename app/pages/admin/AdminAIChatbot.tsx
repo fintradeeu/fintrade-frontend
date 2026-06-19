@@ -8,6 +8,7 @@ import { Input } from "../../components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { toast } from "sonner";
 import api from "../../services/api";
+import { confirmPopup } from "../../utils/popup";
 
 const unresolvedDoubts = [
   { student: "Rahul Sharma", question: "Advanced options pricing models (Black-Scholes derivation)", time: "1 hour ago", priority: "High" },
@@ -75,7 +76,7 @@ export default function AdminAIChatbot() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Delete this FAQ?")) return;
+    if (!(await confirmPopup("Delete this FAQ?"))) return;
     try {
       await api.delete(`/admin/ai/faqs/${id}`);
       toast.success("Deleted successfully");

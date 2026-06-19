@@ -11,15 +11,29 @@ import {
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import api from "../../services/api";
+import { confirmPopup } from "../../utils/popup";
 import { Switch } from "../../components/ui/switch";
 import { toast } from "sonner";
 
-const ROLE_FILTERS = ["all", "admin", "faculty", "student", "distributor"] as const;
+const ROLE_FILTERS = ["all", "admin", "faculty", "student"] as const;
 type RoleFilter = (typeof ROLE_FILTERS)[number];
 
 const DEFAULT_FACULTY_PERMISSIONS = {
   manageCourses: true, manageStudents: true, manageLectures: true,
   manageDoubts: true, manageAssignments: true, manageExams: true, viewReports: true
+};
+
+const isDistributorUser = (user: any) => user.roles?.some((role: any) => role.name === "distributor");
+
+const getStoredIsSuperAdmin = () => {
+  try {
+    const stored = localStorage.getItem("user");
+    if (!stored) return false;
+    const parsed = JSON.parse(stored);
+    return parsed.roles?.some((role: any) => role.name === "super_admin") || false;
+  } catch {
+    return false;
+  }
 };
 
 // ── Excel export helper (HTML spreadsheet format for styled output and clickable links) ──────────────────────────
@@ -208,12 +222,9 @@ export default function AdminStudents() {
 
   const fetchUsers = async () => {
     try {
-      const [usersRes, distsRes] = await Promise.all([
-        api.get("/admin/users?limit=200"),
-        api.get("/admin/distributors").catch(() => ({ data: [] }))
-      ]);
+      const usersRes = await api.get("/admin/users?limit=200");
       setUsers(usersRes.data.users);
-      setDistributors(distsRes.data || []);
+      setDistributors([]);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
@@ -223,14 +234,7 @@ export default function AdminStudents() {
   };
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        const roles = parsed.roles || [];
-        setIsSuperAdmin(roles.some((r: any) => r.name === "super_admin"));
-      }
-    } catch { /* ignore */ }
+    setIsSuperAdmin(getStoredIsSuperAdmin());
     fetchUsers();
   }, []);
 
@@ -264,6 +268,7 @@ export default function AdminStudents() {
   };
 
   const handleSwitchToReferrals = async () => {
+    if (!isSuperAdmin) return;
     setViewTab("referrals");
     if (!selectedUser) return;
     const distInfo = getDistributorStats(selectedUser.id);
@@ -329,7 +334,7 @@ export default function AdminStudents() {
   };
 
   const handleDeleteUser = async (user: any) => {
-    if (!confirm(`Delete user "${user.full_name}"? This cannot be undone.`)) return;
+    if (!(await confirmPopup(`Delete user "${user.full_name}"? This cannot be undone.`))) return;
     try { await api.delete(`/admin/users/${user.id}`); fetchUsers(); }
     catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
   };
@@ -340,7 +345,7 @@ export default function AdminStudents() {
       const base = { email: newUser.email, full_name: newUser.full_name, password: newUser.password, phone: newUser.phone || undefined, city: newUser.city || undefined };
       if (newUser.role === "admin") await api.post("/admin/users/create-admin", base);
       else if (newUser.role === "faculty") await api.post("/admin/users/create-faculty", { ...base, permissions: newUser.permissions });
-      else await api.post("/admin/users/create-distributor", { ...base, region: newUser.region, referral_code: newUser.referral_code.trim() || undefined, discount_percentage: newUser.discount_percentage });
+      else throw new Error("Unsupported user role");
       setShowAddModal(false);
       setNewUser({ role: "faculty", email: "", full_name: "", phone: "", city: "", password: "", region: "", referral_code: "", discount_percentage: 10, permissions: { ...DEFAULT_FACULTY_PERMISSIONS } });
       fetchUsers();
@@ -352,7 +357,7 @@ export default function AdminStudents() {
     e.preventDefault(); setUpdating(true);
     try {
       const payload: any = { email: editForm.email, full_name: editForm.full_name, phone: editForm.phone || null, city: editForm.city || null };
-      if (selectedUser.roles?.some((r: any) => r.name === "distributor")) {
+      if (isSuperAdmin && isDistributorUser(selectedUser)) {
         payload.region = editForm.region; payload.referral_code = editForm.referral_code; payload.discount_percentage = editForm.discount_percentage;
       }
       if (selectedUser.roles?.some((r: any) => r.name === "faculty")) payload.permissions = editForm.permissions;
@@ -363,12 +368,15 @@ export default function AdminStudents() {
   };
 
   const filtered = users.filter(u => {
+    if (isDistributorUser(u)) return false;
     const s = u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || u.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const r = roleFilter === "all" || u.roles?.some((ro: any) => ro.name === roleFilter);
     return s && r;
   });
+  const visibleRoleFilters = ROLE_FILTERS;
   const countRole = (r: string) => {
-    return r === "all" ? users.length : users.filter(u => u.roles?.some((ro: any) => ro.name === r)).length;
+    const visibleUsers = users.filter(u => !isDistributorUser(u));
+    return r === "all" ? visibleUsers.length : visibleUsers.filter(u => u.roles?.some((ro: any) => ro.name === r)).length;
   };
 
   return (
@@ -390,7 +398,7 @@ export default function AdminStudents() {
 
       {/* Role filter cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-        {ROLE_FILTERS.map(role => (
+        {visibleRoleFilters.map(role => (
           <Card key={role} className={`p-4 cursor-pointer transition-all shadow-lg hover:shadow-xl ${roleFilter === role ? "bg-[#0B2A5B] text-[#F4F1EA] ring-2 ring-[#C2A86A]" : "bg-white"}`} onClick={() => setRoleFilter(role)}>
             <p className={`text-xs uppercase tracking-wider mb-1 ${roleFilter === role ? "text-[#F4F1EA]/70" : "text-[#0B2A5B]/60"}`}>{role === "all" ? "All Users" : role === "distributor" ? "Introducing Brokers (IB)" : role.charAt(0).toUpperCase() + role.slice(1) + "s"}</p>
             <p className={`text-2xl font-bold ${roleFilter === role ? "text-[#C2A86A]" : "text-[#0B2A5B]"}`}>{countRole(role)}</p>
@@ -415,7 +423,7 @@ export default function AdminStudents() {
           <Table>
             <TableHeader><TableRow className="bg-[#F4F1EA]">
               <TableHead className="text-[#0B2A5B]">User</TableHead>
-              {roleFilter === "distributor" ? (
+              {isSuperAdmin && roleFilter === "distributor" ? (
                 <>
                   <TableHead className="text-[#0B2A5B]">Region</TableHead>
                   <TableHead className="text-[#0B2A5B]">Referral Code</TableHead>
@@ -438,11 +446,11 @@ export default function AdminStudents() {
             </TableRow></TableHeader>
             <TableBody>
               {filtered.map(u => {
-                const distInfo = roleFilter === "distributor" ? getDistributorStats(u.id) : null;
+                const distInfo = isSuperAdmin && roleFilter === "distributor" ? getDistributorStats(u.id) : null;
                 return (
                   <TableRow key={u.id} className="hover:bg-[#F4F1EA]/50">
                     <TableCell><div><p className="font-semibold text-[#0B2A5B]">{u.full_name}</p><p className="text-xs text-[#0B2A5B]/60">{u.email}</p></div></TableCell>
-                    {roleFilter === "distributor" ? (
+                    {isSuperAdmin && roleFilter === "distributor" ? (
                       <>
                         <TableCell className="text-[#0B2A5B] text-sm">{distInfo?.region || u.distributor_profile?.region || "—"}</TableCell>
                         <TableCell className="text-[#0B2A5B] text-sm font-mono font-bold text-orange-600">{distInfo?.referral_code || u.distributor_profile?.referral_code || "—"}</TableCell>
@@ -454,7 +462,7 @@ export default function AdminStudents() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => {
+                              onClick={async () => {
                                 const code = distInfo?.referral_code || u.distributor_profile?.referral_code;
                                 const link = `${window.location.origin}/register?ref=${code}`;
                                 navigator.clipboard.writeText(link);
@@ -471,7 +479,7 @@ export default function AdminStudents() {
                       <>
                         <TableCell className="text-[#0B2A5B] text-sm">{u.phone || "—"}</TableCell>
                         <TableCell className="text-[#0B2A5B] text-sm">{u.city || "—"}</TableCell>
-                        <TableCell>{u.roles?.map((r: any) => (
+                        <TableCell>{u.roles?.filter((r: any) => isSuperAdmin || r.name !== "distributor").map((r: any) => (
                           <Badge key={r.id} className={`mr-1 ${r.name === "admin" ? "bg-red-100 text-red-700" : r.name === "faculty" ? "bg-purple-100 text-purple-700" : r.name === "distributor" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}`}>{r.name === "distributor" ? "Introducing Broker (IB)" : r.name}</Badge>
                         ))}</TableCell>
                         <TableCell><KycBadge status={u.kyc_status} /></TableCell>
@@ -492,7 +500,7 @@ export default function AdminStudents() {
                   </TableRow>
                 );
               })}
-              {filtered.length === 0 && !loading && <TableRow><TableCell colSpan={roleFilter === "distributor" ? 9 : 8} className="text-center text-[#0B2A5B]/60 py-8">No users found</TableCell></TableRow>}
+              {filtered.length === 0 && !loading && <TableRow><TableCell colSpan={isSuperAdmin && roleFilter === "distributor" ? 9 : 8} className="text-center text-[#0B2A5B]/60 py-8">No users found</TableCell></TableRow>}
             </TableBody>
           </Table>
         </div>
@@ -513,13 +521,13 @@ export default function AdminStudents() {
 
             {/* Tabs */}
             <div className="flex border-b border-gray-100">
-              {(selectedUser.roles?.some((r: any) => r.name === "distributor")
+              {(isSuperAdmin && isDistributorUser(selectedUser)
                 ? ["profile", "kyc", "referrals"]
                 : ["profile", "kyc"]
               ).map(tab => (
                 <button
                   key={tab}
-                  onClick={() => {
+                  onClick={async () => {
                     if (tab === "kyc") handleSwitchToKyc();
                     else if (tab === "referrals") handleSwitchToReferrals();
                     else setViewTab("profile");
@@ -551,12 +559,12 @@ export default function AdminStudents() {
                   <div className="flex items-start gap-3 py-2">
                     <span className="w-28 text-xs font-semibold text-gray-400 uppercase tracking-wide mt-0.5">Roles</span>
                     <div className="flex flex-wrap gap-1">
-                      {selectedUser.roles?.map((r: any) => (
+                      {selectedUser.roles?.filter((r: any) => isSuperAdmin || r.name !== "distributor").map((r: any) => (
                         <Badge key={r.id} className={r.name === "admin" ? "bg-red-100 text-red-700" : r.name === "faculty" ? "bg-purple-100 text-purple-700" : r.name === "distributor" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}>{r.name === "distributor" ? "Introducing Broker (IB)" : r.name}</Badge>
                       ))}
                     </div>
                   </div>
-                  {selectedUser.roles?.some((r: any) => r.name === "distributor") && selectedUser.distributor_profile && (
+                  {isSuperAdmin && isDistributorUser(selectedUser) && selectedUser.distributor_profile && (
                     <div className="mt-4 bg-orange-50 rounded-xl p-4 space-y-2 border border-orange-100">
                       <p className="text-xs font-bold text-orange-700 uppercase tracking-wider">Introducing Broker (IB) Profile</p>
                       {[
@@ -571,7 +579,7 @@ export default function AdminStudents() {
                       <div className="pt-2">
                         <Button
                           size="sm"
-                          onClick={() => {
+                          onClick={async () => {
                             const code = selectedUser.distributor_profile.referral_code;
                             const link = `${window.location.origin}/register?ref=${code}`;
                             navigator.clipboard.writeText(link);
@@ -680,7 +688,7 @@ export default function AdminStudents() {
                 </div>
               )}
 
-              {viewTab === "referrals" && (
+              {isSuperAdmin && viewTab === "referrals" && (
                 <div className="space-y-6">
                   {/* Summary Cards */}
                   <div className="grid grid-cols-2 gap-4">
@@ -754,7 +762,6 @@ export default function AdminStudents() {
                 <select className="w-full p-2 border rounded mt-1 bg-[#F4F1EA] border-[#0B2A5B]/20" value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}>
                   {isSuperAdmin && <option value="admin">Admin</option>}
                   <option value="faculty">Faculty / Teacher</option>
-                  {isSuperAdmin && <option value="distributor">Introducing Broker (IB)</option>}
                 </select>
               </div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Full Name *</label><Input required minLength={2} value={newUser.full_name} onChange={e => setNewUser({ ...newUser, full_name: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
@@ -762,11 +769,6 @@ export default function AdminStudents() {
               <div><label className="text-sm font-medium text-[#0B2A5B]">Phone</label><Input type="tel" placeholder="+91 98765 43210" value={newUser.phone} onChange={e => setNewUser({ ...newUser, phone: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">City</label><Input type="text" placeholder="Mumbai" value={newUser.city} onChange={e => setNewUser({ ...newUser, city: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Password *</label><Input required type="password" minLength={8} placeholder="Min 8 characters" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
-              {newUser.role === "distributor" && (<>
-                <div><label className="text-sm font-medium text-[#0B2A5B]">Region *</label><Input required value={newUser.region} onChange={e => setNewUser({ ...newUser, region: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
-                <div><label className="text-sm font-medium text-[#0B2A5B]">Referral Code (Optional - Auto-generated if left blank)</label><Input placeholder="e.g. IB-CODE" value={newUser.referral_code} onChange={e => setNewUser({ ...newUser, referral_code: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
-                <div><label className="text-sm font-medium text-[#0B2A5B]">Discount %</label><Input required type="number" min="0" max="100" value={newUser.discount_percentage} onChange={e => setNewUser({ ...newUser, discount_percentage: parseInt(e.target.value) })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
-              </>)}
               {newUser.role === "faculty" && (
                 <div className="space-y-3 border-t pt-4 mt-4">
                   <h3 className="font-semibold text-sm text-[#0B2A5B]">Faculty Permissions</h3>
@@ -799,7 +801,7 @@ export default function AdminStudents() {
               <div><label className="text-sm font-medium text-[#0B2A5B]">Email *</label><Input required type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Phone</label><Input type="tel" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">City</label><Input type="text" value={editForm.city} onChange={e => setEditForm({ ...editForm, city: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
-              {selectedUser.roles?.some((r: any) => r.name === "distributor") && (
+              {isSuperAdmin && isDistributorUser(selectedUser) && (
                 <div className="space-y-3 border-t pt-4 mt-4">
                   <h3 className="font-semibold text-sm text-[#0B2A5B]">Introducing Broker (IB) Settings</h3>
                   <div><label className="text-sm font-medium text-[#0B2A5B]">Region *</label><Input required value={editForm.region} onChange={e => setEditForm({ ...editForm, region: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>

@@ -588,7 +588,7 @@ export default function AdminRoles() {
   };
 
   const handleDeleteAdmin = async (id: number) => {
-    if (confirm("Are you sure you want to remove this admin?")) {
+    if (await confirmPopup("Are you sure you want to remove this admin?")) {
       try {
         await api.delete(`/admin/roles/${id}`);
         toast.success("Admin removed");

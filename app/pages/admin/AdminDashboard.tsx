@@ -113,7 +113,7 @@ export default function AdminDashboard() {
               })
               .map((link, i) => (
                 <a key={i} href={link.path}>
-                  <Button variant="outline" className="w-full text-xs h-10 border-gray-200 hover:border-[#D50032] hover:text-[#D50032] bg-white">
+                  <Button variant="outline" className="w-full text-xs h-10 border-gray-200 bg-white text-[#0B2A5B] hover:border-[#D50032] hover:bg-[#D50032] hover:text-white focus-visible:bg-[#D50032] focus-visible:text-white">
                     {link.label}
                   </Button>
                 </a>
