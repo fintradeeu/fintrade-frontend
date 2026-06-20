@@ -18,6 +18,20 @@ const emptyForm = {
   region: "",
   referral_code: "",
   discount_percentage: 10,
+  bank_account_holder_name: "",
+  bank_name: "",
+  bank_account_number: "",
+  bank_ifsc_code: "",
+  bank_upi_id: "",
+  verification_status: "approved",
+};
+
+const getAbsoluteUploadUrl = (path?: string) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  const base = import.meta.env.VITE_API_URL || (isLocalhost ? "http://localhost:8000" : "https://api.thefintrade.com");
+  return `${base.replace(/\/+$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
 };
 
 export default function AdminIntroducingBrokers() {
@@ -75,6 +89,14 @@ export default function AdminIntroducingBrokers() {
     toast.success("Referral link copied.");
   };
 
+  const copyIBRegistrationLink = () => {
+    const link = window.location.hostname.includes("localhost")
+      ? `${window.location.origin}/register`
+      : "https://affiliate.thefintrade.com/register";
+    navigator.clipboard.writeText(link);
+    toast.success("IB self-registration link copied.");
+  };
+
   const openReferrals = async (broker: any) => {
     setSelectedBroker(broker);
     setShowReferrals(true);
@@ -106,6 +128,12 @@ export default function AdminIntroducingBrokers() {
       region: broker.region || "",
       referral_code: broker.referral_code || "",
       discount_percentage: broker.discount_percentage ?? 10,
+      bank_account_holder_name: broker.bank_account_holder_name || "",
+      bank_name: broker.bank_name || "",
+      bank_account_number: broker.bank_account_number || "",
+      bank_ifsc_code: broker.bank_ifsc_code || "",
+      bank_upi_id: broker.bank_upi_id || "",
+      verification_status: broker.verification_status || "pending",
     });
     setShowEdit(true);
   };
@@ -123,6 +151,11 @@ export default function AdminIntroducingBrokers() {
         region: form.region,
         referral_code: form.referral_code.trim() || undefined,
         discount_percentage: Number(form.discount_percentage),
+        bank_account_holder_name: form.bank_account_holder_name || undefined,
+        bank_name: form.bank_name || undefined,
+        bank_account_number: form.bank_account_number || undefined,
+        bank_ifsc_code: form.bank_ifsc_code || undefined,
+        bank_upi_id: form.bank_upi_id || undefined,
       });
       toast.success("IB account created.");
       setShowCreate(false);
@@ -147,6 +180,12 @@ export default function AdminIntroducingBrokers() {
         region: form.region,
         referral_code: form.referral_code,
         discount_percentage: Number(form.discount_percentage),
+        bank_account_holder_name: form.bank_account_holder_name || null,
+        bank_name: form.bank_name || null,
+        bank_account_number: form.bank_account_number || null,
+        bank_ifsc_code: form.bank_ifsc_code || null,
+        bank_upi_id: form.bank_upi_id || null,
+        verification_status: form.verification_status,
       });
       toast.success("IB account updated.");
       setShowEdit(false);
@@ -169,7 +208,39 @@ export default function AdminIntroducingBrokers() {
         <div><label className="text-sm font-medium text-[#0B2A5B]">Region *</label><Input required value={form.region} onChange={e => setForm({ ...form, region: e.target.value })} className="mt-1 bg-[#F4F1EA]" /></div>
         <div><label className="text-sm font-medium text-[#0B2A5B]">Referral Code {mode === "create" ? "" : "*"}</label><Input required={mode === "edit"} value={form.referral_code} onChange={e => setForm({ ...form, referral_code: e.target.value })} placeholder="Auto-generated if blank" className="mt-1 bg-[#F4F1EA]" /></div>
         <div><label className="text-sm font-medium text-[#0B2A5B]">Discount % *</label><Input required type="number" min="0" max="100" value={form.discount_percentage} onChange={e => setForm({ ...form, discount_percentage: Number(e.target.value) })} className="mt-1 bg-[#F4F1EA]" /></div>
+        {mode === "edit" && <div><label className="text-sm font-medium text-[#0B2A5B]">Verification Status</label><select value={form.verification_status} onChange={e => setForm({ ...form, verification_status: e.target.value })} className="mt-1 w-full rounded-md border border-input bg-[#F4F1EA] px-3 py-2 text-sm"><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></div>}
       </div>
+      <div className="border-t pt-4">
+        <h3 className="font-semibold text-sm text-[#0B2A5B] mb-3">Bank Details</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div><label className="text-sm font-medium text-[#0B2A5B]">Account Holder Name</label><Input value={form.bank_account_holder_name} onChange={e => setForm({ ...form, bank_account_holder_name: e.target.value })} className="mt-1 bg-[#F4F1EA]" /></div>
+          <div><label className="text-sm font-medium text-[#0B2A5B]">Bank Name</label><Input value={form.bank_name} onChange={e => setForm({ ...form, bank_name: e.target.value })} className="mt-1 bg-[#F4F1EA]" /></div>
+          <div><label className="text-sm font-medium text-[#0B2A5B]">Account Number</label><Input value={form.bank_account_number} onChange={e => setForm({ ...form, bank_account_number: e.target.value })} className="mt-1 bg-[#F4F1EA]" /></div>
+          <div><label className="text-sm font-medium text-[#0B2A5B]">IFSC Code</label><Input value={form.bank_ifsc_code} onChange={e => setForm({ ...form, bank_ifsc_code: e.target.value.toUpperCase() })} className="mt-1 bg-[#F4F1EA]" /></div>
+          <div><label className="text-sm font-medium text-[#0B2A5B]">UPI ID</label><Input value={form.bank_upi_id} onChange={e => setForm({ ...form, bank_upi_id: e.target.value })} className="mt-1 bg-[#F4F1EA]" /></div>
+        </div>
+      </div>
+      {mode === "edit" && selectedBroker && (
+        <div className="border-t pt-4">
+          <h3 className="font-semibold text-sm text-[#0B2A5B] mb-3">Submitted Documents</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {[
+              ["Profile Photo", selectedBroker.profile_photo_url],
+              ["Aadhaar Card", selectedBroker.aadhaar_card_url],
+              ["PAN Card", selectedBroker.pan_card_url],
+            ].map(([label, url]) => (
+              <div key={label} className="rounded-md border border-[#0B2A5B]/10 bg-[#F4F1EA] p-3">
+                <p className="text-xs font-semibold text-[#0B2A5B]/70 mb-2">{label}</p>
+                {url ? (
+                  <a href={getAbsoluteUploadUrl(url as string)} target="_blank" rel="noreferrer" className="text-sm font-semibold text-[#0B2A5B] hover:underline">Open File</a>
+                ) : (
+                  <p className="text-sm text-[#0B2A5B]/50">Not uploaded</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <Button type="submit" disabled={saving} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">
         {saving ? "Saving..." : mode === "create" ? "Create IB Account" : "Save Changes"}
       </Button>
@@ -185,6 +256,9 @@ export default function AdminIntroducingBrokers() {
         </div>
         <Button onClick={openCreate} className="bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">
           <Plus size={16} className="mr-2" /> Add IB
+        </Button>
+        <Button onClick={copyIBRegistrationLink} variant="outline" className="border-[#0B2A5B]/20">
+          <Copy size={16} className="mr-2" /> Copy IB Signup Link
         </Button>
       </div>
 
@@ -211,6 +285,7 @@ export default function AdminIntroducingBrokers() {
                 <TableHead className="text-[#0B2A5B]">Region</TableHead>
                 <TableHead className="text-[#0B2A5B]">Referral Code</TableHead>
                 <TableHead className="text-[#0B2A5B]">Discount</TableHead>
+                <TableHead className="text-[#0B2A5B]">Status</TableHead>
                 <TableHead className="text-[#0B2A5B]">Students</TableHead>
                 <TableHead className="text-[#0B2A5B]">Revenue</TableHead>
                 <TableHead className="text-[#0B2A5B]">Joined</TableHead>
@@ -224,6 +299,7 @@ export default function AdminIntroducingBrokers() {
                   <TableCell className="text-[#0B2A5B]">{broker.region}</TableCell>
                   <TableCell><Badge className="bg-orange-100 text-orange-700 font-mono">{broker.referral_code}</Badge></TableCell>
                   <TableCell className="text-[#0B2A5B] font-semibold">{broker.discount_percentage}%</TableCell>
+                  <TableCell><Badge className={broker.verification_status === "approved" ? "bg-green-100 text-green-700" : broker.verification_status === "rejected" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}>{broker.verification_status || "pending"}</Badge></TableCell>
                   <TableCell className="text-[#0B2A5B] font-bold">{broker.total_students_referred || 0}</TableCell>
                   <TableCell className="text-green-700 font-bold">₹{(broker.total_revenue_generated || 0).toLocaleString("en-IN")}</TableCell>
                   <TableCell className="text-[#0B2A5B] text-sm">{new Date(broker.created_at).toLocaleDateString("en-IN")}</TableCell>
@@ -236,7 +312,7 @@ export default function AdminIntroducingBrokers() {
                   </TableCell>
                 </TableRow>
               ))}
-              {filtered.length === 0 && !loading && <TableRow><TableCell colSpan={8} className="py-8 text-center text-[#0B2A5B]/60">No IB accounts found</TableCell></TableRow>}
+              {filtered.length === 0 && !loading && <TableRow><TableCell colSpan={9} className="py-8 text-center text-[#0B2A5B]/60">No IB accounts found</TableCell></TableRow>}
             </TableBody>
           </Table>
         </div>

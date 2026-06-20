@@ -62,7 +62,178 @@ function GoogleRegisterButton({ loading, onLoadingChange, onError }: GoogleRegis
   );
 }
 
+function AffiliateIBRegisterForm() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [form, setForm] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+    city: "",
+    password: "",
+    confirm_password: "",
+    region: "",
+    bank_account_holder_name: "",
+    bank_name: "",
+    bank_account_number: "",
+    bank_ifsc_code: "",
+    bank_upi_id: "",
+  });
+  const [files, setFiles] = useState<{
+    profile_photo?: File;
+    aadhaar_card?: File;
+    pan_card?: File;
+  }>({});
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const updateForm = (field: string, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    if (form.password !== form.confirm_password) {
+      setErrorMsg("Password and confirm password do not match.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = new FormData();
+      Object.entries(form).forEach(([key, value]) => payload.append(key, value));
+      if (files.profile_photo) payload.append("profile_photo", files.profile_photo);
+      if (files.aadhaar_card) payload.append("aadhaar_card", files.aadhaar_card);
+      if (files.pan_card) payload.append("pan_card", files.pan_card);
+
+      const res = await api.post("/distributor/self-register", payload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setSuccessMsg(
+        `IB account created successfully. Referral code: ${res.data.referral_code}. Your verification status is ${res.data.verification_status}.`
+      );
+      setForm({
+        full_name: "",
+        email: "",
+        phone: "",
+        city: "",
+        password: "",
+        confirm_password: "",
+        region: "",
+        bank_account_holder_name: "",
+        bank_name: "",
+        bank_account_number: "",
+        bank_ifsc_code: "",
+        bank_upi_id: "",
+      });
+      setFiles({});
+    } catch (err: any) {
+      let message = "IB registration failed. Please check your details and try again.";
+      if (err.response?.data?.detail) {
+        message = Array.isArray(err.response.data.detail)
+          ? err.response.data.detail.map((item: any) => item.msg).join(", ")
+          : err.response.data.detail;
+      }
+      setErrorMsg(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "linear-gradient(135deg, #121212 0%, #2d2d2d 100%)" }}>
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-[#D50032] rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#D50032] rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="w-full max-w-5xl relative z-10">
+        <Link to="/login" className="inline-flex items-center gap-2 text-white hover:text-[#D50032] transition-colors mb-6">
+          <ArrowLeft size={20} />
+          <span>Back to Login</span>
+        </Link>
+
+        <Card className="p-8 bg-white shadow-2xl border-none">
+          <div className="flex items-start justify-between gap-4 mb-8">
+            <div>
+              <h2 className="text-3xl font-bold mb-2" style={{ color: "#121212" }}>IB Self Registration</h2>
+              <p className="text-gray-600">Create your Introducing Broker account and submit your documents for SuperAdmin review.</p>
+            </div>
+            <div className="hidden sm:flex items-center h-[44px] w-[140px] overflow-hidden">
+              <img src={logo} alt="FinTrade" className="h-full w-full object-contain scale-[2.4]" />
+            </div>
+          </div>
+
+          {errorMsg && <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">{errorMsg}</div>}
+          {successMsg && <div className="mb-6 p-3 bg-green-50 border border-green-200 text-green-700 rounded-md text-sm">{successMsg}</div>}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-[#121212] mb-3">Personal Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><Label htmlFor="ib_name">Full Name</Label><Input id="ib_name" value={form.full_name} onChange={(e) => updateForm("full_name", e.target.value)} className="mt-1 bg-gray-50" required /></div>
+                <div><Label htmlFor="ib_email">Email Address</Label><Input id="ib_email" type="email" value={form.email} onChange={(e) => updateForm("email", e.target.value)} className="mt-1 bg-gray-50" required /></div>
+                <div><Label htmlFor="ib_phone">Mobile Number</Label><Input id="ib_phone" type="tel" value={form.phone} onChange={(e) => updateForm("phone", e.target.value)} className="mt-1 bg-gray-50" required /></div>
+                <div><Label htmlFor="ib_city">City</Label><Input id="ib_city" value={form.city} onChange={(e) => updateForm("city", e.target.value)} className="mt-1 bg-gray-50" required /></div>
+                <div><Label htmlFor="ib_region">Region</Label><Input id="ib_region" value={form.region} onChange={(e) => updateForm("region", e.target.value)} placeholder="Gujarat / Mumbai / North India" className="mt-1 bg-gray-50" required /></div>
+                <div><Label htmlFor="ib_photo">Profile Photo</Label><Input id="ib_photo" type="file" accept=".jpg,.jpeg,.png,.webp" onChange={(e) => setFiles((prev) => ({ ...prev, profile_photo: e.target.files?.[0] }))} className="mt-1 bg-gray-50" required /></div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-[#121212] mb-3">Login Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="ib_password">Password</Label>
+                  <div className="relative mt-1">
+                    <Input id="ib_password" type={showPassword ? "text" : "password"} minLength={8} value={form.password} onChange={(e) => updateForm("password", e.target.value)} className="bg-gray-50 pr-12" required />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900">
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
+                <div><Label htmlFor="ib_confirm_password">Confirm Password</Label><Input id="ib_confirm_password" type={showPassword ? "text" : "password"} minLength={8} value={form.confirm_password} onChange={(e) => updateForm("confirm_password", e.target.value)} className="mt-1 bg-gray-50" required /></div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-[#121212] mb-3">KYC Documents</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><Label htmlFor="ib_aadhaar">Aadhaar Card</Label><Input id="ib_aadhaar" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" onChange={(e) => setFiles((prev) => ({ ...prev, aadhaar_card: e.target.files?.[0] }))} className="mt-1 bg-gray-50" required /></div>
+                <div><Label htmlFor="ib_pan">PAN Card</Label><Input id="ib_pan" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" onChange={(e) => setFiles((prev) => ({ ...prev, pan_card: e.target.files?.[0] }))} className="mt-1 bg-gray-50" required /></div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-[#121212] mb-3">Bank Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><Label htmlFor="ib_holder">Account Holder Name</Label><Input id="ib_holder" value={form.bank_account_holder_name} onChange={(e) => updateForm("bank_account_holder_name", e.target.value)} className="mt-1 bg-gray-50" required /></div>
+                <div><Label htmlFor="ib_bank">Bank Name</Label><Input id="ib_bank" value={form.bank_name} onChange={(e) => updateForm("bank_name", e.target.value)} className="mt-1 bg-gray-50" required /></div>
+                <div><Label htmlFor="ib_account">Account Number</Label><Input id="ib_account" value={form.bank_account_number} onChange={(e) => updateForm("bank_account_number", e.target.value)} className="mt-1 bg-gray-50" required /></div>
+                <div><Label htmlFor="ib_ifsc">IFSC Code</Label><Input id="ib_ifsc" value={form.bank_ifsc_code} onChange={(e) => updateForm("bank_ifsc_code", e.target.value.toUpperCase())} className="mt-1 bg-gray-50" required /></div>
+                <div><Label htmlFor="ib_upi">UPI ID</Label><Input id="ib_upi" value={form.bank_upi_id} onChange={(e) => updateForm("bank_upi_id", e.target.value)} className="mt-1 bg-gray-50" /></div>
+              </div>
+            </div>
+
+            <Button type="submit" className="w-full text-white shadow-lg" style={{ background: "#D50032", boxShadow: "0 0 20px rgba(213,0,50, 0.3)" }} size="lg" disabled={loading}>
+              {loading ? "Creating IB Account..." : "Create IB Account"}
+            </Button>
+          </form>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
 export default function RegisterPage() {
+  const isAffiliateRegister = window.location.hostname.toLowerCase().includes("affiliate.");
+  if (isAffiliateRegister) {
+    return <AffiliateIBRegisterForm />;
+  }
+
   const initialRefCode = localStorage.getItem("distributor_code") || new URLSearchParams(window.location.search).get("ref") || "";
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
