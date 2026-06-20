@@ -9,6 +9,7 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 import api from "../../services/api";
 
 export default function Certificate() {
@@ -28,6 +29,10 @@ export default function Certificate() {
   }, []);
 
   const completedCourses = enrollments.filter((e) => e.progress_percent >= 100);
+  const certifiedCourseIds = new Set(certificates.map((cert) => cert.course_id));
+  const coursesReadyForCertificate = completedCourses.filter(
+    (enrollment) => !certifiedCourseIds.has(enrollment.course_id)
+  );
   const totalModules = enrollments.reduce(
     (acc, e) => acc + (e.course?.modules?.length || 0), 0
   );
@@ -42,17 +47,17 @@ export default function Certificate() {
       a.click();
       URL.revokeObjectURL(url);
     } catch (err: any) {
-      alert("Download failed: " + (err.response?.data?.detail || err.message));
+      toast.error("Download failed: " + (err.response?.data?.detail || err.message));
     }
   };
 
   const handleGenerateCertificate = async (courseId: number) => {
     try {
       const res = await api.post("/certificates/generate", { course_id: courseId });
-      setCertificates((prev) => [...prev, res.data]);
-      alert("Certificate generated successfully!");
+      setCertificates((prev) => [res.data, ...prev.filter((cert) => cert.id !== res.data.id)]);
+      toast.success("Certificate generated successfully!");
     } catch (err: any) {
-      alert("Failed: " + (err.response?.data?.detail || err.message));
+      toast.error("Failed: " + (err.response?.data?.detail || err.message));
     }
   };
 
@@ -74,6 +79,31 @@ export default function Certificate() {
       </div>
 
       <div className="max-w-5xl mx-auto">
+        {coursesReadyForCertificate.length > 0 && (
+          <Card className="p-6 bg-white shadow-lg mb-6 border border-[#C2A86A]/30">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-[#0B2A5B]">Certificates Ready</h2>
+                <p className="text-sm text-[#0B2A5B]/70">
+                  Generate a separate certificate for each completed course.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 md:min-w-[320px]">
+                {coursesReadyForCertificate.map((enrollment) => (
+                  <Button
+                    key={enrollment.course_id}
+                    onClick={() => handleGenerateCertificate(enrollment.course_id)}
+                    className="justify-start bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a]"
+                  >
+                    <Award size={18} className="mr-2" />
+                    Generate: {enrollment.course?.title || `Course #${enrollment.course_id}`}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </Card>
+        )}
+
         {certificates.length > 0 ? (
           <>
             {/* Active Certificate Preview */}
@@ -146,7 +176,7 @@ export default function Certificate() {
               <Button
                 onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
-                  alert("Certificate link copied to clipboard!");
+                  toast.success("Certificate link copied to clipboard!");
                 }}
                 size="lg"
                 variant="outline"
@@ -187,19 +217,6 @@ export default function Certificate() {
             <p className="text-[#0B2A5B]/70 mb-6 max-w-md mx-auto">
               Complete a course to earn your certificate. You have {completedCourses.length} completed course(s).
             </p>
-            {completedCourses.length > 0 && (
-              <div className="space-y-3">
-                {completedCourses.map((e) => (
-                  <Button
-                    key={e.course_id}
-                    onClick={() => handleGenerateCertificate(e.course_id)}
-                    className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] mr-3"
-                  >
-                    Generate Certificate: {e.course?.title || `Course #${e.course_id}`}
-                  </Button>
-                ))}
-              </div>
-            )}
           </Card>
         )}
 
