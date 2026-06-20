@@ -70,7 +70,7 @@ export default function DistributorDashboard() {
 
     return referrals.filter((referral) => {
       const referralDate = new Date(referral.created_at);
-      const isEnrolled = Boolean(referral.course_id || referral.course_title);
+      const isEnrolled = Boolean(referral.enrolled || referral.course_id || referral.course_title);
 
       if (start && referralDate < start) return false;
       if (end && referralDate > end) return false;
@@ -217,23 +217,40 @@ export default function DistributorDashboard() {
                 <TableRow className="bg-[#F4F1EA] hover:bg-[#F4F1EA]">
                   <TableHead className="text-[#0B2A5B] font-semibold">Student Name</TableHead>
                   <TableHead className="text-[#0B2A5B] font-semibold">Student Email</TableHead>
-                  <TableHead className="text-[#0B2A5B] font-semibold">Enrolled Course</TableHead>
+                  <TableHead className="text-[#0B2A5B] font-semibold">Course</TableHead>
                   <TableHead className="text-[#0B2A5B] font-semibold">Status</TableHead>
+                  <TableHead className="text-[#0B2A5B] font-semibold">Journey</TableHead>
                   <TableHead className="text-[#0B2A5B] font-semibold">Date Referred</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredReferrals.map((r) => {
-                  const isEnrolled = Boolean(r.course_id || r.course_title);
+                  const isEnrolled = Boolean(r.enrolled || r.course_id || r.course_title);
                   return (
                   <TableRow key={r.id} className="hover:bg-gray-50">
                     <TableCell className="font-semibold text-[#0B2A5B]">{r.student_name}</TableCell>
                     <TableCell className="text-[#0B2A5B]/70">{r.student_email}</TableCell>
-                    <TableCell className="text-[#0B2A5B]">{r.course_title || "Pending Enrollment"}</TableCell>
+                    <TableCell className="text-[#0B2A5B]">
+                      {r.enrolled_courses?.length ? r.enrolled_courses.join(", ") : r.course_title || "Pending Enrollment"}
+                    </TableCell>
                     <TableCell>
                       <Badge className={isEnrolled ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}>
                         {isEnrolled ? "Enrolled" : "Pending"}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1.5 min-w-[260px]">
+                        <Badge className={r.registered ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}>Registration</Badge>
+                        <Badge
+                          title={r.entrance_exam_course_title ? `${r.entrance_exam_course_title} - ${r.entrance_exam_score ?? 0}%` : undefined}
+                          className={r.entrance_exam_given ? (r.entrance_exam_passed ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700") : "bg-gray-100 text-gray-600"}
+                        >
+                          Entrance Exam
+                        </Badge>
+                        <Badge className={r.kyc_done ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}>KYC</Badge>
+                        <Badge className={r.fees_paid ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}>Fees Paid</Badge>
+                        <Badge className={r.course_completed ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}>Completed</Badge>
+                      </div>
                     </TableCell>
                     <TableCell className="text-[#0B2A5B]">{new Date(r.created_at).toLocaleDateString()}</TableCell>
                   </TableRow>

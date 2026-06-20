@@ -63,15 +63,47 @@ function GoogleRegisterButton({ loading, onLoadingChange, onError }: GoogleRegis
 }
 
 export default function RegisterPage() {
+  const initialRefCode = localStorage.getItem("distributor_code") || new URLSearchParams(window.location.search).get("ref") || "";
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
   const [password, setPassword] = useState("");
+  const [referralCode] = useState(initialRefCode);
+  const [leadCaptured, setLeadCaptured] = useState(() => !initialRefCode || localStorage.getItem(`referral_lead_done_${initialRefCode}`) === "true");
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleReferralLeadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+    setLoading(true);
+
+    try {
+      await api.post("/distributor/referral-leads", {
+        referral_code: referralCode,
+        full_name: fullName,
+        email,
+        mobile_no: phone,
+        city,
+      });
+      localStorage.setItem("distributor_code", referralCode);
+      localStorage.setItem(`referral_lead_done_${referralCode}`, "true");
+      setLeadCaptured(true);
+    } catch (err: any) {
+      let errorMessage = "Could not save your details. Please check the referral link and try again.";
+      if (err.response?.data?.detail) {
+        errorMessage = Array.isArray(err.response.data.detail)
+          ? err.response.data.detail.map((item: any) => item.msg).join(", ")
+          : err.response.data.detail;
+      }
+      setErrorMsg(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +111,7 @@ export default function RegisterPage() {
     setLoading(true);
     
     try {
-      const refCode = localStorage.getItem("distributor_code") || new URLSearchParams(window.location.search).get("ref") || undefined;
+      const refCode = referralCode || localStorage.getItem("distributor_code") || new URLSearchParams(window.location.search).get("ref") || undefined;
       const response = await api.post("/auth/register", {
         full_name: fullName,
         email,
@@ -183,8 +215,14 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <h2 className="text-3xl font-bold mb-2" style={{ color: '#121212' }}>Create an Account</h2>
-          <p className="text-gray-600 mb-8">Fill in your details to get started</p>
+          <h2 className="text-3xl font-bold mb-2" style={{ color: '#121212' }}>
+            {referralCode && !leadCaptured ? "Share Your Details" : "Create an Account"}
+          </h2>
+          <p className="text-gray-600 mb-8">
+            {referralCode && !leadCaptured
+              ? "Fill this form first so your IB can guide your admission journey."
+              : "Fill in your details to get started"}
+          </p>
 
           {errorMsg && (
             <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
@@ -192,7 +230,7 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <form onSubmit={handleRegister} className="space-y-4">
+          <form onSubmit={referralCode && !leadCaptured ? handleReferralLeadSubmit : handleRegister} className="space-y-4">
             <div>
               <Label htmlFor="fullName">Full Name</Label>
               <Input
@@ -253,7 +291,7 @@ export default function RegisterPage() {
               />
             </div>
 
-            <div>
+            {(!referralCode || leadCaptured) && <div>
               <Label htmlFor="password">Password</Label>
               <div className="relative mt-1">
                 <Input
@@ -275,7 +313,7 @@ export default function RegisterPage() {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
-            </div>
+            </div>}
 
             <Button
               type="submit"
@@ -284,11 +322,11 @@ export default function RegisterPage() {
               size="lg"
               disabled={loading}
             >
-              {loading ? "Registering..." : "Sign Up"}
+              {loading ? (referralCode && !leadCaptured ? "Saving..." : "Registering...") : (referralCode && !leadCaptured ? "Continue to Registration" : "Sign Up")}
             </Button>
           </form>
 
-          {isGoogleAuthConfigured && (
+          {isGoogleAuthConfigured && (!referralCode || leadCaptured) && (
             <>
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
