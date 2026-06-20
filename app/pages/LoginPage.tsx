@@ -17,6 +17,8 @@ export default function LoginPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const hostname = typeof window !== "undefined" ? window.location.hostname.toLowerCase() : "";
+  const isAffiliatePortal = hostname === "affiliate.thefintrade.com" || hostname.startsWith("affiliate.");
 
   const handleStudentRedirect = async () => {
     try {
@@ -37,6 +39,22 @@ export default function LoginPage() {
     const isAdmin = roles.some((r: any) => r.name === "admin");
     const isFaculty = roles.some((r: any) => r.name === "faculty");
     const isDistributor = roles.some((r: any) => r.name === "distributor");
+
+    if (isAffiliatePortal && !isDistributor) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setErrorMsg("This portal is only for IB accounts. Please use the main FinTrade login.");
+      setStep("credentials");
+      return;
+    }
+
+    if (!isAffiliatePortal && isDistributor) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setErrorMsg("IB accounts must login from affiliate.thefintrade.com/login.");
+      setStep("credentials");
+      return;
+    }
 
     if (isSuperAdmin) {
       navigate("/superadmin/dashboard");
@@ -167,24 +185,7 @@ export default function LoginPage() {
         const { access_token, user } = response.data;
         localStorage.setItem("token", access_token);
         localStorage.setItem("user", JSON.stringify(user));
-
-        const roles = user.roles || [];
-        const isSuperAdmin = roles.some((r: any) => r.name === "super_admin");
-        const isAdmin = roles.some((r: any) => r.name === "admin");
-        const isFaculty = roles.some((r: any) => r.name === "faculty");
-        const isDistributor = roles.some((r: any) => r.name === "distributor");
-
-        if (isSuperAdmin) {
-          navigate("/superadmin/dashboard");
-        } else if (isAdmin) {
-          navigate("/admin/dashboard");
-        } else if (isFaculty) {
-          navigate("/teacher/dashboard");
-        } else if (isDistributor) {
-          navigate("/distributor/dashboard");
-        } else {
-          await handleStudentRedirect();
-        }
+        await redirectAfterLogin(user);
         return;
       }
 
@@ -223,25 +224,7 @@ export default function LoginPage() {
 
       localStorage.setItem("token", access_token);
       localStorage.setItem("user", JSON.stringify(user));
-
-      // Determine dashboard based on role
-      const roles = user.roles || [];
-      const isSuperAdmin = roles.some((r: any) => r.name === "super_admin");
-      const isAdmin = roles.some((r: any) => r.name === "admin");
-      const isFaculty = roles.some((r: any) => r.name === "faculty");
-      const isDistributor = roles.some((r: any) => r.name === "distributor");
-
-      if (isSuperAdmin) {
-        navigate("/superadmin/dashboard");
-      } else if (isAdmin) {
-        navigate("/admin/dashboard");
-      } else if (isFaculty) {
-        navigate("/teacher/dashboard");
-      } else if (isDistributor) {
-        navigate("/distributor/dashboard");
-      } else {
-        await handleStudentRedirect();
-      }
+      await redirectAfterLogin(user);
     } catch (err: any) {
       setErrorMsg(err.response?.data?.detail || "Verification failed. Please try again.");
     } finally {
@@ -454,7 +437,9 @@ export default function LoginPage() {
             /* ── STEP 1: Email + Password ─────────────────────────── */
             <>
               <h2 className="text-3xl font-bold mb-2" style={{ color: '#121212' }}>Login to Your Account</h2>
-              <p className="text-gray-600 mb-8">Enter your credentials to access your dashboard</p>
+              <p className="text-gray-600 mb-8">
+                {isAffiliatePortal ? "IB Affiliate Portal - enter your IB credentials to continue" : "Enter your credentials to access your dashboard"}
+              </p>
 
               {successMsg && (
                 <div className="mb-6 p-3 bg-green-50 border border-green-200 text-green-600 rounded-md text-sm text-center font-medium">
@@ -538,7 +523,7 @@ export default function LoginPage() {
                 </Button>
               </form>
 
-              {isGoogleAuthConfigured && (
+              {isGoogleAuthConfigured && !isAffiliatePortal && (
                 <>
                   <div className="relative my-6">
                     <div className="absolute inset-0 flex items-center">
@@ -561,14 +546,14 @@ export default function LoginPage() {
                 </>
               )}
 
-              <div className="mt-6 text-center">
+              {!isAffiliatePortal && <div className="mt-6 text-center">
                 <p className="text-sm text-gray-600">
                   Don't have an account?{" "}
                   <Link to="/register" className="hover:underline font-semibold" style={{ color: '#E53935' }}>
                     Register here
                   </Link>
                 </p>
-              </div>
+              </div>}
             </>
           )}
 
