@@ -131,7 +131,7 @@ export default function ContractKYC() {
 
     // 2. Fetch current KYC status and restore saved details if any
     api.get("/kyc/status")
-      .then((res) => {
+      .then(async (res) => {
         if (res.data && res.data.status !== "not_started") {
           setKycStatus(res.data.status);
           setRejectionReason(res.data.rejection_reason || "");
@@ -181,7 +181,13 @@ export default function ContractKYC() {
             res.data.aadhaar_doc_url && res.data.pan_doc_url && res.data.photo_url &&
             res.data.signature_url && res.data.biometric_selfie_url
           ) {
-            setStep(5);
+            // Finalize submissions created by the older approval-gated flow.
+            const completed = await handleGenerateContractOnBackend(false);
+            if (completed) {
+              setKycStatus("verified");
+              setVerified(true);
+              setStep(6);
+            }
           }
         }
       })
@@ -202,15 +208,26 @@ export default function ContractKYC() {
   }, []);
 
   useEffect(() => {
-    if (step !== 5 || verified) return;
+    if (step !== 5 && step !== 6) return;
     const checkReview = async () => {
       try {
         const { data } = await api.get("/kyc/status");
         setKycStatus(data.status);
         if (data.status === "verified" || data.status === "approved") {
-          setVerified(true);
-          setStep(6);
-          toast.success("Your KYC has been approved.");
+          if (step === 5) {
+            setVerified(true);
+            setStep(6);
+          }
+        } else if (
+          data.status === "pending" && data.aadhaar_doc_url && data.pan_doc_url &&
+          data.photo_url && data.signature_url && data.biometric_selfie_url
+        ) {
+          const completed = await handleGenerateContractOnBackend(false);
+          if (completed) {
+            setKycStatus("verified");
+            setVerified(true);
+            setStep(6);
+          }
         } else if (data.status === "rejected") {
           setRejectionReason(data.rejection_reason || "Please upload all documents again.");
           setAadhaarUploaded(false); setPanUploaded(false); setPhotoUploaded(false);
@@ -226,7 +243,7 @@ export default function ContractKYC() {
     };
     const timer = window.setInterval(checkReview, 10000);
     return () => window.clearInterval(timer);
-  }, [step, verified]);
+  }, [step]);
 
   // Trigger Email OTP automatically when entering Step 2
   useEffect(() => {
@@ -498,8 +515,10 @@ export default function ContractKYC() {
         }
         const submitted = await handleGenerateContractOnBackend(false);
         if (!submitted) return;
-        setKycStatus("pending");
-        toast.success("Documents submitted for admin approval.");
+        setKycStatus("verified");
+        setVerified(true);
+        setStep(6);
+        toast.success("KYC completed successfully. Your documents were sent to admin for review.");
       } catch (e: any) {
         const errorMsg = typeof e.response?.data?.detail === "string"
           ? e.response.data.detail
@@ -507,7 +526,6 @@ export default function ContractKYC() {
         toast.error(errorMsg);
         return;
       }
-      next();
       return;
     }
 
@@ -519,8 +537,18 @@ export default function ContractKYC() {
         if (data.status === "verified" || data.status === "approved") {
           setVerified(true);
           setStep(6);
+        } else if (
+          data.status === "pending" && data.aadhaar_doc_url && data.pan_doc_url &&
+          data.photo_url && data.signature_url && data.biometric_selfie_url
+        ) {
+          const completed = await handleGenerateContractOnBackend(false);
+          if (completed) {
+            setKycStatus("verified");
+            setVerified(true);
+            setStep(6);
+          }
         } else {
-          toast.info("Your documents are still waiting for admin approval.");
+          toast.info("Please complete all required KYC documents.");
         }
       } finally {
         setVerifying(false);

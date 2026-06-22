@@ -27,7 +27,7 @@ interface StudentContract {
   photoUrl: string;
   signatureUrl: string;
   biometricSelfieUrl: string;
-  kycStatus: "Verified" | "Pending" | "Rejected";
+  kycStatus: "Approved" | "Awaiting Review" | "Rejected";
   signedDate: string;
   course: string;
   contractId: string;
@@ -62,7 +62,7 @@ export default function AdminContracts() {
           photoUrl: c.photo_url || "",
           signatureUrl: c.signature_url || "",
           biometricSelfieUrl: c.biometric_selfie_url || "",
-          kycStatus: c.kyc_status === "verified" ? "Verified" : c.kyc_status === "rejected" ? "Rejected" : "Pending",
+          kycStatus: c.kyc_status === "rejected" ? "Rejected" : c.reviewed_at ? "Approved" : "Awaiting Review",
           signedDate: c.signed_at ? c.signed_at.split("T")[0] : c.created_at ? c.created_at.split("T")[0] : "N/A",
           course: c.course_title || "General",
           contractId: c.contract_number,
@@ -242,10 +242,10 @@ export default function AdminContracts() {
 
           <div class="footer-sign">
             <div class="seal-box">
-              <div class="stamp">Verified</div>
+              <div class="stamp">Reviewed</div>
               <div>
                 <div style="font-size: 9px; color: #6b7280; font-weight: normal; text-transform: uppercase;">KYC Status</div>
-                <div style="color: #111827; font-weight: bold;">${c.kycStatus === "Verified" ? "APPROVED & STAMPED" : c.kycStatus.toUpperCase()}</div>
+                <div style="color: #111827; font-weight: bold;">${c.kycStatus === "Approved" ? "APPROVED & STAMPED" : c.kycStatus.toUpperCase()}</div>
                 <div style="font-size: 8px; color: #6b7280; font-weight: normal; margin-top: 1px;">Dossier Sealed: ${new Date(c.signedDate).toLocaleString("en-IN")}</div>
               </div>
             </div>
@@ -272,8 +272,8 @@ export default function AdminContracts() {
   };
 
   const statusStyle = (s: string) => {
-    if (s === "Verified") return { background: "#4CAF50", color: "white" };
-    if (s === "Pending") return { background: "#FF9800", color: "white" };
+    if (s === "Approved") return { background: "#4CAF50", color: "white" };
+    if (s === "Awaiting Review") return { background: "#FF9800", color: "white" };
     return { background: "#D50032", color: "white" };
   };
 
@@ -283,8 +283,8 @@ export default function AdminContracts() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold" style={{ color: "#121212" }}>Student Contracts</h1>
-            <p className="text-gray-600 mt-1">View and download KYC contracts for all students</p>
+            <h1 className="text-3xl font-bold" style={{ color: "#121212" }}>Student KYC Documents</h1>
+            <p className="text-gray-600 mt-1">Review every student's uploaded KYC documents</p>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-100 px-4 py-2 rounded-lg">
             <Shield className="h-4 w-4" style={{ color: "#D50032" }} />
@@ -295,9 +295,9 @@ export default function AdminContracts() {
         {/* Stats */}
         <div className="grid md:grid-cols-4 gap-4">
           {[
-            { label: "Total Contracts", value: contracts.length, icon: FileText },
-            { label: "KYC Verified", value: contracts.filter(c => c.kycStatus === "Verified").length, icon: CheckCircle },
-            { label: "Pending", value: contracts.filter(c => c.kycStatus === "Pending").length, icon: Shield },
+            { label: "Total KYC Submissions", value: contracts.length, icon: FileText },
+            { label: "Admin Approved", value: contracts.filter(c => c.kycStatus === "Approved").length, icon: CheckCircle },
+            { label: "Awaiting Review", value: contracts.filter(c => c.kycStatus === "Awaiting Review").length, icon: Shield },
             { label: "Rejected", value: contracts.filter(c => c.kycStatus === "Rejected").length, icon: Lock },
           ].map((s, i) => (
             <Card key={i} className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all">
@@ -335,7 +335,7 @@ export default function AdminContracts() {
                   <TableHead className="font-bold">Student</TableHead>
                   <TableHead className="font-bold">Course</TableHead>
                   <TableHead className="font-bold">KYC Status</TableHead>
-                  <TableHead className="font-bold">Signed Date</TableHead>
+                  <TableHead className="font-bold">Submitted Date</TableHead>
                   <TableHead className="font-bold text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -354,7 +354,7 @@ export default function AdminContracts() {
                     <TableCell className="text-gray-600 text-sm">{c.course}</TableCell>
                     <TableCell>
                       <Badge style={statusStyle(c.kycStatus)}>
-                        {c.kycStatus === "Verified" && <CheckCircle className="h-3 w-3 mr-1" />}
+                        {c.kycStatus === "Approved" && <CheckCircle className="h-3 w-3 mr-1" />}
                         {c.kycStatus}
                       </Badge>
                     </TableCell>
@@ -367,7 +367,7 @@ export default function AdminContracts() {
                           variant="outline"
                           size="sm"
                           onClick={() => { setSelectedContract(c); setRejectionReason(c.rejectionReason); }}
-                          className="border-gray-300 hover:border-[#D50032] hover:text-[#D50032]"
+                          className="border-gray-300 bg-white text-[#0B2A5B] hover:border-[#D50032] hover:bg-[#D50032] hover:text-white focus-visible:bg-[#D50032] focus-visible:text-white"
                         >
                           <Eye className="h-4 w-4 mr-1" /> View
                         </Button>
@@ -398,10 +398,10 @@ export default function AdminContracts() {
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: selectedContract.kycStatus === "Verified" ? "rgba(76,175,80,0.08)" : "rgba(255,152,0,0.08)", border: `1px solid ${selectedContract.kycStatus === "Verified" ? "#4CAF50" : "#FF9800"}` }}>
+                <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: selectedContract.kycStatus === "Approved" ? "rgba(76,175,80,0.08)" : "rgba(255,152,0,0.08)", border: `1px solid ${selectedContract.kycStatus === "Approved" ? "#4CAF50" : "#FF9800"}` }}>
                   <span className="font-semibold text-sm">KYC Status</span>
                   <Badge style={statusStyle(selectedContract.kycStatus)}>
-                    {selectedContract.kycStatus === "Verified" && <CheckCircle className="h-3 w-3 mr-1" />}
+                    {selectedContract.kycStatus === "Approved" && <CheckCircle className="h-3 w-3 mr-1" />}
                     {selectedContract.kycStatus}
                   </Badge>
                 </div>
@@ -463,7 +463,7 @@ export default function AdminContracts() {
                   <div className="flex items-center gap-1"><Lock className="h-4 w-4" /> Signed digitally</div>
                   <div className="font-bold" style={{ fontFamily: "cursive", fontSize: 18, color: "#121212" }}>{selectedContract.name}</div>
                 </div>
-                {selectedContract.kycStatus !== "Verified" && (
+                {selectedContract.kycStatus !== "Rejected" && (
                   <div className="space-y-3 border-t border-gray-100 pt-4">
                     <label className="text-sm font-semibold text-gray-700" htmlFor="rejection-reason">
                       Rejection reason
@@ -474,7 +474,7 @@ export default function AdminContracts() {
                       onChange={(event) => setRejectionReason(event.target.value)}
                       placeholder="Explain what the student must correct"
                     />
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className={`grid gap-3 ${selectedContract.kycStatus === "Awaiting Review" ? "grid-cols-2" : "grid-cols-1"}`}>
                       <Button
                         variant="outline"
                         disabled={reviewing}
@@ -483,13 +483,15 @@ export default function AdminContracts() {
                       >
                         <XCircle className="mr-2 h-4 w-4" /> Reject
                       </Button>
-                      <Button
-                        disabled={reviewing}
-                        onClick={() => reviewContract("approve")}
-                        className="bg-green-600 text-white hover:bg-green-700"
-                      >
-                        <CheckCircle className="mr-2 h-4 w-4" /> Approve
-                      </Button>
+                      {selectedContract.kycStatus === "Awaiting Review" && (
+                        <Button
+                          disabled={reviewing}
+                          onClick={() => reviewContract("approve")}
+                          className="bg-green-600 text-white hover:bg-green-700"
+                        >
+                          <CheckCircle className="mr-2 h-4 w-4" /> Approve
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}
