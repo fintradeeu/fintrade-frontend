@@ -110,6 +110,8 @@ export default function ContractKYC() {
   const [course, setCourse] = useState<any>(null);
   const [showCheckout, setShowCheckout] = useState(false);
   const [kycAlreadyDone, setKycAlreadyDone] = useState(false);
+  const [kycStatus, setKycStatus] = useState("not_started");
+  const [rejectionReason, setRejectionReason] = useState("");
 
   // Load existing KYC & target course contexts
   useEffect(() => {
@@ -131,6 +133,8 @@ export default function ContractKYC() {
     api.get("/kyc/status")
       .then((res) => {
         if (res.data && res.data.status !== "not_started") {
+          setKycStatus(res.data.status);
+          setRejectionReason(res.data.rejection_reason || "");
           if (res.data.full_name) setFullName(res.data.full_name);
           if (res.data.dob) setDob(res.data.dob);
           if (res.data.qualification) setQualification(res.data.qualification);
@@ -140,7 +144,14 @@ export default function ContractKYC() {
           if (res.data.pan_number) setPan(res.data.pan_number);
           if (res.data.mobile_verified) setMobileOtp("");
           if (res.data.email_verified) setEmailOtp("");
-          if (res.data.aadhaar_doc_url) {
+          if (res.data.status === "rejected") {
+            setAadhaarUploaded(false);
+            setPanUploaded(false);
+            setPhotoUploaded(false);
+            setSigned(false);
+            setBiometricDone(false);
+            setStep(3);
+          } else if (res.data.aadhaar_doc_url) {
             setAadhaarUploaded(true);
             setDbAadhaarDocUrl(res.data.aadhaar_doc_url);
           }
@@ -165,6 +176,12 @@ export default function ContractKYC() {
             // KYC already completed — skip to contract step
             setStep(6);
             setKycAlreadyDone(true);
+          } else if (
+            res.data.status === "pending" &&
+            res.data.aadhaar_doc_url && res.data.pan_doc_url && res.data.photo_url &&
+            res.data.signature_url && res.data.biometric_selfie_url
+          ) {
+            setStep(5);
           }
         }
       })
@@ -183,6 +200,33 @@ export default function ContractKYC() {
         });
     }
   }, []);
+
+  useEffect(() => {
+    if (step !== 5 || verified) return;
+    const checkReview = async () => {
+      try {
+        const { data } = await api.get("/kyc/status");
+        setKycStatus(data.status);
+        if (data.status === "verified" || data.status === "approved") {
+          setVerified(true);
+          setStep(6);
+          toast.success("Your KYC has been approved.");
+        } else if (data.status === "rejected") {
+          setRejectionReason(data.rejection_reason || "Please upload all documents again.");
+          setAadhaarUploaded(false); setPanUploaded(false); setPhotoUploaded(false);
+          setSigned(false); setBiometricDone(false);
+          setAadhaarFile(null); setPanFile(null); setPhotoFile(null);
+          setSignatureFile(null); setBiometricFile(null);
+          setStep(3);
+          toast.error("Your KYC was rejected. Please fill and upload all documents again.");
+        }
+      } catch (error) {
+        console.error("Unable to refresh KYC review status", error);
+      }
+    };
+    const timer = window.setInterval(checkReview, 10000);
+    return () => window.clearInterval(timer);
+  }, [step, verified]);
 
   // Trigger Email OTP automatically when entering Step 2
   useEffect(() => {
@@ -277,18 +321,7 @@ export default function ContractKYC() {
     setCameraOpen(false);
   };
 
-  const next = () => {
-    if (step === 5 && !verified) {
-      setVerifying(true);
-      setTimeout(() => { 
-        setVerifying(false); 
-        setVerified(true); 
-        setStep(6); 
-      }, 2500);
-      return;
-    }
-    setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1));
-  };
+  const next = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1));
   
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
@@ -406,6 +439,8 @@ export default function ContractKYC() {
           aadhaar_number: cleanAadhaar,
           pan_number: cleanPan
         });
+        setKycStatus("pending");
+        setRejectionReason("");
       } catch (err: any) {
         toast.error("Failed to save Aadhaar/PAN details to database.");
         return;
@@ -461,7 +496,10 @@ export default function ContractKYC() {
             headers: { "Content-Type": undefined }
           });
         }
-        toast.success("Signature and selfie processed successfully!");
+        const submitted = await handleGenerateContractOnBackend(false);
+        if (!submitted) return;
+        setKycStatus("pending");
+        toast.success("Documents submitted for admin approval.");
       } catch (e: any) {
         const errorMsg = typeof e.response?.data?.detail === "string"
           ? e.response.data.detail
@@ -474,15 +512,18 @@ export default function ContractKYC() {
     }
 
     if (step === 5) {
-      if (!verified) {
-        setVerifying(true);
-        setTimeout(async () => {
-          setVerifying(false);
+      setVerifying(true);
+      try {
+        const { data } = await api.get("/kyc/status");
+        setKycStatus(data.status);
+        if (data.status === "verified" || data.status === "approved") {
           setVerified(true);
           setStep(6);
-        }, 2500);
-      } else {
-        setStep(6);
+        } else {
+          toast.info("Your documents are still waiting for admin approval.");
+        }
+      } finally {
+        setVerifying(false);
       }
       return;
     }
@@ -490,22 +531,25 @@ export default function ContractKYC() {
     next();
   };
 
-  const handleGenerateContractOnBackend = async () => {
+  const handleGenerateContractOnBackend = async (termsAccepted = true) => {
     try {
       const searchParams = new URLSearchParams(window.location.search);
       const courseId = searchParams.get("course_id");
       await api.post("/kyc/generate-contract", {
         course_id: courseId ? Number(courseId) : null,
-        terms_accepted: true
+        terms_accepted: termsAccepted
       });
+      return true;
     } catch (e) {
       console.error("Failed to generate contract on backend database", e);
+      toast.error("Could not submit your documents for review. Please try again.");
+      return false;
     }
   };
 
   const handleDownload = async () => {
     // Generate contract on database side
-    await handleGenerateContractOnBackend();
+    await handleGenerateContractOnBackend(true);
 
     // Resolve Aadhaar, PAN, and Photo document URLs
     let aadhaarImgSrc = "";
@@ -731,6 +775,15 @@ export default function ContractKYC() {
               <div>
                 <p className="font-semibold text-green-800 text-sm">KYC Already Verified</p>
                 <p className="text-xs text-green-700 mt-0.5">Your KYC is already completed. You can download your contract and proceed to payment directly.</p>
+              </div>
+            </div>
+          )}
+          {rejectionReason && step === 3 && (
+            <div className="mb-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
+              <X className="h-5 w-5 flex-shrink-0 text-red-600" />
+              <div>
+                <p className="text-sm font-semibold text-red-800">KYC rejected — upload all documents again</p>
+                <p className="mt-1 text-xs text-red-700">Admin reason: {rejectionReason}</p>
               </div>
             </div>
           )}
@@ -1106,7 +1159,8 @@ export default function ContractKYC() {
                   <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: "rgba(213,0,50,0.1)" }}>
                     <Shield className="h-10 w-10" style={{ color: "#D50032" }} />
                   </div>
-                  <p className="text-gray-600">All documents submitted. Click below to process verification.</p>
+                  <p className="text-gray-600">All documents are submitted and waiting for admin approval.</p>
+                  <p className="text-sm text-gray-400">Status: {kycStatus === "pending" ? "Pending review" : kycStatus}</p>
                   <div className="grid grid-cols-2 gap-3 w-full max-w-xs text-left text-sm">
                     {[
                       { label: "Aadhaar", ok: aadhaarUploaded },
@@ -1261,7 +1315,7 @@ export default function ContractKYC() {
                 style={{ background: "#D50032", color: "white" }}
                 disabled={verifying}
               >
-                {step === 5 ? (verified ? "View Contract" : "Verify KYC") : "Continue"}
+                {step === 5 ? (verified ? "View Contract" : "Refresh Status") : "Continue"}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             ) : (

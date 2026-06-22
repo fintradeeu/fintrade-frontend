@@ -6,12 +6,14 @@ import { Badge } from "../../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { Input } from "../../components/ui/input";
-import { CheckCircle, Download, Eye, FileText, Search, Shield, Lock } from "lucide-react";
+import { CheckCircle, Download, Eye, FileText, Search, Shield, Lock, XCircle } from "lucide-react";
 import api from "../../services/api";
 import logo from "../../../imports/fintrade_logo.png";
+import { toast } from "sonner";
 
 interface StudentContract {
   id: number;
+  kycId: number;
   name: string;
   email: string;
   mobile: string;
@@ -29,6 +31,7 @@ interface StudentContract {
   signedDate: string;
   course: string;
   contractId: string;
+  rejectionReason: string;
 }
 
 export default function AdminContracts() {
@@ -36,12 +39,16 @@ export default function AdminContracts() {
   const [selectedContract, setSelectedContract] = useState<StudentContract | null>(null);
   const [contracts, setContracts] = useState<StudentContract[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [reviewing, setReviewing] = useState(false);
 
-  useEffect(() => {
+  const loadContracts = () => {
+    setLoading(true);
     api.get("/kyc/admin/contracts")
       .then((res) => {
         const mapped = res.data.map((c: any) => ({
           id: c.id,
+          kycId: c.kyc_id,
           name: c.user_name || "N/A",
           email: c.user_email || "N/A",
           mobile: c.user_mobile || "N/A",
@@ -59,6 +66,7 @@ export default function AdminContracts() {
           signedDate: c.signed_at ? c.signed_at.split("T")[0] : c.created_at ? c.created_at.split("T")[0] : "N/A",
           course: c.course_title || "General",
           contractId: c.contract_number,
+          rejectionReason: c.rejection_reason || "",
         }));
         setContracts(mapped);
         setLoading(false);
@@ -67,7 +75,32 @@ export default function AdminContracts() {
         console.error("Error loading contracts:", err);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    loadContracts();
   }, []);
+
+  const reviewContract = async (decision: "approve" | "reject") => {
+    if (!selectedContract) return;
+    if (decision === "reject" && !rejectionReason.trim()) {
+      toast.error("Please enter a rejection reason.");
+      return;
+    }
+    setReviewing(true);
+    try {
+      const body = decision === "reject" ? { reason: rejectionReason.trim() } : undefined;
+      await api.put(`/kyc/admin/submissions/${selectedContract.kycId}/${decision}`, body);
+      toast.success(decision === "approve" ? "KYC approved successfully." : "KYC rejected. The student must upload all documents again.");
+      setSelectedContract(null);
+      setRejectionReason("");
+      loadContracts();
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || `Unable to ${decision} KYC.`);
+    } finally {
+      setReviewing(false);
+    }
+  };
 
   const filtered = contracts.filter(
     (c) =>
@@ -333,7 +366,7 @@ export default function AdminContracts() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setSelectedContract(c)}
+                          onClick={() => { setSelectedContract(c); setRejectionReason(c.rejectionReason); }}
                           className="border-gray-300 hover:border-[#D50032] hover:text-[#D50032]"
                         >
                           <Eye className="h-4 w-4 mr-1" /> View
@@ -430,6 +463,36 @@ export default function AdminContracts() {
                   <div className="flex items-center gap-1"><Lock className="h-4 w-4" /> Signed digitally</div>
                   <div className="font-bold" style={{ fontFamily: "cursive", fontSize: 18, color: "#121212" }}>{selectedContract.name}</div>
                 </div>
+                {selectedContract.kycStatus !== "Verified" && (
+                  <div className="space-y-3 border-t border-gray-100 pt-4">
+                    <label className="text-sm font-semibold text-gray-700" htmlFor="rejection-reason">
+                      Rejection reason
+                    </label>
+                    <Input
+                      id="rejection-reason"
+                      value={rejectionReason}
+                      onChange={(event) => setRejectionReason(event.target.value)}
+                      placeholder="Explain what the student must correct"
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button
+                        variant="outline"
+                        disabled={reviewing}
+                        onClick={() => reviewContract("reject")}
+                        className="border-red-300 text-red-600 hover:bg-red-50"
+                      >
+                        <XCircle className="mr-2 h-4 w-4" /> Reject
+                      </Button>
+                      <Button
+                        disabled={reviewing}
+                        onClick={() => reviewContract("approve")}
+                        className="bg-green-600 text-white hover:bg-green-700"
+                      >
+                        <CheckCircle className="mr-2 h-4 w-4" /> Approve
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 <Button onClick={() => handleDownload(selectedContract)} className="w-full" style={{ background: "#D50032", color: "white" }}>
                   <Download className="mr-2 h-4 w-4" /> Download Contract
                 </Button>
