@@ -18,6 +18,15 @@ export default function DistributorDashboard() {
   const [referrals, setReferrals] = useState<any[]>([]);
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  const studentPortalOrigin = import.meta.env.VITE_STUDENT_APP_URL || (
+    window.location.hostname.toLowerCase().includes("affiliate.")
+      ? "https://www.thefintrade.com"
+      : window.location.origin
+  );
+  const studentReferralLink = stats?.referral_code
+    ? `${studentPortalOrigin}/register?ref=${encodeURIComponent(stats.referral_code)}`
+    : "";
   const [userName, setUserName] = useState("Introducing Broker");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -56,9 +65,8 @@ export default function DistributorDashboard() {
   };
 
   const handleCopyLink = () => {
-    if (stats?.referral_code) {
-      const link = `${window.location.origin}/register?ref=${stats.referral_code}`;
-      navigator.clipboard.writeText(link);
+    if (studentReferralLink) {
+      navigator.clipboard.writeText(studentReferralLink);
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
     }
@@ -145,7 +153,7 @@ export default function DistributorDashboard() {
               <LinkIcon className="text-[#C2A86A]" size={24} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-[#0B2A5B]/60">IB Referral Code & Link</p>
+              <p className="text-sm font-medium text-[#0B2A5B]/60">Student Registration Referral</p>
               <div className="flex flex-col gap-2 mt-1">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xl font-bold text-[#0B2A5B] tracking-wider truncate">
@@ -161,13 +169,13 @@ export default function DistributorDashboard() {
                 </div>
                 {stats?.referral_code && (
                   <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-gray-100">
-                    <span className="text-xs text-blue-600 truncate max-w-[120px]" title={`${window.location.origin}/register?ref=${stats.referral_code}`}>
-                      {stats?.referral_code ? `.../register?ref=${stats.referral_code}` : ""}
+                    <span className="text-xs text-blue-600 truncate max-w-[180px]" title={studentReferralLink}>
+                      {studentReferralLink}
                     </span>
                     <button
                       onClick={handleCopyLink}
                       className="p-1 hover:bg-gray-100 rounded text-blue-600 hover:text-blue-800 transition-colors flex items-center"
-                      title="Copy Link"
+                      title="Copy student registration link"
                     >
                       {copiedLink ? <span className="text-[10px] font-bold text-green-600">Copied!</span> : <LinkIcon size={14} />}
                     </button>

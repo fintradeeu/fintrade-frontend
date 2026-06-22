@@ -234,7 +234,9 @@ export default function RegisterPage() {
     return <AffiliateIBRegisterForm />;
   }
 
-  const initialRefCode = localStorage.getItem("distributor_code") || new URLSearchParams(window.location.search).get("ref") || "";
+  // A newly opened referral link must take priority over any older code that
+  // may already be stored in this browser.
+  const initialRefCode = new URLSearchParams(window.location.search).get("ref") || localStorage.getItem("distributor_code") || "";
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
