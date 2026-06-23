@@ -5,6 +5,20 @@ import { Input } from "./ui/input";
 import { Card } from "./ui/card";
 import { Tag, IndianRupee } from "lucide-react";
 
+const loadRazorpayScript = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 interface CourseCheckoutModalProps {
   course: any;
   onClose: () => void;
@@ -69,6 +83,73 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
           discounted_price: discount > 0 ? finalPrice : null,
         });
         console.log("Payment initiation API response:", res.data);
+
+        if (res.data?.gateway === "razorpay") {
+          const scriptLoaded = await loadRazorpayScript();
+          if (!scriptLoaded) {
+            alert("Razorpay SDK failed to load. Please check your internet connection.");
+            setLoading(false);
+            return;
+          }
+
+          let prefill = { name: "", email: "", contact: "" };
+          try {
+            const storedUser = localStorage.getItem("user");
+            if (storedUser) {
+              const user = JSON.parse(storedUser);
+              prefill = {
+                name: user.full_name || "",
+                email: user.email || "",
+                contact: user.phone || "",
+              };
+            }
+          } catch (e) {
+            console.warn("Failed to parse user details for prefill:", e);
+          }
+
+          const options = {
+            key: res.data.key_id,
+            amount: res.data.amount,
+            currency: res.data.currency || "INR",
+            name: "FinTrade",
+            description: course.title || course.name,
+            order_id: res.data.order_id,
+            handler: async function (response: any) {
+              console.log("Razorpay payment success. Verifying...", response);
+              try {
+                setLoading(true);
+                await api.post("/payments/verify-razorpay", {
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_signature: response.razorpay_signature,
+                  txnid: res.data.txnid,
+                });
+                onSuccess();
+              } catch (err: any) {
+                console.error("Razorpay verification failed:", err);
+                alert("Payment verification failed: " + (err.response?.data?.detail || err.message));
+              } finally {
+                setLoading(false);
+              }
+            },
+            prefill,
+            theme: {
+              color: "#0B2A5B",
+            },
+            modal: {
+              ondismiss: function () {
+                console.log("Razorpay checkout modal dismissed by user");
+                setLoading(false);
+              }
+            }
+          };
+
+          const rzp = new (window as any).Razorpay(options);
+          rzp.open();
+          setLoading(false);
+          return;
+        }
+
         if (res.data?.redirect_url) {
           console.log("Redirecting to:", res.data.redirect_url);
           window.location.href = res.data.redirect_url;

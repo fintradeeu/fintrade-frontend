@@ -26,6 +26,20 @@ import {
   LogOut,
 } from "lucide-react";
 
+const loadRazorpayScript = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 
 
 // We will fetch courses from the API instead of hardcoding them.
@@ -216,7 +230,6 @@ export default function CourseEnrollment() {
     setLoading(true);
     try {
       if (finalPrice > 0) {
-        // Initiate Easebuzz Payment
         console.log("Initiating payment for course ID:", selectedCourse);
         const res = await api.post("/payments/create", {
           course_id: selectedCourse,
@@ -224,6 +237,76 @@ export default function CourseEnrollment() {
           discounted_price: discount > 0 ? finalPrice : null,
         });
         console.log("Payment initiation API response:", res.data);
+
+        if (res.data?.gateway === "razorpay") {
+          const scriptLoaded = await loadRazorpayScript();
+          if (!scriptLoaded) {
+            alert("Razorpay SDK failed to load. Please check your internet connection.");
+            setLoading(false);
+            return;
+          }
+
+          let prefill = { name: "", email: "", contact: "" };
+          try {
+            const storedUser = localStorage.getItem("user");
+            if (storedUser) {
+              const user = JSON.parse(storedUser);
+              prefill = {
+                name: user.full_name || "",
+                email: user.email || "",
+                contact: user.phone || "",
+              };
+            }
+          } catch (e) {
+            console.warn("Failed to parse user details for prefill:", e);
+          }
+
+          const options = {
+            key: res.data.key_id,
+            amount: res.data.amount,
+            currency: res.data.currency || "INR",
+            name: "FinTrade",
+            description: selectedCourseData?.title || selectedCourseData?.name || "Course Purchase",
+            order_id: res.data.order_id,
+            handler: async function (response: any) {
+              console.log("Razorpay payment success. Verifying...", response);
+              try {
+                setLoading(true);
+                await api.post("/payments/verify-razorpay", {
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_signature: response.razorpay_signature,
+                  txnid: res.data.txnid,
+                });
+                toast.success("Enrollment successful! Welcome to the course.");
+                setTimeout(() => {
+                  window.location.href = "/student/modules";
+                }, 1500);
+              } catch (err: any) {
+                console.error("Razorpay verification failed:", err);
+                alert("Payment verification failed: " + (err.response?.data?.detail || err.message));
+              } finally {
+                setLoading(false);
+              }
+            },
+            prefill,
+            theme: {
+              color: "#0B2A5B",
+            },
+            modal: {
+              ondismiss: function () {
+                console.log("Razorpay checkout modal dismissed by user");
+                setLoading(false);
+              }
+            }
+          };
+
+          const rzp = new (window as any).Razorpay(options);
+          rzp.open();
+          setLoading(false);
+          return;
+        }
+
         if (res.data && res.data.redirect_url) {
           console.log("Redirecting to:", res.data.redirect_url);
           window.location.href = res.data.redirect_url;
