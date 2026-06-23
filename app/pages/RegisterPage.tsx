@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { useGoogleLogin } from "@react-oauth/google";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, ShieldCheck, Mail, Smartphone } from "lucide-react";
 import logo from "../../imports/fintrade_logo.png";
 import api from "../services/api";
 import { isGoogleAuthConfigured } from "../config/googleAuth";
@@ -249,6 +249,112 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // OTP state
+  const [step, setStep] = useState<"credentials" | "otp">("credentials");
+  const [otpToken, setOtpToken] = useState("");
+  const [otpCode, setOtpCode] = useState(["", "", "", "", "", ""]);
+  const [channels, setChannels] = useState<string[]>([]);
+  const [countdown, setCountdown] = useState(0);
+  const [resending, setResending] = useState(false);
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Countdown timer
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setInterval(() => setCountdown((c) => c - 1), 1000);
+    return () => clearInterval(timer);
+  }, [countdown]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const handleVerifyOTP = async (codeStr?: string) => {
+    const code = codeStr || otpCode.join("");
+    if (code.length !== 6) return;
+
+    setErrorMsg("");
+    setLoading(true);
+
+    try {
+      const response = await api.post("/auth/verify-otp", {
+        otp_token: otpToken,
+        code,
+      });
+      const { access_token, user } = response.data;
+
+      localStorage.setItem("token", access_token);
+      localStorage.setItem("user", JSON.stringify(user));
+      navigate("/");
+    } catch (err: any) {
+      setErrorMsg(err.response?.data?.detail || "Verification failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    setResending(true);
+    setErrorMsg("");
+
+    try {
+      const response = await api.post("/auth/resend-otp", {
+        otp_token: otpToken,
+      });
+      const { otp_token: newToken, expires_in_seconds, channels: ch } = response.data;
+      setOtpToken(newToken);
+      setChannels(ch || []);
+      setCountdown(expires_in_seconds || 300);
+      setOtpCode(["", "", "", "", "", ""]);
+      setTimeout(() => otpRefs.current[0]?.focus(), 100);
+    } catch (err: any) {
+      setErrorMsg(err.response?.data?.detail || "Failed to resend code.");
+    } finally {
+      setResending(false);
+    }
+  };
+
+  const handleOtpChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+
+    const newCode = [...otpCode];
+    newCode[index] = value.slice(-1);
+    setOtpCode(newCode);
+
+    if (value && index < 5) {
+      otpRefs.current[index + 1]?.focus();
+    }
+
+    const fullCode = newCode.join("");
+    if (fullCode.length === 6) {
+      handleVerifyOTP(fullCode);
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === "Backspace" && !otpCode[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (pasted.length === 0) return;
+    const newCode = [...otpCode];
+    for (let i = 0; i < 6; i++) {
+      newCode[i] = pasted[i] || "";
+    }
+    setOtpCode(newCode);
+    if (pasted.length === 6) {
+      handleVerifyOTP(pasted);
+    } else {
+      otpRefs.current[pasted.length]?.focus();
+    }
+  };
+
   const handleReferralLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
@@ -293,11 +399,21 @@ export default function RegisterPage() {
         password,
         referral_code: refCode
       });
-      const { access_token, user } = response.data;
       
+      if (response.data.otp_token) {
+        const { otp_token, expires_in_seconds, channels: ch } = response.data;
+        setOtpToken(otp_token);
+        setChannels(ch || []);
+        setCountdown(expires_in_seconds || 300);
+        setStep("otp");
+        setOtpCode(["", "", "", "", "", ""]);
+        setTimeout(() => otpRefs.current[0]?.focus(), 100);
+        return;
+      }
+      
+      const { access_token, user } = response.data;
       localStorage.setItem("token", access_token);
       localStorage.setItem("user", JSON.stringify(user));
-      
       navigate("/");
     } catch (err: any) {
       let errorMessage = "Registration failed. Email might already exist.";
@@ -388,144 +504,242 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <h2 className="text-3xl font-bold mb-2" style={{ color: '#121212' }}>
-            {referralCode && !leadCaptured ? "Share Your Details" : "Create an Account"}
-          </h2>
-          <p className="text-gray-600 mb-8">
-            {referralCode && !leadCaptured
-              ? "Fill this form first so your IB can guide your admission journey."
-              : "Fill in your details to get started"}
-          </p>
+          {step === "credentials" ? (
+            <>
+              <h2 className="text-3xl font-bold mb-2" style={{ color: '#121212' }}>
+                {referralCode && !leadCaptured ? "Share Your Details" : "Create an Account"}
+              </h2>
+              <p className="text-gray-600 mb-8">
+                {referralCode && !leadCaptured
+                  ? "Fill this form first so your IB can guide your admission journey."
+                  : "Fill in your details to get started"}
+              </p>
 
-          {errorMsg && (
-            <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
-              {errorMsg}
-            </div>
-          )}
+              {errorMsg && (
+                <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
+                  {errorMsg}
+                </div>
+              )}
 
-          <form onSubmit={referralCode && !leadCaptured ? handleReferralLeadSubmit : handleRegister} className="space-y-4">
-            <div>
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input
-                id="fullName"
-                name="name"
-                type="text"
-                autoComplete="name"
-                placeholder="Rahul Sharma"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="mt-1 bg-gray-50 border-gray-300 focus:border-[#D50032] focus:ring-[#D50032]"
-                required
-              />
-            </div>
+              <form onSubmit={referralCode && !leadCaptured ? handleReferralLeadSubmit : handleRegister} className="space-y-4">
+                <div>
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    name="name"
+                    type="text"
+                    autoComplete="name"
+                    placeholder="Rahul Sharma"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="mt-1 bg-gray-50 border-gray-300 focus:border-[#D50032] focus:ring-[#D50032]"
+                    required
+                  />
+                </div>
 
-            <div>
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                placeholder="rahul.sharma@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 bg-gray-50 border-gray-300 focus:border-[#D50032] focus:ring-[#D50032]"
-                required
-              />
-            </div>
+                <div>
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="rahul.sharma@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="mt-1 bg-gray-50 border-gray-300 focus:border-[#D50032] focus:ring-[#D50032]"
+                    required
+                  />
+                </div>
 
-            <div>
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                name="phone"
-                type="tel"
-                autoComplete="tel"
-                placeholder="+91 98765 43210"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="mt-1 bg-gray-50 border-gray-300 focus:border-[#D50032] focus:ring-[#D50032]"
-                required
-              />
-            </div>
+                <div>
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    autoComplete="tel"
+                    placeholder="+91 98765 43210"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="mt-1 bg-gray-50 border-gray-300 focus:border-[#D50032] focus:ring-[#D50032]"
+                    required
+                  />
+                </div>
 
-            <div>
-              <Label htmlFor="city">City</Label>
-              <Input
-                id="city"
-                name="city"
-                type="text"
-                autoComplete="address-level2"
-                placeholder="Mumbai"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                className="mt-1 bg-gray-50 border-gray-300 focus:border-[#D50032] focus:ring-[#D50032]"
-                required
-              />
-            </div>
+                <div>
+                  <Label htmlFor="city">City</Label>
+                  <Input
+                    id="city"
+                    name="city"
+                    type="text"
+                    autoComplete="address-level2"
+                    placeholder="Mumbai"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="mt-1 bg-gray-50 border-gray-300 focus:border-[#D50032] focus:ring-[#D50032]"
+                    required
+                  />
+                </div>
 
-            {(!referralCode || leadCaptured) && <div>
-              <Label htmlFor="password">Password</Label>
-              <div className="relative mt-1">
-                <Input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="new-password"
-                  placeholder="Create a strong password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-gray-50 border-gray-300 focus:border-[#D50032] focus:ring-[#D50032] pr-12"
-                  required
-                />
+                {(!referralCode || leadCaptured) && <div>
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative mt-1">
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      placeholder="Create a strong password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="bg-gray-50 border-gray-300 focus:border-[#D50032] focus:ring-[#D50032] pr-12"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900"
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>}
+
+                <Button
+                  type="submit"
+                  className="w-full text-white shadow-lg mt-6"
+                  style={{ background: '#D50032', boxShadow: '0 0 20px rgba(213,0,50, 0.3)' }}
+                  size="lg"
+                  disabled={loading}
+                >
+                  {loading ? (referralCode && !leadCaptured ? "Saving..." : "Registering...") : (referralCode && !leadCaptured ? "Continue to Registration" : "Sign Up")}
+                </Button>
+              </form>
+
+              {isGoogleAuthConfigured && (!referralCode || leadCaptured) && (
+                <>
+                  <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200" />
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-4 bg-white text-gray-500">Or continue with</span>
+                    </div>
+                  </div>
+
+                  <GoogleRegisterButton
+                    loading={loading}
+                    onLoadingChange={setLoading}
+                    onError={setErrorMsg}
+                  />
+                </>
+              )}
+
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-600">
+                  Already have an account?{" "}
+                  <Link to="/login" className="hover:underline font-semibold" style={{ color: '#D50032' }}>
+                    Login here
+                  </Link>
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ background: 'rgba(213, 0, 50, 0.1)' }}>
+                  <ShieldCheck className="h-8 w-8" style={{ color: '#D50032' }} />
+                </div>
+                <h2 className="text-2xl font-bold mb-2" style={{ color: '#121212' }}>Verify Your Mobile Number</h2>
+                <p className="text-gray-600 text-sm">
+                  We've sent a 6-digit verification code to:
+                </p>
+                <div className="mt-3 space-y-1">
+                  {channels.includes("email") && (
+                    <div className="inline-flex items-center gap-2 text-sm text-gray-700 bg-gray-50 px-3 py-1.5 rounded-full">
+                      <Mail size={14} style={{ color: '#D50032' }} />
+                      <span>{email}</span>
+                    </div>
+                  )}
+                  {channels.includes("sms") && (
+                    <div className="inline-flex items-center gap-2 text-sm text-gray-700 bg-gray-50 px-3 py-1.5 rounded-full ml-2">
+                      <Smartphone size={14} style={{ color: '#D50032' }} />
+                      <span>{phone}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {errorMsg && (
+                <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm text-center">
+                  {errorMsg}
+                </div>
+              )}
+
+              <div className="flex justify-center gap-3 mb-6" onPaste={handleOtpPaste}>
+                {otpCode.map((digit, i) => (
+                  <input
+                    key={i}
+                    ref={(el) => { otpRefs.current[i] = el; }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(i, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                    className="w-12 h-14 text-center text-2xl font-bold border-2 rounded-xl transition-all duration-200 outline-none"
+                    style={{
+                      borderColor: digit ? '#D50032' : '#e5e7eb',
+                      background: digit ? 'rgba(213,0,50,0.04)' : '#f9fafb',
+                      color: '#121212',
+                    }}
+                    onFocus={(e) => { e.target.style.borderColor = '#D50032'; e.target.style.boxShadow = '0 0 0 3px rgba(213,0,50,0.1)'; }}
+                    onBlur={(e) => { if (!digit) { e.target.style.borderColor = '#e5e7eb'; } e.target.style.boxShadow = 'none'; }}
+                  />
+                ))}
+              </div>
+
+              <div className="text-center mb-6">
+                {countdown > 0 ? (
+                  <p className="text-sm text-gray-500">
+                    Code expires in <span className="font-semibold" style={{ color: '#D50032' }}>{formatTime(countdown)}</span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-red-500 font-medium">Code expired. Please request a new one.</p>
+                )}
+              </div>
+
+              <Button
+                onClick={() => handleVerifyOTP()}
+                className="w-full text-white shadow-lg mb-4"
+                style={{ background: '#D50032', boxShadow: '0 0 20px rgba(213, 0, 50, 0.3)' }}
+                size="lg"
+                disabled={loading || otpCode.join("").length !== 6}
+              >
+                {loading ? "Verifying..." : "Verify & Complete Registration"}
+              </Button>
+
+              <div className="flex items-center justify-between">
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900"
+                  onClick={() => { setStep("credentials"); setErrorMsg(""); setOtpCode(["", "", "", "", "", ""]); }}
+                  className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1 transition-colors"
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  <ArrowLeft size={14} /> Back
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResendOTP}
+                  disabled={resending || countdown > 270}
+                  className="text-sm font-medium hover:underline transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ color: '#D50032' }}
+                >
+                  {resending ? "Sending..." : "Resend Code"}
                 </button>
               </div>
-            </div>}
-
-            <Button
-              type="submit"
-              className="w-full text-white shadow-lg mt-6"
-              style={{ background: '#D50032', boxShadow: '0 0 20px rgba(213,0,50, 0.3)' }}
-              size="lg"
-              disabled={loading}
-            >
-              {loading ? (referralCode && !leadCaptured ? "Saving..." : "Registering...") : (referralCode && !leadCaptured ? "Continue to Registration" : "Sign Up")}
-            </Button>
-          </form>
-
-          {isGoogleAuthConfigured && (!referralCode || leadCaptured) && (
-            <>
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-500">Or continue with</span>
-                </div>
-              </div>
-
-              <GoogleRegisterButton
-                loading={loading}
-                onLoadingChange={setLoading}
-                onError={setErrorMsg}
-              />
             </>
           )}
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Already have an account?{" "}
-              <Link to="/login" className="hover:underline font-semibold" style={{ color: '#D50032' }}>
-                Login here
-              </Link>
-            </p>
-          </div>
         </Card>
       </div>
     </div>
