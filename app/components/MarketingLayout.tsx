@@ -462,7 +462,7 @@ export default function MarketingLayout() {
 
       {/* Ticker Strip */}
       {showAnnouncements && (
-        <div className="sticky top-[80px] z-[90] bg-[#121212]">
+        <div className="sticky top-[96px] z-[90] bg-[#121212]">
           <TickerStrip />
         </div>
       )}
