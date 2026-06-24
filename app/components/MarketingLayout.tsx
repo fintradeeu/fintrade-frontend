@@ -230,12 +230,12 @@ export default function MarketingLayout() {
           <div className="relative flex flex-col items-center z-10">
             {/* Glowing Logo Circle */}
             <div className="relative flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full bg-[#D50032]/25 blur-3xl animate-pulse w-40 h-40" />
-              <div className="w-28 h-28 flex items-center justify-center relative">
+              <div className="absolute inset-0 rounded-full bg-[#D50032]/25 blur-3xl animate-pulse w-56 h-56" />
+              <div className="w-48 h-48 flex items-center justify-center relative">
                 <img
-                  src="/TheFinTrade Final Logo (1).png"
+                  src="/F-LOGO--RED.png"
                   alt="FinTrade logo"
-                  className="h-24 w-24 object-contain animate-spin"
+                  className="h-40 w-40 object-contain animate-spin"
                   style={{ animationDuration: "2.5s" }}
                 />
               </div>
@@ -392,13 +392,13 @@ export default function MarketingLayout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ overflow: "visible" }}>
           <div className="flex items-center justify-between h-24" style={{ overflow: "visible" }}>
             {/* LOGO AREA */}
-            <div className="flex-shrink-0 flex items-center" style={{ width: "280px", overflow: "visible" }}>
+            <div className="flex-shrink-0 flex items-center" style={{ width: "350px", overflow: "visible" }}>
               <Link to="/" className="flex items-center" style={{ overflow: "visible" }}>
                 <img
                   src="/TheFinTrade Final Logo (1).png"
                   alt="FinTrade"
                   style={{
-                    width: "250px",
+                    width: "320px",
                     height: "auto",
                     display: "block",
                     imageRendering: "-webkit-optimize-contrast",

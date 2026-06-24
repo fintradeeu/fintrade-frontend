@@ -25,41 +25,128 @@ export default function TickerStrip() {
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
+    const API_KEY = "e87f52a331c6412db67db7f2fd2b56b6";
+    const twelveDataMappings = [
+      { twelveSymbol: "BSESN", label: "SENSEX", isUSD: false, symbol: "BSE:SENSEX" },
+      { twelveSymbol: "SBIN", label: "SBI", isUSD: false, symbol: "NSE:SBIN" },
+      { twelveSymbol: "RELIANCE", label: "RELIANCE", isUSD: false, symbol: "NSE:RELIANCE" },
+      { twelveSymbol: "HDFCBANK", label: "HDFC BANK", isUSD: false, symbol: "NSE:HDFCBANK" },
+      { twelveSymbol: "TCS", label: "TCS", isUSD: false, symbol: "NSE:TCS" },
+      { twelveSymbol: "INFY", label: "INFOSYS", isUSD: false, symbol: "NSE:INFY" },
+      { twelveSymbol: "XAU/USD", label: "GOLD", isUSD: true, symbol: "TVC:GOLD" },
+      { twelveSymbol: "XAG/USD", label: "SILVER", isUSD: true, symbol: "TVC:SILVER" },
+      { twelveSymbol: "WTI/USD", label: "CRUDE OIL", isUSD: true, symbol: "NYMEX:CL1!" },
+      { twelveSymbol: "USD/INR", label: "USD/INR", isUSD: false, symbol: "FX_IDC:USDINR" },
+      { twelveSymbol: "BTC/USD", label: "BITCOIN", isUSD: true, symbol: "CRYPTO:BTCUSD" }
+    ];
+
     const fetchMarketData = async () => {
-      try {
-        const res = await api.get('/simulator/market-data');
-        if (res.data && Array.isArray(res.data)) {
-          const mapped = res.data.map((item: any) => {
-            const changePct = item.change_pct ?? 0;
-            const price = item.price ?? 0;
-            const changeVal = item.change ?? 0;
-            const up = changePct >= 0;
-            const sign = changePct >= 0 ? '+' : '';
-            
-            const isUSD = ['BITCOIN', 'GOLD', 'SILVER', 'CRUDE OIL'].includes(item.symbol);
-            
-            return {
-              label: item.symbol,
-              value: isUSD 
-                ? `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
-                : price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-              change: `${sign}${isUSD 
-                ? changeVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
-                : changeVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-              pct: `${sign}${changePct.toFixed(2)}%`,
-              up: up,
-              symbol: item.tv_symbol
-            };
-          });
-          setTickers(mapped);
+      const cachedData = localStorage.getItem("fintrade_ticker_data");
+      const cachedTime = localStorage.getItem("fintrade_ticker_time");
+      const now = Date.now();
+
+      // Check if cache is fresh (5 minutes)
+      if (cachedData && cachedTime && (now - parseInt(cachedTime, 10) < 300000)) {
+        try {
+          const parsed = JSON.parse(cachedData);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setTickers(parsed);
+            return;
+          }
+        } catch (e) {
+          console.error("Error parsing cached ticker data:", e);
         }
+      }
+
+      // Fetch new data from Twelve Data
+      try {
+        const symbolsStr = twelveDataMappings.map(m => m.twelveSymbol).join(",");
+        const response = await fetch(`https://api.twelvedata.com/quote?symbol=${symbolsStr}&apikey=${API_KEY}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.status === "error") {
+          throw new Error(data.message || "Twelve Data API error");
+        }
+
+        const mapped = twelveDataMappings.map(mapping => {
+          const tickerInfo = data[mapping.twelveSymbol];
+          if (!tickerInfo || tickerInfo.status === "error") {
+            const fallback = fallbackTickers.find(t => t.label === mapping.label);
+            return fallback!;
+          }
+
+          const price = parseFloat(tickerInfo.close || tickerInfo.price || "0");
+          const changeVal = parseFloat(tickerInfo.change || "0");
+          const pctVal = parseFloat(tickerInfo.percent_change || "0");
+          const up = changeVal >= 0;
+          const sign = changeVal >= 0 ? '+' : '';
+
+          return {
+            label: mapping.label,
+            value: mapping.isUSD
+              ? `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              : price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            change: `${sign}${mapping.isUSD
+              ? changeVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+              : changeVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            pct: `${sign}${pctVal.toFixed(2)}%`,
+            up: up,
+            symbol: mapping.symbol
+          };
+        });
+
+        setTickers(mapped);
+        localStorage.setItem("fintrade_ticker_data", JSON.stringify(mapped));
+        localStorage.setItem("fintrade_ticker_time", now.toString());
       } catch (err) {
-        console.error("Failed to fetch live tickers from API, using fallback data:", err);
+        console.warn("Failed to fetch from Twelve Data, checking simulator fallback:", err);
+        
+        // Try local simulator fallback
+        try {
+          const res = await api.get('/simulator/market-data');
+          if (res.data && Array.isArray(res.data)) {
+            const mapped = res.data.map((item: any) => {
+              const changePct = item.change_pct ?? 0;
+              const price = item.price ?? 0;
+              const changeVal = item.change ?? 0;
+              const up = changePct >= 0;
+              const sign = changePct >= 0 ? '+' : '';
+              
+              const isUSD = ['BITCOIN', 'GOLD', 'SILVER', 'CRUDE OIL'].includes(item.symbol);
+              
+              return {
+                label: item.symbol,
+                value: isUSD 
+                  ? `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+                  : price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                change: `${sign}${isUSD 
+                  ? changeVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
+                  : changeVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                pct: `${sign}${changePct.toFixed(2)}%`,
+                up: up,
+                symbol: item.tv_symbol
+              };
+            });
+            setTickers(mapped);
+            localStorage.setItem("fintrade_ticker_data", JSON.stringify(mapped));
+            localStorage.setItem("fintrade_ticker_time", now.toString());
+          }
+        } catch (simErr) {
+          console.error("Local simulator API fallback also failed:", simErr);
+          if (!cachedData) {
+            setTickers(fallbackTickers);
+          }
+        }
       }
     };
 
     fetchMarketData();
-    const interval = setInterval(fetchMarketData, 10000); // refresh every 10 seconds
+    const interval = setInterval(fetchMarketData, 30000); // Check cache/fetch every 30 seconds
     return () => clearInterval(interval);
   }, []);
   
