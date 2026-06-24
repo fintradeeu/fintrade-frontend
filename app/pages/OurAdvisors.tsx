@@ -27,11 +27,11 @@ export default function OurAdvisors() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("/settings/about-us")
+    api.get("/settings/advisors")
       .then((res) => {
-        const leadership = res.data?.leadership || [];
-        if (leadership && leadership.length > 0) {
-          const list = leadership.map((dl: any) => {
+        const advisorsList = res.data?.advisors || [];
+        if (advisorsList && advisorsList.length > 0) {
+          const list = advisorsList.map((dl: any) => {
             const imagePath = dl.profile_image || dl.image;
             const imageUrl = imagePath 
               ? getImageUrl(imagePath) 

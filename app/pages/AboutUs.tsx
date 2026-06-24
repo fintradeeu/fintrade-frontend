@@ -87,7 +87,11 @@ export default function AboutUs() {
             bullets: mission.bullets || []
           });
         }
+      }
+    }).catch(console.error);
 
+    api.get("/settings/landing-page").then(res => {
+      if (res.data) {
         const leadership = res.data.leadership;
         if (leadership?.length > 0) {
           setDynamicLeaders(leadership);

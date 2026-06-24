@@ -71,11 +71,11 @@ export default function AdminAdvisors() {
         return;
       }
       setLoading(true);
-      const res = await api.get("/settings/about-us");
-      const leadership = res.data?.leadership || [];
+      const res = await api.get("/settings/advisors");
+      const advisorsList = res.data?.advisors || [];
 
-      // If DB leadership list is empty, initialize with static leaders
-      const rawList = leadership.length > 0 ? leadership : staticLeaders;
+      // If DB advisors list is empty, initialize with static leaders
+      const rawList = advisorsList.length > 0 ? advisorsList : staticLeaders;
       const formattedList: Advisor[] = rawList.map((item: any) => ({
         id: item.id || getLeaderId(item.name || ""),
         name: item.name || "",
@@ -204,7 +204,7 @@ export default function AdminAdvisors() {
         tags: adv.tags,
       }));
 
-      await api.put("/admin/settings/about-us", { leadership: payload });
+      await api.put("/admin/settings/advisors", { advisors: payload });
       toast.success("Advisors list successfully updated and published!", { id: "save-advisors" });
       setOriginalAdvisors(JSON.parse(JSON.stringify(advisors)));
     } catch (err: any) {

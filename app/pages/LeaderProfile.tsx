@@ -39,60 +39,64 @@ export default function LeaderProfile() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("/settings/about-us")
-      .then((res) => {
-        const leadership = res.data?.leadership || [];
-        let found: any = leadership.find((l: any) => getLeaderId(l) === id);
+    Promise.all([
+      api.get("/settings/landing-page").catch(() => null),
+      api.get("/settings/advisors").catch(() => null)
+    ]).then(([landingRes, advisorsRes]) => {
+      const leadersList = landingRes?.data?.leadership || [];
+      const advisorsList = advisorsRes?.data?.advisors || [];
+      const combined = [...leadersList, ...advisorsList];
 
-        const staticFound = staticLeaders.find((l) => getLeaderId(l) === id) as any;
+      let found: any = combined.find((l: any) => getLeaderId(l) === id);
+      const staticFound = staticLeaders.find((l) => getLeaderId(l) === id) as any;
 
-        if (!found) {
-          found = staticFound;
-        }
+      if (!found) {
+        found = staticFound;
+      }
 
-        if (found) {
-          const imagePath = found.profile_image || found.image || (staticFound && (staticFound.profile_image || staticFound.image));
-          const imageUrl = imagePath 
-            ? getImageUrl(imagePath) 
-            : `https://ui-avatars.com/api/?name=${encodeURIComponent(found.name || found.monogram || "FT")}&background=FFF0F2&color=D50032&size=512&font-size=0.33&bold=true`;
+      if (found) {
+        const imagePath = found.profile_image || found.image || (staticFound && (staticFound.profile_image || staticFound.image));
+        const imageUrl = imagePath 
+          ? getImageUrl(imagePath) 
+          : `https://ui-avatars.com/api/?name=${encodeURIComponent(found.name || found.monogram || "FT")}&background=FFF0F2&color=D50032&size=512&font-size=0.33&bold=true`;
 
-          const rawTags = found.tags || (staticFound && staticFound.tags) || [];
-          const parsedTags = Array.isArray(rawTags)
-            ? rawTags
-            : typeof rawTags === "string"
-              ? rawTags.split(",").map((t: string) => t.trim()).filter(Boolean)
-              : [];
+        const rawTags = found.tags || (staticFound && staticFound.tags) || [];
+        const parsedTags = Array.isArray(rawTags)
+          ? rawTags
+          : typeof rawTags === "string"
+            ? rawTags.split(",").map((t: string) => t.trim()).filter(Boolean)
+            : [];
 
-          setLeader({
-            ...(staticFound || {}),
-            ...found,
-            id: getLeaderId(found),
-            role: found.role || found.title || (staticFound && (staticFound.role || staticFound.title)) || "Leadership",
-            image: imageUrl,
-            fullBio: found.fullBio || found.bio || (staticFound && (staticFound.fullBio || staticFound.bio)) || "",
-            tags: parsedTags,
-            initials: found.initials || (staticFound && staticFound.initials) || getInitials(found.name)
-          });
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to fetch leaders dynamically", err);
-        const found = staticLeaders.find((l) => getLeaderId(l) === id) as any;
-        if (found) {
-          setLeader({
-            ...found,
-            id: getLeaderId(found),
-            role: found.role || found.title || "Leadership",
-            image: found.image || "",
-            fullBio: found.fullBio || found.bio || "",
-            tags: Array.isArray(found.tags) ? found.tags : [],
-            initials: found.initials || getInitials(found.name)
-          });
-        }
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+        setLeader({
+          ...(staticFound || {}),
+          ...found,
+          id: getLeaderId(found),
+          role: found.role || found.title || (staticFound && (staticFound.role || staticFound.title)) || "Leadership",
+          image: imageUrl,
+          fullBio: found.fullBio || found.bio || (staticFound && (staticFound.fullBio || staticFound.bio)) || "",
+          tags: parsedTags,
+          initials: found.initials || (staticFound && staticFound.initials) || getInitials(found.name)
+        });
+      }
+    })
+    .catch((err) => {
+      console.error("Failed to fetch leaders dynamically", err);
+      const found = staticLeaders.find((l) => getLeaderId(l) === id) as any;
+      if (found) {
+        setLeader({
+          ...found,
+          id: getLeaderId(found),
+          role: found.role || found.title || "Leadership",
+          image: found.image || "",
+          fullBio: found.fullBio || found.bio || "",
+          tags: Array.isArray(found.tags) ? found.tags : [],
+          initials: found.initials || getInitials(found.name)
+        });
+      }
+    })
+    .finally(() => {
+      setLoading(false);
+    });
   }, [id]);
 
   if (loading) {
