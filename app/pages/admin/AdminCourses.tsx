@@ -8,6 +8,7 @@ import { Badge } from "../../components/ui/badge";
 import { Plus, X, BookOpen, Layers, FileText, ChevronDown, ChevronUp, FileQuestion, Upload, GripVertical, Pencil, Trash2 } from "lucide-react";
 import api from "../../services/api";
 import { confirmPopup } from "../../utils/popup";
+import { uploadFile } from "../../utils/upload";
 
 export default function AdminCourses() {
   const navigate = useNavigate();
@@ -65,12 +66,8 @@ export default function AdminCourses() {
   const handleMediaUpload = async (file: File) => {
     setUploadingMedia(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await api.post("/admin/upload", formData, {
-        headers: { "Content-Type": undefined }
-      });
-      setNewLesson(prev => ({ ...prev, video_url: res.data.url }));
+      const url = await uploadFile(file);
+      setNewLesson(prev => ({ ...prev, video_url: url }));
     } catch (err: any) {
       alert("Upload failed: " + (err.response?.data?.detail || err.message));
     } finally {

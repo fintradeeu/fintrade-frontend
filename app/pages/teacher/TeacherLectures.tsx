@@ -6,6 +6,7 @@ import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
 import { Users, Video, Play, Upload, Calendar, Clock, Plus, X } from "lucide-react";
 import api from "../../services/api";
+import { uploadFile } from "../../utils/upload";
 
 export default function TeacherLectures() {
   const [lectures, setLectures] = useState<any[]>([]);
@@ -58,13 +59,8 @@ export default function TeacherLectures() {
   const handleUploadVideo = async (id: number, file: File) => {
     setUploadingId(id);
     try {
-      // 1. Upload file
-      const formData = new FormData();
-      formData.append("file", file);
-      const uploadRes = await api.post("/admin/upload", formData, {
-        headers: { "Content-Type": undefined }
-      });
-      const url = uploadRes.data.url;
+      // 1. Upload file using our utility helper
+      const url = await uploadFile(file);
 
       // 2. Add recording to lecture
       await api.post(`/admin/lectures/${id}/recordings`, { recording_url: url });
@@ -91,12 +87,7 @@ export default function TeacherLectures() {
     const file = fileInput.files[0];
     setSaving(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const uploadRes = await api.post("/admin/upload", formData, {
-        headers: { "Content-Type": undefined }
-      });
-      const url = uploadRes.data.url;
+      const url = await uploadFile(file);
 
       await api.post(`/admin/lectures/${resourceLectureId}/recordings`, { recording_url: url });
       fetchData();
