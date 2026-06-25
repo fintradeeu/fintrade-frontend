@@ -481,11 +481,14 @@ export default function MarketingLayout() {
         >
           {/* Drawer Header */}
           <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-            <div className="h-[48px] w-[140px] flex items-center justify-start">
+            <div className="w-[150px] flex items-center justify-start">
               <img
                 src="/TheFinTrade Final Logo (1).png"
                 alt="FinTrade"
-                className="h-10 w-auto object-contain"
+                className="w-full h-auto block"
+                style={{
+                  imageRendering: "-webkit-optimize-contrast",
+                }}
               />
             </div>
             <button
