@@ -392,15 +392,13 @@ export default function MarketingLayout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ overflow: "visible" }}>
           <div className="flex items-center justify-between h-24" style={{ overflow: "visible" }}>
             {/* LOGO AREA */}
-            <div className="flex-shrink-0 flex items-center" style={{ width: "350px", overflow: "visible" }}>
-              <Link to="/" className="flex items-center" style={{ overflow: "visible" }}>
+            <div className="flex-shrink-0 flex items-center w-[130px] xs:w-[160px] sm:w-[320px]">
+              <Link to="/" className="flex items-center">
                 <img
                   src="/TheFinTrade Final Logo (1).png"
                   alt="FinTrade"
+                  className="w-full h-auto block"
                   style={{
-                    width: "320px",
-                    height: "auto",
-                    display: "block",
                     imageRendering: "-webkit-optimize-contrast",
                   }}
                 />
