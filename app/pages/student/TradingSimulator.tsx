@@ -74,7 +74,7 @@ export default function TradingSimulator() {
               "timezone": "Asia/Kolkata",
               "theme": "light",
               "style": "1",
-              "locale": "in",
+              "locale": "en",
               "enable_publishing": false,
               "hide_top_toolbar": false,
               "save_image": false,

@@ -13,8 +13,8 @@ const fallbackTickers = [
   { label: "INFOSYS", value: "1,450.20", change: "+15.10", pct: "+1.1%", up: true, symbol: "NSE:INFY" },
   { label: "GOLD", value: "$2,350.00", change: "+15.20", pct: "+0.65%", up: true, symbol: "TVC:GOLD" },
   { label: "SILVER", value: "$63.50", change: "-1.80", pct: "-2.75%", up: false, symbol: "TVC:SILVER" },
-  { label: "CRUDE OIL", value: "$78.50", change: "-0.25", pct: "-0.32%", up: false, symbol: "NYMEX:CL1!" },
-  { label: "USD/INR", value: "83.45", change: "-0.09", pct: "-0.1%", up: false, symbol: "FX_IDC:USDINR" },
+  { label: "CRUDE OIL", value: "$78.50", change: "-0.25", pct: "-0.32%", up: false, symbol: "TVC:USOIL" },
+  { label: "USD/INR", value: "83.45", change: "-0.09", pct: "-0.1%", up: false, symbol: "FX:USDINR" },
   { label: "BITCOIN", value: "$61,250.00", change: "+1,200.00", pct: "+1.90%", up: true, symbol: "CRYPTO:BTCUSD" }
 ];
 
@@ -35,8 +35,8 @@ export default function TickerStrip() {
       { twelveSymbol: "INFY", label: "INFOSYS", isUSD: false, symbol: "NSE:INFY" },
       { twelveSymbol: "XAU/USD", label: "GOLD", isUSD: true, symbol: "TVC:GOLD" },
       { twelveSymbol: "XAG/USD", label: "SILVER", isUSD: true, symbol: "TVC:SILVER" },
-      { twelveSymbol: "WTI/USD", label: "CRUDE OIL", isUSD: true, symbol: "NYMEX:CL1!" },
-      { twelveSymbol: "USD/INR", label: "USD/INR", isUSD: false, symbol: "FX_IDC:USDINR" },
+      { twelveSymbol: "WTI/USD", label: "CRUDE OIL", isUSD: true, symbol: "TVC:USOIL" },
+      { twelveSymbol: "USD/INR", label: "USD/INR", isUSD: false, symbol: "FX:USDINR" },
       { twelveSymbol: "BTC/USD", label: "BITCOIN", isUSD: true, symbol: "CRYPTO:BTCUSD" }
     ];
 
@@ -168,7 +168,7 @@ export default function TickerStrip() {
             "timezone": "Asia/Kolkata",
             "theme": "dark",
             "style": "1",
-            "locale": "in",
+            "locale": "en",
             "enable_publishing": false,
             "backgroundColor": "rgba(18, 18, 18, 1)",
             "hide_top_toolbar": false,
