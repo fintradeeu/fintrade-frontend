@@ -36,6 +36,8 @@ export default function TradingSimulator() {
   const [orderType, setOrderType] = useState<"buy" | "sell">("buy");
 
   const [quantity, setQuantity] = useState("50");
+  const [stopLoss, setStopLoss] = useState("");
+  const [takeProfit, setTakeProfit] = useState("");
 
   // API state
   const [account, setAccount] = useState<any>(null);
@@ -47,6 +49,7 @@ export default function TradingSimulator() {
   const [startingAccount, setStartingAccount] = useState(false);
 
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const fetchingRef = useRef(false);
 
   useEffect(() => {
     if (selectedInstrument && selectedInstrument.tv_symbol && chartContainerRef.current) {
@@ -95,22 +98,39 @@ export default function TradingSimulator() {
     }
   }, [selectedInstrument]);
 
-  useEffect(() => {
-    loadData();
-    fetchMarketData();
-    const interval = setInterval(fetchMarketData, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
   const fetchMarketData = async () => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
     try {
       const res = await api.get("/simulator/market-data");
       setMarketData(res.data);
       setSelectedInstrument((prev: any) => prev || res.data[0]);
     } catch (err) {
       console.error("Failed to fetch market data", err);
+    } finally {
+      fetchingRef.current = false;
     }
   };
+
+  useEffect(() => {
+    loadData();
+    fetchMarketData();
+
+    let active = true;
+    const poll = async () => {
+      if (!active) return;
+      await fetchMarketData();
+      if (active) {
+        setTimeout(poll, 5000);
+      }
+    };
+
+    const timeoutId = setTimeout(poll, 5000);
+    return () => {
+      active = false;
+      clearTimeout(timeoutId);
+    };
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -161,7 +181,11 @@ export default function TradingSimulator() {
         side: orderType,
         quantity: parseFloat(quantity),
         price: selectedInstrument.price,
+        stop_loss: stopLoss ? parseFloat(stopLoss) : undefined,
+        take_profit: takeProfit ? parseFloat(takeProfit) : undefined,
       });
+      setStopLoss("");
+      setTakeProfit("");
       await loadData(); // Refresh positions and trades
     } catch (err: any) {
       alert("Order failed: " + (err.response?.data?.detail || err.message));
@@ -200,7 +224,67 @@ export default function TradingSimulator() {
   if (loading || marketData.length === 0) {
     return (
       <DashboardLayout role="student">
-        <div className="text-center py-12 text-[#0B2A5B]/60">Loading simulator...</div>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
+          <style>{`
+            @keyframes candleFluctuate {
+              0%, 100% {
+                transform: scaleY(0.7);
+                filter: brightness(0.95);
+              }
+              50% {
+                transform: scaleY(1.3);
+                filter: brightness(1.15);
+              }
+            }
+            .candle-bar {
+              animation: candleFluctuate 1.5s ease-in-out infinite;
+              transform-origin: center;
+            }
+          `}</style>
+          
+          {/* Pulsing, fluctuating market candlesticks only */}
+          <div className="flex items-center justify-center gap-4 h-24">
+            {/* Candle 1 (Green/Bullish) */}
+            <div 
+              className="flex flex-col items-center justify-center candle-bar" 
+              style={{ animationDelay: "0ms" }}
+            >
+              <div className="w-[2px] h-3.5 bg-emerald-500 rounded-full" />
+              <div className="w-3.5 h-8 bg-emerald-500 rounded-sm shadow-md shadow-emerald-500/20" />
+              <div className="w-[2px] h-3.5 bg-emerald-500 rounded-full" />
+            </div>
+
+            {/* Candle 2 (Red/Bearish) */}
+            <div 
+              className="flex flex-col items-center justify-center candle-bar" 
+              style={{ animationDelay: "300ms" }}
+            >
+              <div className="w-[2px] h-2.5 bg-rose-500 rounded-full" />
+              <div className="w-3.5 h-6 bg-rose-500 rounded-sm shadow-md shadow-rose-500/20" />
+              <div className="w-[2px] h-4.5 bg-rose-500 rounded-full" />
+            </div>
+
+            {/* Candle 3 (Green/Bullish) */}
+            <div 
+              className="flex flex-col items-center justify-center candle-bar" 
+              style={{ animationDelay: "600ms" }}
+            >
+              <div className="w-[2px] h-4.5 bg-emerald-500 rounded-full" />
+              <div className="w-3.5 h-11 bg-emerald-500 rounded-sm shadow-md shadow-emerald-500/20" />
+              <div className="w-[2px] h-2.5 bg-emerald-500 rounded-full" />
+            </div>
+
+            {/* Candle 4 (Red/Bearish) */}
+            <div 
+              className="flex flex-col items-center justify-center candle-bar" 
+              style={{ animationDelay: "900ms" }}
+            >
+              <div className="w-[2px] h-3.5 bg-rose-500 rounded-full" />
+              <div className="w-3.5 h-5 bg-rose-500 rounded-sm shadow-md shadow-rose-500/20" />
+              <div className="w-[2px] h-3.5 bg-rose-500 rounded-full" />
+            </div>
+          </div>
+        </div>
       </DashboardLayout>
     );
   }
@@ -360,6 +444,30 @@ export default function TradingSimulator() {
                   <Input 
                     value={`${['BITCOIN', 'GOLD', 'SILVER', 'CRUDE OIL'].includes(selectedInstrument.symbol) ? '$' : '₹'}${selectedInstrument.price.toLocaleString(['BITCOIN', 'GOLD', 'SILVER', 'CRUDE OIL'].includes(selectedInstrument.symbol) ? 'en-US' : 'en-IN')}`} 
                     disabled 
+                    className="mt-2 bg-[#F4F1EA] border-[#0B2A5B]/20" 
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="stopLoss">Stop Loss (Price)</Label>
+                  <Input 
+                    id="stopLoss" 
+                    type="number" 
+                    step="any" 
+                    placeholder="Mandatory for this challenge" 
+                    value={stopLoss} 
+                    onChange={(e) => setStopLoss(e.target.value)} 
+                    className="mt-2 bg-[#F4F1EA] border-[#0B2A5B]/20" 
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="takeProfit">Take Profit (Price)</Label>
+                  <Input 
+                    id="takeProfit" 
+                    type="number" 
+                    step="any" 
+                    placeholder="Optional" 
+                    value={takeProfit} 
+                    onChange={(e) => setTakeProfit(e.target.value)} 
                     className="mt-2 bg-[#F4F1EA] border-[#0B2A5B]/20" 
                   />
                 </div>
