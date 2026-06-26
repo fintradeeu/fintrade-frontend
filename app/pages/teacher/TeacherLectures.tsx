@@ -21,6 +21,7 @@ export default function TeacherLectures() {
   });
 
   const [uploadingId, setUploadingId] = useState<number | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
 
   // Resource Upload Modal State
   const [showResourceModal, setShowResourceModal] = useState(false);
@@ -58,9 +59,12 @@ export default function TeacherLectures() {
 
   const handleUploadVideo = async (id: number, file: File) => {
     setUploadingId(id);
+    setUploadProgress(0);
     try {
       // 1. Upload file using our utility helper
-      const url = await uploadFile(file);
+      const url = await uploadFile(file, (percent) => {
+        setUploadProgress(percent);
+      });
 
       // 2. Add recording to lecture
       await api.post(`/admin/lectures/${id}/recordings`, { recording_url: url });
@@ -70,6 +74,7 @@ export default function TeacherLectures() {
       alert("Error uploading video: " + (err.response?.data?.detail || err.message));
     } finally {
       setUploadingId(null);
+      setUploadProgress(0);
     }
   };
 
@@ -86,8 +91,11 @@ export default function TeacherLectures() {
 
     const file = fileInput.files[0];
     setSaving(true);
+    setUploadProgress(0);
     try {
-      const url = await uploadFile(file);
+      const url = await uploadFile(file, (percent) => {
+        setUploadProgress(percent);
+      });
 
       await api.post(`/admin/lectures/${resourceLectureId}/recordings`, { recording_url: url });
       fetchData();
@@ -98,6 +106,7 @@ export default function TeacherLectures() {
       alert("Error uploading resource: " + (err.response?.data?.detail || err.message));
     } finally {
       setSaving(false);
+      setUploadProgress(0);
     }
   };
 
@@ -232,8 +241,22 @@ export default function TeacherLectures() {
                   />
                   <Button size="sm" variant="outline" disabled={uploadingId === l.id} className="w-full border-dashed border-[#0B2A5B]/40 text-[#0B2A5B]">
                     <Upload size={14} className="mr-2" />
-                    {uploadingId === l.id ? "Uploading..." : "Upload Video"}
+                    {uploadingId === l.id ? `Uploading (${uploadProgress}%)...` : "Upload Video"}
                   </Button>
+                  {uploadingId === l.id && (
+                    <div className="mt-2 space-y-1">
+                      <div className="flex justify-between text-xs text-[#0B2A5B]">
+                        <span className="font-medium animate-pulse">Uploading video...</span>
+                        <span className="font-semibold">{uploadProgress}%</span>
+                      </div>
+                      <div className="w-full bg-[#0B2A5B]/10 rounded-full h-1.5 overflow-hidden">
+                        <div 
+                          className="bg-[#0B2A5B] h-full transition-all duration-300 ease-out" 
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -288,8 +311,22 @@ export default function TeacherLectures() {
                 <label className="text-sm font-medium text-[#0B2A5B]">File *</label>
                 <input required type="file" name="resource_file" className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" />
               </div>
+              {saving && (
+                <div className="mt-2 space-y-1">
+                  <div className="flex justify-between text-xs text-[#0B2A5B]">
+                    <span className="font-medium animate-pulse">Uploading file to server...</span>
+                    <span className="font-semibold">{uploadProgress}%</span>
+                  </div>
+                  <div className="w-full bg-[#0B2A5B]/10 rounded-full h-1.5 overflow-hidden">
+                    <div 
+                      className="bg-[#0B2A5B] h-full transition-all duration-300 ease-out" 
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
               <Button type="submit" disabled={saving || !resourceLectureId} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">
-                {saving ? "Uploading..." : "Upload Resource"}
+                {saving ? `Uploading (${uploadProgress}%)...` : "Upload Resource"}
               </Button>
             </form>
           </Card>

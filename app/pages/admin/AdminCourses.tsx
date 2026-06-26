@@ -38,6 +38,7 @@ export default function AdminCourses() {
 
   const [saving, setSaving] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
 
   // Edit mode tracking (null = create, number = editing that ID)
   const [editCourseId, setEditCourseId] = useState<number | null>(null);
@@ -65,13 +66,17 @@ export default function AdminCourses() {
 
   const handleMediaUpload = async (file: File) => {
     setUploadingMedia(true);
+    setUploadProgress(0);
     try {
-      const url = await uploadFile(file);
+      const url = await uploadFile(file, (percent) => {
+        setUploadProgress(percent);
+      });
       setNewLesson(prev => ({ ...prev, video_url: url }));
     } catch (err: any) {
       alert("Upload failed: " + (err.response?.data?.detail || err.message));
     } finally {
       setUploadingMedia(false);
+      setUploadProgress(0);
     }
   };
 
@@ -671,7 +676,7 @@ export default function AdminCourses() {
                       />
                       <div className="relative overflow-hidden inline-block shrink-0">
                         <Button type="button" variant="outline" className="border-[#0B2A5B]/20 bg-gray-50 text-[#0B2A5B] pointer-events-none" disabled={uploadingMedia}>
-                          <Upload size={16} className="mr-2" /> {uploadingMedia ? "Uploading..." : "Upload"}
+                          <Upload size={16} className="mr-2" /> {uploadingMedia ? `Uploading (${uploadProgress}%)...` : "Upload"}
                         </Button>
                         <input 
                           type="file" 
@@ -682,6 +687,20 @@ export default function AdminCourses() {
                         />
                       </div>
                     </div>
+                    {uploadingMedia && (
+                      <div className="mt-2 space-y-1">
+                        <div className="flex justify-between text-xs text-[#0B2A5B]">
+                          <span className="font-medium animate-pulse">Uploading file to server...</span>
+                          <span className="font-semibold">{uploadProgress}%</span>
+                        </div>
+                        <div className="w-full bg-[#0B2A5B]/10 rounded-full h-2 overflow-hidden">
+                          <div 
+                            className="bg-[#0B2A5B] h-full transition-all duration-300 ease-out" 
+                            style={{ width: `${uploadProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
