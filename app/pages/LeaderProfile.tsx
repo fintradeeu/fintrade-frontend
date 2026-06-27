@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router";
+import { useParams, Link, useLocation } from "react-router";
 import { ArrowLeft } from "lucide-react";
 import { leaders as staticLeaders } from "../data/leaders";
 import api from "../services/api";
@@ -35,8 +35,12 @@ const getInitials = (name?: string) => {
 
 export default function LeaderProfile() {
   const { id } = useParams();
+  const location = useLocation();
   const [leader, setLeader] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isLeadership, setIsLeadership] = useState(() => {
+    return location.state?.from === "leadership";
+  });
 
   useEffect(() => {
     Promise.all([
@@ -45,6 +49,10 @@ export default function LeaderProfile() {
     ]).then(([landingRes, advisorsRes]) => {
       const leadersList = landingRes?.data?.leadership || [];
       const advisorsList = advisorsRes?.data?.advisors || [];
+
+      const isLeader = leadersList.some((l: any) => getLeaderId(l) === id);
+      const isAdvisor = advisorsList.some((l: any) => getLeaderId(l) === id);
+
       const combined = [...leadersList, ...advisorsList];
 
       let found: any = combined.find((l: any) => getLeaderId(l) === id);
@@ -77,6 +85,18 @@ export default function LeaderProfile() {
           tags: parsedTags,
           initials: found.initials || (staticFound && staticFound.initials) || getInitials(found.name)
         });
+
+        if (location.state?.from) {
+          setIsLeadership(location.state.from === "leadership");
+        } else {
+          if (isLeader) {
+            setIsLeadership(true);
+          } else if (isAdvisor) {
+            setIsLeadership(false);
+          } else if (staticFound) {
+            setIsLeadership(true);
+          }
+        }
       }
     })
     .catch((err) => {
@@ -92,12 +112,18 @@ export default function LeaderProfile() {
           tags: Array.isArray(found.tags) ? found.tags : [],
           initials: found.initials || getInitials(found.name)
         });
+
+        if (location.state?.from) {
+          setIsLeadership(location.state.from === "leadership");
+        } else {
+          setIsLeadership(true);
+        }
       }
     })
     .finally(() => {
       setLoading(false);
     });
-  }, [id]);
+  }, [id, location.state]);
 
   if (loading) {
     return (
@@ -112,8 +138,8 @@ export default function LeaderProfile() {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <h1 className="text-3xl font-black text-gray-900 mb-4">Leader Not Found</h1>
-        <Link to="/our-advisors" className="text-[#D50032] font-bold hover:underline flex items-center gap-2">
-          <ArrowLeft className="w-4 h-4" /> Back to Advisors
+        <Link to={isLeadership ? "/about#leadership" : "/our-advisors"} className="text-[#D50032] font-bold hover:underline flex items-center gap-2">
+          <ArrowLeft className="w-4 h-4" /> Back to {isLeadership ? "Leadership" : "Advisors"}
         </Link>
       </div>
     );
@@ -124,9 +150,9 @@ export default function LeaderProfile() {
   return (
     <div className="bg-white min-h-screen relative pt-24 pb-20 select-none">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link to="/our-advisors" className="inline-flex items-center gap-2 text-gray-500 hover:text-[#D50032] transition-colors font-bold text-sm mb-10 group">
+        <Link to={isLeadership ? "/about#leadership" : "/our-advisors"} className="inline-flex items-center gap-2 text-gray-500 hover:text-[#D50032] transition-colors font-bold text-sm mb-10 group">
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          Back to Advisors
+          Back to {isLeadership ? "Leadership" : "Advisors"}
         </Link>
 
         <div className="flex flex-col md:flex-row gap-12 lg:gap-20 items-start">

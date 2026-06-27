@@ -146,6 +146,7 @@ export default function OurAdvisors() {
 
                 <Link 
                   to={`/leader/${leaderId}`} 
+                  state={{ from: "advisors" }}
                   className="text-[#D50032] font-black text-xs tracking-wider uppercase flex items-center justify-center gap-1 group-hover:gap-2 transition-all w-full py-3.5 rounded-xl bg-gray-50 group-hover:bg-[#FFF0F2] mt-auto"
                 >
                   Read Full Profile <ArrowRight className="w-3.5 h-3.5" />

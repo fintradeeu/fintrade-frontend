@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Users, TrendingUp, Target, Award, ArrowRight, Shield, UserCheck, BookOpen, LineChart, ChevronRight } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -43,8 +43,21 @@ function ScrollReveal({
 }
 
 export default function AboutUs() {
+  const location = useLocation();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [vmSlide, setVmSlide] = useState(0);
+
+  useEffect(() => {
+    if (location.hash === "#leadership") {
+      const timer = setTimeout(() => {
+        const element = document.getElementById("leadership");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [location.hash]);
   const [dynamicSlides, setDynamicSlides] = useState<string[]>([]);
   const [dynamicStats, setDynamicStats] = useState<any[]>([]);
   const [dynamicText, setDynamicText] = useState<string[]>([]);
@@ -313,7 +326,7 @@ export default function AboutUs() {
 
         {/* Leadership Section */}
         <ScrollReveal>
-          <div className="border-t border-gray-100 pt-12">
+          <div id="leadership" className="border-t border-gray-100 pt-12">
             <ExpertProfile leaders={dynamicLeaders} />
           </div>
         </ScrollReveal>
