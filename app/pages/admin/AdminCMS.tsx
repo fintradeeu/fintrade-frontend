@@ -682,18 +682,21 @@ export default function AdminCMS() {
             <div className="space-y-4">
               {(config.carousel_slides || []).map((slide, idx) => (
                 <div key={idx} className="p-5 rounded-2xl bg-gray-50 border border-gray-100 relative">
-                  <span className="absolute top-4 right-4 bg-gray-200 text-gray-600 px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-wider">Card #{idx + 1}</span>
-                  <button
-                    onClick={async () => {
-                      if (!(await confirmPopup("Remove this carousel card?"))) return;
-                      const list = [...(config.carousel_slides || [])];
-                      list.splice(idx, 1);
-                      setConfig(p => ({ ...p, carousel_slides: list }));
-                    }}
-                    className="absolute top-12 right-4 text-xs text-red-500 hover:text-red-700 flex items-center gap-1 font-semibold"
-                  >
-                    <Trash2 size={14} /> Remove
-                  </button>
+                  <div className="absolute top-4 right-4 flex items-center gap-3">
+                    <span className="bg-gray-200 text-gray-600 px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-wider">Card #{idx + 1}</span>
+                    <button
+                      onClick={async () => {
+                        if (!(await confirmPopup("Remove this carousel card?"))) return;
+                        const list = [...(config.carousel_slides || [])];
+                        list.splice(idx, 1);
+                        setConfig(p => ({ ...p, carousel_slides: list }));
+                      }}
+                      className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 font-semibold transition-colors"
+                      title="Remove this card"
+                    >
+                      <Trash2 size={14} /> Remove
+                    </button>
+                  </div>
                   <div className="grid md:grid-cols-2 gap-4 max-w-4xl">
                     <div>
                       <Label className="text-xs">Title</Label>
