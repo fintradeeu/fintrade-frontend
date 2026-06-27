@@ -13,10 +13,10 @@ const getImageUrl = (path?: string) => {
 };
 
 const getLeaderId = (leader: any) => {
-  if (leader.id) return leader.id;
   if (leader.name) {
     return leader.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-");
   }
+  if (leader.id) return leader.id;
   return "";
 };
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useLocation } from "react-router";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
 import { leaders as staticLeaders } from "../data/leaders";
 import api from "../services/api";
 
@@ -15,10 +15,10 @@ const getImageUrl = (path?: string) => {
 };
 
 const getLeaderId = (leader: any) => {
-  if (leader.id) return leader.id;
   if (leader.name) {
     return leader.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-");
   }
+  if (leader.id) return leader.id;
   return "";
 };
 
@@ -33,6 +33,13 @@ const getInitials = (name?: string) => {
     .toUpperCase();
 };
 
+const truncateText = (text: string, limit: number) => {
+  if (!text || text.length <= limit) return text;
+  const truncated = text.slice(0, limit);
+  const lastSpace = truncated.lastIndexOf(" ");
+  return lastSpace > 0 ? `${truncated.slice(0, lastSpace)}...` : `${truncated}...`;
+};
+
 export default function LeaderProfile() {
   const { id } = useParams();
   const location = useLocation();
@@ -41,6 +48,11 @@ export default function LeaderProfile() {
   const [isLeadership, setIsLeadership] = useState(() => {
     return location.state?.from === "leadership";
   });
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    setIsExpanded(false);
+  }, [id]);
 
   useEffect(() => {
     Promise.all([
@@ -75,49 +87,61 @@ export default function LeaderProfile() {
             ? rawTags.split(",").map((t: string) => t.trim()).filter(Boolean)
             : [];
 
+        let resolvedIsLeadership = false;
+        if (location.state?.from) {
+          resolvedIsLeadership = location.state.from === "leadership";
+        } else {
+          if (isLeader) {
+            resolvedIsLeadership = true;
+          } else if (isAdvisor) {
+            resolvedIsLeadership = false;
+          } else if (staticFound) {
+            resolvedIsLeadership = true;
+          }
+        }
+        setIsLeadership(resolvedIsLeadership);
+
+        const resolvedBio = resolvedIsLeadership
+          ? (found.bio || found.fullBio || (staticFound && (staticFound.bio || staticFound.fullBio)) || "")
+          : (found.fullBio || found.bio || (staticFound && (staticFound.fullBio || staticFound.bio)) || "");
+
         setLeader({
           ...(staticFound || {}),
           ...found,
           id: getLeaderId(found),
           role: found.role || found.title || (staticFound && (staticFound.role || staticFound.title)) || "Leadership",
           image: imageUrl,
-          fullBio: found.fullBio || found.bio || (staticFound && (staticFound.fullBio || staticFound.bio)) || "",
+          fullBio: resolvedBio,
           tags: parsedTags,
           initials: found.initials || (staticFound && staticFound.initials) || getInitials(found.name)
         });
-
-        if (location.state?.from) {
-          setIsLeadership(location.state.from === "leadership");
-        } else {
-          if (isLeader) {
-            setIsLeadership(true);
-          } else if (isAdvisor) {
-            setIsLeadership(false);
-          } else if (staticFound) {
-            setIsLeadership(true);
-          }
-        }
       }
     })
     .catch((err) => {
       console.error("Failed to fetch leaders dynamically", err);
       const found = staticLeaders.find((l) => getLeaderId(l) === id) as any;
       if (found) {
+        let resolvedIsLeadership = false;
+        if (location.state?.from) {
+          resolvedIsLeadership = location.state.from === "leadership";
+        } else {
+          resolvedIsLeadership = true;
+        }
+        setIsLeadership(resolvedIsLeadership);
+
+        const resolvedBio = resolvedIsLeadership
+          ? (found.bio || found.fullBio || "")
+          : (found.fullBio || found.bio || "");
+
         setLeader({
           ...found,
           id: getLeaderId(found),
           role: found.role || found.title || "Leadership",
           image: found.image || "",
-          fullBio: found.fullBio || found.bio || "",
+          fullBio: resolvedBio,
           tags: Array.isArray(found.tags) ? found.tags : [],
           initials: found.initials || getInitials(found.name)
         });
-
-        if (location.state?.from) {
-          setIsLeadership(location.state.from === "leadership");
-        } else {
-          setIsLeadership(true);
-        }
       }
     })
     .finally(() => {
@@ -188,9 +212,37 @@ export default function LeaderProfile() {
               {leader.name}
             </h1>
 
-            <p className="text-lg md:text-xl text-gray-600 leading-relaxed font-medium mb-10">
-              {leader.fullBio}
-            </p>
+            {(() => {
+              const limit = 350;
+              const shouldTruncate = leader.fullBio && leader.fullBio.length > limit;
+              const displayBio = shouldTruncate && !isExpanded
+                ? truncateText(leader.fullBio, limit)
+                : leader.fullBio;
+
+              return (
+                <>
+                  <p className="text-lg md:text-xl text-gray-600 leading-relaxed font-medium mb-4 whitespace-pre-line">
+                    {displayBio}
+                  </p>
+                  {shouldTruncate && (
+                    <button
+                      onClick={() => setIsExpanded(!isExpanded)}
+                      className="text-[#D50032] hover:text-[#b3002a] font-bold inline-flex items-center gap-1 transition-colors text-base mb-8 focus:outline-none group animate-fadeIn"
+                    >
+                      {isExpanded ? (
+                        <>
+                          Read Less <ChevronUp className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
+                        </>
+                      ) : (
+                        <>
+                          Read More <ChevronDown className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
+                        </>
+                      )}
+                    </button>
+                  )}
+                </>
+              );
+            })()}
 
             <div>
               <h3 className="font-extrabold text-slate-800 mb-4 text-xs tracking-wider uppercase">
