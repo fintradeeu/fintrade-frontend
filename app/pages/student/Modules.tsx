@@ -5,7 +5,7 @@ import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Progress } from "../../components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
-import { FileText, Play, FileAudio, FileVideo, Download, CheckCircle, Lock, Volume2, Settings, HelpCircle, CheckCircle2, Clock, BookOpen, ChevronLeft } from "lucide-react";
+import { FileText, Play, FileAudio, FileVideo, Download, Eye, X, CheckCircle, Lock, Volume2, Settings, HelpCircle, CheckCircle2, Clock, BookOpen, ChevronLeft } from "lucide-react";
 import { Input } from "../../components/ui/input";
 
 // ── Inline quiz renderer for quiz-type lessons ──
@@ -132,6 +132,7 @@ export default function Modules() {
   const [generatingAudio, setGeneratingAudio] = useState(false);
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<number>>(new Set());
   const [videoPolicies, setVideoPolicies] = useState<any[]>([]);
+  const [previewResource, setPreviewResource] = useState<{ title: string; type: string; url: string } | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -487,6 +488,8 @@ export default function Modules() {
                               ref={mediaRef}
                               src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || ''}${activeLesson.video_url}`} 
                               controls 
+                              controlsList="nodownload"
+                              onContextMenu={(e) => e.preventDefault()}
                               className="w-full h-full" 
                               onEnded={() => markCompleted(activeLesson.id)}
                             />
@@ -501,6 +504,8 @@ export default function Modules() {
                             ref={mediaRef}
                             src={activeLesson.video_url.startsWith('http') ? activeLesson.video_url : `${api.defaults.baseURL || ''}${activeLesson.video_url}`} 
                             controls 
+                            controlsList="nodownload"
+                            onContextMenu={(e) => e.preventDefault()}
                             className="w-full max-w-md" 
                             onEnded={() => markCompleted(activeLesson.id)}
                           />
@@ -774,26 +779,38 @@ export default function Modules() {
                               );
                             }
 
-                            return resources.map((res, i) => (
-                              <Card key={i} className="p-4 bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-100 shadow-sm">
-                                      <FileText size={18} />
+                            return resources.map((res, i) => {
+                              const fullUrl = res.url.startsWith('http') ? res.url : `${api.defaults.baseURL}${res.url}`;
+                              const isVideo = res.type === "Video";
+                              const isAudio = res.type === "Audio";
+                              const IconEl = isVideo ? FileVideo : isAudio ? FileAudio : FileText;
+                              const iconBg = isVideo ? "bg-blue-50 text-blue-600 border-blue-100"
+                                           : isAudio ? "bg-purple-50 text-purple-600 border-purple-100"
+                                           : "bg-orange-50 text-orange-600 border-orange-100";
+                              return (
+                                <Card key={i} className="p-4 bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center border shadow-sm ${iconBg}`}>
+                                        <IconEl size={18} />
+                                      </div>
+                                      <div>
+                                        <p className="font-bold text-[#0B2A5B] text-sm">{res.title}</p>
+                                        <p className="text-xs text-slate-400 font-semibold">{res.type} Study Resource</p>
+                                      </div>
                                     </div>
-                                    <div>
-                                      <p className="font-bold text-[#0B2A5B] text-sm">{res.title}</p>
-                                      <p className="text-xs text-slate-400 font-semibold">{res.type} Study Resource</p>
-                                    </div>
-                                  </div>
-                                  <a href={res.url.startsWith('http') ? res.url : `${api.defaults.baseURL}${res.url}`} target="_blank" rel="noreferrer">
-                                    <Button size="sm" variant="outline" className="border-slate-200 text-[#0B2A5B] bg-white hover:bg-slate-50 rounded-xl font-bold shadow-sm">
-                                      <Download size={14} className="mr-1.5" />Download
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="border-[#D50032] text-[#D50032] bg-white hover:bg-red-50 rounded-xl font-bold shadow-sm"
+                                      onClick={() => setPreviewResource({ title: res.title, type: res.type, url: fullUrl })}
+                                    >
+                                      <Eye size={14} className="mr-1.5" />Preview
                                     </Button>
-                                  </a>
-                                </div>
-                              </Card>
-                            ));
+                                  </div>
+                                </Card>
+                              );
+                            });
                           })()}
                         </div>
                       </TabsContent>
@@ -828,6 +845,60 @@ export default function Modules() {
               <p className="text-center text-slate-400 font-medium py-12">Select a course to view modules</p>
             )}
           </Card>
+        </div>
+      )}
+
+      {/* In-app Preview Modal with Download Protections */}
+      {previewResource && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-100">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <div>
+                <h3 className="font-bold text-[#0B2A5B] text-base">{previewResource.title}</h3>
+                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mt-0.5">{previewResource.type} Preview</p>
+              </div>
+              <button
+                onClick={() => setPreviewResource(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 bg-slate-950 flex items-center justify-center flex-1 min-h-[300px]">
+              {previewResource.type === "Video" ? (
+                <video
+                  src={previewResource.url}
+                  controls
+                  controlsList="nodownload"
+                  onContextMenu={(e) => e.preventDefault()}
+                  className="w-full max-h-[60vh] rounded-xl outline-none"
+                  autoPlay
+                />
+              ) : previewResource.type === "Audio" ? (
+                <div className="w-full max-w-md py-12 px-6 bg-white rounded-xl shadow-inner flex flex-col items-center">
+                  <FileAudio size={48} className="text-[#0B2A5B] mb-4" />
+                  <audio
+                    src={previewResource.url}
+                    controls
+                    controlsList="nodownload"
+                    onContextMenu={(e) => e.preventDefault()}
+                    className="w-full"
+                    autoPlay
+                  />
+                </div>
+              ) : (
+                /* PDF Preview */
+                <iframe
+                  src={previewResource.url}
+                  className="w-full h-[60vh] rounded-xl bg-white border-0"
+                  title={previewResource.title}
+                />
+              )}
+            </div>
+          </div>
         </div>
       )}
     </DashboardLayout>

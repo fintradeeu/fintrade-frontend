@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router";
 import api from "../services/api";
-import { Play, TrendingUp, Award, Users, BookOpen, LineChart, Video, CheckCircle, Star, ArrowRight, BarChart3, Brain, Target, Trophy, X, FileText, Search, Phone, Download, Instagram, Youtube, Linkedin, Twitter, Facebook, ChevronRight, ChevronLeft, ChevronDown, Shield, UserCheck, Monitor, Wifi, Activity, ClipboardCheck, GitBranch, Cpu, Clock } from "lucide-react";
+import { Play, TrendingUp, Award, Users, BookOpen, LineChart, Video, CheckCircle, Star, ArrowRight, BarChart3, Brain, Target, Trophy, X, FileText, Search, Phone, Download, Instagram, Youtube, Linkedin, Twitter, Facebook, ChevronRight, ChevronLeft, ChevronDown, Shield, UserCheck, Monitor, Wifi, Activity, ClipboardCheck, GitBranch, Cpu, Clock, Mail, MapPin } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../components/ui/dialog";
@@ -39,6 +39,20 @@ const getBgImageUrl = (path?: string) => {
   return getImageUrl(path);
 };
 
+const officeCountries = [
+  { code: "in", logo_url: "", country: "India", address: "10th Floor, Shivalik Complex, Panchvati Circle, Ahmedabad, Gujarat 380006", email: "india@thefintrade.com", phone: "+91 92746 75947", contact: "Mansi Patel" },
+  { code: "ae", logo_url: "", country: "UAE", address: "Business Bay, Dubai, United Arab Emirates", email: "uae@thefintrade.com", phone: "+971 52 418 9042", contact: "Ahmed Khan" },
+  { code: "gb", logo_url: "", country: "United Kingdom", address: "Canary Wharf, London E14, United Kingdom", email: "uk@thefintrade.com", phone: "+44 20 4571 8840", contact: "Oliver Bennett" },
+  { code: "us", logo_url: "", country: "United States", address: "Wall Street, New York, NY 10005, United States", email: "usa@thefintrade.com", phone: "+1 212 555 0186", contact: "Sophia Carter" },
+  { code: "ca", logo_url: "", country: "Canada", address: "Bay Street, Toronto, ON M5J, Canada", email: "canada@thefintrade.com", phone: "+1 416 555 0148", contact: "Liam Martin" },
+  { code: "au", logo_url: "", country: "Australia", address: "George Street, Sydney NSW 2000, Australia", email: "australia@thefintrade.com", phone: "+61 2 8015 6820", contact: "Emily Wilson" },
+  { code: "sg", logo_url: "", country: "Singapore", address: "Marina Bay Financial Centre, Singapore 018981", email: "singapore@thefintrade.com", phone: "+65 3159 2147", contact: "Wei Tan" },
+  { code: "de", logo_url: "", country: "Germany", address: "Taunusanlage, Frankfurt am Main 60329, Germany", email: "germany@thefintrade.com", phone: "+49 69 2475 0190", contact: "Lukas Weber" },
+  { code: "fr", logo_url: "", country: "France", address: "La Defense, Paris 92800, France", email: "france@thefintrade.com", phone: "+33 1 89 71 2044", contact: "Camille Laurent" },
+  { code: "jp", logo_url: "", country: "Japan", address: "Marunouchi, Chiyoda-ku, Tokyo 100-0005, Japan", email: "japan@thefintrade.com", phone: "+81 3 4578 9120", contact: "Kenji Sato" },
+  { code: "za", logo_url: "", country: "South Africa", address: "Sandton Financial District, Johannesburg 2196, South Africa", email: "africa@thefintrade.com", phone: "+27 10 500 7812", contact: "Aisha Naidoo" },
+];
+
 // Interactive Cursor Glow
 function CursorGlow() {
   return null;
@@ -48,6 +62,87 @@ function CursorGlow() {
 // Dynamic "Popping" Ambient Glow
 function AmbientGlow() {
   return null;
+}
+
+function OfficePresenceStrip({ offices = officeCountries }: { offices?: typeof officeCountries }) {
+  const getOfficeLogo = (office: any, size = 40) => {
+    if (office.logo_url) return getImageUrl(office.logo_url);
+    return `https://flagcdn.com/w${size}/${(office.code || "in").toLowerCase()}.png`;
+  };
+
+  return (
+    <div className="relative z-[80] mt-5 left-1/2 w-screen -translate-x-1/2 overflow-visible border-y border-white/10 bg-[#121212] shadow-[0_12px_32px_rgba(0,0,0,0.25)]">
+      <div className="overflow-visible">
+        <div className="flex w-full items-center gap-0 px-1 py-2">
+          <div className="flex h-5 w-[132px] flex-shrink-0 items-center gap-1.5 border-r border-white/15 px-2.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#D50032] shadow-[0_0_10px_#D50032]" />
+            <span className="whitespace-nowrap text-[9px] font-black uppercase tracking-[0.18em] text-white/65">
+              Global Offices
+            </span>
+          </div>
+            {offices.map((office, index) => (
+              <div
+                key={office.country}
+                className="group relative flex h-5 min-w-0 flex-1 items-center justify-center gap-1 border-r border-white/15 px-0.5 text-left transition-opacity duration-200 hover:opacity-100"
+              >
+                <button
+                  type="button"
+                  className="h-5 w-6 flex-shrink-0 overflow-hidden rounded-[3px] bg-white shadow-sm ring-1 ring-white/20 transition-transform duration-200 group-hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#D50032]"
+                  aria-label={`${office.country} office details`}
+                >
+                  <img
+                    src={getOfficeLogo(office, 40)}
+                    alt={`${office.country} flag`}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                </button>
+                <span className="min-w-0 whitespace-nowrap text-[10px] font-extrabold text-white/85 2xl:text-[11px]">
+                  {office.country}
+                </span>
+
+                <div
+                  className={`pointer-events-none absolute bottom-[calc(100%+10px)] z-[999] w-72 rounded-xl border border-white/12 bg-[#101827]/98 p-4 text-left opacity-0 shadow-[0_24px_60px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-all duration-300 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100 ${index < 2 ? "left-0" : index > officeCountries.length - 3 ? "right-0" : "left-1/2 -translate-x-1/2 group-hover:-translate-x-1/2 group-focus-within:-translate-x-1/2"} translate-y-2`}
+                >
+                  <div className="mb-3 flex items-center gap-2 border-b border-white/10 pb-3">
+                    <span className="h-8 w-11 overflow-hidden rounded-md bg-white ring-1 ring-white/20">
+                      <img
+                        src={getOfficeLogo(office, 80)}
+                        alt={`${office.country} flag`}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    </span>
+                    <div>
+                      <p className="text-sm font-black text-white">{office.country} Office</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#D50032]">TheFinTrade network</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2.5 text-xs font-semibold text-white/72">
+                    <p className="flex gap-2 leading-relaxed">
+                      <MapPin className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-[#D50032]" />
+                      <span>{office.address}</span>
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <Mail className="h-3.5 w-3.5 flex-shrink-0 text-[#D50032]" />
+                      <span>{office.email}</span>
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <Phone className="h-3.5 w-3.5 flex-shrink-0 text-[#D50032]" />
+                      <span>{office.phone}</span>
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <UserCheck className="h-3.5 w-3.5 flex-shrink-0 text-[#D50032]" />
+                      <span>{office.contact}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // Reusable Framer Motion Scroll Reveal Component
@@ -658,6 +753,7 @@ export default function MarketingHome() {
   const [emiConfig, setEmiConfig] = useState<any>({});
   const [certConfig, setCertConfig] = useState<any>({});
   const [liveClasses, setLiveClasses] = useState<any[]>([]);
+  const [globalOffices, setGlobalOffices] = useState<any[]>(officeCountries);
 
   // States and refs for premium mobile autoslide behavior
   const coursesContainerRef = useRef<HTMLDivElement>(null);
@@ -837,6 +933,9 @@ export default function MarketingHome() {
           if (res.data.emi) setEmiConfig(res.data.emi);
           if (res.data.certificate) setCertConfig(res.data.certificate);
           if (res.data.live_classes) setLiveClasses(res.data.live_classes);
+          if (Array.isArray(res.data.global_offices) && res.data.global_offices.length > 0) {
+            setGlobalOffices(res.data.global_offices);
+          }
           if (res.data.showcase_videos && res.data.showcase_videos.length > 0) {
             setShowcaseVideos(res.data.showcase_videos);
           }
@@ -1057,7 +1156,7 @@ export default function MarketingHome() {
         {/* Hero Section (Premium Dark Integrated Theme) */}
         {sectionVisibility.show_hero_slider !== false && (
           <section
-            className="relative pt-6 pb-8 md:pt-10 md:pb-10 overflow-hidden select-none bg-[#0b0f19] text-white"
+            className="relative pt-6 pb-0 md:pt-10 md:pb-0 overflow-visible select-none bg-[#0b0f19] text-white"
             style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }}
           >
             {/* Auto Slider Background */}
@@ -1213,6 +1312,8 @@ export default function MarketingHome() {
                   </div>
 
                 </div>
+
+                <OfficePresenceStrip offices={globalOffices} />
 
               </ScrollReveal>
             </div>

@@ -7,7 +7,7 @@ import { Label } from "../../components/ui/label";
 import {
   Megaphone, Trash2, Plus, Save, RefreshCw, Globe, Phone, Video,
   Star, BookOpen, CheckCircle2, XCircle, LayoutTemplate, Link as LinkIcon,
-  AlertTriangle, Info, Users, Award, TrendingUp, Layers, Newspaper, Flame
+  AlertTriangle, Info, Users, Award, TrendingUp, Layers, Newspaper, Flame, Mail, MapPin
 } from "lucide-react";
 import api from "../../services/api";
 import { confirmPopup } from "../../utils/popup";
@@ -107,6 +107,16 @@ interface HeroButtonsConfig {
   btn3_file_url: string;
 }
 
+interface GlobalOfficeItem {
+  code: string;
+  logo_url?: string;
+  country: string;
+  address: string;
+  email: string;
+  phone: string;
+  contact: string;
+}
+
 interface CarouselSlideItem {
   title: string;
   subtitle: string;
@@ -200,6 +210,7 @@ interface LandingConfig {
   hero_buttons?: HeroButtonsConfig;
   carousel_slides?: CarouselSlideItem[];
   live_classes?: LiveClassItem[];
+  global_offices?: GlobalOfficeItem[];
   section_visibility?: SectionVisibilityConfig;
   emi?: EMIConfig;
   certificate?: CertificateConfig;
@@ -211,6 +222,20 @@ interface LandingConfig {
   about_us_vision?: AboutUsVisionMission;
   about_us_mission?: AboutUsVisionMission;
 }
+
+const defaultGlobalOffices: GlobalOfficeItem[] = [
+  { code: "in", logo_url: "", country: "India", address: "10th Floor, Shivalik Complex, Panchvati Circle, Ahmedabad, Gujarat 380006", email: "india@thefintrade.com", phone: "+91 92746 75947", contact: "Mansi Patel" },
+  { code: "ae", logo_url: "", country: "UAE", address: "Business Bay, Dubai, United Arab Emirates", email: "uae@thefintrade.com", phone: "+971 52 418 9042", contact: "Ahmed Khan" },
+  { code: "gb", logo_url: "", country: "United Kingdom", address: "Canary Wharf, London E14, United Kingdom", email: "uk@thefintrade.com", phone: "+44 20 4571 8840", contact: "Oliver Bennett" },
+  { code: "us", logo_url: "", country: "United States", address: "Wall Street, New York, NY 10005, United States", email: "usa@thefintrade.com", phone: "+1 212 555 0186", contact: "Sophia Carter" },
+  { code: "ca", logo_url: "", country: "Canada", address: "Bay Street, Toronto, ON M5J, Canada", email: "canada@thefintrade.com", phone: "+1 416 555 0148", contact: "Liam Martin" },
+  { code: "au", logo_url: "", country: "Australia", address: "George Street, Sydney NSW 2000, Australia", email: "australia@thefintrade.com", phone: "+61 2 8015 6820", contact: "Emily Wilson" },
+  { code: "sg", logo_url: "", country: "Singapore", address: "Marina Bay Financial Centre, Singapore 018981", email: "singapore@thefintrade.com", phone: "+65 3159 2147", contact: "Wei Tan" },
+  { code: "de", logo_url: "", country: "Germany", address: "Taunusanlage, Frankfurt am Main 60329, Germany", email: "germany@thefintrade.com", phone: "+49 69 2475 0190", contact: "Lukas Weber" },
+  { code: "fr", logo_url: "", country: "France", address: "La Defense, Paris 92800, France", email: "france@thefintrade.com", phone: "+33 1 89 71 2044", contact: "Camille Laurent" },
+  { code: "jp", logo_url: "", country: "Japan", address: "Marunouchi, Chiyoda-ku, Tokyo 100-0005, Japan", email: "japan@thefintrade.com", phone: "+81 3 4578 9120", contact: "Kenji Sato" },
+  { code: "za", logo_url: "", country: "South Africa", address: "Sandton Financial District, Johannesburg 2196, South Africa", email: "africa@thefintrade.com", phone: "+27 10 500 7812", contact: "Aisha Naidoo" },
+];
 
 // ── Sub-components ────────────────────────────────────────────────────
 
@@ -241,7 +266,7 @@ function Toast({ message, type }: { message: string; type: "success" | "error" }
 // ── Main Component ────────────────────────────────────────────────────
 
 export default function AdminCMS() {
-  const [activeTab, setActiveTab] = useState<"announcements" | "courses" | "settings" | "videos" | "benefits" | "services" | "quick_tips" | "why_choose" | "leadership" | "hero_slider" | "live_classes" | "certificate" | "emi" | "modules_timeline" | "reviews" | "articles" | "about_us">("announcements");
+  const [activeTab, setActiveTab] = useState<"announcements" | "courses" | "settings" | "videos" | "benefits" | "services" | "quick_tips" | "why_choose" | "leadership" | "hero_slider" | "global_offices" | "live_classes" | "certificate" | "emi" | "modules_timeline" | "reviews" | "articles" | "about_us">("announcements");
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   // Announcements state
@@ -461,6 +486,10 @@ export default function AdminCMS() {
     }
   };
 
+  const globalOffices = (config.global_offices && config.global_offices.length > 0)
+    ? config.global_offices
+    : defaultGlobalOffices;
+
   return (
     <DashboardLayout role="admin">
       {toast && <Toast {...toast} />}
@@ -481,6 +510,7 @@ export default function AdminCMS() {
       <div className="flex gap-2 mb-6 flex-wrap">
         <TabBtn active={activeTab === "announcements"} onClick={() => setActiveTab("announcements")} icon={<Megaphone size={16} />} label="Announcements" />
         <TabBtn active={activeTab === "hero_slider"} onClick={() => setActiveTab("hero_slider")} icon={<LayoutTemplate size={16} />} label="Section 1: Hero & Carousel" />
+        <TabBtn active={activeTab === "global_offices"} onClick={() => setActiveTab("global_offices")} icon={<Globe size={16} />} label="Global Offices" />
         <TabBtn active={activeTab === "courses"} onClick={() => setActiveTab("courses")} icon={<BookOpen size={16} />} label="Section 2: Professional Programs" />
         <TabBtn active={activeTab === "live_classes"} onClick={() => setActiveTab("live_classes")} icon={<Video size={16} />} label="Section 3: Live Classes" />
         <TabBtn active={activeTab === "videos"} onClick={() => setActiveTab("videos")} icon={<Video size={16} />} label="Section 4: Showcase Videos" />
@@ -771,6 +801,148 @@ export default function AdminCMS() {
       )}
 
       {/* ── TAB: Featured Courses ──────────────────────────────────── */}
+      {activeTab === "global_offices" && !configLoading && (
+        <div className="space-y-6">
+          <Card className="p-4 border border-blue-100 bg-blue-50/50">
+            <div className="flex items-start gap-3">
+              <Info size={18} className="text-blue-500 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-blue-700">
+                Manage the fixed <strong>Global Offices ticker</strong> shown below the hero banner. Logo URL is optional; if empty, the ticker uses the country code flag.
+              </p>
+            </div>
+          </Card>
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setConfig(p => ({ ...p, global_offices: defaultGlobalOffices }))}
+              className="border-gray-300 text-gray-700 hover:border-[#E53935] hover:text-[#E53935]"
+            >
+              <RefreshCw size={16} className="mr-2" /> Restore 11 Defaults
+            </Button>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const list = [...globalOffices, { code: "", logo_url: "", country: "", address: "", email: "", phone: "", contact: "" }];
+                  setConfig(p => ({ ...p, global_offices: list }));
+                }}
+                className="border border-[#E53935] text-[#E53935] hover:bg-[#E53935]/5"
+              >
+                <Plus size={16} className="mr-2" /> Add Office
+              </Button>
+              <Button
+                onClick={() => saveConfig({ global_offices: globalOffices })}
+                className="bg-[#E53935] text-white hover:bg-[#b71c1c]"
+              >
+                <Save size={16} className="mr-2" /> Save Global Offices
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {globalOffices.map((office, idx) => {
+              const logoPreview = office.logo_url
+                ? getImageUrl(office.logo_url)
+                : office.code
+                  ? `https://flagcdn.com/w80/${office.code.toLowerCase()}.png`
+                  : "";
+              const updateOffice = (patch: Partial<GlobalOfficeItem>) => {
+                const list = [...globalOffices];
+                list[idx] = { ...list[idx], ...patch };
+                setConfig(p => ({ ...p, global_offices: list }));
+              };
+
+              return (
+                <Card key={`${office.country}-${idx}`} className="p-5 border border-gray-100 shadow-sm">
+                  <div className="flex flex-col lg:flex-row gap-5">
+                    <div className="lg:w-44 flex-shrink-0">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="h-12 w-16 rounded-lg border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center">
+                          {logoPreview ? (
+                            <img src={logoPreview} alt={`${office.country || "Office"} logo`} className="h-full w-full object-cover" />
+                          ) : (
+                            <Globe className="h-5 w-5 text-gray-400" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-xs font-black uppercase tracking-wider text-gray-400">Office #{idx + 1}</p>
+                          <p className="text-sm font-bold text-gray-900">{office.country || "New Office"}</p>
+                        </div>
+                      </div>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          if (!e.target.files || e.target.files.length === 0) return;
+                          const formData = new FormData();
+                          formData.append("file", e.target.files[0]);
+                          try {
+                            showToast("Uploading country logo...", "success");
+                            const res = await api.post("/admin/upload", formData, {
+                              headers: { "Content-Type": "multipart/form-data" }
+                            });
+                            if (res.data?.url) updateOffice({ logo_url: res.data.url });
+                          } catch {
+                            showToast("Country logo upload failed.", "error");
+                          }
+                        }}
+                        className="text-xs cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="grid flex-1 grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                      <div>
+                        <Label className="text-xs flex items-center gap-1"><Globe size={13} /> Country Code</Label>
+                        <Input value={office.code || ""} onChange={e => updateOffice({ code: e.target.value.toLowerCase() })} placeholder="in, us, ae" className="mt-1 bg-white" />
+                      </div>
+                      <div>
+                        <Label className="text-xs flex items-center gap-1"><Globe size={13} /> Country Name</Label>
+                        <Input value={office.country || ""} onChange={e => updateOffice({ country: e.target.value })} placeholder="Country name" className="mt-1 bg-white" />
+                      </div>
+                      <div>
+                        <Label className="text-xs flex items-center gap-1"><Mail size={13} /> Email</Label>
+                        <Input value={office.email || ""} onChange={e => updateOffice({ email: e.target.value })} placeholder="office@thefintrade.com" className="mt-1 bg-white" />
+                      </div>
+                      <div>
+                        <Label className="text-xs flex items-center gap-1"><Phone size={13} /> Contact No.</Label>
+                        <Input value={office.phone || ""} onChange={e => updateOffice({ phone: e.target.value })} placeholder="+91 ..." className="mt-1 bg-white" />
+                      </div>
+                      <div>
+                        <Label className="text-xs flex items-center gap-1"><Users size={13} /> Contact Person Name</Label>
+                        <Input value={office.contact || ""} onChange={e => updateOffice({ contact: e.target.value })} placeholder="Person name" className="mt-1 bg-white" />
+                      </div>
+                      <div>
+                        <Label className="text-xs flex items-center gap-1"><Globe size={13} /> Logo URL</Label>
+                        <Input value={office.logo_url || ""} onChange={e => updateOffice({ logo_url: e.target.value })} placeholder="Optional uploaded/custom image URL" className="mt-1 bg-white text-xs" />
+                      </div>
+                      <div className="md:col-span-2 xl:col-span-3">
+                        <Label className="text-xs flex items-center gap-1"><MapPin size={13} /> Address</Label>
+                        <Input value={office.address || ""} onChange={e => updateOffice({ address: e.target.value })} placeholder="Office address" className="mt-1 bg-white" />
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!(await confirmPopup("Remove this global office?"))) return;
+                        const list = [...globalOffices];
+                        list.splice(idx, 1);
+                        setConfig(p => ({ ...p, global_offices: list }));
+                      }}
+                      className="self-start rounded-xl border border-red-100 bg-red-50 p-2 text-red-600 hover:bg-red-100"
+                      title="Remove office"
+                    >
+                      <Trash2 size={17} />
+                    </button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {activeTab === "courses" && (
         <div className="space-y-4">
           <Card className="p-4 border border-blue-100 bg-blue-50/50">

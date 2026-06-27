@@ -723,7 +723,18 @@ export default function RegisterPage() {
               <div className="flex items-center justify-between">
                 <button
                   type="button"
-                  onClick={() => { setStep("credentials"); setErrorMsg(""); setOtpCode(["", "", "", "", "", ""]); }}
+                  onClick={async () => {
+                    try {
+                      if (otpToken) {
+                        await api.post("/auth/cancel-registration", { otp_token: otpToken });
+                      }
+                    } catch (err) {
+                      console.error("Failed to cancel registration:", err);
+                    }
+                    setStep("credentials");
+                    setErrorMsg("");
+                    setOtpCode(["", "", "", "", "", ""]);
+                  }}
                   className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1 transition-colors"
                 >
                   <ArrowLeft size={14} /> Back

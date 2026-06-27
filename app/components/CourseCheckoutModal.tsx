@@ -79,7 +79,7 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
         console.log("Initiating payment for course ID:", course.id);
         const res = await api.post("/payments/create", {
           course_id: course.id,
-          coupon_code: couponCode.trim() || null,
+          coupon_code: discount > 0 ? couponCode.trim() : null,
           discounted_price: discount > 0 ? finalPrice : null,
         });
         console.log("Payment initiation API response:", res.data);
@@ -111,7 +111,8 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
             key: res.data.key_id,
             amount: res.data.amount,
             currency: res.data.currency || "INR",
-            name: "FinTrade",
+            name: "FT EDUTECH LLP",
+            image: window.location.origin + "/F-LOGO--RED.png",
             description: course.title || course.name,
             order_id: res.data.order_id,
             handler: async function (response: any) {
@@ -204,7 +205,7 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
 
             <div className="border-t border-[#0B2A5B]/10 pt-4">
               <label className="text-sm font-semibold text-[#0B2A5B] mb-2 block">
-                Have a distributor code?
+                Have a coupon or distributor code?
               </label>
               <div className="flex gap-3">
                 <div className="relative flex-1">
@@ -214,12 +215,29 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
                     placeholder="Enter code"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
+                    disabled={discount > 0}
                     className="pl-10 uppercase"
                   />
                 </div>
-                <Button onClick={applyCoupon} variant="outline" className="border-[#C2A86A] text-[#C2A86A] hover:bg-[#C2A86A] hover:text-white">
-                  Apply
-                </Button>
+                {discount > 0 ? (
+                  <Button
+                    onClick={() => {
+                      setCouponCode("");
+                      setDiscount(0);
+                      setFinalPrice(initialPrice);
+                      setCouponMsg("");
+                      setErrorMsg("");
+                    }}
+                    variant="outline"
+                    className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                  >
+                    Remove
+                  </Button>
+                ) : (
+                  <Button onClick={applyCoupon} variant="outline" className="border-[#C2A86A] text-[#C2A86A] hover:bg-[#C2A86A] hover:text-white">
+                    Apply
+                  </Button>
+                )}
               </div>
               {errorMsg && <p className="text-red-500 text-sm mt-2">{errorMsg}</p>}
               {couponMsg && <p className="text-green-600 text-sm mt-2">{couponMsg}</p>}
@@ -239,27 +257,20 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
                   <span className="font-semibold">-₹{discount.toLocaleString("en-IN")}</span>
                 </div>
               )}
+              <div className="flex justify-between text-[#0B2A5B]/70 text-sm">
+                <span>Taxable Subtotal</span>
+                <span>₹{(initialPrice - discount).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-[#0B2A5B]/70 text-sm">
+                <span>GST (18%)</span>
+                <span>₹{((initialPrice - discount) * 0.18).toFixed(2)}</span>
+              </div>
               <div className="border-t border-[#0B2A5B]/10 pt-3 flex justify-between text-[#0B2A5B] items-center">
                 <span className="text-base md:text-lg font-semibold">Total Amount</span>
                 <span className="text-xl md:text-2xl font-bold text-[#C2A86A]">
-                  ₹{Number(finalPrice).toLocaleString("en-IN")}
+                  ₹{((initialPrice - discount) * 1.18).toFixed(2)}
                 </span>
               </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="font-semibold text-sm md:text-base text-[#0B2A5B]">Payment Method</h3>
-            <div className="grid grid-cols-3 gap-3">
-              <button className="p-3 md:p-4 border-2 border-[#C2A86A] bg-[#C2A86A]/10 rounded-lg font-semibold text-[#0B2A5B] hover:bg-[#C2A86A]/20 transition-colors text-xs md:text-sm">
-                UPI
-              </button>
-              <button className="p-3 md:p-4 border-2 border-[#0B2A5B]/20 rounded-lg font-semibold text-[#0B2A5B] hover:bg-[#F4F1EA] transition-colors text-xs md:text-sm">
-                Card
-              </button>
-              <button className="p-3 md:p-4 border-2 border-[#0B2A5B]/20 rounded-lg font-semibold text-[#0B2A5B] hover:bg-[#F4F1EA] transition-colors text-xs md:text-sm">
-                NetBanking
-              </button>
             </div>
           </div>
         </div>
@@ -270,7 +281,7 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
             disabled={loading}
             className="flex-1 bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] shadow-lg shadow-[#0B2A5B]/20 py-2.5 md:py-3.5 h-auto text-sm md:text-base font-semibold"
           >
-            {loading ? "Processing..." : `Pay ₹${Number(finalPrice).toLocaleString("en-IN")}`}
+            {loading ? "Processing..." : `Pay ₹${((initialPrice - discount) * 1.18).toFixed(2)}`}
           </Button>
           <Button
             onClick={onClose}

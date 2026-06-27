@@ -4,7 +4,7 @@ import {
   Menu, X, LogOut, Home, Users, BookOpen, Video, FileQuestion,
   IndianRupee, Bot, TrendingUp, BarChart3, Settings, Award,
   GraduationCap, MessageCircle, LineChart, Briefcase, Shield,
-  Newspaper, FileText, Trophy, LayoutTemplate, UserCircle, Handshake
+  Newspaper, FileText, Trophy, LayoutTemplate, UserCircle, Handshake, Globe
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent } from "./ui/dialog";
@@ -46,6 +46,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "Blog & CMS", path: "/admin/news", icon: <Newspaper size={20} /> },
         { label: "Advisors", path: "/admin/advisors", icon: <Users size={20} /> },
         { label: "Site Content", path: "/admin/cms", icon: <LayoutTemplate size={20} /> },
+        { label: "Global Offices", path: "/admin/global-offices", icon: <Globe size={20} /> },
         { label: "Feedback Forms", path: "/admin/feedback-forms", icon: <FileText size={20} /> },
         { label: "Admin Roles", path: "/admin/roles", icon: <Shield size={20} /> },
         { label: "AI Chatbot", path: "/admin/ai-chatbot", icon: <Bot size={20} /> },
@@ -95,6 +96,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "Blog & CMS", path: "/admin/news", icon: <Newspaper size={20} /> },
         { label: "Advisors", path: "/admin/advisors", icon: <Users size={20} /> },
         { label: "Site Content", path: "/admin/cms", icon: <LayoutTemplate size={20} /> },
+        { label: "Global Offices", path: "/admin/global-offices", icon: <Globe size={20} /> },
         { label: "Feedback Forms", path: "/admin/feedback-forms", icon: <FileText size={20} /> },
         { label: "Admin Roles", path: "/admin/roles", icon: <Shield size={20} /> },
         { label: "AI Chatbot", path: "/admin/ai-chatbot", icon: <Bot size={20} /> },
@@ -173,6 +175,7 @@ export function DashboardLayout({
         case "/admin/news":
           return userPermissions.manageContent !== false;
         case "/admin/cms":
+        case "/admin/global-offices":
           return userPermissions.viewSiteContent !== false;
         case "/admin/roles":
           return userPermissions.manageAdmins !== false;

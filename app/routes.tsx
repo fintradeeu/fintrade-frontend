@@ -73,6 +73,7 @@ import AdminFeedbackForms from "./pages/admin/AdminFeedbackForms";
 import SubmitFeedback from "./pages/SubmitFeedback";
 import ArticleDetail from "./pages/ArticleDetail";
 import AdminLiveClassRegistrations from "./pages/admin/AdminLiveClassRegistrations";
+import AdminGlobalOffices from "./pages/admin/AdminGlobalOffices";
 
 // Distributor Pages
 import DistributorDashboard from "./pages/distributor/DistributorDashboard";
@@ -249,7 +250,11 @@ export const router = createBrowserRouter([
     Component: TeacherExams,
   },
   {
-    path: "/teacher/exams/:examId/questions", Component: QuestionBuilder, }, { path: "/admin/exams/:examId/questions",
+    path: "/teacher/exams/:examId/questions",
+    Component: QuestionBuilder,
+  },
+  {
+    path: "/admin/exams/:examId/questions",
     Component: QuestionBuilder,
   },
   {
@@ -342,6 +347,10 @@ export const router = createBrowserRouter([
     Component: AdminCMS,
   },
   {
+    path: "/admin/global-offices",
+    Component: AdminGlobalOffices,
+  },
+  {
     path: "/admin/feedback-forms",
     Component: AdminFeedbackForms,
   },
@@ -363,4 +372,3 @@ export const router = createBrowserRouter([
     Component: DistributorWallet,
   },
 ]);
-

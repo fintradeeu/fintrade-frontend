@@ -12,6 +12,7 @@ import { Plus, Edit, Trash2, Tag, IndianRupee, TrendingUp, Users, Lock, ShieldAl
 import { Badge } from "../../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import api from "../../services/api";
+import { confirmPopup } from "../../utils/popup";
 
 interface Offer {
   id: number;
@@ -177,6 +178,8 @@ export default function AdminPayments() {
     }
   };
 
+
+
   useEffect(() => {
     let isSuper = false;
     try {
@@ -213,9 +216,11 @@ export default function AdminPayments() {
 
   const handleAddCoupon = async () => {
     try {
+      const expiryDate = new Date(formData.valid_until);
+      expiryDate.setHours(23, 59, 59, 999);
       await api.post("/admin/offers", {
         ...formData,
-        valid_until: new Date(formData.valid_until).toISOString()
+        valid_until: expiryDate.toISOString()
       });
       setIsAddDialogOpen(false);
       resetForm();
@@ -228,9 +233,11 @@ export default function AdminPayments() {
   const handleEditCoupon = async () => {
     if (selectedCoupon) {
       try {
+        const expiryDate = new Date(formData.valid_until);
+        expiryDate.setHours(23, 59, 59, 999);
         await api.put(`/admin/offers/${selectedCoupon.id}`, {
           ...formData,
-          valid_until: new Date(formData.valid_until).toISOString()
+          valid_until: expiryDate.toISOString()
         });
         setIsEditDialogOpen(false);
         setSelectedCoupon(null);
@@ -256,7 +263,7 @@ export default function AdminPayments() {
   const openEditDialog = (coupon: Offer) => {
     setSelectedCoupon(coupon);
     setFormData({
-      title: coupon.title || coupon.code, // fallback to code if title missing
+      title: coupon.title || coupon.code,
       code: coupon.code,
       discount_type: coupon.discount_type || "percentage",
       discount_value: coupon.discount_value,

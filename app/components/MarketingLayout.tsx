@@ -9,6 +9,7 @@ import { Label } from "./ui/label";
 import api from "../services/api";
 import { motion, AnimatePresence } from "motion/react";
 import TickerStrip from "./TickerStrip";
+import PublicChatbot from "./PublicChatbot";
 
 export default function MarketingLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -742,6 +743,7 @@ export default function MarketingLayout() {
           </Card>
         </div>
       )}
+      <PublicChatbot />
     </div>
   );
 }
