@@ -56,9 +56,9 @@ export default function AdminLectures() {
         title: lecture.title || "",
         description: lecture.description || "",
         instructor_name: lecture.instructor_name || "",
-        start_time: lecture.start_time ? new Date(lecture.start_time).toISOString().slice(0, 16) : "",
+        start_time: (lecture.scheduled_at || lecture.start_time) ? new Date(lecture.scheduled_at || lecture.start_time).toISOString().slice(0, 16) : "",
         end_time: lecture.end_time ? new Date(lecture.end_time).toISOString().slice(0, 16) : "",
-        meeting_url: lecture.meeting_url || "",
+        meeting_url: lecture.meeting_link || lecture.meeting_url || "",
         course_id: lecture.course_id || ""
       });
     } else {
@@ -76,11 +76,17 @@ export default function AdminLectures() {
         toast.error("Please select a course for this lecture.");
         return;
       }
+      const startTime = new Date(newLecture.start_time);
+      const endTime = newLecture.end_time ? new Date(newLecture.end_time) : null;
+      const durationMinutes = endTime && endTime > startTime
+        ? Math.round((endTime.getTime() - startTime.getTime()) / 60000)
+        : 60;
       const payload = {
         ...newLecture,
         course_id: Number(newLecture.course_id),
-        scheduled_at: new Date(newLecture.start_time).toISOString(),
-        meeting_link: newLecture.meeting_url,
+        scheduled_at: startTime.toISOString(),
+        duration_minutes: durationMinutes,
+        meeting_link: newLecture.meeting_url.trim() || undefined,
       };
 
       if (isEditing && currentLectureId) {
@@ -219,7 +225,7 @@ export default function AdminLectures() {
               </div>
               <div>
                 <label className="text-sm font-semibold text-[#0B2A5B] mb-1 block">Google Meet / Zoom Link</label>
-                <Input type="url" placeholder="https://meet.google.com/..." value={newLecture.meeting_url} onChange={(e) => setNewLecture({...newLecture, meeting_url: e.target.value})} className="border-[#0B2A5B]/20" />
+                <Input type="url" placeholder="Leave blank to auto-generate Google Meet" value={newLecture.meeting_url} onChange={(e) => setNewLecture({...newLecture, meeting_url: e.target.value})} className="border-[#0B2A5B]/20" />
               </div>
 
               <div className="pt-4 flex gap-3">
