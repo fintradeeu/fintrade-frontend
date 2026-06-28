@@ -803,7 +803,9 @@ export default function MarketingHome() {
     return () => observer.disconnect();
   }, []);
 
-  const blogStoriesCount = blogStories.length > 0 ? blogStories.length : 4;
+  const hasMarketUpdate = marketUpdates.length > 0;
+  const visibleBlogStories = blogStories.slice(0, hasMarketUpdate ? 5 : 6);
+  const blogCardsCount = (hasMarketUpdate ? 1 : 0) + (visibleBlogStories.length > 0 ? visibleBlogStories.length : 6);
 
   const handleBlogScroll = () => {
     if (!blogScrollRef.current) return;
@@ -812,7 +814,7 @@ export default function MarketingHome() {
     const gap = 16; // gap-4 is 16px
     const scrollLeft = container.scrollLeft;
     const currentIdx = Math.round(scrollLeft / (cardWidth + gap));
-    if (currentIdx !== blogActiveIndex && currentIdx >= 0 && currentIdx < blogStoriesCount) {
+    if (currentIdx !== blogActiveIndex && currentIdx >= 0 && currentIdx < blogCardsCount) {
       setBlogActiveIndex(currentIdx);
     }
   };
@@ -872,7 +874,7 @@ export default function MarketingHome() {
 
     const timer = setInterval(() => {
       if (window.innerWidth < 768 && blogScrollRef.current) {
-        const nextIdx = (blogActiveIndex + 1) % blogStoriesCount;
+        const nextIdx = (blogActiveIndex + 1) % blogCardsCount;
         setBlogActiveIndex(nextIdx);
 
         const container = blogScrollRef.current;
@@ -886,7 +888,7 @@ export default function MarketingHome() {
     }, 4000);
 
     return () => clearInterval(timer);
-  }, [blogActiveIndex, isBlogPaused, blogStoriesCount]);
+  }, [blogActiveIndex, isBlogPaused, blogCardsCount]);
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -944,7 +946,7 @@ export default function MarketingHome() {
 
       try {
         const [blogsRes, updatesRes] = await Promise.all([
-          api.get("/news", { params: { type: "Blog Story", limit: 5 } }),
+          api.get("/news", { params: { type: "Blog Story", limit: 6 } }),
           api.get("/news", { params: { type: "Market Update", limit: 1 } }),
         ]);
 
@@ -2167,9 +2169,9 @@ export default function MarketingHome() {
                   className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch overflow-x-auto md:overflow-x-visible pb-4 md:pb-0 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0"
                   style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                 >
-                  {/* Featured Video (Card 1) */}
-                  <div className="flex flex-col h-full flex-shrink-0 w-[85vw] sm:w-[360px] md:w-full snap-center">
-                    {marketUpdates.length > 0 ? (
+                  {/* Featured Video (Card 1, only when a Market Update exists) */}
+                  {hasMarketUpdate && (
+                    <div className="flex flex-col h-full flex-shrink-0 w-[85vw] sm:w-[360px] md:w-full snap-center">
                       <Card
                         onClick={() => { setActiveVideoIdx(0); setVideoOpen(true); }}
                         className="flex-1 flex flex-col overflow-hidden border-0 shadow-md relative group cursor-pointer"
@@ -2198,40 +2200,11 @@ export default function MarketingHome() {
                           </div>
                         </div>
                       </Card>
-                    ) : (
-                      <Card
-                        onClick={() => { setActiveVideoIdx(0); setVideoOpen(true); }}
-                        className="flex-1 flex flex-col overflow-hidden border-0 shadow-md relative group cursor-pointer"
-                      >
-                        <div className="aspect-[16/10] overflow-hidden relative bg-gray-100 flex items-center justify-center">
-                          <img
-                            src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80"
-                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                            alt="Featured Video"
-                          />
-                          <div className="absolute inset-0 bg-black/45 flex items-center justify-center group-hover:bg-black/35 transition-colors">
-                            <div className="w-14 h-14 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl" style={{ background: "#D50032", boxShadow: "0 0 30px rgba(213,0,50,0.5)" }}>
-                              <Play className="h-5 w-5 text-white ml-0.5 fill-white" />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="p-4 bg-white flex flex-col flex-1">
-                          <div className="flex items-center justify-between text-[11px] text-gray-500 mb-1.5">
-                            <span className="flex items-center gap-1"><Video size={12} /> Video</span>
-                            <span>15 min watch</span>
-                          </div>
-                          <h3 className="font-bold text-sm mb-2 line-clamp-2 hover:text-[#D50032] transition-colors" style={{ color: "#121212" }}>FinTrade: Master the Market Dynamics</h3>
-                          <p className="text-xs text-gray-500 line-clamp-2 mb-3 flex-1">Watch our exclusive masterclass on market analysis and risk management techniques for 2026.</p>
-                          <div className="text-[#D50032] font-semibold text-xs flex items-center group-hover:gap-1.5 transition-all mt-auto self-start">
-                            Watch Video <ChevronRight size={16} />
-                          </div>
-                        </div>
-                      </Card>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
-                  {/* Blog Stories (Cards 2-6) */}
-                  {blogStories.length > 0 ? blogStories.slice(0, 5).map((story, i) => (
+                  {/* Blog Stories */}
+                  {visibleBlogStories.length > 0 ? visibleBlogStories.map((story, i) => (
                     <div key={i} className="flex flex-col h-full flex-shrink-0 w-[85vw] sm:w-[360px] md:w-full snap-center">
                       <Card onClick={() => navigate(`/article/${story.id}`)} className="flex-1 flex flex-col border-0 shadow-md group hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                         <div className="aspect-[16/10] overflow-hidden relative bg-gray-100 flex items-center justify-center">
@@ -2314,7 +2287,7 @@ export default function MarketingHome() {
 
                 {/* Mobile Dot Indicators for Blog Section */}
                 <div className="flex md:hidden gap-1.5 justify-center items-center mt-5 w-full">
-                  {Array.from({ length: 1 + (blogStories.length > 0 ? Math.min(blogStories.length, 5) : 5) }).map((_, idx) => {
+                  {Array.from({ length: blogCardsCount }).map((_, idx) => {
                     const isActive = idx === blogActiveIndex;
                     return (
                       <button

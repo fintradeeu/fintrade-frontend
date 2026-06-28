@@ -21,8 +21,13 @@ export default function BlogPage() {
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const res = await api.get("/news", { params: { type: "Blog Story", limit: 100 } });
-        setBlogs(res.data || []);
+        const [blogsRes, updatesRes] = await Promise.all([
+          api.get("/news", { params: { type: "Blog Story", limit: 6 } }),
+          api.get("/news", { params: { type: "Market Update", limit: 1 } }),
+        ]);
+        const latestUpdate = updatesRes.data?.[0];
+        const latestBlogs = blogsRes.data || [];
+        setBlogs(latestUpdate ? [latestUpdate, ...latestBlogs.slice(0, 5)] : latestBlogs.slice(0, 6));
       } catch (err) {
         console.error("Failed to load blogs:", err);
       } finally {
