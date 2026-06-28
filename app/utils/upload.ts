@@ -1,11 +1,18 @@
 import api from '../services/api';
 import axios from 'axios';
 
+type UploadOptions = {
+  optimizeVideo?: boolean;
+};
+
 export const uploadFile = async (
   file: File,
-  onProgress?: (percent: number) => void
+  onProgress?: (percent: number) => void,
+  options: UploadOptions = {}
 ): Promise<string> => {
   try {
+    const shouldOptimizeVideo = options.optimizeVideo ?? file.type.startsWith("video/");
+
     // 1. Get presigned upload URL from backend
     const res = await api.get('/admin/upload/presigned-url', {
       params: {
@@ -14,7 +21,7 @@ export const uploadFile = async (
       }
     });
 
-    const { upload_url, file_url } = res.data;
+    const { upload_url, file_url, source_file_url, optimization_required } = res.data;
 
     // 2. PUT file binary directly to S3
     await axios.put(upload_url, file, {
@@ -28,6 +35,17 @@ export const uploadFile = async (
         }
       }
     });
+
+    if (shouldOptimizeVideo && optimization_required && source_file_url) {
+      const optimizeRes = await api.post("/admin/upload/optimize", {
+        source_file_url,
+        final_file_url: file_url,
+      });
+
+      if (optimizeRes.data?.status === "skipped" && optimizeRes.data?.file_url) {
+        return optimizeRes.data.file_url;
+      }
+    }
 
     return file_url;
   } catch (err: any) {
