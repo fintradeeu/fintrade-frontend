@@ -21,9 +21,8 @@ export default function BlogPage() {
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const res = await api.get("/news");
-        const blogItems = res.data.filter((n: any) => (n.type || (n.video_url ? "Market Update" : "Blog Story")) === "Blog Story");
-        setBlogs(blogItems);
+        const res = await api.get("/news", { params: { type: "Blog Story", limit: 100 } });
+        setBlogs(res.data || []);
       } catch (err) {
         console.error("Failed to load blogs:", err);
       } finally {

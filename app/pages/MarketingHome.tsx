@@ -943,15 +943,13 @@ export default function MarketingHome() {
       } catch (err) { console.error("Landing page fetch failed", err); }
 
       try {
-        const res = await api.get("/news");
-        const blogs = res.data.filter((n: any) => n.type === "Blog Story");
-        const updates = res.data.filter((n: any) => n.type === "Market Update");
+        const [blogsRes, updatesRes] = await Promise.all([
+          api.get("/news", { params: { type: "Blog Story", limit: 5 } }),
+          api.get("/news", { params: { type: "Market Update", limit: 1 } }),
+        ]);
 
-        // Show newest 4 blogs (LIFO)
-        setBlogStories([...blogs].reverse().slice(0, 4));
-
-        // Show newest 1 update
-        setMarketUpdates([...updates].reverse().slice(0, 1));
+        setBlogStories(blogsRes.data || []);
+        setMarketUpdates(updatesRes.data || []);
       } catch (err) { console.error("News fetch failed", err); }
 
       try {
