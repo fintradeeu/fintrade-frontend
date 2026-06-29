@@ -1087,10 +1087,10 @@ export default function ContractKYC() {
                       <SelectValue placeholder="Select Qualification" />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl border-slate-100 bg-white">
-                      <SelectItem value="SSC" className="font-medium text-slate-700 focus:bg-slate-50">Secondary School Certificate (SSC)</SelectItem>
-                      <SelectItem value="HSC" className="font-medium text-slate-700 focus:bg-slate-50">Higher Secondary Certificate (HSC)</SelectItem>
-                      <SelectItem value="UNDER-GRADUATE" className="font-medium text-slate-700 focus:bg-slate-50">Under Graduate Degree (UG)</SelectItem>
-                      <SelectItem value="POST GRADUATE" className="font-medium text-slate-700 focus:bg-slate-50">Post Graduate Degree (PG)</SelectItem>
+                      <SelectItem value="SSC" className="font-medium text-slate-700 focus:bg-slate-50 focus:text-slate-900 cursor-pointer">Secondary School Certificate (SSC)</SelectItem>
+                      <SelectItem value="HSC" className="font-medium text-slate-700 focus:bg-slate-50 focus:text-slate-900 cursor-pointer">Higher Secondary Certificate (HSC)</SelectItem>
+                      <SelectItem value="UNDER-GRADUATE" className="font-medium text-slate-700 focus:bg-slate-50 focus:text-slate-900 cursor-pointer">Under Graduate Degree (UG)</SelectItem>
+                      <SelectItem value="POST GRADUATE" className="font-medium text-slate-700 focus:bg-slate-50 focus:text-slate-900 cursor-pointer">Post Graduate Degree (PG)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
