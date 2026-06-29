@@ -87,7 +87,7 @@ export default function ContractKYC() {
 
   // Canvas signature pad
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
+  const isDrawingRef = useRef(false);
   const [hasDrawn, setHasDrawn] = useState(false);
   const lastPos = useRef<{ x: number; y: number } | null>(null);
 
@@ -254,36 +254,91 @@ export default function ContractKYC() {
   }, [step]);
 
   // ── Canvas Signature helpers ──────────────────────────────
-  const getCanvasPos = (e: React.MouseEvent | React.TouchEvent) => {
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const getCanvasPos = (e: TouchEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches[0].clientX;
+      const clientY = e.touches[0].clientY;
+      const x = ((clientX - rect.left) / rect.width) * canvas.width;
+      const y = ((clientY - rect.top) / rect.height) * canvas.height;
+      return { x, y };
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        e.preventDefault();
+        isDrawingRef.current = true;
+        lastPos.current = getCanvasPos(e);
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isDrawingRef.current && e.touches.length === 1) {
+        e.preventDefault();
+        const ctx = canvas.getContext("2d")!;
+        const pos = getCanvasPos(e);
+        ctx.beginPath();
+        ctx.moveTo(lastPos.current!.x, lastPos.current!.y);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.strokeStyle = "#1a1a2e";
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = "round";
+        ctx.stroke();
+        lastPos.current = pos;
+        setHasDrawn(true);
+      }
+    };
+
+    const handleTouchEnd = () => {
+      isDrawingRef.current = false;
+    };
+
+    canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
+    canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+    canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
+
+    return () => {
+      canvas.removeEventListener("touchstart", handleTouchStart);
+      canvas.removeEventListener("touchmove", handleTouchMove);
+      canvas.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [step]);
+
+  const startDraw = (e: React.MouseEvent) => {
+    isDrawingRef.current = true;
     const canvas = canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
-    if ("touches" in e) {
-      return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
-    }
-    return { x: (e as React.MouseEvent).clientX - rect.left, y: (e as React.MouseEvent).clientY - rect.top };
+    const x = ((e.clientX - rect.left) / rect.width) * canvas.width;
+    const y = ((e.clientY - rect.top) / rect.height) * canvas.height;
+    lastPos.current = { x, y };
   };
-  const startDraw = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    setIsDrawing(true);
-    lastPos.current = getCanvasPos(e);
-  };
-  const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDrawing) return;
-    e.preventDefault();
+
+  const draw = (e: React.MouseEvent) => {
+    if (!isDrawingRef.current) return;
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
-    const pos = getCanvasPos(e);
+    const rect = canvas.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * canvas.width;
+    const y = ((e.clientY - rect.top) / rect.height) * canvas.height;
+
     ctx.beginPath();
     ctx.moveTo(lastPos.current!.x, lastPos.current!.y);
-    ctx.lineTo(pos.x, pos.y);
+    ctx.lineTo(x, y);
     ctx.strokeStyle = "#1a1a2e";
     ctx.lineWidth = 2.5;
     ctx.lineCap = "round";
     ctx.stroke();
-    lastPos.current = pos;
+    lastPos.current = { x, y };
     setHasDrawn(true);
   };
-  const endDraw = () => setIsDrawing(false);
+
+  const endDraw = () => {
+    isDrawingRef.current = false;
+  };
+
   const clearSignature = () => {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
@@ -292,6 +347,7 @@ export default function ContractKYC() {
     setSigned(false);
     setSignatureFile(null);
   };
+
   const saveSignature = () => {
     if (!hasDrawn) { toast.error("Please draw your signature first."); return; }
     const canvas = canvasRef.current!;
@@ -302,6 +358,16 @@ export default function ContractKYC() {
       setSigned(true);
       toast.success("Signature saved!");
     });
+  };
+
+  // ── Webcam Selfie & Upload helpers ─────────────────────────
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBiometricFile(file);
+    setSelfiePreview(URL.createObjectURL(file));
+    setBiometricDone(true);
+    toast.success("Photo uploaded successfully!");
   };
 
   // ── Webcam Selfie helpers ─────────────────────────────────
@@ -886,7 +952,7 @@ export default function ContractKYC() {
                   <img src="/F-LOGO--RED.png" alt="FinTrade Logo" className="relative z-10 h-9 w-auto object-contain" />
                 </span>
                 <span>
-                  <span className="block text-xl sm:text-2xl font-black text-[#0B2A5B] tracking-tight leading-tight">FT EDUTECH LLP</span>
+                  <span className="block text-xl sm:text-2xl font-black text-[#0B2A5B] tracking-tight leading-tight">FT EDUTECH</span>
                   <span className="mt-1 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                     <Sparkles className="h-3 w-3 text-[#D50032]" /> Premium eKYC onboarding
                   </span>
@@ -1275,9 +1341,6 @@ export default function ContractKYC() {
                       onMouseMove={draw}
                       onMouseUp={endDraw}
                       onMouseLeave={endDraw}
-                      onTouchStart={startDraw}
-                      onTouchMove={draw}
-                      onTouchEnd={endDraw}
                     />
                     <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100 bg-slate-50/80 font-sans font-sans">
                       {signed ? (
@@ -1351,10 +1414,28 @@ export default function ContractKYC() {
                         <div className="w-16 h-16 rounded-full border-2 border-dashed border-[#D50032]/40 flex items-center justify-center bg-red-50/20">
                           <Camera className="h-6 w-6 text-[#D50032]" />
                         </div>
-                        <p className="text-slate-500 text-xs font-semibold text-center max-w-sm font-sans">Please enable your webcam to capture a live, front-facing audit photo for your file</p>
-                        <Button onClick={openCamera} className="bg-[#D50032] hover:bg-red-700 text-white rounded-xl font-bold px-6 shadow-md shadow-red-100">
-                          <Camera className="mr-1.5 h-4 w-4" /> Open Camera Feed
-                        </Button>
+                        <p className="text-slate-500 text-xs font-semibold text-center max-w-sm font-sans">
+                          Capture a live, front-facing photo using your camera or upload a photo file.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3 items-center justify-center w-full mt-2">
+                          <Button 
+                            onClick={openCamera} 
+                            className="w-full sm:w-auto bg-[#D50032] hover:bg-red-700 text-white rounded-xl font-bold px-6 shadow-md shadow-red-100"
+                          >
+                            <Camera className="mr-1.5 h-4 w-4" /> Open Camera Feed
+                          </Button>
+                          <span className="text-xs text-slate-400 font-semibold uppercase sm:px-2">OR</span>
+                          <label className="w-full sm:w-auto flex items-center justify-center gap-1.5 cursor-pointer bg-white border border-slate-200 hover:border-slate-300 text-slate-700 rounded-xl font-bold px-6 py-2.5 shadow-sm text-sm transition-all">
+                            <Upload className="h-4 w-4 text-slate-500" />
+                            <span>Upload Photo</span>
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              onChange={handlePhotoUpload} 
+                              className="hidden" 
+                            />
+                          </label>
+                        </div>
                       </div>
                     )}
                   </div>
