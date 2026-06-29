@@ -21,6 +21,27 @@ export default function MarketingLayout() {
   const location = useLocation();
 
   const [showAnnouncements, setShowAnnouncements] = useState(true);
+  const [showCookieBanner, setShowCookieBanner] = useState(false);
+
+  useEffect(() => {
+    const consent = localStorage.getItem("cookie_consent");
+    if (!consent) {
+      const timer = setTimeout(() => {
+        setShowCookieBanner(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleAcceptCookies = async () => {
+    localStorage.setItem("cookie_consent", "accepted");
+    setShowCookieBanner(false);
+    try {
+      await api.post("/auth/cookie-consent", { consent_type: "accepted" });
+    } catch (err) {
+      console.warn("Failed to log cookie consent:", err);
+    }
+  };
 
   useEffect(() => {
     const fetchVisibility = async () => {
@@ -687,7 +708,7 @@ export default function MarketingLayout() {
             </div>
           </div>
           <div className="pt-8 border-t border-white/10 text-center text-gray-500 text-sm">
-            <p>&copy; {new Date().getFullYear()} FinTrade. All rights reserved. | Powered by FT EDUTECH LLP</p>
+            <p>&copy; {new Date().getFullYear()} FinTrade. All rights reserved. | Powered by FT EDUTECH | <Link to="/cookie-policy" className="hover:text-white underline transition-colors">Cookie Policy</Link></p>
           </div>
         </div>
       </footer>
@@ -743,6 +764,54 @@ export default function MarketingLayout() {
           </Card>
         </div>
       )}
+
+      {/* Cookie Consent Banner */}
+      <AnimatePresence>
+        {showCookieBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-6 left-6 right-6 md:left-auto md:right-6 md:max-w-md z-[9999] bg-white border border-[#0B2A5B]/15 rounded-2xl p-5 shadow-[0_20px_50px_rgba(11,42,91,0.15)] flex flex-col gap-4 font-sans"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h4 className="font-extrabold text-sm text-[#0B2A5B] flex items-center gap-2">
+                  🍪 Cookie Preference
+                </h4>
+                <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                  We use cookies to improve your browsing experience, show personalized content, and analyze site traffic. Read our <Link to="/cookie-policy" className="text-[#D50032] font-semibold hover:underline">Cookie Policy</Link> to learn more.
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowCookieBanner(false)}
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="flex gap-2.5">
+              <Button
+                onClick={handleAcceptCookies}
+                className="flex-1 bg-[#0B2A5B] text-white hover:bg-[#1a3d7a] font-bold text-xs h-9 rounded-lg cursor-pointer"
+              >
+                Accept All
+              </Button>
+              <Button
+                onClick={() => {
+                  localStorage.setItem("cookie_consent", "declined");
+                  setShowCookieBanner(false);
+                }}
+                variant="outline"
+                className="flex-1 border-[#0B2A5B]/15 text-[#0B2A5B] hover:bg-slate-50 font-bold text-xs h-9 rounded-lg cursor-pointer"
+              >
+                Decline
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <PublicChatbot />
     </div>
   );

@@ -71,23 +71,23 @@ function OfficePresenceStrip({ offices = officeCountries }: { offices?: typeof o
   };
 
   return (
-    <div className="relative z-[80] mt-5 left-1/2 w-screen -translate-x-1/2 overflow-visible border-y border-white/10 bg-[#121212] shadow-[0_12px_32px_rgba(0,0,0,0.25)]">
+    <div className="relative z-[80] mt-5 left-1/2 w-screen -translate-x-1/2 overflow-visible border-y border-[#0B2A5B]/10 bg-[#F4F1EA] shadow-[0_12px_32px_rgba(0,0,0,0.08)]">
       <div className="overflow-visible">
         <div className="flex w-full items-center gap-0 px-1 py-2">
-          <div className="flex h-5 w-[132px] flex-shrink-0 items-center gap-1.5 border-r border-white/15 px-2.5">
+          <div className="flex h-5 w-[132px] flex-shrink-0 items-center gap-1.5 border-r border-[#0B2A5B]/15 px-2.5">
             <span className="h-1.5 w-1.5 rounded-full bg-[#D50032] shadow-[0_0_10px_#D50032]" />
-            <span className="whitespace-nowrap text-[9px] font-black uppercase tracking-[0.18em] text-white/65">
+            <span className="whitespace-nowrap text-[9px] font-black uppercase tracking-[0.18em] text-[#D50032] font-sans">
               Global Offices
             </span>
           </div>
             {offices.map((office, index) => (
               <div
                 key={office.country}
-                className="group relative flex h-5 min-w-0 flex-1 items-center justify-center gap-1 border-r border-white/15 px-0.5 text-left transition-opacity duration-200 hover:opacity-100"
+                className="group relative flex h-5 min-w-0 flex-1 items-center justify-center gap-1 border-r border-[#0B2A5B]/15 px-0.5 text-left transition-opacity duration-200 hover:opacity-100"
               >
                 <button
                   type="button"
-                  className="h-5 w-6 flex-shrink-0 overflow-hidden rounded-[3px] bg-white shadow-sm ring-1 ring-white/20 transition-transform duration-200 group-hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#D50032]"
+                  className="h-5 w-6 flex-shrink-0 overflow-hidden rounded-[3px] bg-white shadow-sm ring-1 ring-[#0B2A5B]/10 transition-transform duration-200 group-hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#D50032]"
                   aria-label={`${office.country} office details`}
                 >
                   <img
@@ -97,7 +97,7 @@ function OfficePresenceStrip({ offices = officeCountries }: { offices?: typeof o
                     loading="lazy"
                   />
                 </button>
-                <span className="min-w-0 whitespace-nowrap text-[10px] font-extrabold text-white/85 2xl:text-[11px]">
+                <span className="min-w-0 whitespace-nowrap text-[10px] font-extrabold text-[#0B2A5B] font-sans 2xl:text-[11px]">
                   {office.country}
                 </span>
 
@@ -2387,14 +2387,14 @@ export default function MarketingHome() {
                   <div className="grid lg:grid-cols-12 gap-8 items-start">
                     {/* Desktop Sidebar (Left Column) - Visible on lg screens */}
                     <div className="hidden lg:block lg:col-span-4 w-full">
-                      <div className="flex flex-col gap-2.5 max-h-[580px] overflow-y-auto overflow-x-hidden pr-3 pl-1.5 py-1.5 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+                      <div className="flex flex-col gap-2.5 max-h-[580px] overflow-y-auto overflow-x-hidden pr-3 pl-4 py-1.5 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
                         {filteredTerms.map((term, index) => {
                           const isSelected = (filteredTerms[activeTermIndex]?.num === term.num) || (activeTermIndex === index);
                           return (
                             <button
                               key={term.num}
                               onClick={() => setActiveTermIndex(index)}
-                              className={`w-full text-left p-4 rounded-2xl border transition-all duration-300 flex items-start gap-4 select-none relative overflow-hidden group ${isSelected
+                              className={`w-full text-left p-4 rounded-2xl border transition-all duration-300 flex items-center gap-4 select-none relative overflow-hidden group ${isSelected
                                 ? "bg-white border-[#D50032]/30 shadow-md shadow-[#D50032]/[0.02]"
                                 : "bg-white/40 border-gray-100 hover:border-gray-200 hover:bg-white/70"
                                 }`}
@@ -2403,7 +2403,7 @@ export default function MarketingHome() {
                               {isSelected && (
                                 <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#D50032] rounded-r-md" />
                               )}
-                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-colors ${isSelected ? "bg-[#FFF0F2] text-[#D50032]" : "bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600"
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 transition-colors ${isSelected ? "bg-[#FFF0F2] text-[#D50032]" : "bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600"
                                 }`}>
                                 {term.num}
                               </div>

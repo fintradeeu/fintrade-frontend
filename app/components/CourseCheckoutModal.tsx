@@ -26,15 +26,22 @@ interface CourseCheckoutModalProps {
 }
 
 export default function CourseCheckoutModal({ course, onClose, onSuccess }: CourseCheckoutModalProps) {
-  const [couponCode, setCouponCode] = useState(() => localStorage.getItem("distributor_code") || "");
-  const [discount, setDiscount] = useState(0);
+  const [ibCode, setIbCode] = useState(() => localStorage.getItem("distributor_code") || "");
+  const [couponCode, setCouponCode] = useState("");
+  const [ibDiscount, setIbDiscount] = useState(0);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  
   const parsePrice = (p: any) => parseFloat(String(p).replace(/[^0-9.]/g, '')) || 0;
   const initialPrice = parsePrice(course.price);
-  const [finalPrice, setFinalPrice] = useState(initialPrice);
+  
+  const activeDiscount = couponDiscount > 0 ? couponDiscount : ibDiscount;
+  const finalPrice = Math.max(initialPrice - activeDiscount, 0);
+
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
-  const [couponMsg, setCouponMsg] = useState("");
-  const [couponType, setCouponType] = useState<"ib" | "simple">("ib");
+  const [ibError, setIbError] = useState("");
+  const [ibSuccessMsg, setIbSuccessMsg] = useState("");
+  const [couponError, setCouponError] = useState("");
+  const [couponSuccessMsg, setCouponSuccessMsg] = useState("");
 
   // Auto-apply saved coupon code on mount
   useEffect(() => {
@@ -43,10 +50,9 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
       (async () => {
         try {
           const res = await api.post("/offers/apply", { code: savedCode, course_id: course.id });
-          setDiscount(res.data.discount_applied);
-          setFinalPrice(res.data.discounted_price);
-          setCouponMsg(res.data.message || "Referral code applied successfully!");
-          setErrorMsg("");
+          setIbDiscount(res.data.discount_applied);
+          setIbSuccessMsg(res.data.message || "Referral code applied successfully!");
+          setIbError("");
         } catch (err: any) {
           console.warn("Auto-applying distributor code failed:", err);
         }
@@ -54,21 +60,39 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
     }
   }, [course.id]);
 
-  const applyCoupon = async () => {
+  const applyIbCode = async () => {
+    if (!ibCode.trim()) {
+      setIbError("Please enter a referral code");
+      return;
+    }
     try {
-      const res = await api.post("/offers/apply", { code: couponCode, course_id: course.id });
-      setDiscount(res.data.discount_applied);
-      setFinalPrice(res.data.discounted_price);
-      setCouponMsg(res.data.message || "Coupon applied successfully!");
-      setErrorMsg("");
-      } catch (err: any) {
+      const res = await api.post("/offers/apply", { code: ibCode.trim(), course_id: course.id });
+      setIbDiscount(res.data.discount_applied);
+      setIbSuccessMsg(res.data.message || "Referral code verified!");
+      setIbError("");
+    } catch (err: any) {
       const detail = err.response?.data?.detail;
-      if (Array.isArray(detail)) {
-        setErrorMsg(detail.map((d: any) => d.msg).join(", "));
-      } else {
-        setErrorMsg(detail || "Invalid coupon code");
-      }
-      setCouponMsg("");
+      setIbError(typeof detail === "string" ? detail : "Invalid referral code");
+      setIbSuccessMsg("");
+      setIbDiscount(0);
+    }
+  };
+
+  const applyCouponCode = async () => {
+    if (!couponCode.trim()) {
+      setCouponError("Please enter a coupon code");
+      return;
+    }
+    try {
+      const res = await api.post("/offers/apply", { code: couponCode.trim(), course_id: course.id });
+      setCouponDiscount(res.data.discount_applied);
+      setCouponSuccessMsg(res.data.message || "Coupon applied successfully!");
+      setCouponError("");
+    } catch (err: any) {
+      const detail = err.response?.data?.detail;
+      setCouponError(typeof detail === "string" ? detail : "Invalid coupon code");
+      setCouponSuccessMsg("");
+      setCouponDiscount(0);
     }
   };
 
@@ -76,12 +100,13 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
     console.log("completePayment triggered. finalPrice:", finalPrice, "course:", course);
     setLoading(true);
     try {
+      const combinedCode = [couponCode.trim(), ibCode.trim()].filter(Boolean).join(":");
       if (Number(finalPrice) > 0) {
         console.log("Initiating payment for course ID:", course.id);
         const res = await api.post("/payments/create", {
           course_id: course.id,
-          coupon_code: discount > 0 ? couponCode.trim() : null,
-          discounted_price: discount > 0 ? finalPrice : null,
+          coupon_code: combinedCode || null,
+          discounted_price: activeDiscount > 0 ? finalPrice : null,
         });
         console.log("Payment initiation API response:", res.data);
 
@@ -112,7 +137,7 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
             key: res.data.key_id,
             amount: res.data.amount,
             currency: res.data.currency || "INR",
-            name: "FT EDUTECH LLP",
+            name: "FT EDUTECH",
             image: window.location.origin + "/F-LOGO--RED.png",
             description: course.title || course.name,
             order_id: res.data.order_id,
@@ -161,7 +186,7 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
         }
       } else {
         console.log("Final price is 0, enrolling user directly...");
-        const payload = couponCode.trim() ? { distributor_code: couponCode.trim() } : {};
+        const payload = combinedCode ? { distributor_code: combinedCode } : {};
         await api.post(`/courses/${course.id}/enroll`, payload);
         onSuccess();
       }
@@ -204,65 +229,86 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
               </div>
             </div>
 
-            <div className="border-t border-[#0B2A5B]/10 pt-4">
-              <div className="flex gap-4 mb-2.5">
-                <label className="flex items-center gap-1.5 text-xs font-semibold text-[#0B2A5B] cursor-pointer">
-                  <input
-                    type="radio"
-                    name="couponType"
-                    checked={couponType === "ib"}
-                    onChange={() => setCouponType("ib")}
-                    disabled={discount > 0}
-                    className="accent-[#0B2A5B] h-3.5 w-3.5"
-                  />
-                  <span>IB / Referral Code</span>
+            <div className="border-t border-[#0B2A5B]/10 pt-4 space-y-4">
+              {/* IB / Referral Code Input */}
+              <div>
+                <label className="text-xs font-bold text-[#0B2A5B] block mb-1.5 uppercase tracking-wide">
+                  IB / Partner Referral Code
                 </label>
-                <label className="flex items-center gap-1.5 text-xs font-semibold text-[#0B2A5B] cursor-pointer">
-                  <input
-                    type="radio"
-                    name="couponType"
-                    checked={couponType === "simple"}
-                    onChange={() => setCouponType("simple")}
-                    disabled={discount > 0}
-                    className="accent-[#0B2A5B] h-3.5 w-3.5"
-                  />
-                  <span>Simple Coupon</span>
-                </label>
-              </div>
-              <div className="flex gap-3">
-                <div className="relative flex-1">
-                  <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                  <Input
-                    type="text"
-                    placeholder={couponType === "ib" ? "Enter IB/Referral code" : "Enter simple coupon code"}
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    disabled={discount > 0}
-                    className="pl-10 uppercase"
-                  />
+                <div className="flex gap-3">
+                  <div className="relative flex-1">
+                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <Input
+                      type="text"
+                      placeholder="Enter IB/Referral code (e.g. IB-XXXXXX)"
+                      value={ibCode}
+                      onChange={(e) => setIbCode(e.target.value)}
+                      disabled={ibDiscount > 0}
+                      className="pl-10 uppercase font-mono"
+                    />
+                  </div>
+                  {ibDiscount > 0 ? (
+                    <Button
+                      onClick={() => {
+                        setIbCode("");
+                        setIbDiscount(0);
+                        setIbSuccessMsg("");
+                        setIbError("");
+                      }}
+                      variant="outline"
+                      className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                    >
+                      Remove
+                    </Button>
+                  ) : (
+                    <Button onClick={applyIbCode} variant="outline" className="border-[#C2A86A] text-[#C2A86A] hover:bg-[#C2A86A] hover:text-white">
+                      Apply
+                    </Button>
+                  )}
                 </div>
-                {discount > 0 ? (
-                  <Button
-                    onClick={() => {
-                      setCouponCode("");
-                      setDiscount(0);
-                      setFinalPrice(initialPrice);
-                      setCouponMsg("");
-                      setErrorMsg("");
-                    }}
-                    variant="outline"
-                    className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-                  >
-                    Remove
-                  </Button>
-                ) : (
-                  <Button onClick={applyCoupon} variant="outline" className="border-[#C2A86A] text-[#C2A86A] hover:bg-[#C2A86A] hover:text-white">
-                    Apply
-                  </Button>
-                )}
+                {ibError && <p className="text-xs text-red-600 mt-1">{ibError}</p>}
+                {ibSuccessMsg && <p className="text-xs text-green-600 mt-1">✓ {ibSuccessMsg}</p>}
               </div>
-              {errorMsg && <p className="text-red-500 text-sm mt-2">{errorMsg}</p>}
-              {couponMsg && <p className="text-green-600 text-sm mt-2">{couponMsg}</p>}
+
+              {/* Discount Coupon Code Input */}
+              <div>
+                <label className="text-xs font-bold text-[#0B2A5B] block mb-1.5 uppercase tracking-wide">
+                  Discount Coupon Code
+                </label>
+                <div className="flex gap-3">
+                  <div className="relative flex-1">
+                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <Input
+                      type="text"
+                      placeholder="Enter simple coupon code (e.g. OFFER50)"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      disabled={couponDiscount > 0}
+                      className="pl-10 uppercase font-mono"
+                    />
+                  </div>
+                  {couponDiscount > 0 ? (
+                    <Button
+                      onClick={() => {
+                        setCouponCode("");
+                        setCouponDiscount(0);
+                        setCouponSuccessMsg("");
+                        setCouponError("");
+                      }}
+                      variant="outline"
+                      className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                    >
+                      Remove
+                    </Button>
+                  ) : (
+                    <Button onClick={applyCouponCode} variant="outline" className="border-[#C2A86A] text-[#C2A86A] hover:bg-[#C2A86A] hover:text-white">
+                      Apply
+                    </Button>
+                  )}
+                </div>
+                {couponError && <p className="text-xs text-red-600 mt-1">{couponError}</p>}
+                {couponSuccessMsg && <p className="text-xs text-green-600 mt-1">✓ {couponSuccessMsg}</p>}
+              </div>
             </div>
           </div>
 
@@ -273,24 +319,24 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
                 <span>Course Fee</span>
                 <span>₹{initialPrice.toLocaleString("en-IN")}</span>
               </div>
-              {discount > 0 && (
+              {activeDiscount > 0 && (
                 <div className="flex justify-between text-green-600 text-sm">
                   <span>Discount Applied</span>
-                  <span className="font-semibold">-₹{discount.toLocaleString("en-IN")}</span>
+                  <span className="font-semibold">-₹{activeDiscount.toLocaleString("en-IN")}</span>
                 </div>
               )}
               <div className="flex justify-between text-[#0B2A5B]/70 text-sm">
                 <span>Taxable Subtotal</span>
-                <span>₹{(initialPrice - discount).toFixed(2)}</span>
+                <span>₹{(initialPrice - activeDiscount).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-[#0B2A5B]/70 text-sm">
                 <span>GST (18%)</span>
-                <span>₹{((initialPrice - discount) * 0.18).toFixed(2)}</span>
+                <span>₹{((initialPrice - activeDiscount) * 0.18).toFixed(2)}</span>
               </div>
               <div className="border-t border-[#0B2A5B]/10 pt-3 flex justify-between text-[#0B2A5B] items-center">
                 <span className="text-base md:text-lg font-semibold">Total Amount</span>
                 <span className="text-xl md:text-2xl font-bold text-[#C2A86A]">
-                  ₹{((initialPrice - discount) * 1.18).toFixed(2)}
+                  ₹{((initialPrice - activeDiscount) * 1.18).toFixed(2)}
                 </span>
               </div>
             </div>
@@ -303,7 +349,7 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
             disabled={loading}
             className="flex-1 bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] shadow-lg shadow-[#0B2A5B]/20 py-2.5 md:py-3.5 h-auto text-sm md:text-base font-semibold"
           >
-            {loading ? "Processing..." : `Pay ₹${((initialPrice - discount) * 1.18).toFixed(2)}`}
+            {loading ? "Processing..." : `Pay ₹${((initialPrice - activeDiscount) * 1.18).toFixed(2)}`}
           </Button>
           <Button
             onClick={onClose}

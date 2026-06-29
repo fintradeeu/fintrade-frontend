@@ -368,7 +368,7 @@ export default function InvoicePage() {
                     style={{ width: "160px", height: "56px", objectFit: "contain", display: "block", flexShrink: 0 }}
                   />
                   <div className="border-l border-gray-300 pl-2">
-                    <div className="font-bold text-sm uppercase tracking-wide leading-tight">FinTrade Academy</div>
+                    <div className="font-bold text-sm uppercase tracking-wide leading-tight">FT EDUTECH</div>
                     <div className="text-[9px] text-gray-500 uppercase tracking-widest">Professional Trading Education</div>
                   </div>
                 </div>
@@ -417,7 +417,7 @@ export default function InvoicePage() {
                   </div>
                   <div className="p-2">
                     <span className="text-[9px] text-gray-500 block uppercase">Place of Supply</span>
-                    <span className="font-bold">Maharashtra (27)</span>
+                    <span className="font-bold">Ahmedabad</span>
                   </div>
                 </div>
 
@@ -504,16 +504,16 @@ export default function InvoicePage() {
                     <span className="text-gray-400 font-sans font-normal text-[9px]">Buyer's Signature</span>
                   </div>
                   <div className="p-3 h-12 flex flex-col justify-between">
-                    <span>for FinTrade Academy</span>
+                    <span>for FT EDUTECH</span>
                     <span className="text-[8px] text-gray-500 uppercase tracking-wider font-normal">Authorized Signatory</span>
                   </div>
                 </div>
 
                 {/* === BOTTOM: Company Address Footer === */}
                 <div className="border-t border-black text-center py-2 px-4 bg-gray-50 text-[9px] text-gray-600 space-y-0.5">
-                  <div className="font-bold text-[10px] text-black">FinTrade Academy</div>
+                  <div className="font-bold text-[10px] text-black">FT EDUTECH</div>
                   <div>10th Floor, Shivalik Complex, Nr. Panchvati Circle, Opp. Bank of Baroda, Ambawadi, Ahmedabad, Gujarat - 380006</div>
-                  <div className="font-bold">GSTIN: 24AALFF2921N1Z9 &nbsp;|&nbsp; billing@thefintrade.com</div>
+                  <div className="font-bold">GSTIN: 24AALFF2921N1Z9 &nbsp;|&nbsp; accounts@thefintrade.com</div>
                 </div>
 
               </div>

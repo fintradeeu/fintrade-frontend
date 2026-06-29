@@ -53,6 +53,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "Simulator", path: "/admin/simulator", icon: <TrendingUp size={20} /> },
         { label: "Reports", path: "/admin/reports", icon: <BarChart3 size={20} /> },
         { label: "Contracts", path: "/admin/contracts", icon: <FileText size={20} /> },
+        { label: "Cookie Consents", path: "/admin/cookie-consents", icon: <Shield size={20} /> },
         { label: "Settings", path: "/admin/settings", icon: <Settings size={20} /> },
       ];
     case "student":
@@ -102,6 +103,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "AI Chatbot", path: "/admin/ai-chatbot", icon: <Bot size={20} /> },
         { label: "Simulator", path: "/admin/simulator", icon: <TrendingUp size={20} /> },
         { label: "Contracts", path: "/admin/contracts", icon: <FileText size={20} /> },
+        { label: "Cookie Consents", path: "/admin/cookie-consents", icon: <Shield size={20} /> },
         { label: "Settings", path: "/admin/settings", icon: <Settings size={20} /> },
       ];
     case "distributor":

@@ -74,6 +74,8 @@ import SubmitFeedback from "./pages/SubmitFeedback";
 import ArticleDetail from "./pages/ArticleDetail";
 import AdminLiveClassRegistrations from "./pages/admin/AdminLiveClassRegistrations";
 import AdminGlobalOffices from "./pages/admin/AdminGlobalOffices";
+import CookiePolicy from "./pages/CookiePolicy";
+import AdminCookieConsents from "./pages/admin/AdminCookieConsents";
 
 // Distributor Pages
 import DistributorDashboard from "./pages/distributor/DistributorDashboard";
@@ -126,6 +128,10 @@ export const router = createBrowserRouter([
       {
         path: "/courses/:id",
         Component: CourseDetailPage,
+      },
+      {
+        path: "/cookie-policy",
+        Component: CookiePolicy,
       },
     ]
   },
@@ -357,6 +363,10 @@ export const router = createBrowserRouter([
   {
     path: "/admin/live-class-registrations",
     Component: AdminLiveClassRegistrations,
+  },
+  {
+    path: "/admin/cookie-consents",
+    Component: AdminCookieConsents,
   },
   {
     path: "/feedback/submit/:formId",
