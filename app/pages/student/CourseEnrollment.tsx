@@ -378,15 +378,17 @@ export default function CourseEnrollment() {
       </div>
 
       {showKycModal ? (
-        <div style={{
-        background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)",
-        borderRadius: "24px",
-        overflow: "hidden",
-        boxShadow: "0 32px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.07)",
-        position: "relative",
-        maxWidth: "560px",
-        margin: "0 auto",
-      }}>
+        <div 
+          className="max-h-[90vh] overflow-y-auto"
+          style={{
+            background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)",
+            borderRadius: "24px",
+            boxShadow: "0 32px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.07)",
+            position: "relative",
+            maxWidth: "560px",
+            margin: "0 auto",
+          }}
+        >
         {/* Top gradient bar */}
         <div style={{ height: "4px", background: "linear-gradient(90deg, #22c55e, #16a34a, #4ade80)" }} />
         {/* Glow */}
@@ -396,14 +398,14 @@ export default function CourseEnrollment() {
           background: "radial-gradient(circle, rgba(34,197,94,0.1) 0%, transparent 70%)",
           pointerEvents: "none",
         }} />
-        <div style={{ padding: "40px 36px 36px", textAlign: "center", position: "relative" }}>
+        <div className="p-6 sm:p-9" style={{ textAlign: "center", position: "relative" }}>
           {/* Icon */}
           <div style={{
             width: "88px", height: "88px",
             background: "linear-gradient(135deg, rgba(34,197,94,0.2), rgba(22,163,74,0.15))",
             borderRadius: "50%",
             display: "flex", alignItems: "center", justifyContent: "center",
-            margin: "0 auto 24px",
+            margin: "0 auto 16px",
             border: "2px solid rgba(34,197,94,0.4)",
             boxShadow: "0 0 40px rgba(34,197,94,0.25)",
           }}>
@@ -459,27 +461,16 @@ export default function CourseEnrollment() {
             ))}
           </div>
           {/* Buttons */}
-          <div style={{ display: "flex", gap: "12px" }}>
+          <div className="flex flex-col-reverse sm:flex-row gap-3 w-full mt-4">
             <button
               onClick={() => setShowKycModal(false)}
-              style={{
-                flex: 1, height: "48px", borderRadius: "12px",
-                border: "1px solid rgba(255,255,255,0.12)",
-                background: "rgba(255,255,255,0.06)",
-                color: "rgba(255,255,255,0.6)",
-                fontSize: "14px", fontWeight: 600, cursor: "pointer",
-              }}
+              className="w-full sm:flex-1 h-12 rounded-xl border border-white/12 bg-white/6 text-white/60 text-sm font-semibold hover:bg-white/10 transition-all duration-200 cursor-pointer"
             >
               Maybe Later
             </button>
             <button
               onClick={() => { setShowKycModal(false); navigate(`/student/contract-kyc?course_id=${selectedCourse}`); }}
-              style={{
-                flex: 2, height: "48px", borderRadius: "12px", border: "none",
-                background: "linear-gradient(135deg, #22c55e, #16a34a)",
-                color: "white", fontSize: "14px", fontWeight: 700, cursor: "pointer",
-                boxShadow: "0 8px 24px rgba(34,197,94,0.35)",
-              }}
+              className="w-full sm:flex-[2] h-12 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-bold shadow-lg shadow-green-500/20 hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
             >
               Complete KYC Now →
             </button>
