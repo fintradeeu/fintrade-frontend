@@ -3,17 +3,35 @@ import api from "../../services/api";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/card";
-import { RefreshCcw, Mail, Phone, MapPin, Loader2, Users, Download, Filter } from "lucide-react";
+import { RefreshCcw, Mail, Phone, MapPin, Loader2, Users, Download, Filter, Trash2 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import DashboardLayout from "../../components/DashboardLayout";
+import { confirmPopup } from "../../utils/popup";
+import { toast } from "sonner";
 
 export default function AdminLiveClassRegistrations() {
   const [registrations, setRegistrations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCity, setSelectedCity] = useState("ALL_CITIES");
   const [selectedClass, setSelectedClass] = useState("ALL_CLASSES");
+
+  const handleDelete = async (regId: number) => {
+    const confirmed = await confirmPopup(
+      "Are you sure you want to delete this live class registration? This action cannot be undone."
+    );
+    if (!confirmed) return;
+
+    try {
+      await api.delete(`/admin/lectures/registrations/${regId}`);
+      toast.success("Live class registration deleted successfully!");
+      setRegistrations((prev) => prev.filter((r) => r.id !== regId));
+    } catch (error) {
+      toast.error("Failed to delete registration");
+      console.error(error);
+    }
+  };
 
   const fetchRegistrations = async () => {
     setLoading(true);
@@ -190,6 +208,7 @@ export default function AdminLiveClassRegistrations() {
                     <TableHead className="font-bold text-gray-750 py-3.5">Location</TableHead>
                     <TableHead className="font-bold text-gray-750 py-3.5">Class Info</TableHead>
                     <TableHead className="font-bold text-gray-750 py-3.5 text-right">Registration Date</TableHead>
+                    <TableHead className="font-bold text-gray-750 py-3.5 text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -292,6 +311,17 @@ export default function AdminLiveClassRegistrations() {
                           <div className="text-xs text-gray-500 font-medium mt-0.5">
                             {format(new Date(reg.registered_at), "h:mm a")}
                           </div>
+                        </TableCell>
+                        <TableCell className="py-4 text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(reg.id)}
+                            className="h-8 w-8 text-slate-400 hover:text-red-650 hover:bg-red-550 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            title="Delete Registration"
+                          >
+                            <Trash2 size={16} />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))
