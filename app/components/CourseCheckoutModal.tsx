@@ -34,6 +34,7 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [couponMsg, setCouponMsg] = useState("");
+  const [couponType, setCouponType] = useState<"ib" | "simple">("ib");
 
   // Auto-apply saved coupon code on mount
   useEffect(() => {
@@ -204,15 +205,36 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
             </div>
 
             <div className="border-t border-[#0B2A5B]/10 pt-4">
-              <label className="text-sm font-semibold text-[#0B2A5B] mb-2 block">
-                Have a coupon or distributor code?
-              </label>
+              <div className="flex gap-4 mb-2.5">
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-[#0B2A5B] cursor-pointer">
+                  <input
+                    type="radio"
+                    name="couponType"
+                    checked={couponType === "ib"}
+                    onChange={() => setCouponType("ib")}
+                    disabled={discount > 0}
+                    className="accent-[#0B2A5B] h-3.5 w-3.5"
+                  />
+                  <span>IB / Referral Code</span>
+                </label>
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-[#0B2A5B] cursor-pointer">
+                  <input
+                    type="radio"
+                    name="couponType"
+                    checked={couponType === "simple"}
+                    onChange={() => setCouponType("simple")}
+                    disabled={discount > 0}
+                    className="accent-[#0B2A5B] h-3.5 w-3.5"
+                  />
+                  <span>Simple Coupon</span>
+                </label>
+              </div>
               <div className="flex gap-3">
                 <div className="relative flex-1">
                   <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                   <Input
                     type="text"
-                    placeholder="Enter code"
+                    placeholder={couponType === "ib" ? "Enter IB/Referral code" : "Enter simple coupon code"}
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
                     disabled={discount > 0}
