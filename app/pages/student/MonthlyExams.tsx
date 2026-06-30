@@ -47,16 +47,16 @@ export default function MonthlyExams() {
           );
           allCourseExams.push(...ce);
 
-          // Filter entrance exams: only show ones for courses the user is NOT enrolled in
-          const ee = (allRes.data.entrance_exams || []).filter(
-            (e: any) => !enrolledIds.includes(e.course_id) && e.is_active
-          );
-          unattemptedEntrance.push(...ee);
+          // Filter entrance exams (Disabled in onboarding flow)
+          // const ee = (allRes.data.entrance_exams || []).filter(
+          //   (e: any) => !enrolledIds.includes(e.course_id) && e.is_active
+          // );
+          // unattemptedEntrance.push(...ee);
         } catch {
           // fallback: no course exams
         }
         setCourseExams(allCourseExams);
-        setEntranceExams(unattemptedEntrance);
+        setEntranceExams([]);
 
         // Fetch monthly exams
         const monthlyRes = await api.get("/exams/monthly");

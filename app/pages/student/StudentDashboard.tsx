@@ -158,9 +158,9 @@ export default function StudentDashboard() {
               Ask AI Tutor
             </Button>
           </Link>
-          <Link to="/student/entrance-exam">
+          <Link to="/student/contract-kyc">
             <Button className="w-full bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] shadow-lg shadow-[#C2A86A]/20">
-              Entrance Exam
+              Complete KYC
             </Button>
           </Link>
         </div>

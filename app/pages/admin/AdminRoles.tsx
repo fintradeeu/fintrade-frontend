@@ -756,6 +756,7 @@ export default function AdminRoles() {
                   <TableHead className="font-bold">Permissions</TableHead>
                   <TableHead className="font-bold">Status</TableHead>
                   <TableHead className="font-bold">Last Active</TableHead>
+                  <TableHead className="font-bold">Login Details</TableHead>
                   <TableHead className="font-bold text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -810,6 +811,27 @@ export default function AdminRoles() {
                         day: 'numeric', 
                         month: 'short' 
                       })}
+                    </TableCell>
+                    <TableCell className="text-gray-600 text-xs">
+                      {admin.login_details && admin.login_details.login_time ? (
+                        <div className="space-y-0.5">
+                          <div className="font-semibold text-slate-800">
+                            {new Date(admin.login_details.login_time).toLocaleString('en-IN', {
+                              day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                            })}
+                          </div>
+                          <div className="text-[10px] text-slate-400">
+                            IP: {admin.login_details.ip_address || "—"}
+                          </div>
+                          {admin.login_details.user_agent && (
+                            <div className="text-[10px] text-slate-400 truncate max-w-[140px]">
+                              Agent: {admin.login_details.user_agent.includes("Chrome") ? "Chrome" : admin.login_details.user_agent.includes("Firefox") ? "Firefox" : "Browser"}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 italic">No login record</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">

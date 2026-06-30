@@ -34,6 +34,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
       return [
         { label: "Dashboard", path: "/superadmin/dashboard", icon: <Home size={20} /> },
         { label: "User Management", path: "/admin/students", icon: <Users size={20} /> },
+        { label: "Student Management", path: "/admin/student-management", icon: <GraduationCap size={20} /> },
         { label: "IB Management", path: "/admin/introducing-brokers", icon: <Handshake size={20} /> },
         { label: "Commission Management", path: "/admin/commissions", icon: <IndianRupee size={20} /> },
         { label: "Courses", path: "/admin/courses", icon: <BookOpen size={20} /> },
@@ -88,6 +89,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
       return [
         { label: "Dashboard", path: "/admin/dashboard", icon: <Home size={20} /> },
         { label: "User Management", path: "/admin/students", icon: <Users size={20} /> },
+        { label: "Student Management", path: "/admin/student-management", icon: <GraduationCap size={20} /> },
         { label: "Courses", path: "/admin/courses", icon: <BookOpen size={20} /> },
         { label: "Module Students", path: "/admin/module-students", icon: <GraduationCap size={20} /> },
         { label: "Lectures", path: "/admin/lectures", icon: <Video size={20} /> },
@@ -137,6 +139,7 @@ export function DashboardLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showLockedModal, setShowLockedModal] = useState(false);
   const [enrolledCount, setEnrolledCount] = useState<number | null>(null);
+  const [isKycVerified, setIsKycVerified] = useState<boolean>(true);
   const [autoName, setAutoName] = useState("User");
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileForm, setProfileForm] = useState({ full_name: "", email: "", phone: "" });
@@ -155,6 +158,7 @@ export function DashboardLayout({
         case "/superadmin/dashboard":
           return userPermissions.viewDashboard !== false;
         case "/admin/students":
+        case "/admin/student-management":
           return userPermissions.manageStudents !== false;
         case "/admin/introducing-brokers":
           return resolvedRole === "super_admin";
@@ -258,19 +262,42 @@ export function DashboardLayout({
     }
   }, [profileOpen]);
 
-  // Restrict access for un-enrolled students
+  // Restrict access for students based on enrollment and KYC verification
   useEffect(() => {
     if (resolvedRole === "student") {
-      api.get("/courses/enrolled")
-        .then((res) => {
-          setEnrolledCount(res.data.length);
+      Promise.all([
+        api.get("/courses/enrolled"),
+        api.get("/kyc/status")
+      ])
+        .then(([enrolledRes, kycRes]) => {
+          const enrolled = enrolledRes.data;
+          setEnrolledCount(enrolled.length);
+          
+          const kycStatus = kycRes.data?.status || "not_started";
+          const verified = kycStatus === "verified" || kycStatus === "approved";
+          setIsKycVerified(verified);
+
           const allowedUnenrolledRoutes = [
             "/student/profile", "/student/courses",
             "/student/contract-kyc", "/student/exams", "/student/entrance-exam",
             "/student/invoice"
           ];
-          if (res.data.length === 0 && !allowedUnenrolledRoutes.includes(location.pathname)) {
-            navigate("/student/courses");
+
+          if (enrolled.length === 0) {
+            if (!allowedUnenrolledRoutes.includes(location.pathname)) {
+              navigate("/student/courses");
+            }
+          } else if (!verified) {
+            const allowedUnverifiedRoutes = [
+              "/student/contract-kyc",
+              "/student/profile",
+              "/student/invoice",
+              "/student/courses"
+            ];
+            if (!allowedUnverifiedRoutes.includes(location.pathname)) {
+              const courseId = enrolled[0]?.course_id;
+              navigate(courseId ? `/student/contract-kyc?course_id=${courseId}` : "/student/contract-kyc");
+            }
           }
         })
         .catch(() => {
@@ -478,12 +505,20 @@ export function DashboardLayout({
                 const isActive = location.pathname === item.path;
                 const allowedUnenrolledRoutes = [
                   "/student/profile", "/student/courses",
-                  "/student/contract-kyc", "/student/exams", "/student/entrance-exam"
+                  "/student/contract-kyc", "/student/exams", "/student/entrance-exam",
+                  "/student/invoice"
+                ];
+                const allowedUnverifiedRoutes = [
+                  "/student/contract-kyc",
+                  "/student/profile",
+                  "/student/invoice",
+                  "/student/courses"
                 ];
                 const isLocked =
                   resolvedRole === "student" &&
-                  enrolledCount === 0 &&
-                  !allowedUnenrolledRoutes.includes(item.path);
+                  (enrolledCount === 0
+                    ? !allowedUnenrolledRoutes.includes(item.path)
+                    : (!isKycVerified && !allowedUnverifiedRoutes.includes(item.path)));
 
                 return (
                   <Link
@@ -545,8 +580,9 @@ export function DashboardLayout({
           </div>
           <h2 className="text-2xl font-bold text-[#121212] mb-2">Feature Locked</h2>
           <p className="text-gray-600 mb-6">
-            You must enroll in a course to access this area of the student portal.
-            Visit the Courses tab to get started!
+            {enrolledCount === 0
+              ? "You must enroll in a course to access this area of the student portal. Visit the Courses tab to get started!"
+              : "You must complete your eKYC verification to access this area of the student portal. Visit the KYC tab to get started!"}
           </p>
           <Button
             onClick={() => setShowLockedModal(false)}

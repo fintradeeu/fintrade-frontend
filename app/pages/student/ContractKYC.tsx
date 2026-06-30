@@ -1608,16 +1608,24 @@ export default function ContractKYC() {
                   Download Contract
                 </Button>
                 <Button
-                  onClick={() => setShowCheckout(true)}
-                  disabled={!agreed || !course}
+                  onClick={async () => {
+                    setVerifying(true);
+                    const completed = await handleGenerateContractOnBackend(true);
+                    setVerifying(false);
+                    if (completed) {
+                      toast.success("eKYC and contract signing completed successfully!");
+                      navigate("/student/dashboard");
+                    }
+                  }}
+                  disabled={!agreed || verifying}
                   className={`w-full font-bold rounded-2xl py-6 shadow-md transition-all duration-300 ${
-                    (agreed && course) 
+                    (agreed && !verifying) 
                       ? "bg-gradient-to-r from-[#D50032] to-[#FF4D70] text-white hover:brightness-105" 
                       : "bg-slate-100 text-slate-400 cursor-not-allowed"
                   }`}
                   size="lg"
                 >
-                  Process to Pay
+                  {verifying ? "Processing..." : "Complete KYC & Go to Dashboard"}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>

@@ -181,43 +181,10 @@ export default function CourseEnrollment() {
       setCouponCode(savedCode);
     }
 
-    try {
-      // Single API call to check if student passed entrance exam for this course
-      const checkRes = await api.get(`/exams/check-enrollment?course_id=${courseId}`);
-      const { has_entrance_exam, passed } = checkRes.data;
-
-      if (!has_entrance_exam) {
-        // No entrance exam — go straight to payment
-        setShowPayment(true);
-        if (savedCode) {
-          await autoApplySavedCoupon(courseId);
-        }
-        return;
-      }
-
-      if (passed) {
-        // Passed the entrance exam — check KYC status
-        try {
-          const kycRes = await api.get("/kyc/status");
-          const kycStatus = kycRes.data?.status;
-          if (kycStatus === "verified" || kycStatus === "approved") {
-            setShowPayment(true); // KYC done — go to payment
-            if (savedCode) {
-              await autoApplySavedCoupon(courseId);
-            }
-          } else {
-            setShowKycModal(true); // Show KYC popup
-          }
-        } catch {
-          setShowKycModal(true);
-        }
-      } else {
-        // Not passed — show entrance exam required modal
-        setShowEntranceModal(true);
-      }
-    } catch (err) {
-      // If API fails (unauthenticated etc), show entrance exam modal
-      setShowEntranceModal(true);
+    // Direct checkout
+    setShowPayment(true);
+    if (savedCode) {
+      await autoApplySavedCoupon(courseId);
     }
   };
 
@@ -278,9 +245,9 @@ export default function CourseEnrollment() {
                   razorpay_signature: response.razorpay_signature,
                   txnid: res.data.txnid,
                 });
-                toast.success("Enrollment successful! Welcome to the course.");
+                toast.success("Payment successful! Please complete your eKYC details to proceed.");
                 setTimeout(() => {
-                  window.location.href = "/student/modules";
+                  window.location.href = `/student/contract-kyc?course_id=${selectedCourse}`;
                 }, 1500);
               } catch (err: any) {
                 console.error("Razorpay verification failed:", err);
@@ -317,9 +284,9 @@ export default function CourseEnrollment() {
         // Free course or 100% discount
         console.log("Final price is 0, enrolling user directly...");
         await api.post(`/courses/${selectedCourse}/enroll`, { distributor_code: couponCode });
-        toast.success("Enrollment successful! Welcome to the course.");
+        toast.success("Enrollment successful! Please complete your eKYC details to proceed.");
         setTimeout(() => {
-          window.location.href = "/student/modules";
+          window.location.href = `/student/contract-kyc?course_id=${selectedCourse}`;
         }, 1500);
       }
     } catch (err: any) {

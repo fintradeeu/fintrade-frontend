@@ -14,6 +14,9 @@ interface CookieConsentLog {
   user_id: number | null;
   user_name: string | null;
   user_email: string | null;
+  user_phone?: string | null;
+  user_city?: string | null;
+  user_roles?: string[] | null;
   ip_address: string | null;
   user_agent: string | null;
   consent_type: string;
@@ -60,12 +63,15 @@ export default function AdminCookieConsents() {
     }
 
     // Standard CSV compilation
-    const headers = ["ID", "User ID", "User Name", "User Email", "IP Address", "Consent Type", "Date Time", "User Agent"];
+    const headers = ["ID", "User ID", "User Name", "User Email", "Phone", "City", "Roles", "IP Address", "Consent Type", "Date Time", "User Agent"];
     const rows = filteredConsents.map((c) => [
       c.id,
       c.user_id || "Guest",
       c.user_name || "Guest Visitor",
       c.user_email || "—",
+      c.user_phone || "—",
+      c.user_city || "—",
+      (c.user_roles || []).join("; ") || "—",
       c.ip_address || "—",
       c.consent_type.toUpperCase(),
       new Date(c.created_at).toLocaleString("en-IN"),
@@ -180,9 +186,25 @@ export default function AdminCookieConsents() {
                               <p className="text-xs text-slate-400">Anonymous session</p>
                             </div>
                           ) : (
-                            <div>
+                            <div className="space-y-1">
                               <p className="font-extrabold text-sm text-[#0B2A5B]">{log.user_name}</p>
                               <p className="text-xs text-[#D50032] font-semibold">{log.user_email}</p>
+                              {(log.user_phone || log.user_city) && (
+                                <p className="text-[10px] text-slate-500 font-medium">
+                                  {log.user_phone && `Phone: ${log.user_phone}`}
+                                  {log.user_phone && log.user_city && " | "}
+                                  {log.user_city && `City: ${log.user_city}`}
+                                </p>
+                              )}
+                              {log.user_roles && log.user_roles.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-0.5">
+                                  {log.user_roles.map((r: string) => (
+                                    <Badge key={r} className="bg-slate-100 text-slate-700 text-[9px] px-1.5 py-0 border border-slate-200 uppercase font-semibold">
+                                      {r}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           )}
                         </TableCell>

@@ -53,6 +53,7 @@ import TeacherAssignments from "./pages/teacher/TeacherAssignments";
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminStudents from "./pages/admin/AdminStudents";
+import AdminStudentManagement from "./pages/admin/AdminStudentManagement";
 import AdminIntroducingBrokers from "./pages/admin/AdminIntroducingBrokers";
 import AdminCommissionManagement from "./pages/admin/AdminCommissionManagement";
 import AdminCourses from "./pages/admin/AdminCourses";
@@ -283,6 +284,10 @@ export const router = createBrowserRouter([
   {
     path: "/admin/students",
     Component: AdminStudents,
+  },
+  {
+    path: "/admin/student-management",
+    Component: AdminStudentManagement,
   },
   {
     path: "/admin/introducing-brokers",

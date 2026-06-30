@@ -112,16 +112,16 @@ export default function LandingPage() {
               <span className="text-[#C2A86A]">Build Wealth.</span>
             </h1>
             <p className="text-lg text-[#0B2A5B]/80 mb-8 leading-relaxed">
-              Learn professional trading strategies through our structured LMS platform. From entrance exam to
+              Learn professional trading strategies through our structured LMS platform. From enrollment to
               placement, we guide you every step of the way.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to={isAuthenticated ? "/student/entrance-exam" : "/register"}>
+              <Link to={isAuthenticated ? "/student/courses" : "/register"}>
                 <Button
                   size="lg"
                   className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] shadow-xl shadow-[#0B2A5B]/20 w-full sm:w-auto"
                 >
-                  Start Entrance Exam
+                  Explore Courses
                   <ArrowRight className="ml-2" size={20} />
                 </Button>
               </Link>
@@ -267,12 +267,12 @@ export default function LandingPage() {
               Join thousands of successful traders who started with FinTrade
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to={isAuthenticated ? "/student/entrance-exam" : "/register"}>
+              <Link to={isAuthenticated ? "/student/courses" : "/register"}>
                 <Button
                   size="lg"
                   className="bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] shadow-lg shadow-[#C2A86A]/30 w-full sm:w-auto"
                 >
-                  Start Entrance Exam
+                  Explore Courses
                   <ArrowRight className="ml-2" size={20} />
                 </Button>
               </Link>

@@ -365,37 +365,7 @@ export default function CourseDetailPage() {
       navigate("/register");
       return;
     }
-
-    setEnrollLoading(true);
-    try {
-      const checkRes = await api.get(`/exams/check-enrollment?course_id=${course.id}`);
-      const { has_entrance_exam, passed } = checkRes.data;
-
-      if (!has_entrance_exam) {
-        setShowCheckoutModal(true);
-        return;
-      }
-
-      if (passed) {
-        try {
-          const kycRes = await api.get("/kyc/status");
-          const kycStatus = kycRes.data?.status;
-          if (kycStatus === "verified" || kycStatus === "approved") {
-            setShowCheckoutModal(true);
-          } else {
-            setShowKycModal(true);
-          }
-        } catch {
-          setShowKycModal(true);
-        }
-      } else {
-        navigate(`/student/entrance-exam?course_id=${course.id}`);
-      }
-    } catch {
-      navigate(`/student/entrance-exam?course_id=${course.id}`);
-    } finally {
-      setEnrollLoading(false);
-    }
+    setShowCheckoutModal(true);
   };
 
   // Icons array for Highlights
@@ -711,8 +681,8 @@ export default function CourseDetailPage() {
           onClose={() => setShowCheckoutModal(false)}
           onSuccess={() => {
             setShowCheckoutModal(false);
-            alert("Enrollment successful! You can now access your dashboard.");
-            window.location.href = "/student/dashboard";
+            alert("Payment successful! Please complete your eKYC details to proceed.");
+            window.location.href = `/student/contract-kyc?course_id=${course.id}`;
           }}
         />
       )}
