@@ -1,19 +1,46 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronDown, ChevronUp, Clock, BookOpen, Layers, Play, Video, FileAudio, FileText, HelpCircle, Download } from "lucide-react";
+import { 
+  ChevronDown, ChevronUp, Clock, BookOpen, Layers, Play, Video, FileAudio, 
+  FileText, HelpCircle, Download, TrendingUp, BarChart3, Shield, Award, 
+  Target, Trophy, Brain 
+} from "lucide-react";
 import api from "../../services/api";
 import { motion } from "motion/react";
+
 interface Module {
-  num: number;
+  num: number | string;
   title: string;
   overview: string;
+  icon?: string;
   lessons?: any[];
 }
-// dgdd
+
 interface ProgramSection {
   title: string;
   duration: string;
   modules: Module[];
 }
+
+const iconMap: Record<string, any> = {
+  BookOpen,
+  TrendingUp,
+  FileText,
+  BarChart3,
+  Shield,
+  Award,
+  Target,
+  Trophy,
+  Brain,
+};
+
+const getImageUrl = (path?: string) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
+  const base = api.defaults.baseURL || "";
+  const cleanBase = base.endsWith("/") ? base.slice(0, -1) : base;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `${cleanBase}${cleanPath}`;
+};
 
 const programSections: ProgramSection[] = [
   {
@@ -217,8 +244,19 @@ export default function ProgramModules({ apiCourses }: { apiCourses?: any[] | nu
                             >
                               <div className="flex items-center justify-between gap-1.5 sm:gap-3">
                                 <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1">
-                                  <div className="w-5 h-5 sm:w-6 h-6 rounded-full bg-[#D50032]/5 text-[#D50032] border border-[#D50032]/10 flex items-center justify-center text-[9px] sm:text-[11px] font-black flex-shrink-0">
-                                    {mod.num}
+                                  <div className="w-5 h-5 sm:w-6 h-6 rounded-full bg-[#D50032]/5 text-[#D50032] border border-[#D50032]/10 flex items-center justify-center text-[9px] sm:text-[11px] font-black flex-shrink-0 overflow-hidden">
+                                    {mod.icon ? (
+                                      mod.icon.startsWith("/uploads") ? (
+                                        <img src={getImageUrl(mod.icon)} alt={mod.title} className="w-full h-full object-cover" />
+                                      ) : (
+                                        (() => {
+                                          const IconComp = iconMap[mod.icon] || BookOpen;
+                                          return <IconComp className="w-3 h-3 sm:w-3.5 h-3.5" />;
+                                        })()
+                                      )
+                                    ) : (
+                                      mod.num
+                                    )}
                                   </div>
                                   <h4 className="font-extrabold text-gray-900 text-[11px] sm:text-base leading-snug group-hover:text-[#D50032] transition-colors truncate sm:whitespace-normal">
                                     {mod.title}

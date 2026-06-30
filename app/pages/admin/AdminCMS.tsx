@@ -2124,7 +2124,7 @@ export default function AdminCMS() {
                           onClick={async () => {
                             const list = [...stagesList];
                             const mods = [...(list[sIdx].modules || [])];
-                            mods.push({ num: mods.length + 1, title: "", overview: "" });
+                            mods.push({ num: String(mods.length + 1).padStart(2, "0"), title: "", overview: "", icon: "BookOpen" });
                             list[sIdx] = { ...list[sIdx], modules: mods };
                             setConfig(p => ({ ...p, program_modules: list }));
                           }}
@@ -2144,7 +2144,7 @@ export default function AdminCMS() {
                                 const mods = [...(list[sIdx].modules || [])];
                                 mods.splice(mIdx, 1);
                                 // Re-index module numbers
-                                const reindexed = mods.map((m, i) => ({ ...m, num: i + 1 }));
+                                const reindexed = mods.map((m, i) => ({ ...m, num: String(i + 1).padStart(2, "0") }));
                                 list[sIdx] = { ...list[sIdx], modules: reindexed };
                                 setConfig(p => ({ ...p, program_modules: list }));
                               }}
@@ -2154,13 +2154,26 @@ export default function AdminCMS() {
                               <Trash2 size={14} />
                             </button>
 
-                            <div className="grid md:grid-cols-12 gap-3 pr-6">
-                              <div className="md:col-span-1 flex items-center justify-center">
-                                <span className="w-6 h-6 rounded-full bg-gray-200 text-gray-700 flex items-center justify-center text-xs font-black">
-                                  {mod.num}
-                                </span>
+                            <div className="grid md:grid-cols-12 gap-4 pr-6">
+                              {/* Number Badge */}
+                              <div className="md:col-span-2">
+                                <Label className="text-xs">Number Badge</Label>
+                                <Input
+                                  value={mod.num || ""}
+                                  onChange={e => {
+                                    const list = [...stagesList];
+                                    const mods = [...(list[sIdx].modules || [])];
+                                    mods[mIdx] = { ...mods[mIdx], num: e.target.value };
+                                    list[sIdx] = { ...list[sIdx], modules: mods };
+                                    setConfig(p => ({ ...p, program_modules: list }));
+                                  }}
+                                  placeholder="e.g. 01"
+                                  className="mt-1 h-8 text-xs bg-white"
+                                />
                               </div>
-                              <div className="md:col-span-4">
+
+                              {/* Module Title */}
+                              <div className="md:col-span-10">
                                 <Label className="text-xs">Module Title</Label>
                                 <Input
                                   value={mod.title || ""}
@@ -2175,9 +2188,115 @@ export default function AdminCMS() {
                                   className="mt-1 h-8 text-xs bg-white"
                                 />
                               </div>
-                              <div className="md:col-span-7">
+
+                              {/* Custom Logo / Lucide Icon Selection */}
+                              <div className="md:col-span-12">
+                                <Label className="text-xs text-gray-700 font-bold">Module Custom Logo (PNG/SVG) — Or Custom Lucide Icon</Label>
+                                <div className="grid md:grid-cols-2 gap-4 mt-1 bg-white p-3 rounded-lg border border-gray-200">
+                                  <div className="flex flex-col gap-2">
+                                    <Label className="text-[10px] text-gray-500 font-bold">Lucide Icon Selection</Label>
+                                    <div className="flex gap-2">
+                                      <select
+                                        value={["BookOpen", "TrendingUp", "FileText", "BarChart3", "Shield", "Award", "Target", "Trophy", "Brain"].includes(mod.icon || "BookOpen") ? (mod.icon || "BookOpen") : "Custom"}
+                                        onChange={e => {
+                                          const val = e.target.value;
+                                          if (val !== "Custom") {
+                                            const list = [...stagesList];
+                                            const mods = [...(list[sIdx].modules || [])];
+                                            mods[mIdx] = { ...mods[mIdx], icon: val };
+                                            list[sIdx] = { ...list[sIdx], modules: mods };
+                                            setConfig(p => ({ ...p, program_modules: list }));
+                                          }
+                                        }}
+                                        className="flex h-9 rounded-md border border-input bg-background px-3 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                      >
+                                        <option value="BookOpen">BookOpen</option>
+                                        <option value="TrendingUp">TrendingUp</option>
+                                        <option value="FileText">FileText</option>
+                                        <option value="BarChart3">BarChart3</option>
+                                        <option value="Shield">Shield</option>
+                                        <option value="Award">Award</option>
+                                        <option value="Target">Target</option>
+                                        <option value="Trophy">Trophy</option>
+                                        <option value="Brain">Brain</option>
+                                        <option value="Custom">Custom / Other</option>
+                                      </select>
+                                      <Input
+                                        value={mod.icon && mod.icon.startsWith("/uploads") ? "" : (mod.icon || "")}
+                                        onChange={e => {
+                                          const list = [...stagesList];
+                                          const mods = [...(list[sIdx].modules || [])];
+                                          mods[mIdx] = { ...mods[mIdx], icon: e.target.value };
+                                          list[sIdx] = { ...list[sIdx], modules: mods };
+                                          setConfig(p => ({ ...p, program_modules: list }));
+                                        }}
+                                        placeholder="Or type Lucide icon name..."
+                                        className="flex-1 h-9 text-xs"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-col gap-2">
+                                    <Label className="text-[10px] text-gray-500 font-bold">Custom Image Upload</Label>
+                                    <div className="flex items-center gap-3">
+                                      <Input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={async (e) => {
+                                          if (!e.target.files || e.target.files.length === 0) return;
+                                          const file = e.target.files[0];
+                                          const formData = new FormData();
+                                          formData.append("file", file);
+
+                                          try {
+                                            showToast("Uploading module logo...", "success");
+                                            const res = await api.post("/admin/upload", formData, {
+                                              headers: { "Content-Type": "multipart/form-data" }
+                                            });
+                                            if (res.data && res.data.url) {
+                                              const list = [...stagesList];
+                                              const mods = [...(list[sIdx].modules || [])];
+                                              mods[mIdx] = { ...mods[mIdx], icon: res.data.url };
+                                              list[sIdx] = { ...list[sIdx], modules: mods };
+                                              setConfig(p => ({ ...p, program_modules: list }));
+                                              showToast("Module logo uploaded!", "success");
+                                            }
+                                          } catch {
+                                            showToast("Upload failed.", "error");
+                                          }
+                                        }}
+                                        className="flex-1 cursor-pointer h-9 py-1 text-xs"
+                                      />
+                                      {mod.icon && mod.icon.startsWith("/uploads") && (
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          onClick={async () => {
+                                            const list = [...stagesList];
+                                            const mods = [...(list[sIdx].modules || [])];
+                                            mods[mIdx] = { ...mods[mIdx], icon: "BookOpen" };
+                                            list[sIdx] = { ...list[sIdx], modules: mods };
+                                            setConfig(p => ({ ...p, program_modules: list }));
+                                          }}
+                                          className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 h-9 px-2 flex items-center gap-1 text-xs"
+                                        >
+                                          <Trash2 size={12} className="mr-1" /> Remove
+                                        </Button>
+                                      )}
+                                      {mod.icon && mod.icon.startsWith("/uploads") && (
+                                        <div className="relative w-8 h-8 rounded overflow-hidden border border-gray-200 flex-shrink-0 bg-white">
+                                          <img src={getImageUrl(mod.icon)} alt="icon preview" className="w-full h-full object-cover" />
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Description / Overview */}
+                              <div className="md:col-span-12">
                                 <Label className="text-xs">Overview Description</Label>
-                                <Input
+                                <textarea
                                   value={mod.overview || ""}
                                   onChange={e => {
                                     const list = [...stagesList];
@@ -2186,8 +2305,9 @@ export default function AdminCMS() {
                                     list[sIdx] = { ...list[sIdx], modules: mods };
                                     setConfig(p => ({ ...p, program_modules: list }));
                                   }}
-                                  placeholder="e.g. Psychology foundation for retail and professional trading..."
-                                  className="mt-1 h-8 text-xs bg-white"
+                                  placeholder="Provide a clear description of the module..."
+                                  rows={2}
+                                  className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-xs resize-none focus:outline-none focus:ring-2 focus:ring-[#E53935]/30 focus:border-[#E53935]"
                                 />
                               </div>
                             </div>

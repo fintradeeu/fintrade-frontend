@@ -486,48 +486,7 @@ export default function CourseDetailPage() {
         </div>
       </section>
 
-      {/* Modules Curriculum Section (Step outline) */}
-      {course.modules && course.modules.length > 0 && (
-        <section className="py-12 md:py-16 bg-gray-50/30 border-t border-gray-100">
-          <div className="w-full max-w-7xl mx-auto px-6 lg:px-8">
-            <ScrollReveal delay={0.05} y={15}>
-              <div className="mb-10 text-left">
-                <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Course Curriculum</h2>
-                <p className="text-sm text-gray-400 mt-2 font-medium">Deconstructed structural modules covering strategies and risk management.</p>
-              </div>
-            </ScrollReveal>
 
-            <div className="max-w-4xl mx-auto space-y-6">
-              {course.modules.map((module: any, idx: number) => (
-                <ScrollReveal key={module.id || idx} delay={idx * 0.05} y={20}>
-                  <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row gap-6 hover:border-[#D50032]/10 transition-colors">
-                    <div className="w-10 h-10 rounded-xl bg-[#FFF5F6] border border-[#D50032]/8 flex items-center justify-center flex-shrink-0 font-black text-[#D50032]">
-                      {idx + 1}
-                    </div>
-                    <div className="flex-grow text-left">
-                      <h3 className="text-lg font-bold text-gray-900 mb-3">{module.title || module.name}</h3>
-                      {module.description && (
-                        <p className="text-sm text-gray-500 font-medium mb-4 whitespace-pre-line">{module.description}</p>
-                      )}
-                      {module.lessons && module.lessons.length > 0 && (
-                        <div className="space-y-2.5">
-                          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-2">Lessons Covered</span>
-                          {module.lessons.map((lesson: any, lIdx: number) => (
-                            <div key={lesson.id || lIdx} className="flex items-center gap-2.5 text-sm text-gray-600 font-medium">
-                              <div className="w-1.5 h-1.5 rounded-full bg-[#D50032]/40" />
-                              <span>{lesson.title || lesson.name}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </ScrollReveal>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Course Outcomes Section (Same as shivalik) */}
       <section className="py-12 md:py-16 bg-white border-t border-gray-100">
