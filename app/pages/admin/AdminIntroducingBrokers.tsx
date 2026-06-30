@@ -91,7 +91,7 @@ export default function AdminIntroducingBrokers() {
 
   const copyIBRegistrationLink = () => {
     const link = window.location.hostname.includes("localhost")
-      ? `${window.location.origin}/register`
+      ? `${window.location.origin}/register?type=ib`
       : "https://affiliate.thefintrade.com/register";
     navigator.clipboard.writeText(link);
     toast.success("IB self-registration link copied.");

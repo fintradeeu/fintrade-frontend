@@ -229,7 +229,12 @@ function AffiliateIBRegisterForm() {
 }
 
 export default function RegisterPage() {
-  const isAffiliateRegister = window.location.hostname.toLowerCase().includes("affiliate.");
+  const params = new URLSearchParams(window.location.search);
+  const isAffiliateRegister =
+    window.location.hostname.toLowerCase().includes("affiliate.") ||
+    params.get("type") === "ib" ||
+    params.get("role") === "ib" ||
+    params.get("role") === "distributor";
   if (isAffiliateRegister) {
     return <AffiliateIBRegisterForm />;
   }
