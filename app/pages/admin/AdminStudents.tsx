@@ -369,13 +369,23 @@ export default function AdminStudents() {
 
   const filtered = users.filter(u => {
     if (isDistributorUser(u)) return false;
+    const hasPrivilegedRole = u.roles?.some((ro: any) => 
+      ro.name === "admin" || ro.name === "super_admin" || ro.name === "faculty"
+    );
+    if (hasPrivilegedRole) return false;
     const s = u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || u.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const r = roleFilter === "all" || u.roles?.some((ro: any) => ro.name === roleFilter);
     return s && r;
   });
   const visibleRoleFilters = ROLE_FILTERS;
   const countRole = (r: string) => {
-    const visibleUsers = users.filter(u => !isDistributorUser(u));
+    const visibleUsers = users.filter(u => {
+      if (isDistributorUser(u)) return false;
+      const hasPrivilegedRole = u.roles?.some((ro: any) => 
+        ro.name === "admin" || ro.name === "super_admin" || ro.name === "faculty"
+      );
+      return !hasPrivilegedRole;
+    });
     return r === "all" ? visibleUsers.length : visibleUsers.filter(u => u.roles?.some((ro: any) => ro.name === r)).length;
   };
 
