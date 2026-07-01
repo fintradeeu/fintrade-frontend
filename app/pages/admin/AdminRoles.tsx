@@ -109,7 +109,7 @@ interface AdminUser {
           <Input
             value={formData.role}
             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-            placeholder="e.g. Support Admin, Manager"
+            placeholder="e.g. Admin, Faculty, Support Admin"
             className="mt-2"
           />
         </div>
@@ -653,6 +653,10 @@ export default function AdminRoles() {
         return { background: '#4CAF50', color: 'white' };
       case "Support Admin":
         return { background: '#FF9800', color: 'white' };
+      case "Faculty":
+        return { background: '#7C3AED', color: 'white' };
+      case "Admin":
+        return { background: '#0B2A5B', color: 'white' };
       default:
         return { background: '#4d4d4d', color: 'white' };
     }
@@ -666,7 +670,7 @@ export default function AdminRoles() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold" style={{ color: '#121212' }}>Admin Role Management</h1>
-            <p className="text-gray-600 mt-1">Manage admin users and their permissions</p>
+            <p className="text-gray-600 mt-1">Manage super admin, admin, and faculty users with their permissions</p>
           </div>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
@@ -696,7 +700,7 @@ export default function AdminRoles() {
               </div>
               <div>
                 <div className="text-2xl font-bold" style={{ color: '#121212' }}>{adminUsers.length}</div>
-                <div className="text-sm text-gray-600">Total Admins</div>
+                <div className="text-sm text-gray-600">Role Users</div>
               </div>
             </div>
           </Card>
@@ -738,7 +742,7 @@ export default function AdminRoles() {
                 <div className="text-2xl font-bold" style={{ color: '#121212' }}>
                   {adminUsers.filter(a => a.role !== "Super Admin").length}
                 </div>
-                <div className="text-sm text-gray-600">Role-Based</div>
+                <div className="text-sm text-gray-600">Admin / Faculty</div>
               </div>
             </div>
           </Card>

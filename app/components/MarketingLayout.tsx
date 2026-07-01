@@ -6,7 +6,8 @@ import { Card } from "./ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import api from "../services/api";
+import api, { LIVE_API_URL } from "../services/api";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
 import TickerStrip from "./TickerStrip";
 import PublicChatbot from "./PublicChatbot";
@@ -22,6 +23,13 @@ export default function MarketingLayout() {
 
   const [showAnnouncements, setShowAnnouncements] = useState(true);
   const [showCookieBanner, setShowCookieBanner] = useState(false);
+  const [cookieFormOpen, setCookieFormOpen] = useState(false);
+  const [cookieForm, setCookieForm] = useState({
+    name: "",
+    emailId: "",
+    mobileNumber: "",
+  });
+  const [cookieSaving, setCookieSaving] = useState(false);
 
   useEffect(() => {
     const consent = localStorage.getItem("cookie_consent");
@@ -34,12 +42,55 @@ export default function MarketingLayout() {
   }, []);
 
   const handleAcceptCookies = async () => {
-    localStorage.setItem("cookie_consent", "accepted");
     setShowCookieBanner(false);
+    setCookieFormOpen(true);
+  };
+
+  const handleCookieFormSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const payload = {
+      name: cookieForm.name.trim(),
+      emailId: cookieForm.emailId.trim(),
+      mobileNumber: cookieForm.mobileNumber.trim(),
+    };
+
+    if (!payload.name || !payload.emailId || !payload.mobileNumber) {
+      toast.error("Please fill name, email, and mobile number.");
+      return;
+    }
+
+    setCookieSaving(true);
     try {
-      await api.post("/auth/cookie-consent", { consent_type: "accepted" });
-    } catch (err) {
-      console.warn("Failed to log cookie consent:", err);
+      const profileRes = await api.post("/api/v1/user", payload);
+      const profileData = profileRes.data;
+
+      localStorage.setItem("cookie_consent", "accepted");
+      localStorage.setItem("cookie_policy_profile", JSON.stringify({
+        ...payload,
+        id: profileData?.data?.id,
+        role: profileData?.data?.role || "user",
+      }));
+      try {
+        await api.post("/auth/cookie-consent", { consent_type: "accepted" });
+      } catch (consentErr) {
+        console.warn("Failed to log cookie consent:", consentErr);
+      }
+      setCookieFormOpen(false);
+      toast.success(profileData?.message || "User profile created successfully");
+    } catch (err: any) {
+      console.error("Saving cookie policy profile failed:", err);
+      
+      // Local fallback in case backend is unreachable or returns error
+      localStorage.setItem("cookie_consent", "accepted");
+      localStorage.setItem("cookie_policy_profile", JSON.stringify({
+        ...payload,
+        id: "offline_fallback_" + Date.now(),
+        role: "user",
+      }));
+      setCookieFormOpen(false);
+      toast.success("Accepted cookies (saved locally).");
+    } finally {
+      setCookieSaving(false);
     }
   };
 
@@ -655,6 +706,85 @@ export default function MarketingLayout() {
                 className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold border border-gray-200"
               >
                 Logout
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={cookieFormOpen} onOpenChange={setCookieFormOpen}>
+        <DialogContent className="sm:max-w-[460px] bg-white p-0 overflow-hidden rounded-2xl border border-gray-100 shadow-2xl font-sans">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100">
+            <DialogTitle className="text-[#0B2A5B] flex items-center gap-2.5 text-lg font-extrabold">
+              <span className="w-10 h-10 rounded-full bg-[#D50032]/10 text-[#D50032] flex items-center justify-center text-md font-bold">
+                🍪
+              </span>
+              Cookie Consent Details
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleCookieFormSubmit} className="px-6 py-5 space-y-4">
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Please provide your contact information to accept cookies and finalize compliance records.
+            </p>
+            <div>
+              <Label htmlFor="cookieConsentName" className="text-xs font-extrabold text-[#0B2A5B]">Full Name</Label>
+              <div className="relative mt-2">
+                <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  id="cookieConsentName"
+                  value={cookieForm.name}
+                  onChange={(event) => setCookieForm((current) => ({ ...current, name: event.target.value }))}
+                  placeholder="Sujal Gujar"
+                  className="pl-10 h-11 rounded-xl bg-slate-50 border-slate-200 focus:border-[#D50032] focus:ring-[#D50032]"
+                  disabled={cookieSaving}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="cookieConsentEmail" className="text-xs font-extrabold text-[#0B2A5B]">Email Address</Label>
+              <div className="relative mt-2">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  id="cookieConsentEmail"
+                  type="email"
+                  value={cookieForm.emailId}
+                  onChange={(event) => setCookieForm((current) => ({ ...current, emailId: event.target.value }))}
+                  placeholder="name@example.com"
+                  className="pl-10 h-11 rounded-xl bg-slate-50 border-slate-200 focus:border-[#D50032] focus:ring-[#D50032]"
+                  disabled={cookieSaving}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="cookieConsentPhone" className="text-xs font-extrabold text-[#0B2A5B]">Phone Number</Label>
+              <div className="relative mt-2">
+                <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  id="cookieConsentPhone"
+                  type="tel"
+                  value={cookieForm.mobileNumber}
+                  onChange={(event) => setCookieForm((current) => ({ ...current, mobileNumber: event.target.value }))}
+                  placeholder="9876543210"
+                  className="pl-10 h-11 rounded-xl bg-slate-50 border-slate-200 focus:border-[#D50032] focus:ring-[#D50032]"
+                  disabled={cookieSaving}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-5">
+              <Button
+                type="submit"
+                className="flex-1 bg-[#D50032] hover:bg-[#b00029] text-white font-extrabold px-6 py-2.5 h-11 text-sm rounded-xl shadow-lg shadow-[#D50032]/10 transition-transform active:scale-95 border-0 cursor-pointer"
+                disabled={cookieSaving}
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {cookieSaving ? "Saving..." : "Save & Accept Cookies"}
               </Button>
             </div>
           </form>

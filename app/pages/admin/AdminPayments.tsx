@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import DashboardLayout from "../../components/DashboardLayout";
 import { Card } from "../../components/ui/card";
@@ -8,7 +8,7 @@ import { Label } from "../../components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
-import { Plus, Edit, Trash2, Tag, IndianRupee, TrendingUp, Users, Lock, ShieldAlert } from "lucide-react";
+import { Plus, Edit, Trash2, Tag, IndianRupee, TrendingUp, Users, Lock, ShieldAlert, Download } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import api from "../../services/api";
@@ -119,14 +119,20 @@ export default function AdminPayments() {
   const [checkingRole, setCheckingRole] = useState(true);
   const [coupons, setCoupons] = useState<Offer[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState("coupons");
+  const [selectedAmountMetric, setSelectedAmountMetric] = useState<"total_amount" | "total_fees" | "total_gst" | "total_paid">("total_paid");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState<Offer | null>(null);
   const [stats, setStats] = useState({ 
     active_coupons: 0, 
     total_usage: 0,
-    total_revenue: "₹0.00",
-    monthly_revenue: "₹0.00"
+    total_amount: "â‚¹0.00",
+    total_fees: "â‚¹0.00",
+    total_gst: "â‚¹0.00",
+    total_paid: "â‚¹0.00",
+    total_revenue: "â‚¹0.00",
+    monthly_revenue: "â‚¹0.00"
   });
 
   const canViewRevenue = isSuperAdmin;
@@ -156,7 +162,7 @@ export default function AdminPayments() {
       setCoupons(res.data);
       const statRes = await api.get("/admin/offers/stats");
       
-      let revStats = { total_revenue: "₹0.00", monthly_revenue: "₹0.00" };
+      let revStats = { total_revenue: "â‚¹0.00", monthly_revenue: "â‚¹0.00" };
       if (isSuper) {
         try {
           const revRes = await api.get("/admin/revenue/stats");
@@ -170,6 +176,10 @@ export default function AdminPayments() {
       setStats({
         active_coupons: statRes.data.active_coupons || 0,
         total_usage: statRes.data.total_usage || 0,
+        total_amount: (revStats as any).total_amount || "â‚¹0.00",
+        total_fees: (revStats as any).total_fees || "â‚¹0.00",
+        total_gst: (revStats as any).total_gst || "â‚¹0.00",
+        total_paid: (revStats as any).total_paid || "â‚¹0.00",
         total_revenue: revStats.total_revenue,
         monthly_revenue: revStats.monthly_revenue,
       });
@@ -286,6 +296,54 @@ export default function AdminPayments() {
     });
   };
 
+  const openTransactionBreakdown = (metric: typeof selectedAmountMetric) => {
+    setSelectedAmountMetric(metric);
+    setActiveTab("transactions");
+  };
+
+  const amountCellClass = (metric: typeof selectedAmountMetric) =>
+    `font-bold ${selectedAmountMetric === metric ? "bg-[#FFF4D8] text-[#0B2A5B]" : ""}`;
+
+  const exportTransactionsToExcel = () => {
+    const headers = [
+      "Transaction ID",
+      "Student Name",
+      "Student Email",
+      "Course Title",
+      "Total Amount",
+      "Total Fees",
+      "GST Amount",
+      "Paid Amount",
+      "Payment Mode",
+      "Payment Date",
+      "Status",
+    ];
+
+    const escapeCsv = (value: any) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+    const rows = transactions.map((tx) => [
+      tx.txnid,
+      tx.student_name,
+      tx.student_email,
+      tx.course_title,
+      (tx.total_amount ?? tx.amount ?? 0).toFixed(2),
+      (tx.total_fees ?? 0).toFixed(2),
+      (tx.total_gst ?? 0).toFixed(2),
+      (tx.total_paid ?? tx.amount ?? 0).toFixed(2),
+      tx.payment_mode,
+      tx.created_at ? new Date(tx.created_at).toLocaleString() : "N/A",
+      tx.status,
+    ]);
+
+    const csv = [headers, ...rows].map((row) => row.map(escapeCsv).join(",")).join("\n");
+    const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `student-payments-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
@@ -326,32 +384,56 @@ export default function AdminPayments() {
             </div>
           </Card>
         ) : (
-        <div className="grid md:grid-cols-4 gap-4">
-          <Card className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all">
+        <div className="grid md:grid-cols-2 xl:grid-cols-6 gap-4">
+          <Card onClick={() => openTransactionBreakdown("total_amount")} className={`p-6 border-2 transition-all cursor-pointer ${selectedAmountMetric === "total_amount" ? "border-[#D50032] shadow-md" : "border-gray-100 hover:border-[#D50032]"}`}>
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(76, 175, 80, 0.1)' }}>
                 <IndianRupee className="h-6 w-6" style={{ color: '#4CAF50' }} />
               </div>
               <div>
-                <div className="text-2xl font-bold" style={{ color: '#121212' }}>{stats.total_revenue}</div>
-                <div className="text-sm text-gray-600">Total Revenue</div>
+                <div className="text-2xl font-bold" style={{ color: '#121212' }}>{stats.total_amount}</div>
+                <div className="text-sm text-gray-600">Total Amount</div>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all">
+          <Card onClick={() => openTransactionBreakdown("total_fees")} className={`p-6 border-2 transition-all cursor-pointer ${selectedAmountMetric === "total_fees" ? "border-[#D50032] shadow-md" : "border-gray-100 hover:border-[#D50032]"}`}>
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
                 <TrendingUp className="h-6 w-6" style={{ color: '#D50032' }} />
               </div>
               <div>
-                <div className="text-2xl font-bold" style={{ color: '#121212' }}>{stats.monthly_revenue}</div>
-                <div className="text-sm text-gray-600">This Month</div>
+                <div className="text-2xl font-bold" style={{ color: '#121212' }}>{stats.total_fees}</div>
+                <div className="text-sm text-gray-600">Total Fees</div>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all">
+          <Card onClick={() => openTransactionBreakdown("total_gst")} className={`p-6 border-2 transition-all cursor-pointer ${selectedAmountMetric === "total_gst" ? "border-[#D50032] shadow-md" : "border-gray-100 hover:border-[#D50032]"}`}>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
+                <IndianRupee className="h-6 w-6" style={{ color: '#D50032' }} />
+              </div>
+              <div>
+                <div className="text-2xl font-bold" style={{ color: '#121212' }}>{stats.total_gst}</div>
+                <div className="text-sm text-gray-600">Total GST Amount</div>
+              </div>
+            </div>
+          </Card>
+
+          <Card onClick={() => openTransactionBreakdown("total_paid")} className={`p-6 border-2 transition-all cursor-pointer ${selectedAmountMetric === "total_paid" ? "border-[#D50032] shadow-md" : "border-gray-100 hover:border-[#D50032]"}`}>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(76, 175, 80, 0.1)' }}>
+                <IndianRupee className="h-6 w-6" style={{ color: '#4CAF50' }} />
+              </div>
+              <div>
+                <div className="text-2xl font-bold" style={{ color: '#121212' }}>{stats.total_paid}</div>
+                <div className="text-sm text-gray-600">Total Paid Amount</div>
+              </div>
+            </div>
+          </Card>
+
+          <Card onClick={() => setActiveTab("coupons")} className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all cursor-pointer">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
                 <Tag className="h-6 w-6" style={{ color: '#D50032' }} />
@@ -363,7 +445,7 @@ export default function AdminPayments() {
             </div>
           </Card>
 
-          <Card className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all">
+          <Card onClick={() => setActiveTab("coupons")} className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all cursor-pointer">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
                 <Users className="h-6 w-6" style={{ color: '#D50032' }} />
@@ -378,7 +460,7 @@ export default function AdminPayments() {
         )}
 
         {/* Tabs for Coupons and Transactions */}
-        <Tabs defaultValue="coupons" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="coupons">Promo Coupons</TabsTrigger>
             {isSuperAdmin && <TabsTrigger value="transactions">Student Transactions</TabsTrigger>}
@@ -465,43 +547,62 @@ export default function AdminPayments() {
 
           {isSuperAdmin && (
             <TabsContent value="transactions">
-              <Card className="border-2 border-gray-100 p-4">
-                <h2 className="text-xl font-bold mb-4">All Student Payments</h2>
-                <div className="overflow-x-auto">
-                  <Table>
+              <Card className="border-2 border-gray-100 p-4 max-w-full overflow-hidden">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                  <div>
+                    <h2 className="text-xl font-bold">All Student Payments</h2>
+                    <p className="text-sm text-gray-500">Scroll horizontally if needed; amount columns highlight when you click a summary card.</p>
+                  </div>
+                  <Button
+                    onClick={exportTransactionsToExcel}
+                    disabled={transactions.length === 0}
+                    className="bg-[#0B2A5B] text-white hover:bg-[#143A73] w-full sm:w-auto"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Excel
+                  </Button>
+                </div>
+                <div className="overflow-x-auto max-w-full">
+                  <Table className="text-xs min-w-[1120px]">
                     <TableHeader>
                       <TableRow className="bg-gray-50 hover:bg-gray-50">
-                        <TableHead className="font-bold">Transaction ID</TableHead>
-                        <TableHead className="font-bold">Student Name</TableHead>
-                        <TableHead className="font-bold">Student Email</TableHead>
-                        <TableHead className="font-bold">Course Title</TableHead>
-                        <TableHead className="font-bold">Amount</TableHead>
-                        <TableHead className="font-bold">Payment Mode</TableHead>
-                        <TableHead className="font-bold">Payment Date</TableHead>
-                        <TableHead className="font-bold">Status</TableHead>
+                        <TableHead className="font-bold px-2 py-3">Transaction ID</TableHead>
+                        <TableHead className="font-bold px-2 py-3">Student Name</TableHead>
+                        <TableHead className="font-bold px-2 py-3">Student Email</TableHead>
+                        <TableHead className="font-bold px-2 py-3">Course Title</TableHead>
+                        <TableHead className="font-bold px-2 py-3 text-right">Total Amount</TableHead>
+                        <TableHead className="font-bold px-2 py-3 text-right">Total Fees</TableHead>
+                        <TableHead className="font-bold px-2 py-3 text-right">GST Amount</TableHead>
+                        <TableHead className="font-bold px-2 py-3 text-right">Paid Amount</TableHead>
+                        <TableHead className="font-bold px-2 py-3">Payment Mode</TableHead>
+                        <TableHead className="font-bold px-2 py-3">Payment Date</TableHead>
+                        <TableHead className="font-bold px-2 py-3">Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {transactions.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={8} className="text-center text-gray-500 py-6">
+                          <TableCell colSpan={11} className="text-center text-gray-500 py-6">
                             No successful transactions found.
                           </TableCell>
                         </TableRow>
                       ) : (
                         transactions.map((tx) => (
                           <TableRow key={tx.id} className="hover:bg-gray-50">
-                            <TableCell className="font-mono text-xs font-bold" style={{ color: '#121212' }}>
+                            <TableCell className="font-mono text-[11px] font-bold px-2 py-3 max-w-[130px] truncate" style={{ color: '#121212' }} title={tx.txnid}>
                               {tx.txnid}
                             </TableCell>
-                            <TableCell className="font-medium" style={{ color: '#121212' }}>
+                            <TableCell className="font-medium px-2 py-3 max-w-[120px] truncate" style={{ color: '#121212' }} title={tx.student_name}>
                               {tx.student_name}
                             </TableCell>
-                            <TableCell className="text-gray-600">{tx.student_email}</TableCell>
-                            <TableCell className="font-medium">{tx.course_title}</TableCell>
-                            <TableCell>
-                              <span className="font-bold" style={{ color: '#4CAF50' }}>
-                                ₹{tx.amount.toFixed(2)}
+                            <TableCell className="text-gray-600 px-2 py-3 max-w-[170px] truncate" title={tx.student_email}>{tx.student_email}</TableCell>
+                            <TableCell className="font-medium px-2 py-3 max-w-[120px] truncate" title={tx.course_title}>{tx.course_title}</TableCell>
+                            <TableCell className={`${amountCellClass("total_amount")} px-2 py-3 text-right`}>{"\u20B9"}{(tx.total_amount ?? tx.amount ?? 0).toFixed(2)}</TableCell>
+                            <TableCell className={`${amountCellClass("total_fees")} px-2 py-3 text-right`}>{"\u20B9"}{(tx.total_fees ?? 0).toFixed(2)}</TableCell>
+                            <TableCell className={`${amountCellClass("total_gst")} px-2 py-3 text-right`}>{"\u20B9"}{(tx.total_gst ?? 0).toFixed(2)}</TableCell>
+                            <TableCell className={`${amountCellClass("total_paid")} px-2 py-3 text-right`}>
+                              <span style={{ color: selectedAmountMetric === "total_paid" ? "#0B2A5B" : '#4CAF50' }}>
+                                {"\u20B9"}{(tx.total_paid ?? tx.amount ?? 0).toFixed(2)}
                               </span>
                             </TableCell>
                             <TableCell>

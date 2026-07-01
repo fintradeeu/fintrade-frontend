@@ -108,16 +108,20 @@ export default function TickerStrip() {
           };
         });
 
-        setTickers(mapped);
-        localStorage.setItem("fintrade_ticker_data", JSON.stringify(mapped));
-        localStorage.setItem("fintrade_ticker_time", now.toString());
+        if (mapped && mapped.length > 0) {
+          setTickers(mapped);
+          localStorage.setItem("fintrade_ticker_data", JSON.stringify(mapped));
+          localStorage.setItem("fintrade_ticker_time", now.toString());
+        } else {
+          throw new Error("Mapped Twelve Data ticker list is empty");
+        }
       } catch (err) {
         console.warn("Failed to fetch from Twelve Data, checking simulator fallback:", err);
         
         // Try local simulator fallback
         try {
           const res = await api.get('/simulator/market-data');
-          if (res.data && Array.isArray(res.data)) {
+          if (res.data && Array.isArray(res.data) && res.data.length > 0) {
             const mapped = res.data.map((item: any) => {
               const changePct = item.change_pct ?? 0;
               const price = item.price ?? 0;
@@ -143,10 +147,37 @@ export default function TickerStrip() {
             setTickers(mapped);
             localStorage.setItem("fintrade_ticker_data", JSON.stringify(mapped));
             localStorage.setItem("fintrade_ticker_time", now.toString());
+          } else {
+            console.warn("Simulator market-data returned empty array or invalid structure.");
+            if (cachedData) {
+              try {
+                const parsed = JSON.parse(cachedData);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                  setTickers(parsed);
+                } else {
+                  setTickers(fallbackTickers);
+                }
+              } catch {
+                setTickers(fallbackTickers);
+              }
+            } else {
+              setTickers(fallbackTickers);
+            }
           }
         } catch (simErr) {
           console.error("Local simulator API fallback also failed:", simErr);
-          if (!cachedData) {
+          if (cachedData) {
+            try {
+              const parsed = JSON.parse(cachedData);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                setTickers(parsed);
+              } else {
+                setTickers(fallbackTickers);
+              }
+            } catch {
+              setTickers(fallbackTickers);
+            }
+          } else {
             setTickers(fallbackTickers);
           }
         }

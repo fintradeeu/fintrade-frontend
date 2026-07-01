@@ -5,7 +5,9 @@ const isLocalhost = typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
 const API_URL = import.meta.env.VITE_API_URL || 
-  (isLocalhost ? 'http://localhost:8000' : 'https://api.thefintrade.com');
+  (isLocalhost ? 'http://localhost:8000' : 'https://fintrade-backend.onrender.com');
+
+export const LIVE_API_URL = 'https://fintrade-backend.onrender.com';
 
 export const api = axios.create({
   baseURL: API_URL,

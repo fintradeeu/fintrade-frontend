@@ -140,15 +140,54 @@ export function DashboardLayout({
   const [showLockedModal, setShowLockedModal] = useState(false);
   const [enrolledCount, setEnrolledCount] = useState<number | null>(null);
   const [isKycVerified, setIsKycVerified] = useState<boolean>(true);
-  const [autoName, setAutoName] = useState("User");
+  const [autoName, setAutoName] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("user");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          return parsed.full_name || "User";
+        }
+      } catch { /* ignore */ }
+    }
+    return "User";
+  });
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileForm, setProfileForm] = useState({ full_name: "", email: "", phone: "" });
 
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [resolvedRole, setResolvedRole] = useState<string>(roleProp || userRole || "student");
-  const [userPermissions, setUserPermissions] = useState<any>(null);
+  const [resolvedRole, setResolvedRole] = useState<string>(() => {
+    if (roleProp) return roleProp;
+    if (userRole) return userRole;
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("user");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          const roles = parsed.roles || [];
+          if (roles.some((r: any) => r.name === "super_admin")) return "super_admin";
+          if (roles.some((r: any) => r.name === "admin")) return "admin";
+          if (roles.some((r: any) => r.name === "faculty")) return "teacher";
+          if (roles.some((r: any) => r.name === "distributor")) return "distributor";
+        }
+      } catch { /* ignore */ }
+    }
+    return "student";
+  });
+  const [userPermissions, setUserPermissions] = useState<any>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("user");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          return parsed.permissions || null;
+        }
+      } catch { /* ignore */ }
+    }
+    return null;
+  });
   
   let baseNavItems = customNavItems || getNavItemsByRole(resolvedRole);
   if ((resolvedRole === "admin" || resolvedRole === "super_admin") && userPermissions) {

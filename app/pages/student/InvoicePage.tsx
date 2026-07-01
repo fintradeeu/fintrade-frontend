@@ -24,6 +24,10 @@ interface Invoice {
   courseTitle: string;
   purchaseDate: string;
   amount: number;
+  totalAmount: number;
+  feesAmount: number;
+  gstAmount: number;
+  totalPaidAmount: number;
   paymentMethod: string;
   paymentId: string;
   status: "Paid" | "Refunded" | "Pending";
@@ -40,6 +44,9 @@ export default function InvoicePage() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [selectedAmountMetric, setSelectedAmountMetric] = useState<"totalAmount" | "feesAmount" | "gstAmount" | "totalPaidAmount">("totalPaidAmount");
+
+  const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
   useEffect(() => {
     // Get user info
@@ -58,18 +65,27 @@ export default function InvoicePage() {
           const date = e.enrolled_at ? new Date(e.enrolled_at) : new Date();
           const basePrice = e.course?.price || 14999;
           const discount = e.discount_applied || 0;
-          const finalPrice = e.price_paid || (basePrice - discount);
+          const feesAmount = roundMoney(e.price_paid || (basePrice - discount));
+          const gstAmount = roundMoney(e.payment_amount ? e.payment_amount - feesAmount : feesAmount * 0.18);
+          const totalPaidAmount = roundMoney(e.payment_amount || (feesAmount + gstAmount));
+          const couponLabel = e.coupon_title && e.coupon_code && e.coupon_title !== e.coupon_code
+            ? `${e.coupon_title} (${e.coupon_code})`
+            : e.coupon_code || e.coupon_title;
 
           return {
             id: `inv_${e.id || index + 100}`,
             invoiceNumber: `FT-2026-${1000 + (e.id || index + 1)}`,
             courseTitle: e.course?.title || "Stock Market Fundamentals",
             purchaseDate: date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
-            amount: finalPrice,
+            amount: totalPaidAmount,
+            totalAmount: basePrice,
+            feesAmount,
+            gstAmount,
+            totalPaidAmount,
             paymentMethod: "UPI / Razorpay",
-            paymentId: `pay_Razorpay_${89324 + (e.id || index)}`,
+            paymentId: e.payment_txnid || `pay_Razorpay_${89324 + (e.id || index)}`,
             status: e.is_active ? "Paid" : "Pending",
-            couponCode: discount > 0 ? "COUPON" : undefined,
+            couponCode: couponLabel || (discount > 0 ? "COUPON" : undefined),
             discountAmount: discount,
             originalPrice: basePrice,
           };
@@ -83,7 +99,11 @@ export default function InvoicePage() {
               invoiceNumber: "FT-2026-1024",
               courseTitle: "Technical Analysis Masterclass",
               purchaseDate: "Apr 12, 2026",
-              amount: 8499,
+              amount: 10028.82,
+              totalAmount: 10623,
+              feesAmount: 8499,
+              gstAmount: 1529.82,
+              totalPaidAmount: 10028.82,
               paymentMethod: "NetBanking / Easebuzz",
               paymentId: "pay_EB_9823412",
               status: "Paid",
@@ -96,7 +116,11 @@ export default function InvoicePage() {
               invoiceNumber: "FT-2026-0985",
               courseTitle: "Advanced Options Trading Strategies",
               purchaseDate: "Jan 18, 2026",
-              amount: 14999,
+              amount: 17698.82,
+              totalAmount: 14999,
+              feesAmount: 14999,
+              gstAmount: 2699.82,
+              totalPaidAmount: 17698.82,
               paymentMethod: "Credit Card / Razorpay",
               paymentId: "pay_RZP_1289410",
               status: "Paid",
@@ -114,7 +138,11 @@ export default function InvoicePage() {
             invoiceNumber: "FT-2026-1024",
             courseTitle: "Technical Analysis Masterclass",
             purchaseDate: "Apr 12, 2026",
-            amount: 8499,
+            amount: 10028.82,
+            totalAmount: 10623,
+            feesAmount: 8499,
+            gstAmount: 1529.82,
+            totalPaidAmount: 10028.82,
             paymentMethod: "NetBanking / Easebuzz",
             paymentId: "pay_EB_9823412",
             status: "Paid",
@@ -127,7 +155,11 @@ export default function InvoicePage() {
             invoiceNumber: "FT-2026-0985",
             courseTitle: "Advanced Options Trading Strategies",
             purchaseDate: "Jan 18, 2026",
-            amount: 14999,
+            amount: 17698.82,
+            totalAmount: 14999,
+            feesAmount: 14999,
+            gstAmount: 2699.82,
+            totalPaidAmount: 17698.82,
             paymentMethod: "Credit Card / Razorpay",
             paymentId: "pay_RZP_1289410",
             status: "Paid",
@@ -147,11 +179,24 @@ export default function InvoicePage() {
   };
 
   const calculateBreakdown = (invoice: Invoice) => {
-    const subtotal = invoice.amount;
-    const gstAmount = subtotal * 0.18;
-    const total = subtotal + gstAmount;
+    const subtotal = invoice.feesAmount;
+    const gstAmount = invoice.gstAmount;
+    const total = invoice.totalPaidAmount;
     return { subtotal, gstAmount, total };
   };
+
+  const invoiceTotals = invoices.reduce(
+    (acc, inv) => ({
+      totalAmount: acc.totalAmount + inv.totalAmount,
+      feesAmount: acc.feesAmount + inv.feesAmount,
+      gstAmount: acc.gstAmount + inv.gstAmount,
+      totalPaidAmount: acc.totalPaidAmount + inv.totalPaidAmount,
+    }),
+    { totalAmount: 0, feesAmount: 0, gstAmount: 0, totalPaidAmount: 0 }
+  );
+
+  const invoiceAmountCellClass = (metric: typeof selectedAmountMetric) =>
+    `px-6 py-4 font-bold ${selectedAmountMetric === metric ? "bg-[#FFF4D8] text-[#0B2A5B]" : "text-gray-900"}`;
 
   // Filter and search
   const filteredInvoices = invoices.filter((inv) => {
@@ -186,13 +231,13 @@ export default function InvoicePage() {
 
       <div className="grid gap-6">
         {/* Statistics & Quick Summary */}
-        <div className="grid sm:grid-cols-3 gap-4">
-          <Card className="p-5 bg-white border border-[#0B2A5B]/10 shadow-sm flex items-center justify-between">
+        <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <Card onClick={() => setSelectedAmountMetric("totalAmount")} className={`p-5 bg-white border shadow-sm flex items-center justify-between cursor-pointer transition-all ${selectedAmountMetric === "totalAmount" ? "border-[#D50032] shadow-md" : "border-[#0B2A5B]/10 hover:border-[#D50032]"}`}>
             <div>
-              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Total Spent</p>
+              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Total Amount</p>
               <h3 className="text-2xl font-bold text-[#0B2A5B] flex items-center">
                 <IndianRupee size={20} className="stroke-[2.5]" />
-                {invoices.reduce((acc, inv) => acc + inv.amount, 0).toLocaleString("en-IN")}
+                {formatCurrency(invoiceTotals.totalAmount)}
               </h3>
             </div>
             <div className="p-3 bg-[#0B2A5B]/5 rounded-xl text-[#0B2A5B]">
@@ -200,20 +245,39 @@ export default function InvoicePage() {
             </div>
           </Card>
 
-          <Card className="p-5 bg-white border border-[#0B2A5B]/10 shadow-sm flex items-center justify-between">
+          <Card onClick={() => setSelectedAmountMetric("feesAmount")} className={`p-5 bg-white border shadow-sm flex items-center justify-between cursor-pointer transition-all ${selectedAmountMetric === "feesAmount" ? "border-[#D50032] shadow-md" : "border-[#0B2A5B]/10 hover:border-[#D50032]"}`}>
             <div>
-              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Invoices Issued</p>
-              <h3 className="text-2xl font-bold text-[#0B2A5B]">{invoices.length}</h3>
+              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Total Fees</p>
+              <h3 className="text-2xl font-bold text-[#0B2A5B] flex items-center">
+                <IndianRupee size={20} className="stroke-[2.5]" />
+                {formatCurrency(invoiceTotals.feesAmount)}
+              </h3>
             </div>
             <div className="p-3 bg-[#0B2A5B]/5 rounded-xl text-[#0B2A5B]">
               <FileText size={24} />
             </div>
           </Card>
 
-          <Card className="p-5 bg-white border border-[#0B2A5B]/10 shadow-sm flex items-center justify-between">
+          <Card onClick={() => setSelectedAmountMetric("gstAmount")} className={`p-5 bg-white border shadow-sm flex items-center justify-between cursor-pointer transition-all ${selectedAmountMetric === "gstAmount" ? "border-[#D50032] shadow-md" : "border-[#0B2A5B]/10 hover:border-[#D50032]"}`}>
             <div>
-              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Status</p>
-              <h3 className="text-2xl font-bold text-green-600">All Cleared</h3>
+              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Total GST Amount</p>
+              <h3 className="text-2xl font-bold text-[#0B2A5B] flex items-center">
+                <IndianRupee size={20} className="stroke-[2.5]" />
+                {formatCurrency(invoiceTotals.gstAmount)}
+              </h3>
+            </div>
+            <div className="p-3 bg-[#0B2A5B]/5 rounded-xl text-[#0B2A5B]">
+              <CreditCard size={24} />
+            </div>
+          </Card>
+
+          <Card onClick={() => setSelectedAmountMetric("totalPaidAmount")} className={`p-5 bg-white border shadow-sm flex items-center justify-between cursor-pointer transition-all ${selectedAmountMetric === "totalPaidAmount" ? "border-[#D50032] shadow-md" : "border-[#0B2A5B]/10 hover:border-[#D50032]"}`}>
+            <div>
+              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Total Paid Amount</p>
+              <h3 className="text-2xl font-bold text-green-600 flex items-center">
+                <IndianRupee size={20} className="stroke-[2.5]" />
+                {formatCurrency(invoiceTotals.totalPaidAmount)}
+              </h3>
             </div>
             <div className="p-3 bg-green-50 rounded-xl text-green-600">
               <CheckCircle2 size={24} />
@@ -261,7 +325,10 @@ export default function InvoicePage() {
                   <th className="px-6 py-4">Invoice #</th>
                   <th className="px-6 py-4">Course Description</th>
                   <th className="px-6 py-4">Purchase Date</th>
-                  <th className="px-6 py-4">Amount Paid</th>
+                  <th className="px-6 py-4">Total Amount</th>
+                  <th className="px-6 py-4">Total Fees</th>
+                  <th className="px-6 py-4">GST Amount</th>
+                  <th className="px-6 py-4">Paid Amount</th>
                   <th className="px-6 py-4">Payment Method</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4 text-right">Actions</th>
@@ -277,10 +344,28 @@ export default function InvoicePage() {
                         <Calendar size={14} />
                         <span>{inv.purchaseDate}</span>
                       </td>
-                      <td className="px-6 py-4 font-bold text-gray-900">
+                      <td className={invoiceAmountCellClass("totalAmount")}>
                         <span className="flex items-center gap-0.5">
                           <IndianRupee size={14} />
-                          {inv.amount.toLocaleString("en-IN")}
+                          {formatCurrency(inv.totalAmount)}
+                        </span>
+                      </td>
+                      <td className={invoiceAmountCellClass("feesAmount")}>
+                        <span className="flex items-center gap-0.5">
+                          <IndianRupee size={14} />
+                          {formatCurrency(inv.feesAmount)}
+                        </span>
+                      </td>
+                      <td className={invoiceAmountCellClass("gstAmount")}>
+                        <span className="flex items-center gap-0.5">
+                          <IndianRupee size={14} />
+                          {formatCurrency(inv.gstAmount)}
+                        </span>
+                      </td>
+                      <td className={invoiceAmountCellClass("totalPaidAmount")}>
+                        <span className="flex items-center gap-0.5">
+                          <IndianRupee size={14} />
+                          {formatCurrency(inv.totalPaidAmount)}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-xs font-semibold text-gray-600">
@@ -324,7 +409,7 @@ export default function InvoicePage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-400">
+                    <td colSpan={10} className="px-6 py-12 text-center text-gray-400">
                       No invoices found matching your criteria.
                     </td>
                   </tr>

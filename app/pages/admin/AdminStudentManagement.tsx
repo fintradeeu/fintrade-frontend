@@ -7,7 +7,7 @@ import { Badge } from "../../components/ui/badge";
 import {
   Search, Download, Eye, X, BookOpen, Clock, AlertCircle, CheckCircle,
   FileText, Calendar, CreditCard, Printer, Shield, ChevronDown, ExternalLink,
-  Laptop, Smartphone, Globe
+  Laptop, Smartphone, Globe, Tag
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import api from "../../services/api";
@@ -122,6 +122,30 @@ export default function AdminStudentManagement() {
     return ua.slice(0, 30) + "...";
   };
 
+  const splitCodes = (code?: string) => (code || "")
+    .split(":")
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  const courseCouponCode = (course: any) =>
+    course.coupon_code || ((course.discount_applied || 0) > 0 ? "COUPON" : "");
+
+  const courseCouponLabel = (course: any) => {
+    const code = courseCouponCode(course);
+    if (!code) return "";
+    const title = course.coupon_title?.trim();
+    if (title && title !== code && title.toLowerCase() !== "coupon") {
+      return `${code} - ${title}`;
+    }
+    return code;
+  };
+
+  const studentCouponCodes = (student: any) => {
+    const codes = (student.enrolled_courses || [])
+      .flatMap((course: any) => course.coupon_title ? [courseCouponLabel(course)] : splitCodes(courseCouponCode(course)));
+    return Array.from(new Set<string>(codes));
+  };
+
   const filtered = students.filter(
     (s) =>
       s.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -166,6 +190,7 @@ export default function AdminStudentManagement() {
                   <TableHead className="text-[#0B2A5B] font-bold">Phone</TableHead>
                   <TableHead className="text-[#0B2A5B] font-bold">City</TableHead>
                   <TableHead className="text-[#0B2A5B] font-bold">Purchased Courses</TableHead>
+                  <TableHead className="text-[#0B2A5B] font-bold">Coupon Used</TableHead>
                   <TableHead className="text-[#0B2A5B] font-bold">Joined</TableHead>
                   <TableHead className="text-[#0B2A5B] font-bold text-center">Actions</TableHead>
                 </TableRow>
@@ -189,6 +214,19 @@ export default function AdminStudentManagement() {
                           ))
                         ) : (
                           <span className="text-xs text-red-500 font-bold">No active enrollments</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {studentCouponCodes(s).length > 0 ? (
+                          studentCouponCodes(s).map((code) => (
+                            <Badge key={code} className="bg-green-50 text-green-700 border border-green-100 text-xs font-semibold font-mono">
+                              <Tag size={11} className="mr-1" /> {code}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-xs text-slate-400 font-semibold">No coupon</span>
                         )}
                       </div>
                     </TableCell>
@@ -360,6 +398,7 @@ export default function AdminStudentManagement() {
                               <span>Date: {ec.enrolled_at ? new Date(ec.enrolled_at).toLocaleDateString("en-IN") : "—"}</span>
                               <span>Price Paid: ₹{formatCurrency(paidPrice)}</span>
                               {discount > 0 && <span className="text-green-600 font-medium">Discount applied: ₹{formatCurrency(discount)}</span>}
+                              {courseCouponLabel(ec) && <span className="text-green-700 font-semibold">Coupon: {courseCouponLabel(ec)}</span>}
                             </div>
                           </div>
                           <Button
@@ -371,8 +410,9 @@ export default function AdminStudentManagement() {
                                 amount: paidPrice,
                                 originalPrice: originalPrice,
                                 discountAmount: discount,
+                                couponCode: courseCouponLabel(ec),
                                 paymentMethod: "UPI / Credit Card / Razorpay",
-                                paymentId: `pay_Razorpay_${89324 + ec.id}`,
+                                paymentId: ec.payment_txnid || `pay_Razorpay_${89324 + ec.id}`,
                                 status: ec.is_active ? "Paid" : "Pending"
                               });
                             }}
@@ -523,7 +563,9 @@ export default function AdminStudentManagement() {
                     {selectedInvoice.discountAmount > 0 && (
                       <tr className="border-t border-dashed border-gray-300">
                         <td className="p-1.5"></td>
-                        <td className="p-1.5 text-green-600 font-semibold">Referral Discount Applied</td>
+                        <td className="p-1.5 text-green-600 font-semibold">
+                          Discount Applied{selectedInvoice.couponCode ? ` (${selectedInvoice.couponCode})` : ""}
+                        </td>
                         <td className="p-1.5 text-right text-green-600 font-bold">-₹{formatCurrency(selectedInvoice.discountAmount)}</td>
                       </tr>
                     )}

@@ -21,6 +21,7 @@ interface CookieConsentLog {
   user_agent: string | null;
   consent_type: string;
   created_at: string;
+  source?: "cookie_log" | "profile";
 }
 
 export default function AdminCookieConsents() {
@@ -31,8 +32,45 @@ export default function AdminCookieConsents() {
   const fetchConsents = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/auth/cookie-consents");
-      setConsents(res.data || []);
+      const [consentRes, usersRes] = await Promise.allSettled([
+        api.get("/auth/cookie-consents"),
+        api.get("/admin/users?limit=200"),
+      ]);
+
+      const consentLogs: CookieConsentLog[] =
+        consentRes.status === "fulfilled"
+          ? (consentRes.value.data || []).map((log: CookieConsentLog) => ({
+              ...log,
+              source: "cookie_log",
+            }))
+          : [];
+
+      const rawUsers =
+        usersRes.status === "fulfilled"
+          ? usersRes.value.data?.users || usersRes.value.data || []
+          : [];
+
+      const profileLogs: CookieConsentLog[] = rawUsers
+        .filter((user: any) => {
+          const roles = (user.roles || []).map((role: any) => role.name || role);
+          return roles.includes("user") || roles.length === 0;
+        })
+        .map((user: any) => ({
+          id: Number(user.id),
+          user_id: Number(user.id),
+          user_name: user.full_name || user.name || null,
+          user_email: user.email || null,
+          user_phone: user.phone || user.mobileNumber || null,
+          user_city: user.city || null,
+          user_roles: (user.roles || []).map((role: any) => role.name || role),
+          ip_address: null,
+          user_agent: null,
+          consent_type: "profile_submitted",
+          created_at: user.created_at || new Date().toISOString(),
+          source: "profile",
+        }));
+
+      setConsents([...profileLogs, ...consentLogs]);
     } catch (err: any) {
       toast.error("Failed to load cookie consents list");
       console.error(err);
@@ -50,8 +88,10 @@ export default function AdminCookieConsents() {
     return (
       (c.user_name || "guest visitor").toLowerCase().includes(query) ||
       (c.user_email || "").toLowerCase().includes(query) ||
+      (c.user_phone || "").toLowerCase().includes(query) ||
       (c.ip_address || "").toLowerCase().includes(query) ||
       (c.consent_type || "").toLowerCase().includes(query) ||
+      (c.user_roles || []).join(" ").toLowerCase().includes(query) ||
       (c.user_agent || "").toLowerCase().includes(query)
     );
   });
@@ -63,9 +103,10 @@ export default function AdminCookieConsents() {
     }
 
     // Standard CSV compilation
-    const headers = ["ID", "User ID", "User Name", "User Email", "Phone", "City", "Roles", "IP Address", "Consent Type", "Date Time", "User Agent"];
+    const headers = ["ID", "Source", "User ID", "User Name", "User Email", "Phone", "City", "Roles", "IP Address", "Consent Type", "Date Time", "User Agent"];
     const rows = filteredConsents.map((c) => [
       c.id,
+      c.source === "profile" ? "Profile API" : "Cookie Log",
       c.user_id || "Guest",
       c.user_name || "Guest Visitor",
       c.user_email || "—",
@@ -146,6 +187,7 @@ export default function AdminCookieConsents() {
               <TableHeader className="bg-gray-100">
                 <TableRow className="border-b border-gray-100 hover:bg-transparent">
                   <TableHead className="font-bold text-[#0B2A5B]">ID</TableHead>
+                  <TableHead className="font-bold text-[#0B2A5B]">Source</TableHead>
                   <TableHead className="font-bold text-[#0B2A5B]">Audited User</TableHead>
                   <TableHead className="font-bold text-[#0B2A5B]">IP Address</TableHead>
                   <TableHead className="font-bold text-[#0B2A5B]">Browser</TableHead>
@@ -156,7 +198,7 @@ export default function AdminCookieConsents() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-16 text-slate-500 font-bold">
+                    <TableCell colSpan={7} className="text-center py-16 text-slate-500 font-bold">
                       <div className="flex items-center justify-center gap-2">
                         <div className="w-5 h-5 border-2 border-[#D50032] border-t-transparent rounded-full animate-spin"></div>
                         <span>Loading compliance records...</span>
@@ -165,7 +207,7 @@ export default function AdminCookieConsents() {
                   </TableRow>
                 ) : filteredConsents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-16 text-slate-400 font-bold">
+                    <TableCell colSpan={7} className="text-center py-16 text-slate-400 font-bold">
                       No matching cookie policy logs found.
                     </TableCell>
                   </TableRow>
@@ -177,8 +219,19 @@ export default function AdminCookieConsents() {
                     else if (log.consent_type === "declined") badgeVariant = "destructive";
 
                     return (
-                      <TableRow key={log.id} className="border-b border-gray-100 hover:bg-white transition-colors">
+                      <TableRow key={`${log.source || "cookie_log"}-${log.id}`} className="border-b border-gray-100 hover:bg-white transition-colors">
                         <TableCell className="font-mono text-xs text-slate-400 font-bold">#{log.id}</TableCell>
+                        <TableCell>
+                          <Badge
+                            className={`rounded-md font-bold px-2 py-0.5 text-[10px] uppercase tracking-wider ${
+                              log.source === "profile"
+                                ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                : "bg-slate-50 text-slate-700 border border-slate-200"
+                            }`}
+                          >
+                            {log.source === "profile" ? "Profile API" : "Cookie Log"}
+                          </Badge>
+                        </TableCell>
                         <TableCell>
                           {isGuest ? (
                             <div>

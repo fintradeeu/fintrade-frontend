@@ -15,7 +15,7 @@ import { confirmPopup } from "../../utils/popup";
 import { Switch } from "../../components/ui/switch";
 import { toast } from "sonner";
 
-const ROLE_FILTERS = ["all", "admin", "faculty", "student"] as const;
+const ROLE_FILTERS = ["all", "student"] as const;
 type RoleFilter = (typeof ROLE_FILTERS)[number];
 
 const DEFAULT_FACULTY_PERMISSIONS = {
@@ -384,7 +384,7 @@ export default function AdminStudents() {
       <div className="mb-8 flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold text-[#0B2A5B] mb-2">User Management</h1>
-          <p className="text-[#0B2A5B]/70">View and manage all users, including full KYC details</p>
+          <p className="text-[#0B2A5B]/70">View registered users who have not purchased a course yet</p>
         </div>
         <Button
           onClick={handleExportExcel}

@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
-import { Shield, Info, CheckCircle, Tag, Eye } from "lucide-react";
+import { type FormEvent, useEffect, useState } from "react";
+import { CheckCircle, Mail, Shield, Smartphone, UserCircle } from "lucide-react";
 import { motion } from "motion/react";
-import api from "../services/api";
+import { toast } from "sonner";
+import api, { LIVE_API_URL } from "../services/api";
 import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 
 function ScrollReveal({
   children,
@@ -31,8 +34,13 @@ function ScrollReveal({
 export default function CookiePolicy() {
   const [loading, setLoading] = useState(false);
   const [accepted, setAccepted] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    emailId: "",
+    mobileNumber: "",
+  });
 
-  // Automatically log policy page view on mount
   useEffect(() => {
     (async () => {
       try {
@@ -46,16 +54,69 @@ export default function CookiePolicy() {
     if (storedConsent === "accepted") {
       setAccepted(true);
     }
+
+    const storedProfile = localStorage.getItem("cookie_policy_profile");
+    if (storedProfile) {
+      try {
+        const parsed = JSON.parse(storedProfile);
+        setProfileForm({
+          name: parsed.name || "",
+          emailId: parsed.emailId || parsed.email || "",
+          mobileNumber: parsed.mobileNumber || "",
+        });
+        setProfileSaved(true);
+      } catch {
+        localStorage.removeItem("cookie_policy_profile");
+      }
+    }
   }, []);
 
-  const handleAccept = async () => {
+  const handleAccept = async (event: FormEvent) => {
+    event.preventDefault();
+
+    const payload = {
+      name: profileForm.name.trim(),
+      emailId: profileForm.emailId.trim(),
+      mobileNumber: profileForm.mobileNumber.trim(),
+    };
+
+    if (!payload.name || !payload.emailId || !payload.mobileNumber) {
+      toast.error("Please fill name, email, and mobile number.");
+      return;
+    }
+
     setLoading(true);
     try {
+      const profileRes = await api.post("/api/v1/user", payload);
+      const profileData = profileRes.data;
+
       localStorage.setItem("cookie_consent", "accepted");
-      await api.post("/auth/cookie-consent", { consent_type: "accepted" });
+      localStorage.setItem("cookie_policy_profile", JSON.stringify({
+        ...payload,
+        id: profileData?.data?.id,
+        role: profileData?.data?.role || "user",
+      }));
+      try {
+        await api.post("/auth/cookie-consent", { consent_type: "accepted" });
+      } catch (consentErr) {
+        console.warn("Failed to log cookie consent:", consentErr);
+      }
+      setProfileSaved(true);
       setAccepted(true);
-    } catch (err) {
-      console.error("Accepting cookies failed:", err);
+      toast.success(profileData?.message || "User profile created successfully");
+    } catch (err: any) {
+      console.error("Saving cookie policy profile failed:", err);
+      
+      // Local fallback in case backend is unreachable or returns error
+      localStorage.setItem("cookie_consent", "accepted");
+      localStorage.setItem("cookie_policy_profile", JSON.stringify({
+        ...payload,
+        id: "offline_fallback_" + Date.now(),
+        role: "user",
+      }));
+      setProfileSaved(true);
+      setAccepted(true);
+      toast.success("Accepted cookies (saved locally).");
     } finally {
       setLoading(false);
     }
@@ -63,26 +124,23 @@ export default function CookiePolicy() {
 
   return (
     <div className="py-16 relative z-10 bg-transparent overflow-hidden font-sans" style={{ background: "radial-gradient(circle at 50% 50%, #FFFFFF 0%, #F8F8F8 50%, #F4F4F4 100%)" }}>
-      {/* Background blur decorative element */}
       <div className="absolute top-1/3 left-1/4 -translate-x-1/2 w-[400px] h-[400px] bg-[#D50032]/5 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal>
-          {/* Header */}
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-1.5 px-4.5 py-1.5 rounded-full mb-3 border border-[#D50032]/25 bg-[#D50032]/5">
-              <span className="text-[#D50032] font-extrabold text-xs tracking-wider uppercase">🍪 COMPLIANCE</span>
+              <span className="text-[#D50032] font-extrabold text-xs tracking-wider uppercase">COMPLIANCE</span>
             </div>
             <h1 className="text-3xl md:text-5xl font-black mb-3 text-gray-900 tracking-tight">
               Cookie <span className="text-[#D50032]">Policy</span>
             </h1>
             <p className="text-sm text-gray-500 font-medium">
-              Effective Date: June 16, 2026 • Last updated: June 29, 2026
+              Effective Date: June 16, 2026 | Last updated: June 29, 2026
             </p>
           </div>
         </ScrollReveal>
 
-        {/* Introduction Panel */}
         <ScrollReveal delay={0.1}>
           <div className="bg-white border border-[#0B2A5B]/10 rounded-3xl p-6 md:p-8 shadow-sm mb-8">
             <h2 className="text-xl font-bold text-[#0B2A5B] flex items-center gap-2 mb-4">
@@ -93,39 +151,97 @@ export default function CookiePolicy() {
               At <strong>FT EDUTECH</strong> (operating as <strong>FinTrade</strong>), we value your privacy and transparency. This Cookie Policy explains how cookies, tracking pixels, and local storage technologies are utilized to optimize features on our platform, personalize education, and coordinate analysis.
             </p>
             <p className="text-slate-600 text-sm leading-relaxed mb-6">
-              You can opt-in to accept all cookies or configure your preferences. Opting out of optional cookies may impact some page functionalities.
+              You can opt in to accept all cookies or configure your preferences. Opting out of optional cookies may impact some page functionality.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center gap-4 border-t border-slate-100 pt-6">
-              <div className="flex-grow">
-                <p className="text-sm font-extrabold text-[#0B2A5B]">Your Cookie Status:</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  {accepted 
-                    ? "✓ You have accepted cookies on this browser. Your preferences have been saved."
-                    : "You have not accepted cookies. Choose options below."}
-                </p>
-              </div>
-              {!accepted ? (
-                <Button 
-                  onClick={handleAccept} 
-                  disabled={loading}
-                  className="w-full sm:w-auto bg-[#D50032] hover:bg-[#b00029] text-white font-extrabold px-6 py-2.5 h-auto text-sm rounded-xl shadow-lg shadow-[#D50032]/10 transition-transform active:scale-95 border-0 cursor-pointer"
-                >
-                  {loading ? "Saving..." : "Accept All Cookies"}
-                </Button>
-              ) : (
-                <div className="flex items-center gap-1.5 text-green-600 font-extrabold text-sm bg-green-50 px-4 py-2 rounded-xl border border-green-200">
-                  <CheckCircle size={16} /> Accepted
+            <form onSubmit={handleAccept} className="border-t border-slate-100 pt-6">
+              <div className="grid md:grid-cols-3 gap-4 mb-5">
+                <div>
+                  <Label htmlFor="cookieProfileName" className="text-xs font-extrabold text-[#0B2A5B]">
+                    Full Name
+                  </Label>
+                  <div className="relative mt-2">
+                    <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      id="cookieProfileName"
+                      value={profileForm.name}
+                      onChange={(event) => setProfileForm((current) => ({ ...current, name: event.target.value }))}
+                      placeholder="Sujal Gujar"
+                      className="pl-10 h-11 rounded-xl bg-slate-50 border-slate-200"
+                      disabled={loading || profileSaved}
+                      required
+                    />
+                  </div>
                 </div>
-              )}
-            </div>
+
+                <div>
+                  <Label htmlFor="cookieProfileEmail" className="text-xs font-extrabold text-[#0B2A5B]">
+                    Email Address
+                  </Label>
+                  <div className="relative mt-2">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      id="cookieProfileEmail"
+                      type="email"
+                      value={profileForm.emailId}
+                      onChange={(event) => setProfileForm((current) => ({ ...current, emailId: event.target.value }))}
+                      placeholder="name@example.com"
+                      className="pl-10 h-11 rounded-xl bg-slate-50 border-slate-200"
+                      disabled={loading || profileSaved}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="cookieProfileMobile" className="text-xs font-extrabold text-[#0B2A5B]">
+                    Mobile Number
+                  </Label>
+                  <div className="relative mt-2">
+                    <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      id="cookieProfileMobile"
+                      type="tel"
+                      value={profileForm.mobileNumber}
+                      onChange={(event) => setProfileForm((current) => ({ ...current, mobileNumber: event.target.value }))}
+                      placeholder="9876543210"
+                      className="pl-10 h-11 rounded-xl bg-slate-50 border-slate-200"
+                      disabled={loading || profileSaved}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="flex-grow">
+                  <p className="text-sm font-extrabold text-[#0B2A5B]">Your Cookie Status:</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {accepted
+                      ? "Your profile and cookie preference have been saved."
+                      : "Submit your details to save your policy acceptance."}
+                  </p>
+                </div>
+                {!accepted ? (
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full sm:w-auto bg-[#D50032] hover:bg-[#b00029] text-white font-extrabold px-6 py-2.5 h-auto text-sm rounded-xl shadow-lg shadow-[#D50032]/10 transition-transform active:scale-95 border-0 cursor-pointer"
+                  >
+                    {loading ? "Saving..." : "Save & Accept Cookies"}
+                  </Button>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-green-600 font-extrabold text-sm bg-green-50 px-4 py-2 rounded-xl border border-green-200">
+                    <CheckCircle size={16} /> Accepted
+                  </div>
+                )}
+              </div>
+            </form>
           </div>
         </ScrollReveal>
 
-        {/* Detailed Breakdown */}
         <ScrollReveal delay={0.2}>
           <div className="space-y-6">
-            {/* Required Cookies */}
             <div className="bg-white/60 border border-slate-150 rounded-2xl p-6 shadow-sm">
               <h3 className="font-extrabold text-md text-[#0B2A5B] flex items-center gap-2 mb-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
@@ -136,7 +252,6 @@ export default function CookiePolicy() {
               </p>
             </div>
 
-            {/* Performance Cookies */}
             <div className="bg-white/60 border border-slate-150 rounded-2xl p-6 shadow-sm">
               <h3 className="font-extrabold text-md text-[#0B2A5B] flex items-center gap-2 mb-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
@@ -147,14 +262,13 @@ export default function CookiePolicy() {
               </p>
             </div>
 
-            {/* Marketing Cookies */}
             <div className="bg-white/60 border border-slate-150 rounded-2xl p-6 shadow-sm">
               <h3 className="font-extrabold text-md text-[#0B2A5B] flex items-center gap-2 mb-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#D50032]" />
                 3. Advertising & Marketing Tracking
               </h3>
               <p className="text-slate-500 text-xs leading-relaxed">
-                These cookies record distributor referral codes (like your IB code) to attributes sales correctly, process promotional discount coupon usage, and display targeted announcements. They ensure our affiliate marketing programs credit partners accurately.
+                These cookies record distributor referral codes to attribute sales correctly, process promotional discount coupon usage, and display targeted announcements. They ensure our affiliate marketing programs credit partners accurately.
               </p>
             </div>
           </div>
