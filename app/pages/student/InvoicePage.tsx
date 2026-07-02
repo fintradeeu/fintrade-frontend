@@ -63,11 +63,11 @@ export default function InvoicePage() {
         const enrolledCourses = r.data || [];
         const generatedInvoices: Invoice[] = enrolledCourses.map((e: any, index: number) => {
           const date = e.enrolled_at ? new Date(e.enrolled_at) : new Date();
-          const basePrice = e.course?.price || 14999;
-          const discount = e.discount_applied || 0;
-          const feesAmount = roundMoney(e.price_paid || (basePrice - discount));
-          const gstAmount = roundMoney(e.payment_amount ? e.payment_amount - feesAmount : feesAmount * 0.18);
-          const totalPaidAmount = roundMoney(e.payment_amount || (feesAmount + gstAmount));
+          const basePrice = e.course?.price !== undefined && e.course?.price !== null ? e.course.price : 14999;
+          const discount = e.discount_applied !== undefined && e.discount_applied !== null ? e.discount_applied : 0;
+          const feesAmount = roundMoney(e.price_paid !== undefined && e.price_paid !== null ? e.price_paid : (basePrice - discount));
+          const gstAmount = roundMoney(e.payment_amount !== undefined && e.payment_amount !== null ? e.payment_amount - feesAmount : feesAmount * 0.18);
+          const totalPaidAmount = roundMoney(e.payment_amount !== undefined && e.payment_amount !== null ? e.payment_amount : (feesAmount + gstAmount));
           const couponLabel = e.coupon_title && e.coupon_code && e.coupon_title !== e.coupon_code
             ? `${e.coupon_title} (${e.coupon_code})`
             : e.coupon_code || e.coupon_title;

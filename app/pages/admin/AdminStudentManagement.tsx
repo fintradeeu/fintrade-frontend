@@ -387,7 +387,7 @@ export default function AdminStudentManagement() {
                   {selectedStudent.enrolled_courses && selectedStudent.enrolled_courses.length > 0 ? (
                     selectedStudent.enrolled_courses.map((ec: any, index: number) => {
                       const discount = ec.discount_applied || 0;
-                      const paidPrice = ec.price_paid || 14999;
+                      const paidPrice = ec.price_paid !== undefined && ec.price_paid !== null ? ec.price_paid : 14999;
                       const originalPrice = paidPrice + discount;
                       
                       return (
