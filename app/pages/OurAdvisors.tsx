@@ -140,7 +140,7 @@ export default function OurAdvisors() {
                   
                   <div className="text-center mb-6">
                     <h3 className="font-extrabold text-gray-950 text-xl leading-snug">{leader.name}</h3>
-                    <p className="text-[#D50032] text-xs font-black tracking-wide uppercase mt-1.5">{leader.role}</p>
+                    <p className="text-[#D50032] text-xs font-black tracking-wide uppercase mt-1.5">{leader.title || leader.role}</p>
                   </div>
                 </div>
 

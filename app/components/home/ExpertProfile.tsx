@@ -56,7 +56,7 @@ export default function ExpertProfile({ leaders: leadersProp }: { leaders?: any[
             const imageUrl = imagePath 
               ? getImageUrl(imagePath) 
               : `https://ui-avatars.com/api/?name=${encodeURIComponent(leader.name || leader.monogram || "FT")}&background=FFF0F2&color=D50032&size=512&font-size=0.33&bold=true`;
-            const roleName = leader.role || leader.title || "Leadership";
+            const roleName = leader.title || leader.role || "Leadership";
 
             return (
               <div key={i} className="min-w-[280px] w-[80vw] sm:w-[320px] md:w-auto md:min-w-0 flex-shrink-0 snap-center p-5 bg-white border border-gray-100 rounded-[28px] shadow-[0_10px_35px_rgba(0,0,0,0.012)] hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.04)] hover:border-[#D50032]/10 transition-all duration-300 flex flex-col justify-between group">

@@ -204,7 +204,7 @@ export default function LeaderProfile() {
           <div className="flex-1 pt-4">
             <div className="inline-flex items-center gap-1.5 px-4.5 py-1.5 rounded-full mb-6 border border-[#D50032]/25 bg-[#D50032]/5">
               <span className="text-[#D50032] font-bold text-xs tracking-wider uppercase">
-                {leader.role}
+                {leader.title || leader.role}
               </span>
             </div>
             
