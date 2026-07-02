@@ -423,10 +423,17 @@ export default function CourseDetailPage() {
                   <div className="bg-white border border-gray-100 rounded-2xl p-4 px-6 flex items-center gap-4 shadow-sm w-fit">
                     <div>
                       <span className="text-xs text-gray-400 font-medium block">Enrollment Fee</span>
-                      <span className="text-2xl md:text-3xl font-black text-gray-900">
-                        ₹{priceNum.toLocaleString("en-IN")}
-                        <span className="text-xs font-normal text-gray-400 ml-1">+ GST</span>
-                      </span>
+                      <div className="flex items-baseline gap-2 mt-1">
+                        {originalPriceNum > priceNum && (
+                          <span className="text-base md:text-lg font-medium text-gray-400 line-through">
+                            ₹{originalPriceNum.toLocaleString("en-IN")}
+                          </span>
+                        )}
+                        <span className="text-2xl md:text-3xl font-black text-gray-900">
+                          ₹{priceNum.toLocaleString("en-IN")}
+                          <span className="text-xs font-normal text-gray-400 ml-1">+ GST</span>
+                        </span>
+                      </div>
                     </div>
                     {discountPercentage > 0 && (
                       <div className="bg-green-50 text-emerald-600 border border-emerald-100 px-2.5 py-1 text-xs font-black rounded-lg">
