@@ -34,7 +34,7 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
   const parsePrice = (p: any) => parseFloat(String(p).replace(/[^0-9.]/g, '')) || 0;
   const initialPrice = parsePrice(course.price);
   
-  const activeDiscount = couponDiscount > 0 ? couponDiscount : ibDiscount;
+  const activeDiscount = couponDiscount + ibDiscount;
   const finalPrice = Math.max(initialPrice - activeDiscount, 0);
 
   const [loading, setLoading] = useState(false);
