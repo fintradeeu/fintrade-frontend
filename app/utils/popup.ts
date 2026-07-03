@@ -35,8 +35,19 @@ export const installPopupOverrides = () => {
   };
 };
 
-export function confirmPopup(message: string, title = "Please Confirm"): Promise<boolean> {
+type ConfirmPopupOptions = {
+  message: string;
+  title?: string;
+  onConfirm?: () => void | Promise<void>;
+  onCancel?: () => void | Promise<void>;
+};
+
+export function confirmPopup(messageOrOptions: string | ConfirmPopupOptions, title = "Please Confirm"): Promise<boolean> {
   return new Promise((resolve) => {
+    const options = typeof messageOrOptions === "string" ? null : messageOrOptions;
+    const message = options?.message ?? messageOrOptions;
+    const modalTitle = options?.title ?? title;
+
     const overlay = document.createElement("div");
     overlay.className = "fixed inset-0 z-[100000] flex items-center justify-center bg-black/55 p-4";
 
@@ -45,7 +56,7 @@ export function confirmPopup(message: string, title = "Please Confirm"): Promise
 
     modal.innerHTML = `
       <div class="px-6 py-5 border-b border-gray-100">
-        <div class="text-xl font-bold text-[#0B2A5B]">${title}</div>
+        <div class="text-xl font-bold text-[#0B2A5B]"></div>
       </div>
       <div class="px-6 py-5">
         <div class="text-sm leading-6 text-gray-600 whitespace-pre-wrap"></div>
@@ -56,12 +67,23 @@ export function confirmPopup(message: string, title = "Please Confirm"): Promise
       </div>
     `;
 
+    const titleNode = modal.querySelector(".text-xl");
+    if (titleNode) titleNode.textContent = modalTitle;
+
     const messageNode = modal.querySelector(".whitespace-pre-wrap");
     if (messageNode) messageNode.textContent = message;
 
-    const cleanup = (value: boolean) => {
-      overlay.remove();
-      resolve(value);
+    const cleanup = async (value: boolean) => {
+      try {
+        if (value) {
+          await options?.onConfirm?.();
+        } else {
+          await options?.onCancel?.();
+        }
+      } finally {
+        overlay.remove();
+        resolve(value);
+      }
     };
 
     overlay.addEventListener("click", (event) => {

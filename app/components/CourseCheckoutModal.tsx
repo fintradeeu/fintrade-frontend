@@ -30,6 +30,8 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
   const [couponCode, setCouponCode] = useState("");
   const [ibDiscount, setIbDiscount] = useState(0);
   const [couponDiscount, setCouponDiscount] = useState(0);
+  const [availableBatches, setAvailableBatches] = useState<any[]>([]);
+  const [selectedBatchId, setSelectedBatchId] = useState<string>("");
   
   const parsePrice = (p: any) => parseFloat(String(p).replace(/[^0-9.]/g, '')) || 0;
   const initialPrice = parsePrice(course.price);
@@ -42,6 +44,23 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
   const [ibSuccessMsg, setIbSuccessMsg] = useState("");
   const [couponError, setCouponError] = useState("");
   const [couponSuccessMsg, setCouponSuccessMsg] = useState("");
+
+  // Load available batches on mount
+  useEffect(() => {
+    const fetchBatches = async () => {
+      try {
+        const res = await api.get(`/batches/public/list?course_id=${course.id}`);
+        const list = res.data || [];
+        setAvailableBatches(list);
+        if (list.length > 0) {
+          setSelectedBatchId(String(list[0].id));
+        }
+      } catch (err) {
+        console.warn("Failed to fetch available batches for course checkout:", err);
+      }
+    };
+    fetchBatches();
+  }, [course.id]);
 
   // Auto-apply saved coupon code on mount
   useEffect(() => {
@@ -107,6 +126,7 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
           course_id: course.id,
           coupon_code: combinedCode || null,
           discounted_price: activeDiscount > 0 ? finalPrice : null,
+          batch_id: selectedBatchId ? Number(selectedBatchId) : null,
         });
         console.log("Payment initiation API response:", res.data);
 
@@ -186,7 +206,9 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
         }
       } else {
         console.log("Final price is 0, enrolling user directly...");
-        const payload = combinedCode ? { distributor_code: combinedCode } : {};
+        const payload: any = {};
+        if (combinedCode) payload.distributor_code = combinedCode;
+        if (selectedBatchId) payload.batch_id = Number(selectedBatchId);
         await api.post(`/courses/${course.id}/enroll`, payload);
         onSuccess();
       }
@@ -218,16 +240,57 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
         <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 min-h-0 scrollbar-thin pr-4 md:pr-6">
           <div className="bg-[#F4F1EA] rounded-lg p-5 md:p-6">
             <div className="flex justify-between items-start mb-4">
-              <div>
+              <div className="flex-1 pr-4">
                 <h3 className="text-lg md:text-xl font-bold text-[#0B2A5B] mb-1">{course.title || course.name}</h3>
-                <p className="text-[#0B2A5B]/60 text-xs md:text-sm">Professional Trading Program</p>
+                {availableBatches.length === 0 && (
+                  <p className="text-[#0B2A5B]/60 text-xs md:text-sm">Professional Trading Program</p>
+                )}
               </div>
-              <div className="text-right">
+              <div className="text-right shrink-0">
                 <span className="text-xl md:text-2xl font-bold text-[#0B2A5B]">
                   ₹{initialPrice.toLocaleString("en-IN")}
                 </span>
               </div>
             </div>
+
+            {availableBatches.length > 0 && (
+              <div className="mb-4 w-full">
+                <label className="text-[10px] text-[#0B2A5B] font-black uppercase tracking-wider block mb-2">
+                  Choose Starting Batch (Cohort)
+                </label>
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
+                  {availableBatches.map((batch: any) => (
+                    <button
+                      key={batch.id}
+                      onClick={() => setSelectedBatchId(String(batch.id))}
+                      className={`w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between ${
+                        selectedBatchId === String(batch.id)
+                          ? "border-[#0B2A5B] bg-[#0B2A5B]/5 shadow-sm ring-1 ring-[#0B2A5B]"
+                          : "border-gray-200 bg-white hover:border-[#0B2A5B]/40 hover:bg-gray-50/50"
+                      }`}
+                    >
+                      <div className="flex-1">
+                        <div className="font-bold text-[#0B2A5B] text-sm flex items-center gap-2">
+                          {batch.name}
+                          {batch.status === "Registration Open" && <span className="bg-emerald-100 text-emerald-800 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">Open</span>}
+                          {batch.status === "Running" && <span className="bg-blue-100 text-blue-800 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">Running</span>}
+                          {batch.status === "Upcoming" && <span className="bg-amber-100 text-amber-800 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">Upcoming</span>}
+                        </div>
+                        <div className="text-[11px] font-medium text-gray-500 mt-1 flex items-center gap-1.5">
+                          <span className="text-sm leading-none">📅</span>
+                          <span>Starts {new Date(batch.start_date).toLocaleDateString(undefined, { dateStyle: "medium" })}</span>
+                        </div>
+                      </div>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ml-4 ${
+                        selectedBatchId === String(batch.id) ? "border-[#0B2A5B]" : "border-gray-300"
+                      }`}>
+                        {selectedBatchId === String(batch.id) && <div className="w-2.5 h-2.5 bg-[#0B2A5B] rounded-full" />}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="border-t border-[#0B2A5B]/10 pt-4 space-y-4">
               {/* IB / Referral Code Input */}

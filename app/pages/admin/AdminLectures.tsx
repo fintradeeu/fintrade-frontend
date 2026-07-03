@@ -11,6 +11,7 @@ import { toast } from "sonner";
 
 export default function AdminLectures() {
   const [lectures, setLectures] = useState<any[]>([]);
+  const [batches, setBatches] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -26,16 +27,19 @@ export default function AdminLectures() {
     start_time: "",
     end_time: "",
     meeting_url: "",
+    batch_id: "" as number | string,
     course_id: "" as number | string
   });
 
   const fetchLecturesAndCourses = async () => {
     try {
-      const [lecturesRes, coursesRes] = await Promise.all([
-        api.get("/lectures"),
+      const [lecturesRes, batchesRes, coursesRes] = await Promise.all([
+        api.get("/batches/admin/lectures"),
+        api.get("/batches/admin/list?skip=0&limit=100"),
         api.get("/admin/courses")
       ]);
       setLectures(lecturesRes.data);
+      setBatches(batchesRes.data.batches || []);
       setCourses(coursesRes.data);
     } catch (err) {
       console.error(err);
@@ -59,12 +63,13 @@ export default function AdminLectures() {
         start_time: (lecture.scheduled_at || lecture.start_time) ? new Date(lecture.scheduled_at || lecture.start_time).toISOString().slice(0, 16) : "",
         end_time: lecture.end_time ? new Date(lecture.end_time).toISOString().slice(0, 16) : "",
         meeting_url: lecture.meeting_link || lecture.meeting_url || "",
+        batch_id: lecture.batch_id || "",
         course_id: lecture.course_id || ""
       });
     } else {
       setIsEditing(false);
       setCurrentLectureId(null);
-      setNewLecture({ title: "", description: "", instructor_name: "", start_time: "", end_time: "", meeting_url: "", course_id: "" });
+      setNewLecture({ title: "", description: "", instructor_name: "", start_time: "", end_time: "", meeting_url: "", batch_id: "", course_id: "" });
     }
     setShowAddModal(true);
   };
@@ -72,8 +77,8 @@ export default function AdminLectures() {
   const handleAddOrEditLecture = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (!newLecture.course_id) {
-        toast.error("Please select a course for this lecture.");
+      if (!newLecture.batch_id || !newLecture.course_id) {
+        toast.error("Please select a batch and course for this lecture.");
         return;
       }
       const startTime = new Date(newLecture.start_time);
@@ -83,6 +88,7 @@ export default function AdminLectures() {
         : 60;
       const payload = {
         ...newLecture,
+        batch_id: Number(newLecture.batch_id),
         course_id: Number(newLecture.course_id),
         scheduled_at: startTime.toISOString(),
         duration_minutes: durationMinutes,
@@ -90,10 +96,10 @@ export default function AdminLectures() {
       };
 
       if (isEditing && currentLectureId) {
-        await api.put(`/admin/lectures/${currentLectureId}`, payload);
+        await api.put(`/batches/admin/lectures/${currentLectureId}`, payload);
         toast.success("Lecture updated successfully");
       } else {
-        await api.post("/admin/lectures", payload);
+        await api.post("/batches/admin/lectures", payload);
         toast.success("Lecture created successfully");
       }
       setShowAddModal(false);
@@ -106,7 +112,7 @@ export default function AdminLectures() {
   const handleDeleteLecture = async (id: number) => {
     if (!(await confirmPopup("Are you sure you want to delete this lecture?"))) return;
     try {
-      await api.delete(`/admin/lectures/${id}`);
+      await api.delete(`/batches/admin/lectures/${id}`);
       toast.success("Lecture deleted successfully");
       fetchLecturesAndCourses();
     } catch (err: any) {
@@ -119,7 +125,7 @@ export default function AdminLectures() {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-[#0B2A5B] mb-2">Lecture Management</h1>
-          <p className="text-[#0B2A5B]/70">Schedule and assign lectures to teachers</p>
+          <p className="text-[#0B2A5B]/70">Schedule lectures batch-wise for enrolled students</p>
         </div>
         <Button onClick={() => openModal()} className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a]">
           <Plus size={16} className="mr-2" />
@@ -136,6 +142,9 @@ export default function AdminLectures() {
                   <h3 className="text-lg font-semibold text-[#0B2A5B]">{lecture.title}</h3>
                   <Badge className={lecture.status === "completed" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}>
                     {lecture.status || "scheduled"}
+                  </Badge>
+                  <Badge className="bg-[#F4F1EA] text-[#0B2A5B]">
+                    {batches.find((b) => b.id === lecture.batch_id)?.name || `Batch #${lecture.batch_id}`}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-6 text-sm text-[#0B2A5B]/70">
@@ -181,6 +190,20 @@ export default function AdminLectures() {
             <h2 className="text-2xl font-bold mb-6 text-[#0B2A5B]">{isEditing ? "Edit Lecture" : "Schedule New Lecture"}</h2>
             <form onSubmit={handleAddOrEditLecture} className="space-y-4">
               <div>
+                <label className="text-sm font-semibold text-[#0B2A5B] mb-1 block">Batch <span className="text-red-500">*</span></label>
+                <select
+                  required
+                  className="w-full p-2 border border-[#0B2A5B]/20 rounded-md bg-white text-sm"
+                  value={newLecture.batch_id}
+                  onChange={(e) => setNewLecture({...newLecture, batch_id: e.target.value, course_id: ""})}
+                >
+                  <option value="" disabled>Select a batch</option>
+                  {batches.map(batch => (
+                    <option key={batch.id} value={batch.id}>{batch.name} ({batch.batch_code})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
                 <label className="text-sm font-semibold text-[#0B2A5B] mb-1 block">Course <span className="text-red-500">*</span></label>
                 <select 
                   required
@@ -189,7 +212,13 @@ export default function AdminLectures() {
                   onChange={(e) => setNewLecture({...newLecture, course_id: e.target.value})}
                 >
                   <option value="" disabled>Select a course</option>
-                  {courses.map(course => (
+                  {courses
+                    .filter((course) => {
+                      const batch = batches.find((b) => String(b.id) === String(newLecture.batch_id));
+                      if (!batch) return true;
+                      return (batch.assigned_courses || []).some((assigned: any) => assigned.id === course.id);
+                    })
+                    .map(course => (
                     <option key={course.id} value={course.id}>{course.title}</option>
                   ))}
                 </select>

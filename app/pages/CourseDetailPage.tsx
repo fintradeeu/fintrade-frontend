@@ -290,6 +290,7 @@ export default function CourseDetailPage() {
   const isAuthenticated = !!localStorage.getItem("token");
 
   const [course, setCourse] = useState<any>(null);
+  const [availableBatches, setAvailableBatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [enrollLoading, setEnrollLoading] = useState(false);
   const [showKycModal, setShowKycModal] = useState(false);
@@ -300,6 +301,13 @@ export default function CourseDetailPage() {
       try {
         const res = await api.get(`/courses/${id}`);
         setCourse(res.data);
+        
+        try {
+          const batchRes = await api.get(`/batches/public/list?course_id=${id}`);
+          setAvailableBatches(batchRes.data || []);
+        } catch (batchErr) {
+          console.warn("Failed to fetch active batches for course detail page:", batchErr);
+        }
       } catch (err) {
         console.error("Failed to fetch course details from API, attempting local fallback:", err);
         // Attempt fallback from mockCourses
@@ -451,6 +459,44 @@ export default function CourseDetailPage() {
                     <ArrowRight className="w-5 h-5" />
                   </Button>
                 </div>
+                {availableBatches.length > 0 && (
+                  <div className="mt-6 space-y-3">
+                    <span className="text-xs text-[#0B2A5B] font-extrabold uppercase tracking-wider block">Cohort Batches &amp; Schedules:</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl">
+                      {availableBatches.map((batch: any) => {
+                        const statusColors: Record<string, string> = {
+                          "Registration Open": "bg-emerald-50 text-emerald-700 border-emerald-200",
+                          "Running": "bg-blue-50 text-blue-700 border-blue-200",
+                          "Upcoming": "bg-amber-50 text-amber-700 border-amber-200",
+                          "Completed": "bg-gray-50 text-gray-600 border-gray-200"
+                        };
+                        const statusColor = statusColors[batch.status] || "bg-gray-50 text-gray-600 border-gray-200";
+                        return (
+                          <div key={batch.id} className="text-xs bg-[#F4F1EA]/30 border border-[#0B2A5B]/10 p-3.5 px-4 rounded-xl flex flex-col gap-1.5 shadow-sm hover:border-[#0B2A5B]/30 transition-all text-left">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-[#0B2A5B] font-extrabold text-sm truncate">🎯 {batch.name}</span>
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${statusColor} shrink-0`}>
+                                {batch.status}
+                              </span>
+                            </div>
+                            <div className="space-y-1 text-gray-500 font-medium text-[11px]">
+                              <div className="flex items-center gap-1.5">
+                                <span>📅</span>
+                                <span>Batch: {new Date(batch.start_date).toLocaleDateString(undefined, { dateStyle: "medium" })} – {new Date(batch.end_date).toLocaleDateString(undefined, { dateStyle: "medium" })}</span>
+                              </div>
+                              {batch.status === "Registration Open" && (
+                                <div className="flex items-center gap-1.5 text-red-500 font-semibold">
+                                  <span>⏰</span>
+                                  <span>Reg. Closes: {new Date(batch.registration_end_date).toLocaleDateString(undefined, { dateStyle: "medium" })}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </ScrollReveal>
             </div>
           </div>

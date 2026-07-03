@@ -141,56 +141,69 @@ export default function TeacherAssignments() {
       </div>
 
       {isCreating && (
-        <Card className="p-6 bg-white shadow-lg mb-8 border-t-4 border-[#C2A86A]">
-          <h2 className="text-xl font-semibold text-[#0B2A5B] mb-6">Create New Assignment</h2>
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
+        <Card className="p-6 md:p-8 bg-white shadow-xl mb-8 border-0 ring-1 ring-black/5 rounded-2xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#0B2A5B] to-[#C2A86A]" />
+          <h2 className="text-xl md:text-2xl font-bold text-[#0B2A5B] mb-8">Create New Assignment</h2>
+          
+          <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Select Course</label>
-              <Select value={courseId} onValueChange={setCourseId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a course" />
-                </SelectTrigger>
-                <SelectContent>
-                  {courses.map(c => (
-                    <SelectItem key={c.id} value={c.id.toString()}>{c.title}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <label className="text-xs font-black text-[#0B2A5B] uppercase tracking-wider block">Assignment Title *</label>
+              <Input 
+                placeholder="e.g. Advanced Options Strategies Assignment" 
+                value={title} 
+                onChange={(e) => setTitle(e.target.value)} 
+                className="rounded-xl border-gray-200"
+              />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Assignment Title</label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g., Technical Analysis Report" />
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-black text-[#0B2A5B] uppercase tracking-wider block">Due Date *</label>
+                <Input 
+                  type="datetime-local" 
+                  value={dueDate} 
+                  onChange={(e) => setDueDate(e.target.value)} 
+                  className="rounded-xl border-gray-200"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-black text-[#0B2A5B] uppercase tracking-wider block">Max Score *</label>
+                <Input 
+                  type="number" 
+                  value={maxScore} 
+                  onChange={(e) => setMaxScore(e.target.value)} 
+                  className="rounded-xl border-gray-200"
+                />
+              </div>
             </div>
+
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Due Date</label>
-              <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+              <label className="text-xs font-black text-[#0B2A5B] uppercase tracking-wider block">Description & Instructions</label>
+              <Textarea 
+                value={description} 
+                onChange={(e) => setDescription(e.target.value)} 
+                placeholder="Provide clear instructions for the assignment..." 
+                className="h-32 rounded-xl border-gray-200 resize-none"
+              />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Max Score</label>
-              <Input type="number" value={maxScore} onChange={(e) => setMaxScore(e.target.value)} />
+
+            <div className="space-y-2 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+              <label className="text-xs font-black text-[#0B2A5B] uppercase tracking-wider block">Resources (Optional)</label>
+              <Input 
+                type="file" 
+                multiple 
+                onChange={(e) => setResourceFiles(Array.from(e.target.files || []))} 
+                className="bg-white rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#0B2A5B]/10 file:text-[#0B2A5B] hover:file:bg-[#0B2A5B]/20"
+              />
+              <p className="text-xs text-gray-500 mt-2">Upload multiple files if needed (PDF, DOCX, ZIP).</p>
             </div>
           </div>
-          <div className="space-y-2 mb-6">
-            <label className="text-sm font-medium text-gray-700">Description & Instructions</label>
-            <Textarea 
-              value={description} 
-              onChange={(e) => setDescription(e.target.value)} 
-              placeholder="Provide clear instructions for the assignment..." 
-              className="h-32"
-            />
-          </div>
-          <div className="space-y-2 mb-6">
-            <label className="text-sm font-medium text-gray-700">Resources (Optional)</label>
-            <Input 
-              type="file" 
-              multiple 
-              onChange={(e) => setResourceFiles(Array.from(e.target.files || []))} 
-            />
-            <p className="text-xs text-gray-500">Upload multiple files if needed.</p>
-          </div>
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setIsCreating(false)} disabled={isUploadingResources}>Cancel</Button>
-            <Button className="bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]" onClick={handleCreateAssignment} disabled={isUploadingResources}>
+
+          <div className="flex justify-end gap-3 mt-8">
+            <Button variant="outline" className="rounded-xl border-gray-200" onClick={() => setIsCreating(false)} disabled={isUploadingResources}>
+              Cancel
+            </Button>
+            <Button className="bg-[#0B2A5B] text-white hover:bg-[#1a3d7a] rounded-xl px-6" onClick={handleCreateAssignment} disabled={isUploadingResources}>
               {isUploadingResources ? "Uploading..." : "Create Assignment"}
             </Button>
           </div>

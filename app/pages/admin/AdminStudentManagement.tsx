@@ -85,6 +85,47 @@ export default function AdminStudentManagement() {
     fetchStudents();
   }, []);
 
+  const exportToCSV = () => {
+    if (filtered.length === 0) {
+      toast.error("No student data available to export.");
+      return;
+    }
+    const headers = ["Student Name", "Email", "Phone", "City", "Purchased Courses", "Coupon Used", "Joined Date"];
+    
+    const rows = filtered.map(s => {
+      const coursesStr = (s.enrolled_courses || []).map((ec: any) => ec.course_title).join(" | ");
+      const couponsStr = studentCouponCodes(s).join(" | ");
+      const joinedDate = s.created_at ? new Date(s.created_at).toLocaleDateString("en-IN") : "";
+      
+      const escape = (val: string) => `"${(val || "").replace(/"/g, '""')}"`;
+      
+      return [
+        escape(s.full_name),
+        escape(s.email),
+        escape(s.phone),
+        escape(s.city),
+        escape(coursesStr),
+        escape(couponsStr),
+        escape(joinedDate)
+      ];
+    });
+
+    const csvString = "\uFEFF" // UTF-8 BOM
+      + headers.map(h => `"${h.replace(/"/g, '""')}"`).join(",") + "\n"
+      + rows.map(e => e.join(",")).join("\n");
+      
+    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `students_list_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success("Student list exported successfully.");
+  };
+
   const loadKycForUser = async (userId: number) => {
     setKycLoading(true);
     try {
@@ -155,11 +196,14 @@ export default function AdminStudentManagement() {
 
   return (
     <DashboardLayout role="admin">
-      <div className="mb-8 flex items-start justify-between">
+      <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-[#0B2A5B] mb-2">Student Management</h1>
           <p className="text-[#0B2A5B]/70">Track students who have purchased courses, view their invoices, KYC status, and session activity logs.</p>
         </div>
+        <Button onClick={exportToCSV} className="bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] rounded-xl flex items-center gap-2">
+          <Download size={16} /> Export CSV
+        </Button>
       </div>
 
       {/* Search Bar */}

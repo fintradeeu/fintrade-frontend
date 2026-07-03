@@ -20,23 +20,10 @@ export default function StudentAssignments() {
 
   const fetchAssignments = async () => {
     try {
-      // In a real app, we fetch enrolled courses and their assignments.
-      // For MVP, we'll fetch from a dedicated endpoint or simulate it.
-      const enrolledRes = await api.get("/courses/enrolled");
-      const enrolledCourses = enrolledRes.data;
-      
-      const allAssignments: any[] = [];
-      for (const enrollment of enrolledCourses) {
-        try {
-          const aRes = await api.get(`/courses/${enrollment.course_id}/assignments`);
-          allAssignments.push(...aRes.data);
-        } catch (e) {
-          console.error(e);
-        }
-      }
-      setAssignments(allAssignments);
+      const assignmentsRes = await api.get("/batches/student/assignments");
+      setAssignments(assignmentsRes.data);
 
-      const subRes = await api.get("/courses/assignments/my-submissions");
+      const subRes = await api.get("/batches/student/assignments/my-submissions");
       setSubmissions(subRes.data);
     } catch (err) {
       console.error(err);
@@ -70,8 +57,8 @@ export default function StudentAssignments() {
       const fileUrl = uploadRes.data.url;
 
       // Submit assignment
-      await api.post("/courses/assignments/submit", {
-        assignment_id: assignmentId,
+      await api.post("/batches/student/assignments/submit", {
+        batch_assignment_id: assignmentId,
         file_url: fileUrl
       });
       

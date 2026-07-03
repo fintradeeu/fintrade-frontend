@@ -33,6 +33,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
     case "super_admin":
       return [
         { label: "Dashboard", path: "/superadmin/dashboard", icon: <Home size={20} /> },
+        { label: "Batch Management", path: "/admin/batches", icon: <Users size={20} /> },
         { label: "User Management", path: "/admin/students", icon: <Users size={20} /> },
         { label: "Student Management", path: "/admin/student-management", icon: <GraduationCap size={20} /> },
         { label: "IB Management", path: "/admin/introducing-brokers", icon: <Handshake size={20} /> },
@@ -42,6 +43,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "Lectures", path: "/admin/lectures", icon: <Video size={20} /> },
         { label: "Live Class Registrations", path: "/admin/live-class-registrations", icon: <Users size={20} /> },
         { label: "Exams", path: "/admin/exams", icon: <FileQuestion size={20} /> },
+        { label: "Assignments", path: "/admin/assignments", icon: <FileText size={20} /> },
         { label: "Payments & Coupons", path: "/admin/payments", icon: <IndianRupee size={20} /> },
         { label: "Login Details", path: "/admin/login-details", icon: <Users size={20} /> },
         { label: "Blog & CMS", path: "/admin/news", icon: <Newspaper size={20} /> },
@@ -49,6 +51,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "Site Content", path: "/admin/cms", icon: <LayoutTemplate size={20} /> },
         { label: "Global Offices", path: "/admin/global-offices", icon: <Globe size={20} /> },
         { label: "Feedback Forms", path: "/admin/feedback-forms", icon: <FileText size={20} /> },
+        { label: "Doubt Panel", path: "/admin/doubt-forms", icon: <MessageCircle size={20} /> },
         { label: "Admin Roles", path: "/admin/roles", icon: <Shield size={20} /> },
         { label: "AI Chatbot", path: "/admin/ai-chatbot", icon: <Bot size={20} /> },
         { label: "Simulator", path: "/admin/simulator", icon: <TrendingUp size={20} /> },
@@ -59,13 +62,14 @@ const getNavItemsByRole = (role: string): NavItem[] => {
       ];
     case "student":
       return [
-        { label: "Dashboard", path: "/student/dashboard", icon: <Home size={20} /> },
+        { label: "Dashboard", path: "/student/batch-dashboard", icon: <Home size={20} /> },
         { label: "Profile", path: "/student/profile", icon: <UserCircle size={20} /> },
         { label: "Courses", path: "/student/courses", icon: <BookOpen size={20} /> },
         { label: "Modules", path: "/student/modules", icon: <GraduationCap size={20} /> },
         { label: "Lectures", path: "/student/lectures", icon: <Video size={20} /> },
         { label: "Assignments", path: "/student/assignments", icon: <FileText size={20} /> },
         { label: "AI Tutor", path: "/student/ai-tutor", icon: <Bot size={20} /> },
+        { label: "Doubt Solving", path: "/student/doubt-forms", icon: <MessageCircle size={20} /> },
         { label: "Exams", path: "/student/exams", icon: <FileQuestion size={20} /> },
         { label: "Performance", path: "/student/performance", icon: <BarChart3 size={20} /> },
         { label: "Leaderboard", path: "/student/leaderboard", icon: <Trophy size={20} /> },
@@ -88,6 +92,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
     case "admin":
       return [
         { label: "Dashboard", path: "/admin/dashboard", icon: <Home size={20} /> },
+        { label: "Batch Management", path: "/admin/batches", icon: <Users size={20} /> },
         { label: "User Management", path: "/admin/students", icon: <Users size={20} /> },
         { label: "Student Management", path: "/admin/student-management", icon: <GraduationCap size={20} /> },
         { label: "Courses", path: "/admin/courses", icon: <BookOpen size={20} /> },
@@ -95,12 +100,14 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "Lectures", path: "/admin/lectures", icon: <Video size={20} /> },
         { label: "Live Class Registrations", path: "/admin/live-class-registrations", icon: <Users size={20} /> },
         { label: "Exams", path: "/admin/exams", icon: <FileQuestion size={20} /> },
+        { label: "Assignments", path: "/admin/assignments", icon: <FileText size={20} /> },
         { label: "Login Details", path: "/admin/login-details", icon: <Users size={20} /> },
         { label: "Blog & CMS", path: "/admin/news", icon: <Newspaper size={20} /> },
         { label: "Advisors", path: "/admin/advisors", icon: <Users size={20} /> },
         { label: "Site Content", path: "/admin/cms", icon: <LayoutTemplate size={20} /> },
         { label: "Global Offices", path: "/admin/global-offices", icon: <Globe size={20} /> },
         { label: "Feedback Forms", path: "/admin/feedback-forms", icon: <FileText size={20} /> },
+        { label: "Doubt Panel", path: "/admin/doubt-forms", icon: <MessageCircle size={20} /> },
         { label: "Admin Roles", path: "/admin/roles", icon: <Shield size={20} /> },
         { label: "AI Chatbot", path: "/admin/ai-chatbot", icon: <Bot size={20} /> },
         { label: "Simulator", path: "/admin/simulator", icon: <TrendingUp size={20} /> },
@@ -306,15 +313,18 @@ export function DashboardLayout({
     if (resolvedRole === "student") {
       Promise.all([
         api.get("/courses/enrolled"),
-        api.get("/kyc/status")
+        api.get("/kyc/status"),
+        api.get("/batches/student/dashboard").catch(() => null)
       ])
-        .then(([enrolledRes, kycRes]) => {
+        .then(([enrolledRes, kycRes, batchRes]) => {
           const enrolled = enrolledRes.data;
           setEnrolledCount(enrolled.length);
           
           const kycStatus = kycRes.data?.status || "not_started";
           const verified = kycStatus === "verified" || kycStatus === "approved";
           setIsKycVerified(verified);
+
+          const isBatchLocked = batchRes?.data?.is_locked === true;
 
           const allowedUnenrolledRoutes = [
             "/student/profile", "/student/courses",
@@ -336,6 +346,17 @@ export function DashboardLayout({
             if (!allowedUnverifiedRoutes.includes(location.pathname)) {
               const courseId = enrolled[0]?.course_id;
               navigate(courseId ? `/student/contract-kyc?course_id=${courseId}` : "/student/contract-kyc");
+            }
+          } else if (isBatchLocked) {
+            const allowedLockedRoutes = [
+              "/student/batch-dashboard",
+              "/student/profile",
+              "/student/invoice",
+              "/student/contract-kyc",
+              "/student/courses"
+            ];
+            if (!allowedLockedRoutes.includes(location.pathname)) {
+              navigate("/student/batch-dashboard");
             }
           }
         })

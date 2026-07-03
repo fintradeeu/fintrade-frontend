@@ -13,6 +13,7 @@ import { uploadFile } from "../../utils/upload";
 export default function AdminCourses() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState<any[]>([]);
+  const [selectedCourseIds, setSelectedCourseIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedCourse, setExpandedCourse] = useState<number | null>(null);
 
@@ -48,6 +49,14 @@ export default function AdminCourses() {
   // Drag and Drop state
   const [draggedModule, setDraggedModule] = useState<number | null>(null);
   const [draggedLesson, setDraggedLesson] = useState<number | null>(null);
+
+  // Import Lesson State
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importTargetModuleId, setImportTargetModuleId] = useState<number | null>(null);
+  const [importTargetCourseId, setImportTargetCourseId] = useState<number | null>(null);
+  const [importSourceCourseId, setImportSourceCourseId] = useState<number | null>(null);
+  const [importSourceCourseDetails, setImportSourceCourseDetails] = useState<any | null>(null);
+  const [selectedImportLessonIds, setSelectedImportLessonIds] = useState<number[]>([]);
 
   const fetchCourses = async () => {
     try { const res = await api.get("/admin/courses"); setCourses(res.data); }
@@ -199,6 +208,72 @@ export default function AdminCourses() {
     } catch (err: any) { alert("Error deleting course: " + (err.response?.data?.detail || err.message)); }
   };
 
+  const handleDeleteSelectedCourses = async () => {
+    if (!(await confirmPopup(`Delete the ${selectedCourseIds.length} selected courses and all their modules and lessons? This cannot be undone.`))) return;
+    setSaving(true);
+    try {
+      await api.post("/admin/courses/delete-selected", { course_ids: selectedCourseIds });
+      setSelectedCourseIds([]);
+      fetchCourses();
+    } catch (err: any) {
+      alert("Error deleting courses: " + (err.response?.data?.detail || err.message));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ── Import Lessons Helpers ──
+  const openImportModal = (moduleId: number, courseId: number) => {
+    setImportTargetModuleId(moduleId);
+    setImportTargetCourseId(courseId);
+    setImportSourceCourseId(null);
+    setImportSourceCourseDetails(null);
+    setSelectedImportLessonIds([]);
+    setShowImportModal(true);
+  };
+
+  const handleImportSourceCourseChange = async (sourceId: number) => {
+    setImportSourceCourseId(sourceId);
+    setSelectedImportLessonIds([]);
+    if (!sourceId) {
+      setImportSourceCourseDetails(null);
+      return;
+    }
+    try {
+      const res = await api.get(`/courses/${sourceId}`);
+      setImportSourceCourseDetails(res.data);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load source course details");
+    }
+  };
+
+  const handleToggleImportLesson = (lessonId: number) => {
+    setSelectedImportLessonIds(prev =>
+      prev.includes(lessonId) ? prev.filter(id => id !== lessonId) : [...prev, lessonId]
+    );
+  };
+
+  const handleImportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!importTargetModuleId || selectedImportLessonIds.length === 0) return;
+    setSaving(true);
+    try {
+      await api.post("/admin/lessons/import", {
+        target_module_id: importTargetModuleId,
+        lesson_ids: selectedImportLessonIds
+      });
+      setShowImportModal(false);
+      if (expandedCourse) {
+        fetchCourseDetail(expandedCourse);
+      }
+    } catch (err: any) {
+      alert("Error importing lessons: " + (err.response?.data?.detail || err.message));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // ── Edit Module (reuses create modal) ──
   const openEditModule = (mod: any, courseId: number) => {
     setEditModuleId(mod.id);
@@ -344,10 +419,18 @@ export default function AdminCourses() {
           <h1 className="text-3xl font-bold text-[#0B2A5B]">Manage Courses</h1>
           <p className="text-[#0B2A5B]/60 mt-1">Create and structure your trading programs</p>
         </div>
-        <Button onClick={async () => { setEditCourseId(null); setNewCourse({ title: "", description: "", short_description: "", original_price: 0, price: 0, difficulty_level: "beginner", duration_days: 0, is_published: false }); setShowCourseModal(true); }} className="bg-[#D50032] hover:bg-[#a30026] text-white">
-          <Plus size={16} className="mr-2" />
-          Create Course
-        </Button>
+        <div className="flex gap-2">
+          {selectedCourseIds.length > 0 && (
+            <Button onClick={handleDeleteSelectedCourses} disabled={saving} className="bg-red-600 hover:bg-red-700 text-white">
+              <Trash2 size={16} className="mr-2" />
+              Delete Selected ({selectedCourseIds.length})
+            </Button>
+          )}
+          <Button onClick={async () => { setEditCourseId(null); setNewCourse({ title: "", description: "", short_description: "", original_price: 0, price: 0, difficulty_level: "beginner", duration_days: 0, is_published: false }); setShowCourseModal(true); }} className="bg-[#D50032] hover:bg-[#a30026] text-white">
+            <Plus size={16} className="mr-2" />
+            Create Course
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -358,11 +441,43 @@ export default function AdminCourses() {
       </div>
 
       {/* Course List */}
+      {courses.length > 0 && (
+        <div className="mb-3 flex items-center gap-2 px-1">
+          <input
+            type="checkbox"
+            checked={selectedCourseIds.length === courses.length}
+            onChange={() => {
+              if (selectedCourseIds.length === courses.length) {
+                setSelectedCourseIds([]);
+              } else {
+                setSelectedCourseIds(courses.map(c => c.id));
+              }
+            }}
+            className="h-4.5 w-4.5 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer"
+            id="select-all-courses"
+          />
+          <label htmlFor="select-all-courses" className="text-xs font-bold text-[#0B2A5B] cursor-pointer select-none">
+            {selectedCourseIds.length === courses.length ? "Deselect All" : "Select All Courses"}
+          </label>
+        </div>
+      )}
+
       <div className="space-y-4">
         {courses.map((course) => (
           <Card key={course.id} className="bg-white shadow-lg overflow-hidden">
             <div className="p-4 md:p-6 flex flex-col md:flex-row md:items-start justify-between cursor-pointer gap-4" onClick={() => toggleExpand(course.id)}>
               <div className="flex items-start gap-3 md:gap-4 flex-1 min-w-0">
+                <input
+                  type="checkbox"
+                  checked={selectedCourseIds.includes(course.id)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    setSelectedCourseIds(prev =>
+                      prev.includes(course.id) ? prev.filter(id => id !== course.id) : [...prev, course.id]
+                    );
+                  }}
+                  className="mt-3 md:mt-3.5 h-4.5 w-4.5 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer shrink-0"
+                />
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-[#C2A86A]/10 rounded-lg flex items-center justify-center flex-shrink-0">
                   <BookOpen className="text-[#C2A86A]" size={20} />
                 </div>
@@ -443,6 +558,9 @@ export default function AdminCourses() {
                             </Button>
                             <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 text-[#0B2A5B] text-xs h-8 py-1" onClick={async () => { setEditModuleId(null); setLessonForModule(mod.id); setNewModule({ title: "", description: "", order: 0, is_published: false }); setModuleForCourse(course.id); setShowLessonModal(true); setEditLessonId(null); setNewLesson({ title: "", content: "", content_type: "text", video_url: "", duration_minutes: 15, order: 0, is_published: false }); setQuizQuestion(""); setQuizOptions(["", "", "", ""]); setQuizCorrect("a"); setQuizType("mcq"); }}>
                               <FileText size={12} className="mr-1" />Add Lesson
+                            </Button>
+                            <Button size="sm" variant="outline" className="border-purple-200 text-purple-600 text-xs h-8 py-1 hover:bg-purple-50" onClick={(e) => { e.stopPropagation(); openImportModal(mod.id, course.id); }}>
+                              <Upload size={12} className="mr-1" />Import Lessons
                             </Button>
                           </div>
                         </div>
@@ -721,6 +839,82 @@ export default function AdminCourses() {
               </div>
               <div className="p-6 pt-4 border-t border-gray-100 bg-gray-50/50">
                 <Button type="submit" disabled={saving || uploadingMedia} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{saving ? "Saving..." : editLessonId ? "Save Changes" : "Add Lesson"}</Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {/* Import Lessons Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-2xl bg-white shadow-xl relative flex flex-col max-h-[90vh] rounded-2xl overflow-hidden">
+            <button onClick={() => setShowImportModal(false)} className="absolute top-4.5 right-4 z-10 text-gray-500 hover:text-black"><X size={20} /></button>
+            <div className="p-6 pb-4 border-b border-gray-100">
+              <h2 className="text-xl md:text-2xl font-bold text-[#0B2A5B]">Import Lessons</h2>
+              <p className="text-xs text-gray-500 mt-1">Copy existing lessons from other courses into this module.</p>
+            </div>
+            <form onSubmit={handleImportSubmit} className="flex-1 flex flex-col min-h-0">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0 pr-4 scrollbar-thin">
+                <div>
+                  <label className="text-sm font-medium text-[#0B2A5B]">Select Source Course</label>
+                  <select 
+                    className="w-full p-2 border rounded mt-1 bg-[#F4F1EA]" 
+                    value={importSourceCourseId || ""} 
+                    onChange={(e) => handleImportSourceCourseChange(Number(e.target.value))}
+                  >
+                    <option value="">-- Choose Course --</option>
+                    {courses.filter((c: any) => c.id !== importTargetCourseId).map((c: any) => (
+                      <option key={c.id} value={c.id}>{c.title}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {importSourceCourseDetails && (
+                  <div className="space-y-4 mt-4">
+                    <h3 className="font-semibold text-[#0B2A5B] text-sm">Select Lessons to Import:</h3>
+                    {importSourceCourseDetails.modules && importSourceCourseDetails.modules.length > 0 ? (
+                      <div className="space-y-3">
+                        {importSourceCourseDetails.modules.map((mod: any) => (
+                          <div key={mod.id} className="border border-gray-100 rounded-lg p-3 bg-gray-50/30">
+                            <h4 className="font-semibold text-xs text-gray-500 uppercase tracking-wider mb-2">{mod.title}</h4>
+                            {mod.lessons && mod.lessons.length > 0 ? (
+                              <div className="space-y-2">
+                                {mod.lessons.map((lesson: any) => (
+                                  <label key={lesson.id} className="flex items-start gap-2.5 p-2 rounded bg-white border border-gray-100 hover:border-purple-200 cursor-pointer transition-colors">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedImportLessonIds.includes(lesson.id)}
+                                      onChange={() => handleToggleImportLesson(lesson.id)}
+                                      className="mt-1 rounded text-purple-600 focus:ring-purple-500"
+                                    />
+                                    <div className="min-w-0 flex-1">
+                                      <div className="text-sm font-medium text-gray-700 break-words">{lesson.title}</div>
+                                      <div className="text-xs text-gray-400 capitalize">{lesson.content_type} {lesson.duration_minutes ? `• ${lesson.duration_minutes} min` : ""}</div>
+                                    </div>
+                                  </label>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-xs text-gray-400 italic">No lessons in this module.</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500 italic text-center py-4">No modules found in the selected course.</div>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="p-6 pt-4 border-t border-gray-100 bg-gray-50/50">
+                <Button 
+                  type="submit" 
+                  disabled={saving || selectedImportLessonIds.length === 0} 
+                  className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]"
+                >
+                  {saving ? "Importing..." : `Import Selected Lessons (${selectedImportLessonIds.length})`}
+                </Button>
               </div>
             </form>
           </Card>

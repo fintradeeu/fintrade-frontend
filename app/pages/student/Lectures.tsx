@@ -50,12 +50,8 @@ export default function Lectures() {
   useEffect(() => {
     const fetchLectures = async () => {
       try {
-        const enrolledRes = await api.get("/courses/enrolled");
-        const enrolledCourseIds = enrolledRes.data.map((e: any) => e.course_id);
-
-        const res = await api.get("/lectures");
-        const allLectures: LectureType[] = res.data;
-        const lectures = allLectures.filter(l => enrolledCourseIds.includes(l.course_id));
+        const res = await api.get("/batches/student/lectures");
+        const lectures: LectureType[] = res.data;
 
         const now = new Date();
         const upcoming: LectureType[] = [];

@@ -20,6 +20,7 @@ import CourseDetailPage from "./pages/CourseDetailPage";
 
 // Student Pages
 import StudentDashboard from "./pages/student/StudentDashboard";
+import StudentBatchDashboard from "./pages/student/StudentBatchDashboard";
 import StudentProfile from "./pages/student/StudentProfile";
 import EntranceExam from "./pages/student/EntranceExam";
 import CourseEnrollment from "./pages/student/CourseEnrollment";
@@ -36,6 +37,7 @@ import StudentAssignments from "./pages/student/StudentAssignments";
 import Leaderboard from "./pages/student/Leaderboard";
 import ExamResultReview from "./pages/student/ExamResultReview";
 import InvoicePage from "./pages/student/InvoicePage";
+import StudentDoubtForms from "./pages/student/StudentDoubtForms";
 
 // Teacher Pages
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
@@ -69,6 +71,7 @@ import AdminNews from "./pages/admin/AdminNews";
 import AdminAdvisors from "./pages/admin/AdminAdvisors";
 import AdminRoles from "./pages/admin/AdminRoles";
 import AdminLoginDetails from "./pages/admin/AdminLoginDetails";
+import AdminBatches from "./pages/admin/AdminBatches";
 import AdminCMS from "./pages/admin/AdminCMS";
 import AdminFeedbackForms from "./pages/admin/AdminFeedbackForms";
 import SubmitFeedback from "./pages/SubmitFeedback";
@@ -77,6 +80,7 @@ import AdminLiveClassRegistrations from "./pages/admin/AdminLiveClassRegistratio
 import AdminGlobalOffices from "./pages/admin/AdminGlobalOffices";
 import CookiePolicy from "./pages/CookiePolicy";
 import AdminCookieConsents from "./pages/admin/AdminCookieConsents";
+import AdminDoubtForms from "./pages/admin/AdminDoubtForms";
 
 // Distributor Pages
 import DistributorDashboard from "./pages/distributor/DistributorDashboard";
@@ -159,6 +163,10 @@ export const router = createBrowserRouter([
     Component: StudentDashboard,
   },
   {
+    path: "/student/batch-dashboard",
+    Component: StudentBatchDashboard,
+  },
+  {
     path: "/student/profile",
     Component: StudentProfile,
   },
@@ -225,6 +233,10 @@ export const router = createBrowserRouter([
   {
     path: "/student/invoice",
     Component: InvoicePage,
+  },
+  {
+    path: "/student/doubt-forms",
+    Component: StudentDoubtForms,
   },
   // Teacher Routes
   {
@@ -314,6 +326,14 @@ export const router = createBrowserRouter([
     Component: AdminExams,
   },
   {
+    path: "/admin/assignments",
+    Component: TeacherAssignments,
+  },
+  {
+    path: "/superadmin/assignments",
+    Component: TeacherAssignments,
+  },
+  {
     path: "/admin/payments",
     Component: AdminPayments,
   },
@@ -350,6 +370,10 @@ export const router = createBrowserRouter([
     Component: AdminSettings,
   },
   {
+    path: "/admin/batches",
+    Component: AdminBatches,
+  },
+  {
     path: "/admin/contracts",
     Component: AdminContracts,
   },
@@ -372,6 +396,10 @@ export const router = createBrowserRouter([
   {
     path: "/admin/cookie-consents",
     Component: AdminCookieConsents,
+  },
+  {
+    path: "/admin/doubt-forms",
+    Component: AdminDoubtForms,
   },
   {
     path: "/feedback/submit/:formId",

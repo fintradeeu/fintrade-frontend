@@ -131,6 +131,7 @@ export default function Modules() {
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [generatingAudio, setGeneratingAudio] = useState(false);
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<number>>(new Set());
+  const [completedBatchLessonIds, setCompletedBatchLessonIds] = useState<Set<number>>(new Set());
   const [videoPolicies, setVideoPolicies] = useState<any[]>([]);
   const [previewResource, setPreviewResource] = useState<{ title: string; type: string; url: string } | null>(null);
 
@@ -140,21 +141,81 @@ export default function Modules() {
         // Fetch learning dashboard for completed lessons
         const dashRes = await api.get("/learning/dashboard");
         const completedIds = new Set<number>(dashRes.data.completed_lessons.map((l: any) => l.lesson_id));
+        const completedBatchIds = new Set<number>((dashRes.data.completed_batch_lessons || []).map((l: any) => l.lesson_id));
         setCompletedLessonIds(completedIds);
+        setCompletedBatchLessonIds(completedBatchIds);
         setVideoPolicies(dashRes.data.video_policies || []);
 
         // Fetch enrolled courses with progress
         const enrolledRes = await api.get("/courses/enrolled");
         const enrolled = enrolledRes.data;
+        const enrolledByCourseId = enrolled.reduce((acc: Record<number, any>, enr: any) => {
+          acc[enr.course_id] = enr;
+          return acc;
+        }, {});
 
-        // Fetch detail for each enrolled course to get modules/lessons
+        let batchCoursesById: Record<number, any> = {};
+        try {
+          const batchRes = await api.get("/batches/student/dashboard");
+          batchCoursesById = (batchRes.data.assigned_courses || []).reduce((acc: Record<number, any>, course: any) => {
+            acc[course.course_id] = course;
+            return acc;
+          }, {});
+        } catch {
+          batchCoursesById = {};
+        }
+
+        // Fetch batch-specific modules first, falling back to the template course.
+        const courseRefs = [
+          ...enrolled.map((enr: any) => ({
+            course_id: enr.course_id,
+            progress_percent: enr.progress_percent,
+            enrollment: enr,
+          })),
+          ...Object.values(batchCoursesById)
+            .filter((course: any) => !enrolledByCourseId[course.course_id])
+            .map((course: any) => ({
+              course_id: course.course_id,
+              progress_percent: course.progress_percent || 0,
+              enrollment: null,
+              batch_course: course,
+            })),
+        ];
+
         const detailed = await Promise.all(
-          enrolled.map(async (enr: any) => {
+          courseRefs.map(async (enr: any) => {
             try {
               const detail = await api.get(`/courses/${enr.course_id}`);
-              return { ...detail.data, progress_percent: enr.progress_percent, enrollment: enr };
+              let modules = detail.data.modules || [];
+              const hasBatchCourse = Boolean(batchCoursesById[enr.course_id]);
+
+              if (hasBatchCourse) {
+                try {
+                  const batchStructure = await api.get(`/batches/student/courses/${enr.course_id}/structure`);
+                  modules = (batchStructure.data || []).map((mod: any) => ({
+                    ...mod,
+                    is_batch_module: true,
+                    lessons: (mod.lessons || []).map((lesson: any) => ({
+                      ...lesson,
+                      module_id: mod.id,
+                      is_batch_lesson: true,
+                      template_lesson_id: lesson.template_lesson_id || null,
+                    })),
+                  }));
+                } catch {
+                  modules = detail.data.modules || [];
+                }
+              }
+
+              return {
+                ...detail.data,
+                modules,
+                is_batch_course: hasBatchCourse,
+                progress_percent: enr.progress_percent,
+                enrollment: enr.enrollment
+              };
             } catch {
-              return { id: enr.course_id, title: enr.course?.title || "Course", modules: [], progress_percent: enr.progress_percent, enrollment: enr };
+              return { id: enr.course_id, title: enr.enrollment?.course?.title || enr.batch_course?.title || "Course", modules: [], progress_percent: enr.progress_percent, enrollment: enr.enrollment };
             }
           })
         );
@@ -169,23 +230,42 @@ export default function Modules() {
     fetchData();
   }, []);
 
+  const isLessonCompleted = (lesson: any) => (
+    lesson?.is_batch_lesson ? completedBatchLessonIds.has(lesson.id) : completedLessonIds.has(lesson.id)
+  );
+
   const markCompleted = async (lessonId: number) => {
-    if (completedLessonIds.has(lessonId)) return;
+    const lesson = orderedLessons.find(l => l.id === lessonId) || activeLesson;
+    const isBatchLesson = Boolean(lesson?.is_batch_lesson);
+    if (isBatchLesson ? completedBatchLessonIds.has(lessonId) : completedLessonIds.has(lessonId)) return;
     try {
-      await api.post("/learning/lesson/complete", {
-        course_id: selectedCourse.id,
-        lesson_id: lessonId,
-      });
+      if (isBatchLesson) {
+        await api.post(`/batches/student/lessons/${lessonId}/complete`, {
+          course_id: selectedCourse.id,
+        });
+      } else {
+        await api.post("/learning/lesson/complete", {
+          course_id: selectedCourse.id,
+          lesson_id: lessonId,
+        });
+      }
+
       const newCompletedSet = new Set(completedLessonIds);
-      newCompletedSet.add(lessonId);
-      setCompletedLessonIds(newCompletedSet);
+      const newCompletedBatchSet = new Set(completedBatchLessonIds);
+      if (isBatchLesson) {
+        newCompletedBatchSet.add(lessonId);
+        setCompletedBatchLessonIds(newCompletedBatchSet);
+      } else {
+        newCompletedSet.add(lessonId);
+        setCompletedLessonIds(newCompletedSet);
+      }
       
       // Update progress percent visually (mirrors backend real percentage logic)
       setCourses(courses.map(c => {
         if (c.id === selectedCourse.id) {
           const totalLessons = c.modules?.reduce((acc: number, m: any) => acc + (m.lessons?.length || 0), 0) || 1;
           const completedInCourse = c.modules?.reduce((acc: number, m: any) =>
-            acc + (m.lessons?.filter((l: any) => newCompletedSet.has(l.id))?.length || 0), 0
+            acc + (m.lessons?.filter((l: any) => l.is_batch_lesson ? newCompletedBatchSet.has(l.id) : newCompletedSet.has(l.id))?.length || 0), 0
           ) || 0;
           const newProgress = Math.min(100, Math.round((completedInCourse / totalLessons) * 100 * 100) / 100);
           return { ...c, progress_percent: newProgress };
@@ -210,15 +290,15 @@ export default function Modules() {
 
   // Automatic completion for text/pdf (after 5 seconds)
   useEffect(() => {
-    if (!activeLesson || completedLessonIds.has(activeLesson.id)) return;
+    if (!activeLesson || isLessonCompleted(activeLesson)) return;
     if (activeLesson.content_type === "text" || activeLesson.content_type === "pdf") {
       const timer = setTimeout(() => markCompleted(activeLesson.id), 5000);
       return () => clearTimeout(timer);
     }
-  }, [activeLesson, completedLessonIds]);
+  }, [activeLesson, completedLessonIds, completedBatchLessonIds]);
 
   const handleGenerateAudio = async () => {
-    if (!activeLesson || activeLesson.content_type !== "text") return;
+    if (!activeLesson || activeLesson.content_type !== "text" || activeLesson.is_batch_lesson) return;
     
     setGeneratingAudio(true);
     try {
@@ -545,7 +625,7 @@ export default function Modules() {
                                 onEnded={() => markCompleted(activeLesson.id)}
                               />
                             </div>
-                          ) : (
+                          ) : activeLesson.is_batch_lesson ? null : (
                             <div className="flex justify-end">
                               <Button size="sm" onClick={handleGenerateAudio} disabled={generatingAudio} className="bg-[#D50032] text-white hover:bg-[#FF0000] rounded-xl font-bold shadow-md transition-all hover:scale-105 active:scale-95">
                                 <Volume2 size={16} className="mr-2" />
@@ -599,7 +679,7 @@ export default function Modules() {
                       )}
 
                       {/* Manual Complete Button (Fallback for embedded iframes or text) */}
-                      {!completedLessonIds.has(activeLesson.id) ? (
+                      {!isLessonCompleted(activeLesson) ? (
                         (() => {
                           const activePolicy = videoPolicies.find(p => p.module_id === activeLesson.module_id);
                           const isVideoWatchMandatory = activePolicy ? activePolicy.mandatory : true;
@@ -627,7 +707,7 @@ export default function Modules() {
                             const currentIndex = orderedLessons.findIndex(l => l.id === activeLesson.id);
                             if (currentIndex >= 0 && currentIndex < orderedLessons.length - 1) {
                               const nextLesson = orderedLessons[currentIndex + 1];
-                              const isNextUnlocked = completedLessonIds.has(activeLesson.id);
+                              const isNextUnlocked = isLessonCompleted(activeLesson);
                               return isNextUnlocked ? (
                                 <div className="flex justify-center">
                                   <Button onClick={() => setActiveLesson(nextLesson)} className="bg-[#D50032] text-white hover:bg-[#FF0000] shadow-md font-bold px-6 py-2.5 rounded-xl transition-all hover:scale-105 active:scale-95">
@@ -692,9 +772,9 @@ export default function Modules() {
                                   let isUnlocked = true;
                                   if (globalIndex > 0) {
                                     const prevLesson = orderedLessons[globalIndex - 1];
-                                    isUnlocked = completedLessonIds.has(prevLesson.id);
+                                    isUnlocked = isLessonCompleted(prevLesson);
                                   }
-                                  const isCompleted = completedLessonIds.has(lesson.id);
+                                  const isCompleted = isLessonCompleted(lesson);
 
                                   return (
                                     <div 
