@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router";
 import DashboardLayout from "../../components/DashboardLayout";
 import { Card } from "../../components/ui/card";
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Plus, Edit, Trash2, Tag, IndianRupee, TrendingUp, Users, Lock, ShieldAlert, Download } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 import api from "../../services/api";
 import { confirmPopup } from "../../utils/popup";
 
@@ -344,6 +345,20 @@ export default function AdminPayments() {
     URL.revokeObjectURL(url);
   };
 
+  const chartData = useMemo(() => {
+    const grouped = transactions.reduce((acc, tx) => {
+      if (!tx.created_at || tx.status !== "Success") return acc;
+      const date = new Date(tx.created_at).toISOString().slice(0, 10);
+      if (!acc[date]) {
+        acc[date] = { date, revenue: 0 };
+      }
+      acc[date].revenue += (tx.total_paid ?? tx.amount ?? 0);
+      return acc;
+    }, {} as Record<string, { date: string, revenue: number }>);
+    
+    return Object.values(grouped).sort((a: any, b: any) => a.date.localeCompare(b.date));
+  }, [transactions]);
+
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
@@ -502,7 +517,7 @@ export default function AdminPayments() {
                           <span className="text-gray-600">{coupon.description}</span>
                         </TableCell>
                         <TableCell>
-                          <span className="font-medium">{coupon.usage_count}</span>
+                          <span className="font-medium">{coupon.current_redemptions || 0}</span>
                         </TableCell>
                         <TableCell className="text-gray-600">
                           {new Date(coupon.valid_until).toLocaleDateString()}
@@ -546,7 +561,36 @@ export default function AdminPayments() {
           </TabsContent>
 
           {isSuperAdmin && (
-            <TabsContent value="transactions">
+            <TabsContent value="transactions" className="space-y-6">
+              {/* Revenue Chart */}
+              <Card className="border-2 border-gray-100 p-6 max-w-full overflow-hidden">
+                <h2 className="text-xl font-bold mb-4">Revenue Trend</h2>
+                {chartData.length > 0 ? (
+                  <div className="h-72 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#4CAF50" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#4CAF50" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                        <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value}`} />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                        <RechartsTooltip formatter={(value: number) => [`₹${value.toFixed(2)}`, "Revenue"]} />
+                        <Area type="monotone" dataKey="revenue" stroke="#4CAF50" fillOpacity={1} fill="url(#colorRevenue)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="h-72 flex items-center justify-center text-gray-400">
+                    No revenue data available to display.
+                  </div>
+                )}
+              </Card>
+
+              {/* Transactions Table */}
               <Card className="border-2 border-gray-100 p-4 max-w-full overflow-hidden">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                   <div>

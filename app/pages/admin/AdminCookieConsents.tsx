@@ -189,6 +189,7 @@ export default function AdminCookieConsents() {
                   <TableHead className="font-bold text-[#0B2A5B]">ID</TableHead>
                   <TableHead className="font-bold text-[#0B2A5B]">Source</TableHead>
                   <TableHead className="font-bold text-[#0B2A5B]">Audited User</TableHead>
+                  <TableHead className="font-bold text-[#0B2A5B]">Mobile Number</TableHead>
                   <TableHead className="font-bold text-[#0B2A5B]">IP Address</TableHead>
                   <TableHead className="font-bold text-[#0B2A5B]">Browser</TableHead>
                   <TableHead className="font-bold text-[#0B2A5B]">Consent Type</TableHead>
@@ -242,11 +243,9 @@ export default function AdminCookieConsents() {
                             <div className="space-y-1">
                               <p className="font-extrabold text-sm text-[#0B2A5B]">{log.user_name}</p>
                               <p className="text-xs text-[#D50032] font-semibold">{log.user_email}</p>
-                              {(log.user_phone || log.user_city) && (
+                              {log.user_city && (
                                 <p className="text-[10px] text-slate-500 font-medium">
-                                  {log.user_phone && `Phone: ${log.user_phone}`}
-                                  {log.user_phone && log.user_city && " | "}
-                                  {log.user_city && `City: ${log.user_city}`}
+                                  {`City: ${log.user_city}`}
                                 </p>
                               )}
                               {log.user_roles && log.user_roles.length > 0 && (
@@ -259,6 +258,13 @@ export default function AdminCookieConsents() {
                                 </div>
                               )}
                             </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {log.user_phone ? (
+                            <span className="font-semibold text-[#0B2A5B]">{log.user_phone}</span>
+                          ) : (
+                            <span className="text-slate-400 italic">N/A</span>
                           )}
                         </TableCell>
                         <TableCell className="font-mono text-xs text-slate-600 font-bold">

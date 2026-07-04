@@ -62,6 +62,7 @@ export default function CourseEnrollment() {
   const [selectedCourse, setSelectedCourse] = useState<number | null>(null);
   const [showEntranceModal, setShowEntranceModal] = useState(false);
   const [showKycModal, setShowKycModal] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [finalPrice, setFinalPrice] = useState(0);
@@ -245,7 +246,7 @@ export default function CourseEnrollment() {
                   razorpay_signature: response.razorpay_signature,
                   txnid: res.data.txnid,
                 });
-                toast.success("Payment successful! Please complete your eKYC details to proceed.");
+                toast.success("Payment successful!");
                 setTimeout(() => {
                   window.location.href = `/student/contract-kyc?course_id=${selectedCourse}`;
                 }, 1500);
@@ -284,10 +285,7 @@ export default function CourseEnrollment() {
         // Free course or 100% discount
         console.log("Final price is 0, enrolling user directly...");
         await api.post(`/courses/${selectedCourse}/enroll`, { distributor_code: couponCode });
-        toast.success("Enrollment successful! Please complete your eKYC details to proceed.");
-        setTimeout(() => {
-          window.location.href = `/student/contract-kyc?course_id=${selectedCourse}`;
-        }, 1500);
+        setIsSuccess(true);
       }
     } catch (err: any) {
       console.error("completePayment failed with error:", err);
@@ -569,6 +567,24 @@ export default function CourseEnrollment() {
             </div>
           )}
         </div>
+      ) : isSuccess ? (
+        <Card className="max-w-2xl mx-auto p-12 bg-white shadow-xl flex flex-col items-center justify-center text-center">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
+              <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold text-[#0B2A5B] mb-4">Enrollment Successful!</h2>
+            <p className="text-slate-500 max-w-md mb-8">
+              Congratulations! You have successfully enrolled in <strong>{selectedCourseData?.title}</strong> using a 100% discount. 
+            </p>
+            <button
+              onClick={() => window.location.href = "/student/dashboard"}
+              className="w-full max-w-sm py-4 bg-[#D50032] text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-[#D50032]/30 hover:-translate-y-0.5 transition-all"
+            >
+              Go to Dashboard
+            </button>
+        </Card>
       ) : (
         <Card className="max-w-2xl mx-auto p-8 bg-white shadow-xl">
           <h2 className="text-2xl font-bold text-[#0B2A5B] mb-6">Complete Your Enrollment</h2>

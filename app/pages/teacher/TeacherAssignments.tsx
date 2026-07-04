@@ -41,14 +41,25 @@ export default function TeacherAssignments() {
     try {
       const coursesRes = await api.get("/admin/courses");
       setCourses(coursesRes.data);
-      
-      // In a real app we'd fetch all assignments for the teacher's courses
-      // For MVP we just show a placeholder list or fetch sequentially
-      const allAssignments: any[] = [];
-      for (const c of coursesRes.data) {
-        const aRes = await api.get(`/courses/${c.id}/assignments`);
-        allAssignments.push(...aRes.data);
+      if (coursesRes.data.length > 0) {
+        setCourseId(coursesRes.data[0].id.toString());
       }
+      
+      const allAssignments: any[] = [];
+      
+      // Fetch global course assignments (1 API call instead of loop)
+      const globalRes = await api.get('/admin/assignments');
+      allAssignments.push(...globalRes.data);
+
+      // Fetch batch assignments (1 API call)
+      const batchRes = await api.get('/batches/admin/assignments');
+      // Mark them so UI knows they are batch assignments if needed
+      const batchAssignments = batchRes.data.map((ba: any) => ({
+        ...ba,
+        is_batch_assignment: true
+      }));
+      allAssignments.push(...batchAssignments);
+
       setAssignments(allAssignments);
     } catch (err) {
       console.error(err);
@@ -58,6 +69,14 @@ export default function TeacherAssignments() {
   };
 
   const handleCreateAssignment = async () => {
+    if (!courseId) {
+      toast.error("No course available to link this assignment to");
+      return;
+    }
+    if (!title) {
+      toast.error("Please enter an assignment title");
+      return;
+    }
     setIsUploadingResources(true);
     try {
       const uploadedResources = [];
@@ -146,14 +165,16 @@ export default function TeacherAssignments() {
           <h2 className="text-xl md:text-2xl font-bold text-[#0B2A5B] mb-8">Create New Assignment</h2>
           
           <div className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-xs font-black text-[#0B2A5B] uppercase tracking-wider block">Assignment Title *</label>
-              <Input 
-                placeholder="e.g. Advanced Options Strategies Assignment" 
-                value={title} 
-                onChange={(e) => setTitle(e.target.value)} 
-                className="rounded-xl border-gray-200"
-              />
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-black text-[#0B2A5B] uppercase tracking-wider block">Assignment Title *</label>
+                <Input 
+                  placeholder="e.g. Advanced Options Strategies Assignment" 
+                  value={title} 
+                  onChange={(e) => setTitle(e.target.value)} 
+                  className="rounded-xl border-gray-200"
+                />
+              </div>
             </div>
             
             <div className="grid md:grid-cols-2 gap-6">

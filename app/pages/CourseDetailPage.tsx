@@ -693,7 +693,7 @@ export default function CourseDetailPage() {
           onClose={() => setShowCheckoutModal(false)}
           onSuccess={() => {
             setShowCheckoutModal(false);
-            alert("Payment successful! Please complete your eKYC details to proceed.");
+            alert("Payment successful!");
             window.location.href = `/student/contract-kyc?course_id=${course.id}`;
           }}
         />

@@ -174,9 +174,9 @@ export default function ContractKYC() {
           }
           if (res.data.status === "verified" || res.data.status === "approved") {
             setVerified(true);
-            // KYC already completed — skip to contract step
-            setStep(6);
-            setKycAlreadyDone(true);
+            toast.success("eKYC is already completed successfully!");
+            navigate("/student/dashboard");
+            return;
           } else if (
             res.data.status === "pending" &&
             res.data.aadhaar_doc_url && res.data.pan_doc_url && res.data.photo_url &&

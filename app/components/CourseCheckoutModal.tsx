@@ -32,6 +32,7 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [availableBatches, setAvailableBatches] = useState<any[]>([]);
   const [selectedBatchId, setSelectedBatchId] = useState<string>("");
+  const [isSuccess, setIsSuccess] = useState(false);
   
   const parsePrice = (p: any) => parseFloat(String(p).replace(/[^0-9.]/g, '')) || 0;
   const initialPrice = parsePrice(course.price);
@@ -210,7 +211,7 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
         if (combinedCode) payload.distributor_code = combinedCode;
         if (selectedBatchId) payload.batch_id = Number(selectedBatchId);
         await api.post(`/courses/${course.id}/enroll`, payload);
-        onSuccess();
+        setIsSuccess(true);
       }
     } catch (err: any) {
       console.error("completePayment failed with error:", err);
@@ -233,11 +234,32 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
         <button onClick={onClose} className="absolute top-4.5 right-4 z-10 text-gray-400 hover:text-gray-600">
           ✕
         </button>
-        <div className="p-6 md:p-8 pb-4 border-b border-gray-100">
-          <h2 className="text-xl md:text-2xl font-bold text-[#0B2A5B]">Complete Your Enrollment</h2>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 min-h-0 scrollbar-thin pr-4 md:pr-6">
+
+        {isSuccess ? (
+          <div className="p-10 flex flex-col items-center justify-center text-center space-y-6">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-2">
+              <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold text-[#0B2A5B]">Enrollment Successful!</h2>
+            <p className="text-slate-500 max-w-md">
+              Congratulations! You have successfully enrolled in <strong>{course.title || course.name}</strong> using a 100% discount. 
+            </p>
+            <button
+              onClick={() => window.location.href = "/student/dashboard"}
+              className="mt-6 w-full py-4 bg-[#D50032] text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-[#D50032]/30 hover:-translate-y-0.5 transition-all"
+            >
+              Go to Dashboard
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="p-6 md:p-8 pb-4 border-b border-gray-100">
+              <h2 className="text-xl md:text-2xl font-bold text-[#0B2A5B]">Complete Your Enrollment</h2>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 min-h-0 scrollbar-thin pr-4 md:pr-6">
           <div className="bg-[#F4F1EA] rounded-lg p-5 md:p-6">
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1 pr-4">
@@ -422,6 +444,8 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
             Cancel
           </Button>
         </div>
+        </>
+        )}
       </Card>
     </div>
   );

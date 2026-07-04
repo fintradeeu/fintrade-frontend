@@ -43,6 +43,8 @@ export default function AdminBatches() {
   const [batchStudents, setBatchStudents] = useState<any[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [studentSearch, setStudentSearch] = useState("");
+  const [studentCourseFilter, setStudentCourseFilter] = useState("");
+  const [studentFilterCourses, setStudentFilterCourses] = useState<any[]>([]);
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [customizerBatch, setCustomizerBatch] = useState<any>(null);
   const [customizerCourse, setCustomizerCourse] = useState<any>(null);
@@ -58,19 +60,35 @@ export default function AdminBatches() {
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [expandedBatch, setExpandedBatch] = useState<number | null>(null);
 
-  // Customizer Tabs, Lectures & Exams State
-  const [customizerTab, setCustomizerTab] = useState<'curriculum' | 'lectures' | 'exams'>('curriculum');
+  // Customizer Tabs, Lectures & Exams & Assignments & Day Tasks State
+  const [customizerTab, setCustomizerTab] = useState<'curriculum' | 'lectures' | 'exams' | 'assignments' | 'daytasks'>('curriculum');
   const [customizerLectures, setCustomizerLectures] = useState<any[]>([]);
   const [customizerLecturesLoading, setCustomizerLecturesLoading] = useState(false);
   const [showLectureForm, setShowLectureForm] = useState(false);
   const [lectureFormData, setLectureFormData] = useState({ title: '', description: '', meeting_link: '', start_time: '', end_time: '', instructor_name: '' });
   const [editingLectureId, setEditingLectureId] = useState<number | null>(null);
-
   const [customizerExams, setCustomizerExams] = useState<any[]>([]);
   const [customizerExamsLoading, setCustomizerExamsLoading] = useState(false);
+
+  const [availableGlobalAssignments, setAvailableGlobalAssignments] = useState<any[]>([]);
+  const [availableGlobalAssignmentsLoading, setAvailableGlobalAssignmentsLoading] = useState(false);
+
+  const [activeStructureTab, setActiveStructureTab] = useState('curriculum');
   const [showExamForm, setShowExamForm] = useState(false);
   const [examFormData, setExamFormData] = useState({ title: '', description: '', duration_minutes: 60, passing_score: 60, max_attempts: 3, reattempt_fee: 500, questions_per_attempt: '', marks_per_question: 1, negative_marks: 0 });
   const [editingExamId, setEditingExamId] = useState<number | null>(null);
+
+  const [customizerAssignments, setCustomizerAssignments] = useState<any[]>([]);
+  const [customizerAssignmentsLoading, setCustomizerAssignmentsLoading] = useState(false);
+  const [showAssignmentForm, setShowAssignmentForm] = useState(false);
+  const [assignmentFormData, setAssignmentFormData] = useState({ title: '', description: '', due_date: '', max_score: 100, batch_module_id: '' });
+  const [editingAssignmentId, setEditingAssignmentId] = useState<number | null>(null);
+
+  const [customizerDayTasks, setCustomizerDayTasks] = useState<any[]>([]);
+  const [customizerDayTasksLoading, setCustomizerDayTasksLoading] = useState(false);
+  const [showDayTaskForm, setShowDayTaskForm] = useState(false);
+  const [dayTaskFormData, setDayTaskFormData] = useState({ title: '', content_type: 'live_lecture', content: '', duration_minutes: 0, day_number: 1, is_published: true, start_time: '', end_time: '', instructor_name: '', exam_title: '', exam_passing_score: 0, linked_assignment_id: '' });
+  const [editingDayTaskId, setEditingDayTaskId] = useState<number | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -151,7 +169,9 @@ export default function AdminBatches() {
   };
 
   const openStudentsModal = async (batch: any) => {
-    setCurrentBatchId(batch.id); setBatchStudents([]); setStudentSearch(""); setShowStudentsModal(true); setStudentsLoading(true);
+    setCurrentBatchId(batch.id); setBatchStudents([]); setStudentSearch(""); setStudentCourseFilter("");
+    setStudentFilterCourses(batch.assigned_courses || []);
+    setShowStudentsModal(true); setStudentsLoading(true);
     try { const r = await api.get(`/batches/admin/${batch.id}/students`); setBatchStudents(r.data); }
     catch { toast.error("Failed to load students"); }
     finally { setStudentsLoading(false); }
@@ -175,8 +195,53 @@ export default function AdminBatches() {
     if (course.is_batch_only) {
       fetchCustomizerLectures(batch.id, course.id);
       fetchCustomizerExams(course.id);
+      fetchCustomizerAssignments(batch.id, course.id);
+      fetchCustomizerDayTasks(batch.id, course.id);
     }
   };
+
+  const fetchCustomizerDayTasks = async (bId: number, cId: number) => {
+    setCustomizerDayTasksLoading(true);
+    try {
+      const res = await api.get(`/batches/admin/${bId}/courses/${cId}/day-tasks`);
+      setCustomizerDayTasks(res.data || []);
+    } catch {
+      toast.error("Failed to load day tasks");
+    } finally {
+      setCustomizerDayTasksLoading(false);
+    }
+  };
+
+  const fetchCustomizerAssignments = async (bId: number, cId: number) => {
+    setCustomizerAssignmentsLoading(true);
+    try {
+      const res = await api.get(`/batches/admin/assignments?batch_id=${bId}&course_id=${cId}`);
+      setCustomizerAssignments(res.data || []);
+    } catch {
+      toast.error("Failed to load batch assignments");
+    } finally {
+      setCustomizerAssignmentsLoading(false);
+    }
+  };
+
+  const fetchAvailableGlobalAssignments = async () => {
+    setAvailableGlobalAssignmentsLoading(true);
+    try {
+      const res = await api.get(`/admin/assignments`);
+      setAvailableGlobalAssignments(res.data || []);
+    } catch {
+      // It's okay if they fail to load, just log it
+      console.error("Failed to load global assignments for import");
+    } finally {
+      setAvailableGlobalAssignmentsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (customizerCourse && activeStructureTab === 'assignments') {
+      fetchAvailableGlobalAssignments();
+    }
+  }, [activeStructureTab, customizerCourse]);
 
   const fetchCustomizerLectures = async (bId: number, cId: number) => {
     setCustomizerLecturesLoading(true);
@@ -297,6 +362,89 @@ export default function AdminBatches() {
     }
   };
 
+  const handleAssignmentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customizerBatch || !customizerCourse) return;
+    try {
+      const payload = {
+        batch_id: customizerBatch.id,
+        course_id: customizerCourse.id,
+        title: assignmentFormData.title,
+        description: assignmentFormData.description,
+        due_date: assignmentFormData.due_date ? new Date(assignmentFormData.due_date).toISOString() : null,
+        max_score: assignmentFormData.max_score,
+        batch_module_id: assignmentFormData.batch_module_id ? Number(assignmentFormData.batch_module_id) : undefined
+      };
+      if (editingAssignmentId) {
+        await api.put(`/batches/admin/assignments/${editingAssignmentId}`, payload);
+        toast.success("Assignment updated");
+      } else {
+        await api.post("/batches/admin/assignments", payload);
+        toast.success("Assignment created");
+      }
+      setShowAssignmentForm(false);
+      setAssignmentFormData({ title: '', description: '', due_date: '', max_score: 100, batch_module_id: '' });
+      setEditingAssignmentId(null);
+      fetchCustomizerAssignments(customizerBatch.id, customizerCourse.id);
+    } catch (err: any) {
+      toast.error("Failed to save assignment: " + (err.response?.data?.detail || err.message));
+    }
+  };
+
+  const handleDeleteAssignment = async (assignmentId: number) => {
+    if (!(await confirmPopup("Are you sure you want to delete this assignment?"))) return;
+    try {
+      await api.delete(`/batches/admin/assignments/${assignmentId}`);
+      toast.success("Assignment deleted");
+      fetchCustomizerAssignments(customizerBatch.id, customizerCourse.id);
+    } catch (err: any) {
+      toast.error("Failed to delete assignment: " + (err.response?.data?.detail || err.message));
+    }
+  };
+
+  const handleDayTaskSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customizerBatch || !customizerCourse) return;
+    try {
+      const payload: any = { 
+        ...dayTaskFormData, 
+        batch_id: customizerBatch.id,
+        course_id: customizerCourse.id,
+        duration_minutes: Number(dayTaskFormData.duration_minutes), 
+        day_number: Number(dayTaskFormData.day_number),
+        start_time: dayTaskFormData.start_time ? new Date(dayTaskFormData.start_time).toISOString() : null,
+        end_time: dayTaskFormData.end_time ? new Date(dayTaskFormData.end_time).toISOString() : null,
+        exam_passing_score: Number(dayTaskFormData.exam_passing_score),
+        linked_assignment_id: dayTaskFormData.linked_assignment_id ? Number(dayTaskFormData.linked_assignment_id) : null
+      };
+
+      if (editingDayTaskId) {
+        await api.put(`/admin/day-tasks/${editingDayTaskId}`, payload);
+        toast.success("Day task updated");
+      } else {
+        await api.post(`/batches/admin/${customizerBatch.id}/courses/${customizerCourse.id}/day-tasks`, payload);
+        toast.success("Day task created");
+      }
+      setShowDayTaskForm(false);
+      setDayTaskFormData({ title: '', content_type: 'live_lecture', content: '', duration_minutes: 0, day_number: 1, is_published: true, start_time: '', end_time: '', instructor_name: '', exam_title: '', exam_passing_score: 0, linked_assignment_id: '' });
+      setEditingDayTaskId(null);
+      fetchCustomizerDayTasks(customizerBatch.id, customizerCourse.id);
+    } catch (err: any) {
+      toast.error("Failed to save day task: " + (err.response?.data?.detail || err.message));
+    }
+  };
+
+  const handleDeleteDayTask = async (taskId: number) => {
+    if (!(await confirmPopup("Are you sure you want to delete this day task?"))) return;
+    try {
+      await api.delete(`/admin/day-tasks/${taskId}`);
+      toast.success("Day task deleted");
+      fetchCustomizerDayTasks(customizerBatch.id, customizerCourse.id);
+    } catch (err: any) {
+      toast.error("Failed to delete day task: " + (err.response?.data?.detail || err.message));
+    }
+  };
+
   const createModule = async (e:React.FormEvent) => {
     e.preventDefault();
     try { await api.post("/batches/admin/modules",{batch_id:customizerBatch.id,course_id:customizerCourse.id,...moduleForm}); toast.success("Module created"); setIsAddingModule(false); setModuleForm({title:"",description:"",order:0,is_published:true}); fetchStructure(customizerBatch.id,customizerCourse.id); }
@@ -332,6 +480,14 @@ export default function AdminBatches() {
     finally { setUploading(false); setUploadProgress(null); }
   };
 
+  const handleDayTaskUpload = async (e:React.ChangeEvent<HTMLInputElement>) => {
+    const f=e.target.files?.[0]; if(!f) return;
+    setUploading(true); setUploadProgress(0);
+    try { const u=await uploadFile(f,(pct)=>setUploadProgress(pct)); setDayTaskFormData(p=>({...p,content:u})); toast.success("Uploaded PDF"); }
+    catch { toast.error("Upload failed"); }
+    finally { setUploading(false); setUploadProgress(null); }
+  };
+
   const createLesson = async (e:React.FormEvent) => {
     e.preventDefault(); if(!isAddingLessonModuleId) return;
     try { await api.post("/batches/admin/lessons",{batch_module_id:isAddingLessonModuleId,...lessonForm}); toast.success("Lesson created"); setIsAddingLessonModuleId(null); setLessonForm({title:"",content:"",content_type:"text",video_url:"",duration_minutes:0,order:0,is_published:true}); fetchStructure(customizerBatch.id,customizerCourse.id); }
@@ -354,8 +510,9 @@ export default function AdminBatches() {
     return (!q||b.name.toLowerCase().includes(q)||(b.batch_code||"").toLowerCase().includes(q))&&(statusFilter==="All"||b.status===statusFilter);
   });
   const filtStudents = batchStudents.filter(s=>{
-    const q=studentSearch.toLowerCase();
-    return !q||(s.full_name||"").toLowerCase().includes(q)||s.email.toLowerCase().includes(q);
+    const mSearch = !studentSearch || (s.full_name?.toLowerCase().includes(studentSearch.toLowerCase()) || s.email.toLowerCase().includes(studentSearch.toLowerCase()));
+    const mCourse = !studentCourseFilter || s.course_id?.toString() === studentCourseFilter;
+    return mSearch && mCourse;
   });
 
   const totalStudents = batches.reduce((a,b)=>a+(b.current_students||0),0);
@@ -554,10 +711,6 @@ export default function AdminBatches() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[10px] font-black text-[#0B2A5B] uppercase tracking-widest mb-1.5">Max Students</label>
-                  <Input type="number" value={batchForm.max_students} onChange={e=>setBatchForm(p=>({...p,max_students:Number(e.target.value)}))} className="rounded-xl"/>
-                </div>
                 <div className="flex items-end pb-1">
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <div onClick={()=>setBatchForm(p=>({...p,is_published:!p.is_published}))} className={`relative w-10 h-5 rounded-full transition-all cursor-pointer flex-shrink-0 ${batchForm.is_published?"bg-[#0B2A5B]":"bg-gray-200"}`}>
@@ -609,9 +762,6 @@ export default function AdminBatches() {
                   <h3 className="text-xs font-black text-purple-700 uppercase tracking-wider">New Batch-Only Course</h3>
                   <Input required placeholder="Course title" value={batchCourseForm.title} onChange={e=>setBatchCourseForm(p=>({...p,title:e.target.value}))} className="rounded-xl text-sm"/>
                   <Textarea placeholder="Short description" value={batchCourseForm.description} onChange={e=>setBatchCourseForm(p=>({...p,description:e.target.value}))} className="rounded-xl text-sm resize-none" rows={2}/>
-                  <div>
-                    <Input type="number" min="0" placeholder="Hours" value={batchCourseForm.duration_hours} onChange={e=>setBatchCourseForm(p=>({...p,duration_hours:Number(e.target.value)}))} className="rounded-xl text-sm w-full"/>
-                  </div>
                   <div className="flex justify-end gap-2">
                     <button type="button" onClick={()=>setShowBatchCourseForm(false)} className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">Cancel</button>
                     <button type="submit" className="px-3 py-1.5 text-xs font-black rounded-lg bg-purple-600 text-white hover:bg-purple-700">Create &amp; Assign</button>
@@ -661,9 +811,23 @@ export default function AdminBatches() {
               <button onClick={()=>setShowStudentsModal(false)} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 transition-all"><X size={18}/></button>
             </div>
             <div className="px-6 pt-4 pb-2">
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"/>
-                <input className="w-full pl-9 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-emerald-400 transition-colors placeholder:text-gray-400" placeholder="Search students..." value={studentSearch} onChange={e=>setStudentSearch(e.target.value)}/>
+              <div className="flex gap-3">
+                <div className="relative flex-1">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"/>
+                  <input className="w-full pl-9 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-emerald-400 transition-colors placeholder:text-gray-400" placeholder="Search students..." value={studentSearch} onChange={e=>setStudentSearch(e.target.value)}/>
+                </div>
+                {studentFilterCourses.length > 0 && (
+                  <select 
+                    value={studentCourseFilter}
+                    onChange={(e) => setStudentCourseFilter(e.target.value)}
+                    className="h-[38px] px-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-400 text-gray-600 min-w-[150px]"
+                  >
+                    <option value="">All Courses</option>
+                    {studentFilterCourses.map(c => (
+                      <option key={c.id} value={c.id}>{c.title}</option>
+                    ))}
+                  </select>
+                )}
               </div>
             </div>
             <div className="flex-1 overflow-y-auto px-6 pb-4">
@@ -684,6 +848,7 @@ export default function AdminBatches() {
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-[#0B2A5B] text-sm truncate">{s.full_name||"—"}</p>
                         <p className="text-xs text-gray-400 truncate">{s.email}</p>
+                        {s.course_title && <p className="text-[10px] text-emerald-600 font-semibold mt-0.5 truncate uppercase tracking-wider">{s.course_title}</p>}
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-[10px] text-gray-400">{s.phone||"—"}</p>
@@ -750,6 +915,26 @@ export default function AdminBatches() {
                   }`}
                 >
                   Exams
+                </button>
+                <button
+                  onClick={() => setCustomizerTab('assignments')}
+                  className={`px-4 py-3.5 text-xs font-bold transition-all border-b-2 -mb-px ${
+                    customizerTab === 'assignments'
+                      ? 'border-[#0B2A5B] text-[#0B2A5B]'
+                      : 'border-transparent text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  Assignments
+                </button>
+                <button
+                  onClick={() => setCustomizerTab('daytasks')}
+                  className={`px-4 py-3.5 text-xs font-bold transition-all border-b-2 -mb-px ${
+                    customizerTab === 'daytasks'
+                      ? 'border-[#0B2A5B] text-[#0B2A5B]'
+                      : 'border-transparent text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  Day Tasks
                 </button>
               </div>
             )}
@@ -855,15 +1040,9 @@ export default function AdminBatches() {
                                               <label className="text-[10px] font-bold text-[#0B2A5B] block mb-1">Lesson Content / Description</label>
                                               <Textarea placeholder="Lesson content..." value={lessonForm.content} onChange={e=>setLessonForm(p=>({...p,content:e.target.value}))} className="rounded-xl text-sm resize-none" rows={2}/>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-2">
-                                              <div>
-                                                <label className="text-[10px] font-bold text-[#0B2A5B] block mb-1">Display Order *</label>
-                                                <Input type="number" placeholder="Order" value={lessonForm.order} onChange={e=>setLessonForm(p=>({...p,order:Number(e.target.value)}))} className="rounded-xl text-sm"/>
-                                              </div>
-                                              <div>
-                                                <label className="text-[10px] font-bold text-[#0B2A5B] block mb-1">Duration (minutes)</label>
-                                                <Input type="number" placeholder="Duration (mins)" value={lessonForm.duration_minutes} onChange={e=>setLessonForm(p=>({...p,duration_minutes:Number(e.target.value)}))} className="rounded-xl text-sm"/>
-                                              </div>
+                                            <div>
+                                              <label className="text-[10px] font-bold text-[#0B2A5B] block mb-1">Duration (minutes)</label>
+                                              <Input type="number" placeholder="Duration (mins)" value={lessonForm.duration_minutes} onChange={e=>setLessonForm(p=>({...p,duration_minutes:Number(e.target.value)}))} className="rounded-xl text-sm"/>
                                             </div>
                                             <div className="flex justify-end gap-2">
                                               <button type="button" onClick={()=>setEditingLessonId(null)} className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">Cancel</button>
@@ -921,15 +1100,9 @@ export default function AdminBatches() {
                                       <label className="text-[10px] font-bold text-[#0B2A5B] block mb-1">Lesson Content / Description</label>
                                       <Textarea placeholder="Lesson content..." value={lessonForm.content} onChange={e=>setLessonForm(p=>({...p,content:e.target.value}))} className="rounded-xl text-sm resize-none" rows={2}/>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                      <div>
-                                        <label className="text-[10px] font-bold text-[#0B2A5B] block mb-1">Display Order *</label>
-                                        <Input type="number" placeholder="Order" value={lessonForm.order} onChange={e=>setLessonForm(p=>({...p,order:Number(e.target.value)}))} className="rounded-xl text-sm"/>
-                                      </div>
-                                      <div>
-                                        <label className="text-[10px] font-bold text-[#0B2A5B] block mb-1">Duration (minutes)</label>
-                                        <Input type="number" placeholder="Duration (mins)" value={lessonForm.duration_minutes} onChange={e=>setLessonForm(p=>({...p,duration_minutes:Number(e.target.value)}))} className="rounded-xl text-sm"/>
-                                      </div>
+                                    <div>
+                                      <label className="text-[10px] font-bold text-[#0B2A5B] block mb-1">Duration (minutes)</label>
+                                      <Input type="number" placeholder="Duration (mins)" value={lessonForm.duration_minutes} onChange={e=>setLessonForm(p=>({...p,duration_minutes:Number(e.target.value)}))} className="rounded-xl text-sm"/>
                                     </div>
                                     <div className="flex justify-end gap-2">
                                       <button type="button" onClick={()=>setIsAddingLessonModuleId(null)} className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">Cancel</button>
@@ -1232,6 +1405,347 @@ export default function AdminBatches() {
                                   className="w-8 h-8 flex items-center justify-center rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-all"
                                 >
                                   <Trash2 size={13} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {customizerCourse.is_batch_only && customizerTab === 'assignments' && (
+                <>
+                  {customizerAssignmentsLoading ? (
+                    <div className="space-y-3">
+                      {[1, 2].map(i => (
+                        <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse">
+                          <div className="h-4 bg-gray-100 rounded w-1/4 mb-3" />
+                          <div className="h-3 bg-gray-50 rounded w-1/2" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-5">
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-sm font-black text-[#0B2A5B] uppercase tracking-wider">Course Assignments</h3>
+                        {!showAssignmentForm && (
+                          <button
+                            onClick={() => {
+                              setEditingAssignmentId(null);
+                              setAssignmentFormData({ title: '', description: '', due_date: '', max_score: 100, batch_module_id: '' });
+                              setShowAssignmentForm(true);
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0B2A5B] text-white text-xs font-black hover:bg-[#1a3d7a] transition-all shadow-sm animate-fade-in"
+                          >
+                            <Plus size={12} /> Import Assignment
+                          </button>
+                        )}
+                      </div>
+
+                      {showAssignmentForm && (
+                        <form onSubmit={handleAssignmentSubmit} className="bg-white rounded-2xl border border-[#0B2A5B]/15 p-5 shadow-sm space-y-3 animate-fade-in">
+                          <h4 className="text-xs font-black text-[#0B2A5B] uppercase tracking-wider">
+                            {editingAssignmentId ? "Edit Assignment" : "Import Assignment"}
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">
+                                {editingAssignmentId ? "Assignment Title *" : "Select Assignment to Import *"}
+                              </label>
+                              {editingAssignmentId ? (
+                                <Input required placeholder="e.g. Capstone Project" value={assignmentFormData.title} onChange={e => setAssignmentFormData(p => ({ ...p, title: e.target.value }))} className="rounded-xl" />
+                              ) : (
+                                <select 
+                                  required 
+                                  value={availableGlobalAssignments.find(a => a.title === assignmentFormData.title)?.id || ""}
+                                  onChange={e => {
+                                    const selected = availableGlobalAssignments.find(a => a.id.toString() === e.target.value);
+                                    if (selected) {
+                                      setAssignmentFormData(p => ({
+                                        ...p,
+                                        title: selected.title,
+                                        description: selected.description || "",
+                                        max_score: selected.max_score || 100
+                                      }));
+                                    }
+                                  }}
+                                  className="w-full h-10 px-3 border border-gray-200 rounded-xl text-sm bg-white"
+                                >
+                                  <option value="">— Select an Assignment —</option>
+                                  {availableGlobalAssignments.map(a => (
+                                    <option key={a.id} value={a.id}>{a.title}</option>
+                                  ))}
+                                </select>
+                              )}
+                            </div>
+                            <div>
+                              <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Due Date</label>
+                              <Input type="datetime-local" value={assignmentFormData.due_date} onChange={e => setAssignmentFormData(p => ({ ...p, due_date: e.target.value }))} className="rounded-xl text-xs" />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Max Score *</label>
+                              <Input type="number" required min="1" value={assignmentFormData.max_score} onChange={e => setAssignmentFormData(p => ({ ...p, max_score: Number(e.target.value) }))} className="rounded-xl" />
+                            </div>
+                            <div>
+                              <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Module Link (Optional)</label>
+                              <select value={assignmentFormData.batch_module_id} onChange={e => setAssignmentFormData(p => ({ ...p, batch_module_id: e.target.value }))} className="w-full h-10 px-3 border border-gray-200 rounded-xl text-sm bg-white">
+                                <option value="">— Select Module —</option>
+                                {customizerModules.map(m => (
+                                  <option key={m.id} value={m.id}>{m.title}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Description / Guidelines *</label>
+                            <Textarea required placeholder="Instructions for the assignment..." value={assignmentFormData.description} onChange={e => setAssignmentFormData(p => ({ ...p, description: e.target.value }))} className="rounded-xl resize-none" rows={3} />
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <button type="button" onClick={() => setShowAssignmentForm(false)} className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">Cancel</button>
+                            <button type="submit" className="px-4 py-1.5 text-xs font-black rounded-lg bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">Save Assignment</button>
+                          </div>
+                        </form>
+                      )}
+
+                      {customizerAssignments.length === 0 ? (
+                        <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-200">
+                          <BookOpen size={28} className="text-gray-200 mx-auto mb-3" />
+                          <p className="text-gray-400 text-sm">No assignments created yet.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {customizerAssignments.map(assignment => (
+                            <div key={assignment.id} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-[#0B2A5B]/20 transition-all">
+                              <div className="space-y-1">
+                                <h4 className="font-bold text-[#0B2A5B] text-sm">{assignment.title}</h4>
+                                {assignment.description && <p className="text-xs text-gray-400 line-clamp-1">{assignment.description}</p>}
+                                <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-gray-400 mt-1">
+                                  <span>💯 Max score: {assignment.max_score}</span>
+                                  {assignment.due_date && <span>📅 Due: {new Date(assignment.due_date).toLocaleString()}</span>}
+                                  {assignment.batch_module_id && <span>🔗 Linked to module</span>}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 self-end md:self-auto shrink-0">
+                                <button
+                                  onClick={() => {
+                                    setEditingAssignmentId(assignment.id);
+                                    setAssignmentFormData({
+                                      title: assignment.title,
+                                      description: assignment.description || "",
+                                      due_date: assignment.due_date ? new Date(assignment.due_date).toISOString().slice(0, 16) : "",
+                                      max_score: assignment.max_score || 100,
+                                      batch_module_id: assignment.batch_module_id ? assignment.batch_module_id.toString() : ""
+                                    });
+                                    setShowAssignmentForm(true);
+                                  }}
+                                  className="w-8 h-8 flex items-center justify-center rounded-lg text-[#0B2A5B]/40 hover:text-[#0B2A5B] hover:bg-[#0B2A5B]/5 transition-all"
+                                >
+                                  <Edit size={13} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteAssignment(assignment.id)}
+                                  className="w-8 h-8 flex items-center justify-center rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-all"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {customizerCourse.is_batch_only && customizerTab === 'daytasks' && (
+                <>
+                  {customizerDayTasksLoading ? (
+                    <div className="space-y-3">
+                      {[1, 2].map(i => (
+                        <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse">
+                          <div className="h-4 bg-gray-100 rounded w-1/4 mb-3" />
+                          <div className="h-3 bg-gray-50 rounded w-1/2" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-5">
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-sm font-black text-[#0B2A5B] uppercase tracking-wider">Day-Wise Tasks</h3>
+                        {!showDayTaskForm && (
+                          <button
+                            onClick={() => {
+                              setEditingDayTaskId(null);
+                              setDayTaskFormData({ title: '', content_type: 'live_lecture', content: '', duration_minutes: 0, day_number: 1, is_published: true, start_time: '', end_time: '', instructor_name: '', exam_title: '', exam_passing_score: 0, linked_assignment_id: '' });
+                              setShowDayTaskForm(true);
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0B2A5B] text-white text-xs font-black hover:bg-[#1a3d7a] transition-all shadow-md animate-fade-in"
+                          >
+                            <Plus size={12} /> Add Day Task
+                          </button>
+                        )}
+                      </div>
+
+                      {showDayTaskForm && (
+                        <form onSubmit={handleDayTaskSubmit} className="bg-white rounded-2xl border border-[#0B2A5B]/15 p-5 shadow-sm space-y-4 animate-fade-in">
+                          <h4 className="text-xs font-black text-[#0B2A5B] uppercase tracking-wider">
+                            {editingDayTaskId ? "Edit Day Task" : "New Day Task"}
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Task Title *</label>
+                              <Input required placeholder="Title" value={dayTaskFormData.title} onChange={e => setDayTaskFormData(p => ({ ...p, title: e.target.value }))} className="rounded-xl text-sm" />
+                            </div>
+                            <div>
+                              <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Day Number (1-5) *</label>
+                              <Input required type="number" min="1" max="5" placeholder="e.g. 1, 2, 3" value={dayTaskFormData.day_number} onChange={e => setDayTaskFormData(p => ({ ...p, day_number: Number(e.target.value) }))} className="rounded-xl text-sm" />
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Content Type *</label>
+                              <select value={dayTaskFormData.content_type} onChange={e => setDayTaskFormData(p => ({ ...p, content_type: e.target.value }))} className="w-full h-10 px-3 border border-gray-200 rounded-xl text-sm bg-white">
+                                <option value="live_lecture">Live Lecture</option>
+                                <option value="exam">Exam</option>
+                                <option value="assignment">Assignment</option>
+                                <option value="pdf">PDF</option>
+                              </select>
+                            </div>
+                            {(dayTaskFormData.content_type === 'live_lecture' || dayTaskFormData.content_type === 'exam') && (
+                              <div>
+                                <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Duration (minutes)</label>
+                                <Input type="number" min="0" placeholder="Duration" value={dayTaskFormData.duration_minutes} onChange={e => setDayTaskFormData(p => ({ ...p, duration_minutes: Number(e.target.value) }))} className="rounded-xl text-sm" />
+                              </div>
+                            )}
+                          </div>
+
+                          {dayTaskFormData.content_type === 'live_lecture' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Start Time</label>
+                                <Input type="datetime-local" value={dayTaskFormData.start_time} onChange={e => setDayTaskFormData(p => ({ ...p, start_time: e.target.value }))} className="rounded-xl text-sm" />
+                              </div>
+                              <div>
+                                <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">End Time</label>
+                                <Input type="datetime-local" value={dayTaskFormData.end_time} onChange={e => setDayTaskFormData(p => ({ ...p, end_time: e.target.value }))} className="rounded-xl text-sm" />
+                              </div>
+                              <div className="md:col-span-2">
+                                <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Instructor Name</label>
+                                <Input placeholder="Instructor Name" value={dayTaskFormData.instructor_name} onChange={e => setDayTaskFormData(p => ({ ...p, instructor_name: e.target.value }))} className="rounded-xl text-sm" />
+                              </div>
+                            </div>
+                          )}
+
+                          {dayTaskFormData.content_type === 'exam' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Exam Title</label>
+                                <Input placeholder="Exam Title" value={dayTaskFormData.exam_title} onChange={e => setDayTaskFormData(p => ({ ...p, exam_title: e.target.value }))} className="rounded-xl text-sm" />
+                              </div>
+                              <div>
+                                <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Passing Score (%)</label>
+                                <Input type="number" min="0" max="100" placeholder="60" value={dayTaskFormData.exam_passing_score} onChange={e => setDayTaskFormData(p => ({ ...p, exam_passing_score: Number(e.target.value) }))} className="rounded-xl text-sm" />
+                              </div>
+                            </div>
+                          )}
+
+                          {dayTaskFormData.content_type === 'assignment' && (
+                            <div>
+                              <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Import From Assignments *</label>
+                              <select required value={dayTaskFormData.linked_assignment_id} onChange={e => setDayTaskFormData(p => ({ ...p, linked_assignment_id: e.target.value }))} className="w-full h-10 px-3 border border-gray-200 rounded-xl text-sm bg-white">
+                                <option value="">— Select an Assignment —</option>
+                                {customizerAssignments.map(a => (
+                                  <option key={a.id} value={a.id}>{a.title}</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+
+                          {dayTaskFormData.content_type === 'pdf' && (
+                            <div className="space-y-2">
+                              <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">PDF File URL *</label>
+                              <div className="flex gap-2">
+                                <Input required placeholder="PDF URL" value={dayTaskFormData.content} onChange={e=>setDayTaskFormData(p=>({...p,content:e.target.value}))} className="rounded-xl text-sm flex-1"/>
+                                <label className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-xl text-xs font-bold cursor-pointer text-[#0B2A5B] transition-all whitespace-nowrap">
+                                  <Upload size={13}/>{uploading?"Uploading...":"Upload File"}
+                                  <input type="file" accept="application/pdf" onChange={handleDayTaskUpload} disabled={uploading} className="hidden"/>
+                                </label>
+                              </div>
+                              {uploading&&uploadProgress!==null&&<div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden"><div className="bg-purple-500 h-full rounded-full transition-all" style={{width:`${uploadProgress}%`}}/></div>}
+                            </div>
+                          )}
+
+                          <div>
+                            <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Notes / Content</label>
+                            <Textarea placeholder="Optional task instructions..." value={dayTaskFormData.content} onChange={e => setDayTaskFormData(p => ({ ...p, content: e.target.value }))} className="rounded-xl text-sm resize-none" rows={2} />
+                          </div>
+
+                          <div className="flex justify-end gap-2 pt-2 border-t border-gray-50">
+                            <button type="button" onClick={() => setShowDayTaskForm(false)} className="px-4 py-2 text-xs font-semibold rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all">Cancel</button>
+                            <button type="submit" className="px-4 py-2 text-xs font-black rounded-xl bg-[#0B2A5B] text-white hover:bg-[#1a3d7a] transition-all shadow-md">
+                              {editingDayTaskId ? "Update Task" : "Save Task"}
+                            </button>
+                          </div>
+                        </form>
+                      )}
+
+                      {customizerDayTasks.length === 0 && !showDayTaskForm ? (
+                        <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
+                          <Calendar size={32} className="text-gray-200 mx-auto mb-4" />
+                          <p className="text-gray-400 text-sm font-medium">No day tasks added yet.</p>
+                          <p className="text-xs text-gray-400 mt-1">Add tasks like Day -5 orientation or daily pre-reads.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {customizerDayTasks.map(task => (
+                            <div key={task.id} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex items-start gap-4 hover:border-gray-200 transition-colors">
+                              <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex flex-col items-center justify-center shrink-0">
+                                <span className="text-[9px] font-bold text-indigo-400 uppercase leading-none mt-1">Day</span>
+                                <span className="text-sm font-black text-indigo-700 leading-tight">{task.day_number}</span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-bold text-[#0B2A5B] text-sm">{task.title}</h4>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 uppercase tracking-wider">{task.content_type}</span>
+                                </div>
+                                {task.content && <p className="text-xs text-gray-500 mt-2 line-clamp-2">{task.content}</p>}
+                              </div>
+                              <div className="flex gap-2 shrink-0">
+                                <button
+                                  onClick={() => {
+                                    setEditingDayTaskId(task.id);
+                                    setDayTaskFormData({ 
+                                      title: task.title, 
+                                      content_type: task.content_type, 
+                                      content: task.content || '', 
+                                      duration_minutes: task.duration_minutes || 0, 
+                                      day_number: task.day_number, 
+                                      is_published: task.is_published,
+                                      start_time: task.start_time ? task.start_time.split('.')[0] : '',
+                                      end_time: task.end_time ? task.end_time.split('.')[0] : '',
+                                      instructor_name: task.instructor_name || '',
+                                      exam_title: task.exam_title || '',
+                                      exam_passing_score: task.exam_passing_score || 0,
+                                      linked_assignment_id: task.linked_assignment_id || ''
+                                    });
+                                    setShowDayTaskForm(true);
+                                  }}
+                                  className="w-8 h-8 flex items-center justify-center rounded-xl text-[#0B2A5B]/50 hover:text-[#0B2A5B] hover:bg-gray-100 transition-all"
+                                >
+                                  <Edit size={14} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteDayTask(task.id)}
+                                  className="w-8 h-8 flex items-center justify-center rounded-xl text-red-400 hover:text-red-600 hover:bg-red-50 transition-all"
+                                >
+                                  <Trash2 size={14} />
                                 </button>
                               </div>
                             </div>
