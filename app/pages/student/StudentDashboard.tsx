@@ -99,6 +99,24 @@ export default function StudentDashboard() {
           <Progress value={courseProgress} className="mt-4 h-2" />
         </Card>
 
+        {/* Become an IB */}
+        <Card className="p-6 bg-white border-l-4 border-l-[#D50032] shadow-lg flex flex-col justify-between">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm text-[#0B2A5B]/60 mb-1">Partner With Us</p>
+              <p className="text-xl font-bold text-[#0B2A5B] leading-tight">Become an IB</p>
+              <p className="text-xs text-[#0B2A5B]/60 mt-2">Earn rewards by referring students to FinTrade.</p>
+            </div>
+            <div className="w-12 h-12 bg-[#D50032]/10 rounded-full flex items-center justify-center shrink-0">
+              <TrendingUp className="text-[#D50032]" size={24} />
+            </div>
+          </div>
+          <Link to="/register?role=ib" className="block mt-4">
+            <Button className="w-full bg-[#D50032] text-white hover:bg-[#a30026] shadow-md transition-all">
+              Register Now
+            </Button>
+          </Link>
+        </Card>
 
         {/* Upcoming Lectures */}
         <Card className="p-6 bg-white shadow-lg">

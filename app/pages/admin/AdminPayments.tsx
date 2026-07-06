@@ -217,6 +217,20 @@ export default function AdminPayments() {
     fetchCoupons(isSuper);
   }, []);
 
+  const chartData = useMemo(() => {
+    const grouped = transactions.reduce((acc, tx) => {
+      if (!tx.created_at || tx.status?.toLowerCase() !== "success") return acc;
+      const date = new Date(tx.created_at).toISOString().slice(0, 10);
+      if (!acc[date]) {
+        acc[date] = { date, revenue: 0 };
+      }
+      acc[date].revenue += (tx.total_paid ?? tx.amount ?? 0);
+      return acc;
+    }, {} as Record<string, { date: string, revenue: number }>);
+    
+    return Object.values(grouped).sort((a: any, b: any) => a.date.localeCompare(b.date));
+  }, [transactions]);
+
   if (checkingRole || !isSuperAdmin) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50">
@@ -344,20 +358,6 @@ export default function AdminPayments() {
     link.click();
     URL.revokeObjectURL(url);
   };
-
-  const chartData = useMemo(() => {
-    const grouped = transactions.reduce((acc, tx) => {
-      if (!tx.created_at || tx.status !== "Success") return acc;
-      const date = new Date(tx.created_at).toISOString().slice(0, 10);
-      if (!acc[date]) {
-        acc[date] = { date, revenue: 0 };
-      }
-      acc[date].revenue += (tx.total_paid ?? tx.amount ?? 0);
-      return acc;
-    }, {} as Record<string, { date: string, revenue: number }>);
-    
-    return Object.values(grouped).sort((a: any, b: any) => a.date.localeCompare(b.date));
-  }, [transactions]);
 
   return (
     <DashboardLayout role="admin">
