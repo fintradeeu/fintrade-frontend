@@ -58,6 +58,15 @@ export default function AdminCourses() {
   const [importSourceCourseDetails, setImportSourceCourseDetails] = useState<any | null>(null);
   const [selectedImportLessonIds, setSelectedImportLessonIds] = useState<number[]>([]);
 
+  // Day Tasks state
+  const [courseTabs, setCourseTabs] = useState<Record<number, 'curriculum' | 'daytasks'>>({});
+  const [courseDayTasks, setCourseDayTasks] = useState<Record<number, any[]>>({});
+  const [dayTasksLoading, setDayTasksLoading] = useState<Record<number, boolean>>({});
+  const [showDayTaskForm, setShowDayTaskForm] = useState(false);
+  const [dayTaskFormData, setDayTaskFormData] = useState({ title: '', content_type: 'live_lecture', content: '', duration_minutes: 0, day_number: 1, is_published: true, start_time: '', end_time: '', instructor_name: '', exam_title: '', exam_passing_score: 0, linked_assignment_id: '' });
+  const [editingDayTaskId, setEditingDayTaskId] = useState<number | null>(null);
+  const [activeDayTaskCourse, setActiveDayTaskCourse] = useState<number | null>(null);
+
   const fetchCourses = async () => {
     try { const res = await api.get("/admin/courses"); setCourses(res.data); }
     catch (err) { console.error(err); }
@@ -69,6 +78,15 @@ export default function AdminCourses() {
       const res = await api.get(`/courses/${id}`);
       setCourses((prev) => prev.map((c) => (c.id === id ? res.data : c)));
     } catch (err) { console.error(err); }
+  };
+
+  const fetchCourseDayTasks = async (courseId: number) => {
+    setDayTasksLoading(prev => ({ ...prev, [courseId]: true }));
+    try {
+      const res = await api.get(`/courses/admin/${courseId}/day-tasks`);
+      setCourseDayTasks(prev => ({ ...prev, [courseId]: res.data || [] }));
+    } catch (err) { console.error(err); }
+    finally { setDayTasksLoading(prev => ({ ...prev, [courseId]: false })); }
   };
 
   useEffect(() => { fetchCourses(); }, []);
@@ -113,6 +131,46 @@ export default function AdminCourses() {
       is_published: fullCourse.is_published || false
     });
     setShowCourseModal(true);
+  };
+
+  const handleDayTaskSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeDayTaskCourse) return;
+    try {
+      const payload: any = { 
+        ...dayTaskFormData, 
+        course_id: activeDayTaskCourse,
+        duration_minutes: Number(dayTaskFormData.duration_minutes), 
+        day_number: Number(dayTaskFormData.day_number),
+        start_time: dayTaskFormData.start_time ? new Date(dayTaskFormData.start_time).toISOString() : null,
+        end_time: dayTaskFormData.end_time ? new Date(dayTaskFormData.end_time).toISOString() : null,
+        exam_passing_score: Number(dayTaskFormData.exam_passing_score),
+        linked_assignment_id: dayTaskFormData.linked_assignment_id ? Number(dayTaskFormData.linked_assignment_id) : null
+      };
+
+      if (editingDayTaskId) {
+        await api.put(`/batches/admin/day-tasks/${editingDayTaskId}`, payload);
+      } else {
+        await api.post(`/courses/admin/${activeDayTaskCourse}/day-tasks`, payload);
+      }
+      setShowDayTaskForm(false);
+      setDayTaskFormData({ title: '', content_type: 'live_lecture', content: '', duration_minutes: 0, day_number: 1, is_published: true, start_time: '', end_time: '', instructor_name: '', exam_title: '', exam_passing_score: 0, linked_assignment_id: '' });
+      setEditingDayTaskId(null);
+      fetchCourseDayTasks(activeDayTaskCourse);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save day task");
+    }
+  };
+
+  const handleDeleteDayTask = async (taskId: number, courseId: number) => {
+    if (!await confirmPopup("Delete this day task?")) return;
+    try {
+      await api.delete(`/batches/admin/day-tasks/${taskId}`);
+      fetchCourseDayTasks(courseId);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleCreateCourse = async (e: React.FormEvent) => {
@@ -525,21 +583,51 @@ export default function AdminCourses() {
 
             {expandedCourse === course.id && (
               <div className="border-t border-[#0B2A5B]/10 bg-[#F4F1EA]/30 p-4 md:p-6">
-                {(course.modules || []).length === 0 ? (
-                  <p className="text-sm text-[#0B2A5B]/50 text-center py-4">No modules yet. Click "Add Module" to create one.</p>
-                ) : (
-                  <div className="space-y-4">
-                    {(course.modules || []).sort((a: any, b: any) => a.order - b.order).map((mod: any) => (
-                      <Card 
-                        key={mod.id} 
-                        className="p-4 bg-white border border-[#0B2A5B]/10 hover:border-[#0B2A5B]/30 transition-colors"
-                        draggable
-                        onDragStart={() => setDraggedModule(mod.id)}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={(e) => handleModuleDrop(e, course.id, mod.id)}
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 pb-2 border-b border-[#0B2A5B]/5 sm:border-none sm:pb-0">
-                          <div className="flex items-center gap-3">
+                
+                {/* Tabs */}
+                <div className="flex gap-4 mb-6 border-b border-[#0B2A5B]/10 pb-2">
+                  <button
+                    className={`font-semibold pb-2 border-b-2 transition-all ${
+                      (courseTabs[course.id] || 'curriculum') === 'curriculum' 
+                        ? 'border-[#D50032] text-[#D50032]' 
+                        : 'border-transparent text-[#0B2A5B]/50 hover:text-[#0B2A5B]'
+                    }`}
+                    onClick={() => setCourseTabs(prev => ({ ...prev, [course.id]: 'curriculum' }))}
+                  >
+                    Curriculum
+                  </button>
+                  <button
+                    className={`font-semibold pb-2 border-b-2 transition-all ${
+                      courseTabs[course.id] === 'daytasks' 
+                        ? 'border-[#D50032] text-[#D50032]' 
+                        : 'border-transparent text-[#0B2A5B]/50 hover:text-[#0B2A5B]'
+                    }`}
+                    onClick={() => {
+                      setCourseTabs(prev => ({ ...prev, [course.id]: 'daytasks' }));
+                      if (!courseDayTasks[course.id]) fetchCourseDayTasks(course.id);
+                    }}
+                  >
+                    Day Tasks
+                  </button>
+                </div>
+
+                {(courseTabs[course.id] || 'curriculum') === 'curriculum' ? (
+                  // CURRICULUM VIEW
+                  (course.modules || []).length === 0 ? (
+                    <p className="text-sm text-[#0B2A5B]/50 text-center py-4">No modules yet. Click "Add Module" to create one.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {(course.modules || []).sort((a: any, b: any) => a.order - b.order).map((mod: any) => (
+                        <Card 
+                          key={mod.id} 
+                          className="p-4 bg-white border border-[#0B2A5B]/10 hover:border-[#0B2A5B]/30 transition-colors"
+                          draggable
+                          onDragStart={() => setDraggedModule(mod.id)}
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={(e) => handleModuleDrop(e, course.id, mod.id)}
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 pb-2 border-b border-[#0B2A5B]/5 sm:border-none sm:pb-0">
+                            <div className="flex items-center gap-3">
                             <div className="cursor-move text-[#0B2A5B]/40 hover:text-[#0B2A5B]"><GripVertical size={20} /></div>
                             <div className="w-8 h-8 bg-[#0B2A5B]/10 rounded flex items-center justify-center flex-shrink-0">
                               <Layers size={16} className="text-[#0B2A5B]" />
@@ -604,6 +692,50 @@ export default function AdminCourses() {
                         )}
                       </Card>
                     ))}
+                  </div>
+                )
+                ) : (
+                  // DAY TASKS VIEW
+                  <div className="space-y-4">
+                     <div className="flex justify-between items-center mb-4">
+                       <h3 className="text-lg font-semibold text-[#0B2A5B]">Day Tasks</h3>
+                       <Button onClick={() => { setActiveDayTaskCourse(course.id); setEditingDayTaskId(null); setDayTaskFormData({ title: '', content_type: 'live_lecture', content: '', duration_minutes: 0, day_number: 1, is_published: true, start_time: '', end_time: '', instructor_name: '', exam_title: '', exam_passing_score: 0, linked_assignment_id: '' }); setShowDayTaskForm(true); }} className="bg-[#D50032] hover:bg-[#a30026] text-white">
+                         <Plus size={16} className="mr-2" /> Add Day Task
+                       </Button>
+                     </div>
+                     {dayTasksLoading[course.id] ? (
+                       <p className="text-sm text-[#0B2A5B]/50 text-center py-4">Loading tasks...</p>
+                     ) : (courseDayTasks[course.id] || []).length === 0 ? (
+                       <p className="text-sm text-[#0B2A5B]/50 text-center py-4">No day tasks added yet.</p>
+                     ) : (
+                       <div className="space-y-3">
+                         {(courseDayTasks[course.id] || []).map((task: any) => (
+                           <Card key={task.id} className="p-4 bg-white border border-[#0B2A5B]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                             <div>
+                               <div className="flex items-center gap-2 mb-1">
+                                 <Badge className="bg-[#0B2A5B]/10 text-[#0B2A5B]">Day {task.day_number}</Badge>
+                                 <Badge variant="outline">{task.content_type.replace('_', ' ')}</Badge>
+                                 {task.is_published && <Badge className="bg-green-100 text-green-700">Published</Badge>}
+                               </div>
+                               <h4 className="font-semibold text-[#0B2A5B]">{task.title}</h4>
+                             </div>
+                             <div className="flex gap-2">
+                               <Button variant="outline" size="sm" onClick={() => {
+                                 setActiveDayTaskCourse(course.id);
+                                 setEditingDayTaskId(task.id);
+                                 setDayTaskFormData({ ...task, start_time: task.start_time?.slice(0, 16) || '', end_time: task.end_time?.slice(0, 16) || '' });
+                                 setShowDayTaskForm(true);
+                               }}>
+                                 <Pencil size={14} />
+                               </Button>
+                               <Button variant="outline" size="sm" className="text-red-500 border-red-200" onClick={() => handleDeleteDayTask(task.id, course.id)}>
+                                 <Trash2 size={14} />
+                               </Button>
+                             </div>
+                           </Card>
+                         ))}
+                       </div>
+                     )}
                   </div>
                 )}
               </div>
@@ -920,6 +1052,97 @@ export default function AdminCourses() {
           </Card>
         </div>
       )}
+
+      {/* Day Task Form Modal */}
+      {showDayTaskForm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-2xl bg-white shadow-xl relative flex flex-col max-h-[90vh] rounded-2xl overflow-hidden">
+            <button onClick={() => setShowDayTaskForm(false)} className="absolute top-4.5 right-4 z-10 text-gray-400 hover:text-gray-600"><X size={20} /></button>
+            <div className="p-6 pb-4 border-b border-gray-100">
+              <h2 className="text-xl md:text-2xl font-bold text-[#0B2A5B]">{editingDayTaskId ? "Edit Day Task" : "New Day Task"}</h2>
+            </div>
+            <form onSubmit={handleDayTaskSubmit} className="flex-1 flex flex-col min-h-0">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0 pr-4 scrollbar-thin">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-semibold text-[#0B2A5B] mb-1 block">Task Title *</label>
+                    <Input required placeholder="Title" value={dayTaskFormData.title} onChange={e => setDayTaskFormData(p => ({ ...p, title: e.target.value }))} className="bg-[#F4F1EA]" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-[#0B2A5B] mb-1 block">Day Number (e.g. 1, -5) *</label>
+                    <Input required type="number" placeholder="e.g. 1, 2, -5" value={dayTaskFormData.day_number} onChange={e => setDayTaskFormData(p => ({ ...p, day_number: Number(e.target.value) }))} className="bg-[#F4F1EA]" />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-semibold text-[#0B2A5B] mb-1 block">Content Type *</label>
+                    <select value={dayTaskFormData.content_type} onChange={e => setDayTaskFormData(p => ({ ...p, content_type: e.target.value }))} className="w-full h-10 px-3 border border-gray-200 rounded-md text-sm bg-white">
+                      <option value="live_lecture">Live Lecture</option>
+                      <option value="exam">Exam</option>
+                      <option value="assignment">Assignment</option>
+                      <option value="pdf">PDF</option>
+                    </select>
+                  </div>
+                  {(dayTaskFormData.content_type === 'live_lecture' || dayTaskFormData.content_type === 'exam') && (
+                    <div>
+                      <label className="text-sm font-semibold text-[#0B2A5B] mb-1 block">Duration (minutes)</label>
+                      <Input type="number" min="0" placeholder="Duration" value={dayTaskFormData.duration_minutes} onChange={e => setDayTaskFormData(p => ({ ...p, duration_minutes: Number(e.target.value) }))} className="bg-[#F4F1EA]" />
+                    </div>
+                  )}
+                </div>
+
+                {dayTaskFormData.content_type === 'live_lecture' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <label className="text-sm font-semibold text-[#0B2A5B] mb-1 block">Start Time</label>
+                      <Input type="datetime-local" value={dayTaskFormData.start_time} onChange={e => setDayTaskFormData(p => ({ ...p, start_time: e.target.value }))} className="bg-white" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-[#0B2A5B] mb-1 block">End Time</label>
+                      <Input type="datetime-local" value={dayTaskFormData.end_time} onChange={e => setDayTaskFormData(p => ({ ...p, end_time: e.target.value }))} className="bg-white" />
+                    </div>
+                    <div className="col-span-full">
+                      <label className="text-sm font-semibold text-[#0B2A5B] mb-1 block">Instructor Name</label>
+                      <Input placeholder="Instructor Name" value={dayTaskFormData.instructor_name} onChange={e => setDayTaskFormData(p => ({ ...p, instructor_name: e.target.value }))} className="bg-white" />
+                    </div>
+                  </div>
+                )}
+
+                {dayTaskFormData.content_type === 'exam' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <label className="text-sm font-semibold text-[#0B2A5B] mb-1 block">Exam Title</label>
+                      <Input placeholder="Exam Title" value={dayTaskFormData.exam_title} onChange={e => setDayTaskFormData(p => ({ ...p, exam_title: e.target.value }))} className="bg-white" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-[#0B2A5B] mb-1 block">Passing Score (%)</label>
+                      <Input type="number" min="0" max="100" placeholder="Passing Score" value={dayTaskFormData.exam_passing_score} onChange={e => setDayTaskFormData(p => ({ ...p, exam_passing_score: Number(e.target.value) }))} className="bg-white" />
+                    </div>
+                  </div>
+                )}
+
+                {dayTaskFormData.content_type === 'pdf' && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-[#0B2A5B] mb-1 block">PDF URL</label>
+                    <Input placeholder="Enter PDF URL or use upload button..." value={dayTaskFormData.content} onChange={e => setDayTaskFormData(p => ({ ...p, content: e.target.value }))} className="bg-[#F4F1EA]" />
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-sm font-semibold text-[#0B2A5B] mb-1 block">Notes / Content</label>
+                  <textarea placeholder="Optional task instructions..." value={dayTaskFormData.content} onChange={e => setDayTaskFormData(p => ({ ...p, content: e.target.value }))} className="w-full p-3 border border-gray-200 rounded-md text-sm resize-none bg-[#F4F1EA]" rows={3} />
+                </div>
+              </div>
+              <div className="p-6 pt-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50/50">
+                <Button type="button" variant="outline" onClick={() => setShowDayTaskForm(false)}>Cancel</Button>
+                <Button type="submit" className="bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">{editingDayTaskId ? "Update Task" : "Save Task"}</Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
     </DashboardLayout>
   );
 }

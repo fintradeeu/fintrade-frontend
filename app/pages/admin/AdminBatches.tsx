@@ -81,7 +81,7 @@ export default function AdminBatches() {
   const [customizerAssignments, setCustomizerAssignments] = useState<any[]>([]);
   const [customizerAssignmentsLoading, setCustomizerAssignmentsLoading] = useState(false);
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
-  const [assignmentFormData, setAssignmentFormData] = useState({ title: '', description: '', due_date: '', max_score: 100, batch_module_id: '' });
+  const [assignmentFormData, setAssignmentFormData] = useState<any>({ title: '', description: '', due_date: '', max_score: 100, batch_module_id: '', resources: [] });
   const [editingAssignmentId, setEditingAssignmentId] = useState<number | null>(null);
 
   const [customizerDayTasks, setCustomizerDayTasks] = useState<any[]>([]);
@@ -373,7 +373,8 @@ export default function AdminBatches() {
         description: assignmentFormData.description,
         due_date: assignmentFormData.due_date ? new Date(assignmentFormData.due_date).toISOString() : null,
         max_score: assignmentFormData.max_score,
-        batch_module_id: assignmentFormData.batch_module_id ? Number(assignmentFormData.batch_module_id) : undefined
+        batch_module_id: assignmentFormData.batch_module_id ? Number(assignmentFormData.batch_module_id) : undefined,
+        resources: assignmentFormData.resources || []
       };
       if (editingAssignmentId) {
         await api.put(`/batches/admin/assignments/${editingAssignmentId}`, payload);
@@ -383,7 +384,7 @@ export default function AdminBatches() {
         toast.success("Assignment created");
       }
       setShowAssignmentForm(false);
-      setAssignmentFormData({ title: '', description: '', due_date: '', max_score: 100, batch_module_id: '' });
+      setAssignmentFormData({ title: '', description: '', due_date: '', max_score: 100, batch_module_id: '', resources: [] });
       setEditingAssignmentId(null);
       fetchCustomizerAssignments(customizerBatch.id, customizerCourse.id);
     } catch (err: any) {
@@ -884,7 +885,7 @@ export default function AdminBatches() {
               <button onClick={()=>setShowCustomizer(false)} className="w-8 h-8 flex items-center justify-center rounded-lg text-white/50 hover:text-white hover:bg-white/15 transition-all"><X size={18}/></button>
             </div>
 
-            {customizerCourse.is_batch_only && (
+            {true && (
               <div className="flex border-b border-gray-100 bg-gray-50 px-6 shrink-0">
                 <button
                   onClick={() => setCustomizerTab('curriculum')}
@@ -940,7 +941,7 @@ export default function AdminBatches() {
             )}
 
             <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-gray-50/60">
-              {(!customizerCourse.is_batch_only || customizerTab === 'curriculum') && (
+              {customizerTab === 'curriculum' && (
                 <>
                   {customizerLoading?(
                     <div className="space-y-3">{[1,2].map(i=><div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse"><div className="h-4 bg-gray-100 rounded w-1/4 mb-3"/><div className="h-3 bg-gray-50 rounded w-1/2"/></div>)}</div>
@@ -1124,7 +1125,7 @@ export default function AdminBatches() {
                 </>
               )}
 
-              {customizerCourse.is_batch_only && customizerTab === 'lectures' && (
+              {customizerTab === 'lectures' && (
                 <>
                   {customizerLecturesLoading ? (
                     <div className="space-y-3">
@@ -1254,7 +1255,7 @@ export default function AdminBatches() {
                 </>
               )}
 
-              {customizerCourse.is_batch_only && customizerTab === 'exams' && (
+              {customizerTab === 'exams' && (
                 <>
                   {customizerExamsLoading ? (
                     <div className="space-y-3">
@@ -1416,7 +1417,7 @@ export default function AdminBatches() {
                 </>
               )}
 
-              {customizerCourse.is_batch_only && customizerTab === 'assignments' && (
+              {customizerTab === 'assignments' && (
                 <>
                   {customizerAssignmentsLoading ? (
                     <div className="space-y-3">
@@ -1435,12 +1436,12 @@ export default function AdminBatches() {
                           <button
                             onClick={() => {
                               setEditingAssignmentId(null);
-                              setAssignmentFormData({ title: '', description: '', due_date: '', max_score: 100, batch_module_id: '' });
+                              setAssignmentFormData({ title: '', description: '', due_date: '', max_score: 100, batch_module_id: '', resources: [] });
                               setShowAssignmentForm(true);
                             }}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0B2A5B] text-white text-xs font-black hover:bg-[#1a3d7a] transition-all shadow-sm animate-fade-in"
                           >
-                            <Plus size={12} /> Import Assignment
+                            <Plus size={12} /> Create Assignment
                           </button>
                         )}
                       </div>
@@ -1448,38 +1449,12 @@ export default function AdminBatches() {
                       {showAssignmentForm && (
                         <form onSubmit={handleAssignmentSubmit} className="bg-white rounded-2xl border border-[#0B2A5B]/15 p-5 shadow-sm space-y-3 animate-fade-in">
                           <h4 className="text-xs font-black text-[#0B2A5B] uppercase tracking-wider">
-                            {editingAssignmentId ? "Edit Assignment" : "Import Assignment"}
+                            {editingAssignmentId ? "Edit Assignment" : "Create Assignment"}
                           </h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div>
-                              <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">
-                                {editingAssignmentId ? "Assignment Title *" : "Select Assignment to Import *"}
-                              </label>
-                              {editingAssignmentId ? (
-                                <Input required placeholder="e.g. Capstone Project" value={assignmentFormData.title} onChange={e => setAssignmentFormData(p => ({ ...p, title: e.target.value }))} className="rounded-xl" />
-                              ) : (
-                                <select 
-                                  required 
-                                  value={availableGlobalAssignments.find(a => a.title === assignmentFormData.title)?.id || ""}
-                                  onChange={e => {
-                                    const selected = availableGlobalAssignments.find(a => a.id.toString() === e.target.value);
-                                    if (selected) {
-                                      setAssignmentFormData(p => ({
-                                        ...p,
-                                        title: selected.title,
-                                        description: selected.description || "",
-                                        max_score: selected.max_score || 100
-                                      }));
-                                    }
-                                  }}
-                                  className="w-full h-10 px-3 border border-gray-200 rounded-xl text-sm bg-white"
-                                >
-                                  <option value="">— Select an Assignment —</option>
-                                  {availableGlobalAssignments.map(a => (
-                                    <option key={a.id} value={a.id}>{a.title}</option>
-                                  ))}
-                                </select>
-                              )}
+                              <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Assignment Title *</label>
+                              <Input required placeholder="e.g. Capstone Project" value={assignmentFormData.title} onChange={e => setAssignmentFormData(p => ({ ...p, title: e.target.value }))} className="rounded-xl" />
                             </div>
                             <div>
                               <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Due Date</label>
@@ -1500,6 +1475,23 @@ export default function AdminBatches() {
                                 ))}
                               </select>
                             </div>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Assignment File / Resource URL</label>
+                            <div className="flex gap-2">
+                              <Input placeholder="Resource URL or upload" value={assignmentFormData.resources?.[0]?.url || ""} onChange={e => setAssignmentFormData(p => ({ ...p, resources: [{ url: e.target.value, name: 'Resource', type: 'File' }] }))} className="rounded-xl text-sm flex-1"/>
+                              <label className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-xl text-xs font-bold cursor-pointer text-[#0B2A5B] transition-all whitespace-nowrap">
+                                <Upload size={13}/>{uploading?"Uploading...":"Upload File"}
+                                <input type="file" onChange={async (e:React.ChangeEvent<HTMLInputElement>) => {
+                                  const f=e.target.files?.[0]; if(!f) return;
+                                  setUploading(true); setUploadProgress(0);
+                                  try { const u=await uploadFile(f,(pct)=>setUploadProgress(pct)); setAssignmentFormData((p: any)=>({...p, resources: [{ url: u, name: f.name, type: 'File' }]})); toast.success("Uploaded Resource"); }
+                                  catch { toast.error("Upload failed"); }
+                                  finally { setUploading(false); setUploadProgress(null); }
+                                }} disabled={uploading} className="hidden"/>
+                              </label>
+                            </div>
+                            {uploading&&uploadProgress!==null&&<div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden"><div className="bg-purple-500 h-full rounded-full transition-all" style={{width:`${uploadProgress}%`}}/></div>}
                           </div>
                           <div>
                             <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Description / Guidelines *</label>
@@ -1539,7 +1531,8 @@ export default function AdminBatches() {
                                       description: assignment.description || "",
                                       due_date: assignment.due_date ? new Date(assignment.due_date).toISOString().slice(0, 16) : "",
                                       max_score: assignment.max_score || 100,
-                                      batch_module_id: assignment.batch_module_id ? assignment.batch_module_id.toString() : ""
+                                      batch_module_id: assignment.batch_module_id ? assignment.batch_module_id.toString() : "",
+                                      resources: assignment.resources || []
                                     });
                                     setShowAssignmentForm(true);
                                   }}
@@ -1563,7 +1556,7 @@ export default function AdminBatches() {
                 </>
               )}
 
-              {customizerCourse.is_batch_only && customizerTab === 'daytasks' && (
+              {customizerTab === 'daytasks' && (
                 <>
                   {customizerDayTasksLoading ? (
                     <div className="space-y-3">
@@ -1657,14 +1650,15 @@ export default function AdminBatches() {
                           )}
 
                           {dayTaskFormData.content_type === 'assignment' && (
-                            <div>
-                              <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Import From Assignments *</label>
-                              <select required value={dayTaskFormData.linked_assignment_id} onChange={e => setDayTaskFormData(p => ({ ...p, linked_assignment_id: e.target.value }))} className="w-full h-10 px-3 border border-gray-200 rounded-xl text-sm bg-white">
-                                <option value="">— Select an Assignment —</option>
-                                {customizerAssignments.map(a => (
-                                  <option key={a.id} value={a.id}>{a.title}</option>
-                                ))}
-                              </select>
+                            <div className="space-y-2">
+                              <label className="text-xs font-semibold text-[#0B2A5B] mb-1 block">Assignment File URL *</label>
+                              <div className="flex gap-2">
+                                <Input required placeholder="Assignment PDF/File URL" value={dayTaskFormData.content} onChange={e=>setDayTaskFormData(p=>({...p,content:e.target.value}))} className="rounded-xl text-sm flex-1"/>
+                                <label className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-xl text-xs font-bold cursor-pointer text-[#0B2A5B] transition-all whitespace-nowrap">
+                                  <Upload size={13}/>{uploading?"Uploading...":"Upload File"}
+                                  <input type="file" onChange={handleDayTaskUpload} disabled={uploading} className="hidden"/>
+                                </label>
+                              </div>
                             </div>
                           )}
 
