@@ -21,17 +21,18 @@ const loadRazorpayScript = (): Promise<boolean> => {
 
 interface CourseCheckoutModalProps {
   course: any;
+  batchId?: number | null;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export default function CourseCheckoutModal({ course, onClose, onSuccess }: CourseCheckoutModalProps) {
+export default function CourseCheckoutModal({ course, batchId, onClose, onSuccess }: CourseCheckoutModalProps) {
   const [ibCode, setIbCode] = useState(() => localStorage.getItem("distributor_code") || "");
   const [couponCode, setCouponCode] = useState("");
   const [ibDiscount, setIbDiscount] = useState(0);
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [availableBatches, setAvailableBatches] = useState<any[]>([]);
-  const [selectedBatchId, setSelectedBatchId] = useState<string>("");
+  const [selectedBatchId, setSelectedBatchId] = useState<string>(batchId ? String(batchId) : "");
   const [isSuccess, setIsSuccess] = useState(false);
   
   const parsePrice = (p: any) => parseFloat(String(p).replace(/[^0-9.]/g, '')) || 0;
@@ -53,7 +54,10 @@ export default function CourseCheckoutModal({ course, onClose, onSuccess }: Cour
         const res = await api.get(`/batches/public/list?course_id=${course.id}`);
         const list = res.data || [];
         setAvailableBatches(list);
-        if (list.length > 0) {
+        setAvailableBatches(list);
+        if (batchId) {
+          setSelectedBatchId(String(batchId));
+        } else if (list.length > 0) {
           setSelectedBatchId(String(list[0].id));
         }
       } catch (err) {

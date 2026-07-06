@@ -714,6 +714,9 @@ export default function MarketingHome() {
   });
 
   const [apiCourses, setApiCourses] = useState<any[]>([]);
+  const [apiBatches, setApiBatches] = useState<any[]>([]);
+  const [selectedBatchForModal, setSelectedBatchForModal] = useState<any | null>(null);
+  const [isBatchesExpanded, setIsBatchesExpanded] = useState(false);
   const [isCoursesExpanded, setIsCoursesExpanded] = useState(false);
   const [cmsSettings, setCmsSettings] = useState<any>({});
   const [apiBenefits, setApiBenefits] = useState<any[]>([]);
@@ -912,6 +915,16 @@ export default function MarketingHome() {
       } catch (err) { }
     };
     fetchFeatured();
+
+    const fetchBatches = async () => {
+      try {
+        const res = await api.get("/batches/public/list");
+        if (res.data && res.data.length > 0) {
+          setApiBatches(res.data);
+        }
+      } catch (err) { console.error("Failed to fetch public batches", err); }
+    };
+    fetchBatches();
 
     const fetchCMSAndNews = async () => {
       try {
@@ -1612,6 +1625,155 @@ export default function MarketingHome() {
                 </ScrollReveal>
               )}
             </div>
+          </section>
+        )}
+
+        {/* 1.5. Public Batches & Cohorts Section */}
+        {apiBatches.length > 0 && (
+          <section id="batches" className="pt-6 pb-2 md:py-8 relative z-10 bg-transparent border-t border-gray-100/50" style={{ fontFamily: "sans-serif" }}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <ScrollReveal>
+                <div className="text-left mb-10">
+                  <h2 className="text-4xl md:text-5xl lg:text-[54px] font-light text-gray-900 mb-3 tracking-tight">Batches &amp; Cohorts</h2>
+                  <p className="text-base lg:text-xl text-gray-500 max-w-2xl mt-2 leading-relaxed">
+                    Join our upcoming cohorts to learn alongside peers with dedicated support and structured timelines.
+                  </p>
+                </div>
+              </ScrollReveal>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {apiBatches.slice(0, isBatchesExpanded ? undefined : 3).map((batch: any, i: number) => {
+                  const statusColors: Record<string, string> = {
+                    "Registration Open": "bg-emerald-50 text-emerald-700 border-emerald-200",
+                    "Running": "bg-blue-50 text-blue-700 border-blue-200",
+                    "Upcoming": "bg-amber-50 text-amber-700 border-amber-200",
+                    "Completed": "bg-gray-50 text-gray-600 border-gray-200"
+                  };
+                  const statusColor = statusColors[batch.status] || "bg-gray-50 text-gray-600 border-gray-200";
+
+                  return (
+                    <ScrollReveal key={batch.id} delay={i * 0.1} y={20}>
+                      <div className="flex flex-col justify-between h-full bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:border-[#D50032]/30 transition-all duration-300">
+                        <div>
+                          <div className="flex items-start justify-between mb-4">
+                            <h3 className="text-xl font-bold text-gray-900 leading-tight">
+                              {batch.name}
+                            </h3>
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${statusColor} shrink-0`}>
+                              {batch.status}
+                            </span>
+                          </div>
+                          
+                          <div className="space-y-3 mb-6">
+                            <div className="flex items-start gap-3">
+                              <span className="text-[#D50032] mt-0.5">📅</span>
+                              <div>
+                                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-0.5">Batch Duration</p>
+                                <p className="text-sm text-gray-800 font-medium">
+                                  {new Date(batch.start_date).toLocaleDateString(undefined, { dateStyle: "medium" })} – {new Date(batch.end_date).toLocaleDateString(undefined, { dateStyle: "medium" })}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            {(batch.status === "Upcoming" || batch.status === "Registration Open") && (
+                              <div className="flex items-start gap-3">
+                                <span className="text-[#D50032] mt-0.5">⏰</span>
+                                <div>
+                                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-0.5">Registration Closes</p>
+                                  <p className="text-sm text-red-600 font-medium">
+                                    {new Date(batch.registration_end_date).toLocaleDateString(undefined, { dateStyle: "medium" })}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            {batch.assigned_courses && batch.assigned_courses.length > 0 && (
+                              <div className="flex items-start gap-3 pt-2">
+                                <span className="text-[#D50032] mt-0.5">📚</span>
+                                <div>
+                                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Included Courses</p>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {batch.assigned_courses.map((ac: any) => (
+                                      <span key={ac.id} className="text-[10px] bg-gray-100 text-gray-700 px-2 py-0.5 rounded-md border border-gray-200">
+                                        {ac.title || `Course ${ac.id}`}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <Button 
+                          onClick={() => setSelectedBatchForModal(batch)}
+                          className="w-full bg-white border-2 border-[#D50032] text-[#D50032] hover:bg-[#D50032] hover:text-white transition-colors duration-300 rounded-xl h-11 font-bold"
+                        >
+                          View &amp; Enroll
+                        </Button>
+                      </div>
+                    </ScrollReveal>
+                  );
+                })}
+              </div>
+
+              {apiBatches.length > 3 && (
+                <ScrollReveal delay={0.2}>
+                  <div className="mt-8 text-center">
+                    <Button
+                      onClick={() => {
+                        setIsBatchesExpanded(!isBatchesExpanded);
+                        if (isBatchesExpanded) {
+                          document.getElementById("batches")?.scrollIntoView({ behavior: "smooth" });
+                        }
+                      }}
+                      className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] px-8 py-2.5 rounded-full font-semibold transition-all shadow-md"
+                    >
+                      {isBatchesExpanded ? "View Less" : "View All Batches"}
+                    </Button>
+                  </div>
+                </ScrollReveal>
+              )}
+            </div>
+
+            {/* Batch Courses Selection Modal */}
+            <Dialog open={!!selectedBatchForModal} onOpenChange={(open) => !open && setSelectedBatchForModal(null)}>
+              <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border-none shadow-2xl rounded-2xl">
+                <div className="bg-[#0B2A5B] p-6 text-white relative">
+                  <DialogTitle className="text-xl font-bold">Select a Course to Enroll</DialogTitle>
+                  <DialogDescription className="text-[#F4F1EA]/80 mt-2">
+                    {selectedBatchForModal?.name} includes multiple courses. Please select the course you'd like to view and enroll in.
+                  </DialogDescription>
+                </div>
+                <div className="p-6 space-y-3 max-h-[60vh] overflow-y-auto">
+                  {selectedBatchForModal?.assigned_courses?.length > 0 ? (
+                    selectedBatchForModal.assigned_courses.map((ac: any) => (
+                      <Link 
+                        key={ac.id} 
+                        to={`/courses/${ac.id}?batch=${selectedBatchForModal.id}`}
+                        onClick={() => setSelectedBatchForModal(null)}
+                        className="block"
+                      >
+                        <div className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-[#D50032]/30 bg-gray-50/50 hover:bg-red-50/30 transition-all group">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-[#D50032]/10 flex items-center justify-center">
+                              <BookOpen className="w-5 h-5 text-[#D50032]" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-gray-900 group-hover:text-[#D50032] transition-colors">{ac.title || `Course ${ac.id}`}</p>
+                              <p className="text-xs text-gray-500 line-clamp-1">{ac.short_description || "Professional trading course"}</p>
+                            </div>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#D50032]" />
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-4">No courses assigned to this batch yet.</p>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
           </section>
         )}
 
