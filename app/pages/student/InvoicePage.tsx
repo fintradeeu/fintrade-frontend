@@ -17,6 +17,9 @@ import {
 } from "lucide-react";
 import api from "../../services/api";
 import logo from "../../../imports/fintrade_logo.png";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
+import { toast } from "sonner";
 
 interface Invoice {
   id: string;
@@ -172,6 +175,28 @@ export default function InvoicePage() {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadPdf = async () => {
+    const element = document.getElementById("invoice-printable-area");
+    if (!element) return;
+    
+    try {
+      toast("Generating PDF...", { id: "pdf-toast" });
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Invoice_${selectedInvoice?.invoiceNumber || 'download'}.pdf`);
+      toast.success("Invoice downloaded successfully!", { id: "pdf-toast" });
+    } catch (err) {
+      console.error("Failed to generate PDF:", err);
+      toast.error("Failed to download PDF.", { id: "pdf-toast" });
+    }
   };
 
   const formatCurrency = (val: number) => {
@@ -397,7 +422,7 @@ export default function InvoicePage() {
                             size="sm"
                             onClick={() => {
                               setSelectedInvoice(inv);
-                              setTimeout(() => window.print(), 100);
+                              setTimeout(() => handleDownloadPdf(), 300);
                             }}
                             className="bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]"
                           >
@@ -443,7 +468,7 @@ export default function InvoicePage() {
             {/* Printable Content */}
             <div className="flex-1 overflow-y-auto p-4 bg-white print:p-0">
               {/* Outer Tally Border Wrapper */}
-              <div className="border-[1.5px] border-black text-black font-mono text-[11px] leading-tight">
+              <div id="invoice-printable-area" className="border-[1.5px] border-black text-black font-mono text-[11px] leading-tight bg-white">
 
                 {/* === TOP: Logo + Company Name side by side === */}
                 <div className="flex items-center gap-2 px-3 py-2 border-b border-black bg-white">
@@ -609,8 +634,8 @@ export default function InvoicePage() {
               <Button size="sm" variant="ghost" onClick={() => setSelectedInvoice(null)} className="text-gray-500 hover:bg-gray-100">
                 Cancel
               </Button>
-              <Button size="sm" onClick={handlePrint} className="bg-[#0B2A5B] hover:bg-[#1a3d7a] text-white">
-                Print / Save PDF
+              <Button size="sm" onClick={handleDownloadPdf} className="bg-[#0B2A5B] hover:bg-[#1a3d7a] text-white">
+                Save PDF
               </Button>
             </div>
           </Card>

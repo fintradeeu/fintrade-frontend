@@ -3,7 +3,7 @@ import api from "../services/api";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card } from "./ui/card";
-import { Tag, IndianRupee } from "lucide-react";
+import { Tag, IndianRupee, CreditCard, Banknote, Landmark, Upload } from "lucide-react";
 
 const loadRazorpayScript = (): Promise<boolean> => {
   return new Promise((resolve) => {
@@ -34,6 +34,17 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
   const [availableBatches, setAvailableBatches] = useState<any[]>([]);
   const [selectedBatchId, setSelectedBatchId] = useState<string>(batchId ? String(batchId) : "");
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isPending, setIsPending] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "cash" | "cheque">("razorpay");
+  const [offlineData, setOfflineData] = useState({
+    payment_date: "",
+    reference_number: "",
+    remarks: "",
+    bank_name: "",
+    branch_name: "",
+    account_holder_name: ""
+  });
+  const [chequeFile, setChequeFile] = useState<File | null>(null);
   
   const parsePrice = (p: any) => parseFloat(String(p).replace(/[^0-9.]/g, '')) || 0;
   const initialPrice = parsePrice(course.price);
@@ -125,7 +136,42 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
     setLoading(true);
     try {
       const combinedCode = [couponCode.trim(), ibCode.trim()].filter(Boolean).join(":");
+      const finalAmountPaid = ((initialPrice - activeDiscount) * 1.18);
       if (Number(finalPrice) > 0) {
+        
+        if (paymentMethod === "cash" || paymentMethod === "cheque") {
+          if (paymentMethod === "cash" && (!offlineData.payment_date || !offlineData.reference_number)) {
+            alert("Please fill in the required fields (Payment Date and Receipt Number).");
+            setLoading(false); return;
+          }
+          if (paymentMethod === "cheque" && (!offlineData.reference_number || !offlineData.payment_date || !offlineData.bank_name || !offlineData.branch_name || !offlineData.account_holder_name || !chequeFile)) {
+            alert("Please fill all required cheque details and upload a cheque image.");
+            setLoading(false); return;
+          }
+
+          let chequeImageUrl = "";
+          if (paymentMethod === "cheque" && chequeFile) {
+            const formData = new FormData();
+            formData.append("file", chequeFile);
+            const uploadRes = await api.post("/payments/upload-cheque", formData, {
+              headers: { "Content-Type": "multipart/form-data" }
+            });
+            chequeImageUrl = uploadRes.data.url;
+          }
+
+          await api.post("/payments/offline-payment", {
+            course_id: course.id,
+            payment_mode: paymentMethod,
+            amount: Number(finalAmountPaid.toFixed(2)),
+            coupon_code: combinedCode || null,
+            batch_id: selectedBatchId ? Number(selectedBatchId) : null,
+            ...offlineData,
+            cheque_image_url: chequeImageUrl || undefined
+          });
+          setIsPending(true);
+          return;
+        }
+
         console.log("Initiating payment for course ID:", course.id);
         const res = await api.post("/payments/create", {
           course_id: course.id,
@@ -255,6 +301,25 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
               className="mt-6 w-full py-4 bg-[#D50032] text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-[#D50032]/30 hover:-translate-y-0.5 transition-all"
             >
               Go to Dashboard
+            </button>
+          </div>
+        ) : isPending ? (
+          <div className="p-10 flex flex-col items-center justify-center text-center space-y-6">
+            <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mb-2">
+              <svg className="w-10 h-10 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold text-[#0B2A5B]">Payment Submitted!</h2>
+            <p className="text-slate-500 max-w-md">
+              Your {paymentMethod} payment for <strong>{course.title || course.name}</strong> has been submitted and is currently <strong>{paymentMethod === "cash" ? "Pending Verification" : "Pending Clearance"}</strong>. 
+              An admin will review it shortly. Once approved, the course will be unlocked.
+            </p>
+            <button
+              onClick={() => { onClose(); onSuccess(); }}
+              className="mt-6 w-full py-4 bg-[#D50032] text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-[#D50032]/30 hover:-translate-y-0.5 transition-all"
+            >
+              Close
             </button>
           </div>
         ) : (
@@ -401,6 +466,97 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
             </div>
           </div>
 
+          {/* Payment Method Selection */}
+          <div className="bg-gray-50 rounded-lg p-5 md:p-6 mt-4">
+            <h3 className="font-semibold text-sm md:text-base text-[#0B2A5B] mb-4">Payment Method</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+              <button
+                onClick={() => setPaymentMethod("razorpay")}
+                className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${paymentMethod === 'razorpay' ? 'border-[#0B2A5B] bg-[#0B2A5B]/5' : 'border-gray-200 bg-white hover:border-[#0B2A5B]/30'}`}
+              >
+                <CreditCard className={`mb-2 ${paymentMethod === 'razorpay' ? 'text-[#0B2A5B]' : 'text-gray-400'}`} />
+                <span className={`text-sm font-semibold ${paymentMethod === 'razorpay' ? 'text-[#0B2A5B]' : 'text-gray-500'}`}>Razorpay</span>
+              </button>
+              <button
+                onClick={() => setPaymentMethod("cash")}
+                className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${paymentMethod === 'cash' ? 'border-[#0B2A5B] bg-[#0B2A5B]/5' : 'border-gray-200 bg-white hover:border-[#0B2A5B]/30'}`}
+              >
+                <Banknote className={`mb-2 ${paymentMethod === 'cash' ? 'text-[#0B2A5B]' : 'text-gray-400'}`} />
+                <span className={`text-sm font-semibold ${paymentMethod === 'cash' ? 'text-[#0B2A5B]' : 'text-gray-500'}`}>Cash</span>
+              </button>
+              <button
+                onClick={() => setPaymentMethod("cheque")}
+                className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${paymentMethod === 'cheque' ? 'border-[#0B2A5B] bg-[#0B2A5B]/5' : 'border-gray-200 bg-white hover:border-[#0B2A5B]/30'}`}
+              >
+                <Landmark className={`mb-2 ${paymentMethod === 'cheque' ? 'text-[#0B2A5B]' : 'text-gray-400'}`} />
+                <span className={`text-sm font-semibold ${paymentMethod === 'cheque' ? 'text-[#0B2A5B]' : 'text-gray-500'}`}>Cheque</span>
+              </button>
+            </div>
+
+            {/* Cash Fields */}
+            {paymentMethod === "cash" && (
+              <div className="space-y-4 pt-2 border-t border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-[#0B2A5B] block mb-1">Receipt Number *</label>
+                    <Input value={offlineData.reference_number} onChange={e => setOfflineData({...offlineData, reference_number: e.target.value})} placeholder="E.g. RCPT-123" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-[#0B2A5B] block mb-1">Payment Date *</label>
+                    <Input type="date" value={offlineData.payment_date} onChange={e => setOfflineData({...offlineData, payment_date: e.target.value})} />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#0B2A5B] block mb-1">Remarks (Optional)</label>
+                  <Input value={offlineData.remarks} onChange={e => setOfflineData({...offlineData, remarks: e.target.value})} placeholder="Any additional notes" />
+                </div>
+              </div>
+            )}
+
+            {/* Cheque Fields */}
+            {paymentMethod === "cheque" && (
+              <div className="space-y-4 pt-2 border-t border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-[#0B2A5B] block mb-1">Cheque Number *</label>
+                    <Input value={offlineData.reference_number} onChange={e => setOfflineData({...offlineData, reference_number: e.target.value})} placeholder="E.g. 000123" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-[#0B2A5B] block mb-1">Cheque Date *</label>
+                    <Input type="date" value={offlineData.payment_date} onChange={e => setOfflineData({...offlineData, payment_date: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-[#0B2A5B] block mb-1">Bank Name *</label>
+                    <Input value={offlineData.bank_name} onChange={e => setOfflineData({...offlineData, bank_name: e.target.value})} placeholder="E.g. HDFC Bank" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-[#0B2A5B] block mb-1">Branch Name *</label>
+                    <Input value={offlineData.branch_name} onChange={e => setOfflineData({...offlineData, branch_name: e.target.value})} placeholder="E.g. MG Road Branch" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-xs font-bold text-[#0B2A5B] block mb-1">Account Holder Name *</label>
+                    <Input value={offlineData.account_holder_name} onChange={e => setOfflineData({...offlineData, account_holder_name: e.target.value})} placeholder="Name on cheque" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-xs font-bold text-[#0B2A5B] block mb-1">Cheque Image Upload *</label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer relative">
+                      <input type="file" accept="image/*" onChange={e => setChequeFile(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                      <Upload className="mx-auto text-gray-400 mb-2" size={24} />
+                      <span className="text-sm font-medium text-gray-600">
+                        {chequeFile ? chequeFile.name : "Click to browse or drag & drop"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#0B2A5B] block mb-1">Remarks (Optional)</label>
+                  <Input value={offlineData.remarks} onChange={e => setOfflineData({...offlineData, remarks: e.target.value})} placeholder="Any additional notes" />
+                </div>
+              </div>
+            )}
+          </div>
+
+
           <div className="bg-gray-50 rounded-lg p-5 md:p-6">
             <h3 className="font-semibold text-sm md:text-base text-[#0B2A5B] mb-4">Order Summary</h3>
             <div className="space-y-3 mb-4">
@@ -435,10 +591,10 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
         <div className="p-6 md:p-8 pt-4 border-t border-gray-100 bg-gray-50/50 flex gap-4">
           <Button
             onClick={completePayment}
-            disabled={loading}
+            disabled={loading || (paymentMethod === "cash" && (!offlineData.payment_date || !offlineData.reference_number)) || (paymentMethod === "cheque" && (!offlineData.reference_number || !offlineData.payment_date || !offlineData.bank_name || !offlineData.branch_name || !offlineData.account_holder_name || !chequeFile))}
             className="flex-1 bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] shadow-lg shadow-[#0B2A5B]/20 py-2.5 md:py-3.5 h-auto text-sm md:text-base font-semibold"
           >
-            {loading ? "Processing..." : `Pay ₹${((initialPrice - activeDiscount) * 1.18).toFixed(2)}`}
+            {loading ? "Processing..." : `Pay ₹${((initialPrice - activeDiscount) * 1.18).toFixed(2)} ${paymentMethod !== 'razorpay' ? `via ${paymentMethod === 'cash' ? 'Cash' : 'Cheque'}` : ''}`}
           </Button>
           <Button
             onClick={onClose}

@@ -12,6 +12,8 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import api from "../../services/api";
 import { toast } from "sonner";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 // HSL/Tailored badge helper
 function KycBadge({ status }: { status?: string }) {
@@ -78,6 +80,28 @@ export default function AdminStudentManagement() {
       toast.error("Failed to load students list.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    const element = document.getElementById("invoice-printable-area");
+    if (!element) return;
+    
+    try {
+      toast("Generating PDF...", { id: "pdf-toast" });
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Invoice_${selectedInvoice?.invoiceNumber || 'download'}.pdf`);
+      toast.success("Invoice downloaded successfully!", { id: "pdf-toast" });
+    } catch (err) {
+      console.error("Failed to generate PDF:", err);
+      toast.error("Failed to download PDF.", { id: "pdf-toast" });
     }
   };
 
@@ -526,25 +550,28 @@ export default function AdminStudentManagement() {
 
       {/* Invoice Viewer overlay */}
       {selectedInvoice && selectedStudent && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <Card className="w-full max-w-2xl bg-white shadow-2xl rounded-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-slate-50">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm print:absolute print:inset-0 print:p-0 print:bg-white print:z-[9999]">
+          <Card className="w-full max-w-2xl bg-white shadow-2xl rounded-2xl overflow-hidden flex flex-col max-h-[90vh] print:shadow-none print:rounded-none print:max-h-full print:border-none">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-slate-50 print:hidden">
               <span className="font-bold text-[#0B2A5B]">Tax Invoice Summary</span>
               <div className="flex items-center gap-2">
                 <Button size="sm" variant="outline" onClick={() => window.print()} className="border-slate-300 rounded-xl">
-                  <Printer size={14} className="mr-1.5" /> Print Invoice
+                  <Printer size={14} className="mr-1.5" /> Print
+                </Button>
+                <Button size="sm" onClick={handleDownloadPdf} className="bg-[#0B2A5B] hover:bg-[#1a3d7a] text-white rounded-xl">
+                  <Download size={14} className="mr-1.5" /> Download PDF
                 </Button>
                 <button
                   onClick={() => setSelectedInvoice(null)}
-                  className="p-1 hover:bg-slate-200 rounded-full transition-colors text-slate-500"
+                  className="p-1 ml-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500"
                 >
                   <X size={20} />
                 </button>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 bg-white">
-              <div className="border-[1.5px] border-black text-black font-mono text-[11px] leading-tight p-4">
+            <div className="flex-1 overflow-y-auto p-6 bg-white print:p-0 print:overflow-visible">
+              <div id="invoice-printable-area" className="border-[1.5px] border-black text-black font-mono text-[11px] leading-tight p-4 bg-white">
                 {/* Header Logo section */}
                 <div className="flex items-center gap-2 pb-3 border-b border-black">
                   <div className="font-bold text-base uppercase tracking-wide">FINTRADE EDUTECH</div>

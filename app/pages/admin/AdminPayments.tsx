@@ -148,6 +148,10 @@ export default function AdminPayments() {
     is_active: true
   });
 
+  const [isOfflineActionDialogOpen, setIsOfflineActionDialogOpen] = useState(false);
+  const [selectedOfflineTransaction, setSelectedOfflineTransaction] = useState<any>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+
   const fetchTransactions = async () => {
     try {
       const res = await api.get("/admin/revenue/details");
@@ -281,6 +285,42 @@ export default function AdminPayments() {
         fetchCoupons(isSuperAdmin);
       } catch (err: any) {
         alert("Error deleting offer: " + (err.response?.data?.detail || err.message));
+      }
+    }
+  };
+
+  const handleApproveOfflinePayment = async () => {
+    if (!selectedOfflineTransaction) return;
+    if (await confirmPopup("Are you sure you want to approve this payment and enroll the student?")) {
+      try {
+        await api.put(`/payments/admin/${selectedOfflineTransaction.id}/approve`);
+        setIsOfflineActionDialogOpen(false);
+        setSelectedOfflineTransaction(null);
+        fetchTransactions();
+      } catch (err: any) {
+        alert("Error approving payment: " + (err.response?.data?.detail || err.message));
+      }
+    }
+  };
+
+  const handleRejectOfflinePayment = async () => {
+    if (!selectedOfflineTransaction) return;
+    if (!rejectionReason.trim()) {
+      alert("Please provide a rejection reason.");
+      return;
+    }
+    if (await confirmPopup("Are you sure you want to reject this payment?")) {
+      try {
+        await api.put(`/payments/admin/${selectedOfflineTransaction.id}/reject`, {
+          action: "reject",
+          reason: rejectionReason
+        });
+        setIsOfflineActionDialogOpen(false);
+        setSelectedOfflineTransaction(null);
+        setRejectionReason("");
+        fetchTransactions();
+      } catch (err: any) {
+        alert("Error rejecting payment: " + (err.response?.data?.detail || err.message));
       }
     }
   };
@@ -621,13 +661,14 @@ export default function AdminPayments() {
                         <TableHead className="font-bold px-2 py-3">Payment Mode</TableHead>
                         <TableHead className="font-bold px-2 py-3">Payment Date</TableHead>
                         <TableHead className="font-bold px-2 py-3">Status</TableHead>
+                        <TableHead className="font-bold px-2 py-3 text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {transactions.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={11} className="text-center text-gray-500 py-6">
-                            No successful transactions found.
+                          <TableCell colSpan={12} className="text-center text-gray-500 py-6">
+                            No successful or pending transactions found.
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -658,9 +699,29 @@ export default function AdminPayments() {
                               {tx.created_at ? new Date(tx.created_at).toLocaleString() : "N/A"}
                             </TableCell>
                             <TableCell>
-                              <Badge style={{ background: '#4CAF50', color: 'white' }}>
-                                {tx.status}
+                              <Badge 
+                                style={{ 
+                                  background: tx.status === 'success' ? '#4CAF50' : 
+                                             (tx.status === 'pending_verification' || tx.status === 'pending_clearance' ? '#FF9800' : '#D50032'), 
+                                  color: 'white' 
+                                }}
+                              >
+                                {tx.status.replace("_", " ")}
                               </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {(tx.status === 'pending_verification' || tx.status === 'pending_clearance') && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedOfflineTransaction(tx);
+                                    setIsOfflineActionDialogOpen(true);
+                                  }}
+                                >
+                                  Review
+                                </Button>
+                              )}
                             </TableCell>
                           </TableRow>
                         ))
@@ -680,6 +741,79 @@ export default function AdminPayments() {
               <DialogTitle>Edit Coupon</DialogTitle>
             </DialogHeader>
             <CouponForm onSubmit={handleEditCoupon} submitLabel="Update Coupon" formData={formData} setFormData={setFormData} />
+          </DialogContent>
+        </Dialog>
+
+        {/* Offline Payment Action Dialog */}
+        <Dialog open={isOfflineActionDialogOpen} onOpenChange={setIsOfflineActionDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Review Offline Payment</DialogTitle>
+            </DialogHeader>
+            {selectedOfflineTransaction && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
+                  <div>
+                    <Label className="text-gray-500">Student</Label>
+                    <div className="font-semibold">{selectedOfflineTransaction.student_name}</div>
+                    <div className="text-sm text-gray-600">{selectedOfflineTransaction.student_email}</div>
+                  </div>
+                  <div>
+                    <Label className="text-gray-500">Course</Label>
+                    <div className="font-semibold">{selectedOfflineTransaction.course_title}</div>
+                    <div className="text-sm font-bold text-[#D50032]">Amount: ₹{(selectedOfflineTransaction.total_paid ?? selectedOfflineTransaction.amount ?? 0).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <Label className="text-gray-500">Payment Mode</Label>
+                    <div className="font-semibold capitalize">{selectedOfflineTransaction.payment_mode}</div>
+                  </div>
+                  <div>
+                    <Label className="text-gray-500">Payment Date</Label>
+                    <div className="font-semibold">{selectedOfflineTransaction.payment_date ? new Date(selectedOfflineTransaction.payment_date).toLocaleDateString() : 'N/A'}</div>
+                  </div>
+                  <div>
+                    <Label className="text-gray-500">{selectedOfflineTransaction.payment_mode === 'cash' ? 'Receipt Number' : 'Cheque Number'}</Label>
+                    <div className="font-semibold">{selectedOfflineTransaction.reference_number || 'N/A'}</div>
+                  </div>
+                  {selectedOfflineTransaction.payment_mode === 'cheque' && (
+                    <>
+                      <div>
+                        <Label className="text-gray-500">Bank & Branch</Label>
+                        <div className="font-semibold">{selectedOfflineTransaction.bank_name || 'N/A'} - {selectedOfflineTransaction.branch_name || 'N/A'}</div>
+                      </div>
+                      <div>
+                        <Label className="text-gray-500">Account Holder</Label>
+                        <div className="font-semibold">{selectedOfflineTransaction.account_holder_name || 'N/A'}</div>
+                      </div>
+                    </>
+                  )}
+                  <div className="col-span-2">
+                    <Label className="text-gray-500">Remarks</Label>
+                    <div className="font-semibold">{selectedOfflineTransaction.remarks || 'None'}</div>
+                  </div>
+                </div>
+
+                {selectedOfflineTransaction.payment_mode === 'cheque' && selectedOfflineTransaction.cheque_image_url && (
+                  <div>
+                    <Label className="text-gray-500 block mb-2">Cheque Image</Label>
+                    <div className="border rounded-lg p-2 max-h-64 overflow-auto flex justify-center">
+                      <img src={selectedOfflineTransaction.cheque_image_url.startsWith('http') ? selectedOfflineTransaction.cheque_image_url : `${api.defaults.baseURL}${selectedOfflineTransaction.cheque_image_url}`} alt="Cheque" className="max-w-full object-contain" />
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-4 border-t space-y-4">
+                  <div>
+                    <Label>Rejection Reason (only if rejecting)</Label>
+                    <Input value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} placeholder="E.g. Cheque bounced, invalid receipt..." />
+                  </div>
+                  <div className="flex gap-4">
+                    <Button onClick={handleApproveOfflinePayment} className="flex-1 bg-green-600 hover:bg-green-700 text-white">Approve & Enroll</Button>
+                    <Button onClick={handleRejectOfflinePayment} variant="destructive" className="flex-1">Reject Payment</Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
