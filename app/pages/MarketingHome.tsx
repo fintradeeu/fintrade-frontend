@@ -65,6 +65,8 @@ function AmbientGlow() {
 }
 
 function OfficePresenceStrip({ offices = officeCountries }: { offices?: typeof officeCountries }) {
+  if (!offices || offices.length === 0) return null;
+
   const getOfficeLogo = (office: any, size = 40) => {
     if (office.logo_url) return getImageUrl(office.logo_url);
     return `https://flagcdn.com/w${size}/${(office.code || "in").toLowerCase()}.png`;
@@ -950,7 +952,7 @@ export default function MarketingHome() {
           if (res.data.emi) setEmiConfig(res.data.emi);
           if (res.data.certificate) setCertConfig(res.data.certificate);
           if (res.data.live_classes) setLiveClasses(res.data.live_classes);
-          if (Array.isArray(res.data.global_offices) && res.data.global_offices.length > 0) {
+          if (Array.isArray(res.data.global_offices)) {
             setGlobalOffices(res.data.global_offices);
           }
           if (res.data.showcase_videos && res.data.showcase_videos.length > 0) {
@@ -1655,8 +1657,8 @@ export default function MarketingHome() {
                     <ScrollReveal key={batch.id} delay={i * 0.1} y={20}>
                       <div className="flex flex-col justify-between h-full bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:border-[#D50032]/30 transition-all duration-300">
                         <div>
-                          <div className="flex items-start justify-between mb-4">
-                            <h3 className="text-xl font-bold text-gray-900 leading-tight">
+                          <div className="flex items-start justify-between mb-4 gap-2">
+                            <h3 className="text-xl font-bold text-gray-900 leading-tight truncate flex-1" title={batch.name}>
                               {batch.name}
                             </h3>
                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${statusColor} shrink-0`}>
@@ -1693,7 +1695,7 @@ export default function MarketingHome() {
                                 <div>
                                   <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Included Courses</p>
                                   <div className="flex flex-wrap gap-1.5">
-                                    {batch.assigned_courses.map((ac: any) => (
+                                    {batch.assigned_courses.filter((ac: any) => !ac.is_batch_only).map((ac: any) => (
                                       <span key={ac.id} className="text-[10px] bg-gray-100 text-gray-700 px-2 py-0.5 rounded-md border border-gray-200">
                                         {ac.title || `Course ${ac.id}`}
                                       </span>
@@ -1746,8 +1748,10 @@ export default function MarketingHome() {
                   </DialogDescription>
                 </div>
                 <div className="p-6 space-y-3 max-h-[60vh] overflow-y-auto">
-                  {selectedBatchForModal?.assigned_courses?.length > 0 ? (
-                    selectedBatchForModal.assigned_courses.map((ac: any) => (
+                  {selectedBatchForModal?.assigned_courses?.filter((ac: any) => !ac.is_batch_only).length > 0 ? (
+                    selectedBatchForModal.assigned_courses
+                      .filter((ac: any) => !ac.is_batch_only)
+                      .map((ac: any) => (
                       <Link 
                         key={ac.id} 
                         to={`/courses/${ac.id}?batch=${selectedBatchForModal.id}`}

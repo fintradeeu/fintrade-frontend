@@ -71,7 +71,7 @@ export default function TradingSimulator() {
               "width": "100%",
               "height": "100%",
               "symbol": selectedInstrument.tv_symbol,
-              "interval": "1",
+              "interval": "D",
               "timezone": "Asia/Kolkata",
               "theme": "light", // Light theme matching Upstox
               "style": "1",
@@ -105,18 +105,30 @@ export default function TradingSimulator() {
     fetchingRef.current = true;
     try {
       const res = await api.get("/simulator/market-data");
-      setMarketData(res.data);
-      if (res.data && res.data.length > 0) {
-        setSelectedInstrument((prev: any) => {
-          if (prev) {
-            const updated = res.data.find((i: any) => i.symbol === prev.symbol);
-            return updated || res.data[0];
-          }
-          return res.data[0];
-        });
+      if (!res.data || res.data.length === 0) {
+        throw new Error("Market data is empty (likely 503 fallback from backend)");
       }
+      setMarketData(res.data);
+      setSelectedInstrument((prev: any) => {
+        if (prev) {
+          const updated = res.data.find((i: any) => i.symbol === prev.symbol);
+          return updated || res.data[0];
+        }
+        return res.data[0];
+      });
     } catch (err) {
-      console.error("Failed to fetch market data", err);
+      console.error("Failed to fetch market data, using fallback mock data", err);
+      // Fallback mock data if API key is not configured or backend returns empty
+      const mockData = [
+        { symbol: "RELIANCE", name: "Reliance Industries", price: 2950.45, change: 12.30, change_pct: 0.42, tv_symbol: "BSE:RELIANCE" },
+        { symbol: "TCS", name: "Tata Consultancy", price: 3840.10, change: -15.20, change_pct: -0.39, tv_symbol: "BSE:TCS" },
+        { symbol: "HDFCBANK", name: "HDFC Bank", price: 1645.80, change: 8.50, change_pct: 0.52, tv_symbol: "BSE:HDFCBANK" },
+        { symbol: "INFY", name: "Infosys Ltd", price: 1520.65, change: 5.40, change_pct: 0.36, tv_symbol: "BSE:INFY" },
+        { symbol: "SENSEX", name: "BSE Sensex", price: 76941.99, change: 438.39, change_pct: 0.57, tv_symbol: "BSE:SENSEX" },
+        { symbol: "NIFTY", name: "Nifty 50", price: 24024.75, change: 142.70, change_pct: 0.60, tv_symbol: "NSE:NIFTY" },
+      ];
+      setMarketData(mockData);
+      setSelectedInstrument((prev: any) => prev || mockData[3]);
     } finally {
       fetchingRef.current = false;
     }
@@ -319,11 +331,13 @@ export default function TradingSimulator() {
 
           {/* Right Navigation */}
           <div className="flex items-center gap-6 text-gray-700 font-semibold text-[13px]">
-            <button className="text-purple-700 border-b-2 border-purple-700 pb-1 -mb-[9px]">My List</button>
-            <button className="hover:text-purple-700">Orders</button>
-            <button className="hover:text-purple-700">Positions</button>
-            <button className="hover:text-purple-700">Holdings</button>
-            <button className="hover:text-purple-700 flex items-center gap-1">More <ChevronDown size={14} /></button>
+            {/* Main Nav Links */}
+            <div className="flex items-center gap-6 font-semibold text-gray-500">
+              <span className={`cursor-pointer hover:text-gray-800 pb-[10px] ${activeTab === 'Overview' ? 'text-purple-700 border-b-2 border-purple-700' : ''}`} onClick={() => setActiveTab('Overview')}>My List</span>
+              <span className={`cursor-pointer hover:text-gray-800 pb-[10px] ${activeTab === 'Orders' ? 'text-purple-700 border-b-2 border-purple-700' : ''}`} onClick={() => setActiveTab('Orders')}>Orders</span>
+              <span className={`cursor-pointer hover:text-gray-800 pb-[10px] ${activeTab === 'Portfolio' ? 'text-purple-700 border-b-2 border-purple-700' : ''}`} onClick={() => setActiveTab('Portfolio')}>Positions & Holdings</span>
+              <span className="cursor-pointer hover:text-gray-800 pb-[10px] flex items-center gap-1">More <ChevronDown size={14}/></span>
+            </div>
             
             <div className="flex items-center gap-3 ml-2 border-l border-gray-200 pl-4">
               <button className="bg-[#1e1b4b] text-white px-3 py-1 rounded font-bold text-xs flex items-center gap-1 cursor-pointer">
@@ -336,10 +350,10 @@ export default function TradingSimulator() {
         </div>
 
         {/* MAIN THREE-COLUMN WORKSPACE */}
-        <div className="flex flex-1 overflow-hidden bg-[#f9fafb]">
+        <div className="flex flex-1 overflow-x-auto overflow-y-hidden bg-[#f9fafb]">
           
           {/* LEFT SIDEBAR: WATCHLIST */}
-          <div className="w-[300px] flex-shrink-0 bg-white border-r border-gray-200 flex flex-col z-10 shadow-[1px_0_2px_rgba(0,0,0,0.02)]">
+          <div className="w-[260px] lg:w-[300px] flex-shrink-0 bg-white border-r border-gray-200 flex flex-col z-10 shadow-[1px_0_2px_rgba(0,0,0,0.02)]">
             <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200">
               <div className="flex items-center gap-2">
                 <button className="text-gray-400 hover:text-gray-700">&lt;</button>
@@ -413,7 +427,7 @@ export default function TradingSimulator() {
           </div>
 
           {/* MAIN GRAPH AREA */}
-          <div className="flex-1 flex flex-col bg-white border-r border-gray-200">
+          <div className="flex-1 min-w-[400px] flex flex-col bg-white border-r border-gray-200">
             {/* Dark Banner */}
             <div className="bg-gradient-to-r from-[#2e1065] via-[#3b0764] to-[#1e1b4b] text-white px-4 py-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -457,34 +471,6 @@ export default function TradingSimulator() {
 
             {/* Chart Container */}
             <div className="flex-1 relative bg-white">
-               {/* Floating Buy/Sell buttons matching image (above chart) */}
-              <div className="absolute top-4 left-4 z-10 flex flex-col gap-1">
-                 <div className="flex flex-col bg-white/90 backdrop-blur rounded border border-gray-200 shadow-sm p-1.5 px-2">
-                    <span className="font-bold text-gray-800 text-xs">{selectedInstrument?.symbol.split('/')[0]} LIMITED • 1 • NSE</span>
-                    <span className="text-[10px] text-gray-500 font-medium">
-                      O{(selectedInstrument?.price * 0.99).toFixed(2)} H{(selectedInstrument?.price * 1.01).toFixed(2)} L{(selectedInstrument?.price * 0.98).toFixed(2)} C{selectedInstrument?.price.toFixed(2)} Vol 6.831K
-                    </span>
-                 </div>
-                 <div className="flex gap-2 mt-1 items-center">
-                    <Button 
-                      onClick={() => { setActiveTab("Orders"); setOrderType("sell"); }}
-                      className="bg-[#ef4444] hover:bg-[#dc2626] text-white h-8 px-4 text-xs font-bold rounded flex items-center shadow-sm"
-                    >
-                      SELL {selectedInstrument?.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                    </Button>
-                    <div className="flex flex-col items-center justify-center bg-gray-50 border border-gray-200 rounded px-1 min-w-[32px] h-8">
-                      <span className="text-[8px] text-gray-500 font-bold leading-none mt-0.5">0.00</span>
-                      <span className="text-xs font-bold text-[#10b981] leading-none mb-0.5">1</span>
-                    </div>
-                    <Button 
-                      onClick={() => { setActiveTab("Orders"); setOrderType("buy"); }}
-                      className="bg-[#10b981] hover:bg-[#059669] text-white h-8 px-4 text-xs font-bold rounded flex items-center shadow-sm"
-                    >
-                      BUY {selectedInstrument?.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                    </Button>
-                 </div>
-              </div>
-
               <div ref={chartContainerRef} className="absolute inset-0" />
             </div>
 
@@ -764,6 +750,29 @@ export default function TradingSimulator() {
                           />
                         </div>
                       )}
+
+                      <div className="grid grid-cols-2 gap-3 pb-2">
+                        <div>
+                          <Label className="text-xs font-semibold text-gray-600">Stop Loss <span className="text-red-500">*</span></Label>
+                          <Input
+                            type="number"
+                            value={stopLoss}
+                            onChange={(e) => setStopLoss(e.target.value)}
+                            className="h-9 mt-1 text-sm bg-white border-gray-300 focus-visible:ring-purple-700"
+                            placeholder="Required"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs font-semibold text-gray-600">Target</Label>
+                          <Input
+                            type="number"
+                            value={takeProfit}
+                            onChange={(e) => setTakeProfit(e.target.value)}
+                            className="h-9 mt-1 text-sm bg-white border-gray-300 focus-visible:ring-purple-700"
+                            placeholder="Optional"
+                          />
+                        </div>
+                      </div>
 
                       <div className="flex justify-between items-center bg-gray-50 border border-gray-200 p-3 rounded-md text-sm font-medium text-gray-800">
                         <span>Est. Total</span>
