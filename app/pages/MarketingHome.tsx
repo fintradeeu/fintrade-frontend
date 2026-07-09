@@ -1657,8 +1657,8 @@ export default function MarketingHome() {
                     <ScrollReveal key={batch.id} delay={i * 0.1} y={20}>
                       <div className="flex flex-col justify-between h-full bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:border-[#D50032]/30 transition-all duration-300">
                         <div>
-                          <div className="flex items-start justify-between mb-4 gap-2">
-                            <h3 className="text-xl font-bold text-gray-900 leading-tight truncate flex-1" title={batch.name}>
+                          <div className="flex items-start justify-between mb-4 gap-2 min-w-0">
+                            <h3 className="text-xl font-bold text-gray-900 leading-tight truncate flex-1 min-w-0" title={batch.name}>
                               {batch.name}
                             </h3>
                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${statusColor} shrink-0`}>
