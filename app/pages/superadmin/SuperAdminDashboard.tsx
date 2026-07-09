@@ -34,6 +34,12 @@ export default function SuperAdminDashboard() {
   
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [dayWiseData, setDayWiseData] = useState({
+    newUsers: 0,
+    newStudents: 0,
+    newIBs: 0,
+    newCourses: 0,
+  });
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -88,7 +94,25 @@ export default function SuperAdminDashboard() {
       return eventDate.toDateString() === selectedDate.toDateString();
     });
     setFilteredEvents(filtered);
-  }, [selectedDate, allEvents]);
+    
+    // Day-wise stats logic
+    const isSameDate = (d1: string | Date, d2: Date) => {
+      if (!d1) return false;
+      return new Date(d1).toDateString() === d2.toDateString();
+    };
+
+    const newUsersCount = detailedData.users.filter(u => isSameDate(u.created_at, selectedDate)).length;
+    const newStudentsCount = detailedData.students.filter(u => isSameDate(u.created_at, selectedDate)).length;
+    const newIBsCount = detailedData.users.filter(u => (u.roles?.some((r: any) => r.name === 'ib') || u.role === 'ib') && isSameDate(u.created_at, selectedDate)).length;
+    const newCoursesCount = detailedData.courses.filter(c => isSameDate(c.created_at, selectedDate)).length;
+
+    setDayWiseData({
+      newUsers: newUsersCount,
+      newStudents: newStudentsCount,
+      newIBs: newIBsCount,
+      newCourses: newCoursesCount,
+    });
+  }, [selectedDate, allEvents, detailedData]);
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay(); 
@@ -345,7 +369,27 @@ export default function SuperAdminDashboard() {
               </div>
             </div>
 
-            <div className="p-4 flex-1 bg-white">
+            <div className="p-4 flex-1 bg-white border-b border-gray-100">
+              <h3 className="text-sm font-bold text-purple-500 mb-3">Day-wise Stats for {selectedDate.toLocaleDateString()}</h3>
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <div className="bg-purple-50 p-2 rounded-lg text-center">
+                  <div className="text-xl font-bold text-purple-600">{dayWiseData.newUsers}</div>
+                  <div className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">New Users</div>
+                </div>
+                <div className="bg-green-50 p-2 rounded-lg text-center">
+                  <div className="text-xl font-bold text-green-600">{dayWiseData.newStudents}</div>
+                  <div className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">New Enrolls</div>
+                </div>
+                <div className="bg-orange-50 p-2 rounded-lg text-center">
+                  <div className="text-xl font-bold text-orange-500">{dayWiseData.newIBs}</div>
+                  <div className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">New IBs</div>
+                </div>
+                <div className="bg-blue-50 p-2 rounded-lg text-center">
+                  <div className="text-xl font-bold text-blue-600">{dayWiseData.newCourses}</div>
+                  <div className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">New Courses</div>
+                </div>
+              </div>
+              
               <h3 className="text-sm font-bold text-purple-500 mb-3">Events</h3>
               <div className="space-y-4">
                 {filteredEvents.length > 0 ? filteredEvents.map((event, idx) => (

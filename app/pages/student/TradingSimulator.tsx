@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
-import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
@@ -9,28 +8,20 @@ import {
   TrendingUp,
   TrendingDown,
   IndianRupee,
-  AlertTriangle,
   Loader2,
   Bell,
   Plus,
   RefreshCcw,
-  Trash2,
-  Layers,
-  ArrowRight,
-  TrendingUp as GainIcon,
-  ChevronRight,
-  DollarSign
+  Search,
+  Settings,
+  X,
+  LineChart,
+  CandlestickChart,
+  MoreHorizontal,
+  ChevronDown,
+  Wallet,
+  UserCircle
 } from "lucide-react";
-import {
-  ComposedChart,
-  Bar,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
-} from "recharts";
 import api from "../../services/api";
 
 export default function TradingSimulator() {
@@ -53,7 +44,7 @@ export default function TradingSimulator() {
   const [placing, setPlacing] = useState(false);
   const [startingAccount, setStartingAccount] = useState(false);
   
-  const [activeTab, setActiveTab] = useState<"all" | "positions" | "orders">("all");
+  const [activeTab, setActiveTab] = useState<"Overview" | "Orders" | "Portfolio">("Overview");
 
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const fetchingRef = useRef(false);
@@ -80,17 +71,19 @@ export default function TradingSimulator() {
               "width": "100%",
               "height": "100%",
               "symbol": selectedInstrument.tv_symbol,
-              "interval": "5",
+              "interval": "1",
               "timezone": "Asia/Kolkata",
-              "theme": "dark", // Dark theme matching Upstox
+              "theme": "light", // Light theme matching Upstox
               "style": "1",
               "locale": "en",
               "enable_publishing": false,
-              "hide_top_toolbar": false,
+              "hide_top_toolbar": true, // We have our own mock toolbar
+              "hide_legend": false,
               "save_image": false,
               "container_id": containerId,
-              "backgroundColor": "#12202e",
-              "gridColor": "rgba(29, 46, 63, 0.5)"
+              "backgroundColor": "#ffffff",
+              "gridColor": "rgba(229, 231, 235, 0.5)",
+              "toolbar_bg": "#ffffff"
             });
           } catch (e) {
             console.error("TradingView widget init error", e);
@@ -203,6 +196,7 @@ export default function TradingSimulator() {
       setStopLoss("");
       setTakeProfit("");
       setLimitPrice("");
+      setActiveTab("Portfolio");
       await loadData();
     } catch (err: any) {
       alert("Order failed: " + (err.response?.data?.detail || err.message));
@@ -227,9 +221,9 @@ export default function TradingSimulator() {
   const getExchangeLabel = (symbol: string) => {
     const sym = symbol.toUpperCase();
     if (sym === "SENSEX") return "BSE";
-    if (sym === "NIFTY" || sym === "RELIANCE" || sym === "TATAMOTORS" || sym === "ICICIBANK" || sym === "WIPRO" || sym === "ITC") return "NSE";
-    if (sym === "BTC/USD") return "BINANCE";
-    return "NSE";
+    if (sym === "NIFTY" || sym === "RELIANCE" || sym === "TATAMOTORS" || sym === "ICICIBANK" || sym === "WIPRO" || sym === "ITC") return "NSE EQ";
+    if (sym === "BTC/USD") return "CRYPTO";
+    return "NSE EQ";
   };
 
   // Portfolio calculations
@@ -238,22 +232,15 @@ export default function TradingSimulator() {
   const portfolioValue = initialCapital + totalPnl;
   const pnlPercentage = initialCapital > 0 ? ((totalPnl / initialCapital) * 100).toFixed(2) : "0.00";
 
-  // Chart aggregation
-  const chartData = trades.slice(-10).map((t: any, i: number) => ({
-    trade: `#${i + 1}`,
-    price: t.entry_price,
-    pnl: t.pnl || 0,
-  }));
-
-  const sensexObj = marketData.find((i) => i.symbol === "SENSEX") || { price: 77300, change: 150, change_pct: 0.19 };
-  const niftyObj = marketData.find((i) => i.symbol === "NIFTY") || { price: 23500, change: 45, change_pct: 0.19 };
+  const sensexObj = marketData.find((i) => i.symbol === "SENSEX") || { price: 76941.99, change: 438.39, change_pct: 0.57 };
+  const niftyObj = marketData.find((i) => i.symbol === "NIFTY") || { price: 24024.75, change: 142.70, change_pct: 0.60 };
 
   if (loading || marketData.length === 0) {
     return (
       <DashboardLayout role="student">
-        <div className="flex flex-col items-center justify-center min-h-[70vh] bg-[#0b141d] rounded-3xl p-8 border border-[#1d2e3f]">
-          <Loader2 className="w-12 h-12 text-[#10b981] animate-spin mb-4" />
-          <p className="text-[#7c91a6] font-semibold">Loading Upstox Trading Environment...</p>
+        <div className="flex flex-col items-center justify-center min-h-[70vh] bg-white rounded-lg p-8 border border-gray-200 shadow-sm">
+          <Loader2 className="w-12 h-12 text-[#6d28d9] animate-spin mb-4" />
+          <p className="text-gray-600 font-medium">Loading Upstox Pro Environment...</p>
         </div>
       </DashboardLayout>
     );
@@ -262,23 +249,23 @@ export default function TradingSimulator() {
   if (!account) {
     return (
       <DashboardLayout role="student">
-        <div className="py-12 bg-[#0b141d] rounded-3xl p-8 border border-[#1d2e3f] text-center max-w-4xl mx-auto shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-[#10b981]" />
-          <div className="absolute -top-32 -left-32 w-[350px] h-[350px] bg-[#10b981]/5 rounded-full blur-[80px] pointer-events-none" />
-          <div className="absolute -bottom-32 -right-32 w-[350px] h-[350px] bg-[#f43f5e]/5 rounded-full blur-[80px] pointer-events-none" />
-
-          <IndianRupee className="mx-auto text-[#10b981] mb-6 drop-shadow-[0_0_15px_rgba(16,185,129,0.35)] animate-pulse" size={64} />
-          <h1 className="text-4xl font-black text-white mb-4 tracking-tight">Start Trading on Upstox Simulator</h1>
-          <p className="text-[#7c91a6] max-w-2xl mx-auto mb-8 text-md leading-relaxed font-medium">
-            Open your paper-trading portfolio with <strong className="text-white font-extrabold">₹5,00,000 virtual capital</strong>. Practice real-time Indian stocks and global indices risk-free in an immersive environment.
+        <div className="py-16 bg-white rounded-lg p-8 border border-gray-200 text-center max-w-4xl mx-auto shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-[#6d28d9]" />
+          
+          <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <LineChart className="text-[#6d28d9]" size={36} />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4 tracking-tight">Start Trading on Pro Simulator</h1>
+          <p className="text-gray-600 max-w-2xl mx-auto mb-8 text-md leading-relaxed">
+            Open your paper-trading portfolio with <strong className="text-gray-900 font-semibold">₹5,00,000 virtual capital</strong>. Practice real-time Indian stocks and global indices risk-free in an immersive environment mirroring real market dynamics.
           </p>
 
           <Button
             onClick={handleStartAccount}
             disabled={startingAccount}
-            className="bg-[#10b981] hover:bg-[#0e9d6d] text-[#0b141d] font-black px-10 py-6 text-md rounded-2xl shadow-xl shadow-[#10b981]/25 transition-transform active:scale-95 border-0 cursor-pointer"
+            className="bg-[#6d28d9] hover:bg-[#5b21b6] text-white font-semibold px-8 py-6 text-md rounded shadow-md transition-colors cursor-pointer"
           >
-            {startingAccount ? <><Loader2 className="mr-2 animate-spin" size={20} /> Deploying Simulator...</> : "Initialize Trading Account"}
+            {startingAccount ? <><Loader2 className="mr-2 animate-spin" size={20} /> Deploying Simulator...</> : "Activate Now"}
           </Button>
         </div>
       </DashboardLayout>
@@ -287,481 +274,593 @@ export default function TradingSimulator() {
 
   return (
     <DashboardLayout role="student">
-      {/* Interactive Immersive Dark Trading Panel */}
-      <div className="bg-[#0b141d] text-white rounded-3xl overflow-hidden border border-[#1d2e3f] shadow-2xl font-sans">
+      {/* Container matching Upstox full height/width style inside Dashboard */}
+      <div className="bg-white text-gray-800 rounded-lg overflow-hidden border border-gray-200 shadow-sm flex flex-col font-sans h-[calc(100vh-6rem)] relative">
         
-        {/* TOP BAR / INDEX TICKERS */}
-        <div className="bg-[#0e1b29] border-b border-[#1d2e3f] px-5 py-3.5 flex flex-wrap items-center justify-between gap-4 select-none">
-          <div className="flex items-center gap-3">
-            <span className="bg-[#10b981] text-[#0b141d] font-black text-[10px] px-2 py-0.5 rounded uppercase tracking-widest">
-              Upstox Pro
-            </span>
-            <span className="text-white font-black text-sm tracking-wider">
-              FINTRADE SIMULATOR
-            </span>
+        {/* TOP NAVBAR */}
+        <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between text-sm shadow-[0_1px_2px_rgba(0,0,0,0.02)] z-10">
+          <div className="flex items-center gap-8">
+            {/* Logo / Brand */}
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-[#4f1699] rounded text-white font-bold flex items-center justify-center text-[10px]">
+                Up
+              </div>
+            </div>
+
+            {/* Indices */}
+            <div className="flex items-center gap-6">
+              <div className="flex flex-col">
+                <span className="text-gray-600 text-xs font-semibold uppercase">NIFTY</span>
+                <div className="flex items-center gap-1.5 font-medium text-xs">
+                  <span className="text-gray-800">{niftyObj.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                  <span className={`${niftyObj.change >= 0 ? "text-green-600" : "text-red-500"}`}>
+                    {niftyObj.change >= 0 ? "+" : ""}{Math.abs(niftyObj.change).toFixed(2)} ({niftyObj.change >= 0 ? "+" : ""}{niftyObj.change_pct}%)
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-gray-600 text-xs font-semibold uppercase flex items-center gap-1">SENSEX <span className="bg-orange-100 text-orange-600 text-[9px] px-1 rounded font-bold">EXPIRY</span></span>
+                <div className="flex items-center gap-1.5 font-medium text-xs">
+                  <span className="text-gray-800">{sensexObj.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                  <span className={`${sensexObj.change >= 0 ? "text-green-600" : "text-red-500"}`}>
+                    {sensexObj.change >= 0 ? "+" : ""}{Math.abs(sensexObj.change).toFixed(2)} ({sensexObj.change >= 0 ? "+" : ""}{sensexObj.change_pct}%)
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-gray-600 text-xs font-semibold">India VIX</span>
+                <div className="flex items-center gap-1.5 font-medium text-xs">
+                  <span className="text-gray-800">13.28</span>
+                  <span className="text-red-500">-1.40 (-9.54%)</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Indices Panel */}
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2 border-r border-[#1d2e3f] pr-6">
-              <span className="text-[#7c91a6] text-xs font-bold uppercase tracking-wider">SENSEX</span>
-              <span className="text-white font-extrabold text-sm">
-                {sensexObj.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-              </span>
-              <span className={`text-xs font-bold flex items-center gap-0.5 ${sensexObj.change >= 0 ? "text-[#10b981]" : "text-[#f43f5e]"}`}>
-                {sensexObj.change >= 0 ? "+" : ""}
-                {sensexObj.change_pct}%
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 border-r border-[#1d2e3f] pr-6">
-              <span className="text-[#7c91a6] text-xs font-bold uppercase tracking-wider">NIFTY</span>
-              <span className="text-white font-extrabold text-sm">
-                {niftyObj.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-              </span>
-              <span className={`text-xs font-bold flex items-center gap-0.5 ${niftyObj.change >= 0 ? "text-[#10b981]" : "text-[#f43f5e]"}`}>
-                {niftyObj.change >= 0 ? "+" : ""}
-                {niftyObj.change_pct}%
-              </span>
-            </div>
-          </div>
-
-          {/* Account Portfolio Stats */}
-          <div className="flex items-center gap-6 text-right">
-            <div>
-              <p className="text-[10px] text-[#7c91a6] font-bold uppercase tracking-wider">Net Wallet Balance</p>
-              <p className="text-sm font-extrabold text-[#10b981] flex items-center justify-end gap-0.5">
-                ₹{Math.round(portfolioValue).toLocaleString("en-IN")}
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] text-[#7c91a6] font-bold uppercase tracking-wider">Today's P&L</p>
-              <p className={`text-sm font-extrabold flex items-center justify-end gap-0.5 ${totalPnl >= 0 ? "text-[#10b981]" : "text-[#f43f5e]"}`}>
-                {totalPnl >= 0 ? "+" : "-"}₹{Math.abs(Math.round(totalPnl)).toLocaleString("en-IN")}
-              </p>
-            </div>
-            <div className="flex items-center gap-1.5 pl-2">
-              <button 
-                onClick={loadData}
-                className="w-8 h-8 rounded-full bg-[#12202e] hover:bg-[#1d2e3f] border border-[#1d2e3f] flex items-center justify-center text-[#7c91a6] hover:text-white transition-colors cursor-pointer"
-                title="Refresh Simulator"
-              >
-                <RefreshCcw size={14} className={loading ? "animate-spin" : ""} />
+          {/* Right Navigation */}
+          <div className="flex items-center gap-6 text-gray-700 font-semibold text-[13px]">
+            <button className="text-purple-700 border-b-2 border-purple-700 pb-1 -mb-[9px]">My List</button>
+            <button className="hover:text-purple-700">Orders</button>
+            <button className="hover:text-purple-700">Positions</button>
+            <button className="hover:text-purple-700">Holdings</button>
+            <button className="hover:text-purple-700 flex items-center gap-1">More <ChevronDown size={14} /></button>
+            
+            <div className="flex items-center gap-3 ml-2 border-l border-gray-200 pl-4">
+              <button className="bg-[#1e1b4b] text-white px-3 py-1 rounded font-bold text-xs flex items-center gap-1 cursor-pointer">
+                <Plus size={12} /> Plus
               </button>
-              <button className="w-8 h-8 rounded-full bg-[#12202e] hover:bg-[#1d2e3f] border border-[#1d2e3f] flex items-center justify-center text-[#7c91a6] hover:text-white transition-colors cursor-pointer">
-                <Bell size={14} />
-              </button>
+              <button className="text-gray-600 hover:text-gray-900 cursor-pointer"><Wallet size={18} /></button>
+              <button className="w-7 h-7 bg-purple-700 text-white rounded-full flex items-center justify-center font-bold text-xs cursor-pointer">SP</button>
             </div>
           </div>
         </div>
 
-        {/* WORKSPACE CONTENT LAYOUT */}
-        <div className="grid lg:grid-cols-4 min-h-[580px]">
+        {/* MAIN THREE-COLUMN WORKSPACE */}
+        <div className="flex flex-1 overflow-hidden bg-[#f9fafb]">
           
-          {/* LEFT SIDEBAR: WATCHLIST / HOT STOCKS */}
-          <div className="lg:col-span-1 bg-[#0c1622] border-r border-[#1d2e3f] flex flex-col">
-            <div className="p-4 border-b border-[#1d2e3f] flex items-center justify-between">
-              <span className="font-extrabold text-xs text-[#7c91a6] uppercase tracking-wider flex items-center gap-1.5">
-                <Layers size={14} className="text-[#10b981]" /> Hot Stocks Ticker
-              </span>
-              <span className="text-[10px] bg-[#1d2e3f] px-2 py-0.5 rounded text-white/70 font-mono">
-                {marketData.length} symbols
-              </span>
+          {/* LEFT SIDEBAR: WATCHLIST */}
+          <div className="w-[300px] flex-shrink-0 bg-white border-r border-gray-200 flex flex-col z-10 shadow-[1px_0_2px_rgba(0,0,0,0.02)]">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <button className="text-gray-400 hover:text-gray-700">&lt;</button>
+                <span className="font-bold text-sm">1</span>
+                <button className="text-gray-400 hover:text-gray-700">&gt;</button>
+                <button className="text-gray-600 hover:text-gray-900 ml-1"><Plus size={16} /></button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="bg-gray-800 text-white text-[11px] px-2 py-0.5 rounded font-medium cursor-pointer">Manage scrips</span>
+                <MoreHorizontal size={16} className="text-gray-600 cursor-pointer" />
+              </div>
+            </div>
+            
+            <div className="px-3 py-2 border-b border-gray-200 flex justify-between items-center bg-gray-50/50">
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold text-gray-800 flex items-center gap-1 cursor-pointer">top 20 by market c... <ChevronDown size={12} /></span>
+                <span className="text-[10px] text-gray-500">by You</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500 font-medium">{marketData.length} / 100</span>
+                <button className="text-gray-500 hover:text-gray-800"><MoreHorizontal size={14} /></button>
+                <button className="text-gray-500 hover:text-gray-800"><Search size={14} /></button>
+                <button className="w-6 h-6 bg-purple-700 text-white rounded flex items-center justify-center cursor-pointer">
+                  <Plus size={14} />
+                </button>
+              </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto max-h-[550px] divide-y divide-[#1d2e3f]/40">
+            <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
               {marketData.map((item) => {
                 const isSelected = selectedInstrument?.symbol === item.symbol;
                 const isBullish = item.change >= 0;
                 
                 return (
-                  <button
+                  <div
                     key={item.symbol}
                     onClick={() => setSelectedInstrument(item)}
-                    className={`w-full p-4 text-left transition-all flex items-center justify-between border-l-3 ${
+                    className={`px-4 py-2.5 flex items-center justify-between cursor-pointer group ${
                       isSelected
-                        ? "bg-[#12202e] border-l-[#10b981]"
-                        : "hover:bg-[#12202e]/40 border-l-transparent"
+                        ? "bg-[#faf5ff] border-l-4 border-purple-700"
+                        : "hover:bg-gray-50 border-l-4 border-transparent"
                     }`}
                   >
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[9px] font-black bg-[#1d2e3f] text-[#7c91a6] px-1 rounded">
-                          {getExchangeLabel(item.symbol)}
-                        </span>
-                        <span className="font-extrabold text-sm tracking-tight text-white">
-                          {item.symbol}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-[#7c91a6] font-medium mt-0.5 block uppercase">
-                        {item.symbol === "BTC/USD" ? "Bitcoin / USDT" : `${item.symbol} Equity`}
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-sm text-gray-800">
+                        {item.symbol.split('/')[0]}
+                      </span>
+                      <span className="text-[10px] text-gray-500 font-medium">
+                        {getExchangeLabel(item.symbol)}
                       </span>
                     </div>
 
-                    <div className="text-right">
-                      <p className={`text-sm font-extrabold ${isBullish ? "text-[#10b981]" : "text-[#f43f5e]"}`}>
-                        {item.symbol === "BTC/USD" ? "$" : "₹"}
-                        {item.price.toLocaleString(item.symbol === "BTC/USD" ? "en-US" : "en-IN")}
-                      </p>
-                      <p className={`text-[10px] font-bold flex items-center justify-end gap-0.5 mt-0.5 ${isBullish ? "text-[#10b981]" : "text-[#f43f5e]"}`}>
-                        {isBullish ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
-                        {isBullish ? "+" : ""}
-                        {Math.abs(item.change).toFixed(2)}%
-                      </p>
+                    <div className="flex flex-col items-end">
+                      <span className={`text-sm font-semibold ${isBullish ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                        {item.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      </span>
+                      <span className={`text-[11px] font-medium ${isBullish ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                        {isBullish ? "+" : ""}{Math.abs(item.change).toFixed(2)} ({isBullish ? "+" : ""}{item.change_pct}%)
+                      </span>
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
+            
+            {/* Footer Ad */}
+            <div className="bg-black text-white px-4 py-2 text-[11px] font-medium flex justify-between items-center cursor-pointer">
+              <span>Track 200 symbols with <span className="italic font-serif">Plus</span> &gt;</span>
+              <X size={12} className="text-gray-400 hover:text-white" />
+            </div>
           </div>
 
-          {/* MAIN GRAPH & TRADING ROOM PANEL */}
-          <div className="lg:col-span-3 flex flex-col bg-[#0b141d]">
-            
-            {/* Split panel: Top for Chart, Right for Order, Bottom for Books */}
-            <div className="grid md:grid-cols-3 border-b border-[#1d2e3f]">
-              
-              {/* INTERACTIVE CHART: 2/3 Width */}
-              <div className="md:col-span-2 border-r border-[#1d2e3f] p-4 flex flex-col justify-between">
-                <div className="flex items-center justify-between pb-3">
-                  <div>
-                    <h3 className="font-extrabold text-white text-md flex items-center gap-1.5">
-                      {selectedInstrument?.symbol} Chart
-                    </h3>
-                    <p className="text-xs text-[#7c91a6] mt-0.5">
-                      Real-time interactive candlestick data streaming directly.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="bg-[#10b981]/15 text-[#10b981] text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider animate-pulse">
-                      Live
-                    </span>
-                  </div>
-                </div>
+          {/* MAIN GRAPH AREA */}
+          <div className="flex-1 flex flex-col bg-white border-r border-gray-200">
+            {/* Dark Banner */}
+            <div className="bg-gradient-to-r from-[#2e1065] via-[#3b0764] to-[#1e1b4b] text-white px-4 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <LineChart size={16} className="text-purple-300" />
+                <span className="text-sm font-semibold">Access high frequency market data with <span className="italic font-serif">Plus</span></span>
+              </div>
+              <button className="bg-purple-300/20 hover:bg-purple-300/30 text-white text-xs font-semibold px-4 py-1 rounded-full transition-colors cursor-pointer">
+                Activate Now
+              </button>
+              <button className="text-gray-400 hover:text-white ml-2 cursor-pointer"><X size={16} /></button>
+            </div>
 
-                <div 
-                  ref={chartContainerRef}
-                  style={{ height: "340px", width: "100%" }}
-                  className="rounded-xl overflow-hidden border border-[#1d2e3f] bg-[#12202e]"
-                />
+            {/* Chart Toolbar */}
+            <div className="border-b border-gray-200 px-3 py-2 flex items-center justify-between text-gray-600 text-sm bg-white shadow-sm z-10 relative">
+              <div className="flex items-center gap-4">
+                <Search size={16} className="cursor-pointer" />
+                <span className="font-bold text-gray-800">{selectedInstrument?.symbol.split('/')[0]} {getExchangeLabel(selectedInstrument?.symbol)}</span>
+                <button className="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 cursor-pointer">
+                  <Plus size={12} />
+                </button>
+                <div className="flex items-center gap-1 border-l border-gray-200 pl-3">
+                  <span className="cursor-pointer hover:text-gray-900 font-medium">1m</span>
+                  <ChevronDown size={14} className="cursor-pointer" />
+                </div>
+                <div className="flex items-center gap-2 border-l border-gray-200 pl-3">
+                  <CandlestickChart size={16} className="cursor-pointer" />
+                  <LineChart size={16} className="cursor-pointer" />
+                </div>
+                <div className="flex items-center gap-1 border-l border-gray-200 pl-3 cursor-pointer hover:text-gray-900">
+                  <span className="font-medium">Instant Order</span>
+                  <LineChart size={14} />
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1 font-semibold text-gray-700 cursor-pointer">
+                  Tradingview Platform <ChevronDown size={14} />
+                </span>
+                <Search size={16} className="cursor-pointer" />
+              </div>
+            </div>
+
+            {/* Chart Container */}
+            <div className="flex-1 relative bg-white">
+               {/* Floating Buy/Sell buttons matching image (above chart) */}
+              <div className="absolute top-4 left-4 z-10 flex flex-col gap-1">
+                 <div className="flex flex-col bg-white/90 backdrop-blur rounded border border-gray-200 shadow-sm p-1.5 px-2">
+                    <span className="font-bold text-gray-800 text-xs">{selectedInstrument?.symbol.split('/')[0]} LIMITED • 1 • NSE</span>
+                    <span className="text-[10px] text-gray-500 font-medium">
+                      O{(selectedInstrument?.price * 0.99).toFixed(2)} H{(selectedInstrument?.price * 1.01).toFixed(2)} L{(selectedInstrument?.price * 0.98).toFixed(2)} C{selectedInstrument?.price.toFixed(2)} Vol 6.831K
+                    </span>
+                 </div>
+                 <div className="flex gap-2 mt-1 items-center">
+                    <Button 
+                      onClick={() => { setActiveTab("Orders"); setOrderType("sell"); }}
+                      className="bg-[#ef4444] hover:bg-[#dc2626] text-white h-8 px-4 text-xs font-bold rounded flex items-center shadow-sm"
+                    >
+                      SELL {selectedInstrument?.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    </Button>
+                    <div className="flex flex-col items-center justify-center bg-gray-50 border border-gray-200 rounded px-1 min-w-[32px] h-8">
+                      <span className="text-[8px] text-gray-500 font-bold leading-none mt-0.5">0.00</span>
+                      <span className="text-xs font-bold text-[#10b981] leading-none mb-0.5">1</span>
+                    </div>
+                    <Button 
+                      onClick={() => { setActiveTab("Orders"); setOrderType("buy"); }}
+                      className="bg-[#10b981] hover:bg-[#059669] text-white h-8 px-4 text-xs font-bold rounded flex items-center shadow-sm"
+                    >
+                      BUY {selectedInstrument?.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    </Button>
+                 </div>
               </div>
 
-              {/* ORDER BOOK ENTRY: 1/3 Width */}
-              <div className="md:col-span-1 p-5 bg-[#0e1b29]/40 flex flex-col justify-between">
+              <div ref={chartContainerRef} className="absolute inset-0" />
+            </div>
+
+            {/* Bottom Toolbar & Status Bar */}
+            <div className="border-t border-gray-200 bg-white shadow-[0_-1px_2px_rgba(0,0,0,0.02)] z-10">
+              <div className="px-4 py-1 flex items-center justify-between text-xs text-gray-600 font-semibold border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <span className="hover:text-gray-900 cursor-pointer">5Y</span>
+                  <span className="hover:text-gray-900 cursor-pointer">1Y</span>
+                  <span className="hover:text-gray-900 cursor-pointer">6M</span>
+                  <span className="hover:text-gray-900 cursor-pointer">3M</span>
+                  <span className="hover:text-gray-900 cursor-pointer">1M</span>
+                  <span className="hover:text-gray-900 cursor-pointer">5D</span>
+                  <span className="text-purple-700 cursor-pointer">1D</span>
+                  <LineChart size={14} className="ml-2 cursor-pointer" />
+                </div>
+                <div className="flex items-center gap-3 font-medium">
+                  <span>Powered by <span className="font-bold italic">TBT</span> 12:45:53 (UTC+5:30)</span>
+                  <span className="cursor-pointer">%</span>
+                  <span className="cursor-pointer">log</span>
+                  <span className="cursor-pointer">auto</span>
+                </div>
+              </div>
+              <div className="px-4 py-1.5 flex items-center gap-8 text-[11px] text-gray-500 font-medium">
+                <span className="cursor-pointer font-semibold text-gray-700">Orders</span>
+                <div className="flex flex-col">
+                  <span>Positions Day P&L</span>
+                  <span className={totalPnl >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}>{totalPnl.toFixed(2)}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span>Holdings Day P&L</span>
+                  <span className="text-[#10b981]">0.00</span>
+                </div>
+                <div className="flex-1" />
+                <div className="flex items-center gap-3 text-gray-700">
+                  <RefreshCcw size={14} className={`cursor-pointer hover:text-gray-900 ${loading ? "animate-spin" : ""}`} onClick={loadData} />
+                  <Settings size={14} className="cursor-pointer hover:text-gray-900" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT SIDEBAR: SCRIP INFO / ORDER PANEL */}
+          <div className="w-[350px] flex-shrink-0 bg-white flex flex-col z-10 shadow-[-1px_0_2px_rgba(0,0,0,0.02)]">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
+              <span className="font-semibold text-sm text-gray-800">Scrip Info</span>
+              <div className="flex items-center gap-2 text-gray-500">
+                <X size={16} className="cursor-pointer hover:text-gray-800" />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {/* Selected Scrip Title Area */}
+              <div className="px-4 py-4 flex justify-between items-start">
                 <div>
-                  <h3 className="font-black text-white text-sm uppercase tracking-wider mb-4 border-b border-[#1d2e3f] pb-2">
-                    Place Transaction
-                  </h3>
-
-                  {/* BUY / SELL Switch */}
-                  <div className="grid grid-cols-2 gap-2 mb-4 bg-[#12202e] p-1 rounded-xl border border-[#1d2e3f]">
-                    <button
-                      onClick={() => setOrderType("buy")}
-                      className={`py-2 text-xs font-black rounded-lg transition-all border-0 cursor-pointer ${
-                        orderType === "buy"
-                          ? "bg-[#10b981] text-[#0b141d]"
-                          : "bg-transparent text-[#7c91a6] hover:text-white"
-                      }`}
-                    >
-                      BUY
-                    </button>
-                    <button
-                      onClick={() => setOrderType("sell")}
-                      className={`py-2 text-xs font-black rounded-lg transition-all border-0 cursor-pointer ${
-                        orderType === "sell"
-                          ? "bg-[#f43f5e] text-white"
-                          : "bg-transparent text-[#7c91a6] hover:text-white"
-                      }`}
-                    >
-                      SELL
-                    </button>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-gray-900 leading-none">{selectedInstrument?.symbol.split('/')[0]}</h2>
+                    <span className="w-5 h-5 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center font-bold text-[10px]">T</span>
                   </div>
-
-                  {/* Order Type styling Limit/Market */}
-                  <div className="grid grid-cols-2 gap-2 mb-4 bg-[#12202e] p-1 rounded-xl border border-[#1d2e3f]">
-                    <button
-                      onClick={() => setOrderStyle("market")}
-                      className={`py-1.5 text-[10px] font-extrabold rounded-lg transition-all border-0 cursor-pointer ${
-                        orderStyle === "market"
-                          ? "bg-[#1d2e3f] text-white"
-                          : "bg-transparent text-[#7c91a6] hover:text-white"
-                      }`}
-                    >
-                      MARKET
-                    </button>
-                    <button
-                      onClick={() => setOrderStyle("limit")}
-                      className={`py-1.5 text-[10px] font-extrabold rounded-lg transition-all border-0 cursor-pointer ${
-                        orderStyle === "limit"
-                          ? "bg-[#1d2e3f] text-white"
-                          : "bg-transparent text-[#7c91a6] hover:text-white"
-                      }`}
-                    >
-                      LIMIT
-                    </button>
+                  <span className="text-xs text-gray-500 font-medium">{getExchangeLabel(selectedInstrument?.symbol)}</span>
+                </div>
+                <div className="text-right">
+                  <div className={`text-lg font-bold leading-none ${selectedInstrument?.change >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                    {selectedInstrument?.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                   </div>
-
-                  {/* Quantity / Limit inputs */}
-                  <div className="space-y-3.5">
-                    <div>
-                      <Label htmlFor="simQuantity" className="text-[#7c91a6] text-xs font-bold">Quantity (Shares)</Label>
-                      <Input
-                        id="simQuantity"
-                        type="number"
-                        value={quantity}
-                        onChange={(e) => setQuantity(e.target.value)}
-                        className="bg-[#12202e] border-[#1d2e3f] focus:border-[#10b981] text-white rounded-lg h-9 text-xs mt-1.5"
-                      />
-                    </div>
-
-                    {orderStyle === "limit" && (
-                      <div>
-                        <Label htmlFor="simLimit" className="text-[#7c91a6] text-xs font-bold">Limit Price</Label>
-                        <Input
-                          id="simLimit"
-                          type="number"
-                          value={limitPrice}
-                          onChange={(e) => setLimitPrice(e.target.value)}
-                          placeholder={`Ticker: ${selectedInstrument?.price}`}
-                          className="bg-[#12202e] border-[#1d2e3f] focus:border-[#10b981] text-white rounded-lg h-9 text-xs mt-1.5"
-                        />
-                      </div>
-                    )}
-
-                    <div>
-                      <Label htmlFor="simSL" className="text-[#7c91a6] text-xs font-bold">Stop Loss (Price)</Label>
-                      <Input
-                        id="simSL"
-                        type="number"
-                        value={stopLoss}
-                        onChange={(e) => setStopLoss(e.target.value)}
-                        placeholder="Mandatory rule trigger"
-                        className="bg-[#12202e] border-[#1d2e3f] focus:border-[#10b981] text-white rounded-lg h-9 text-xs mt-1.5"
-                      />
-                    </div>
+                  <div className={`text-xs font-medium ${selectedInstrument?.change >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                    {selectedInstrument?.change >= 0 ? "+" : ""}{Math.abs(selectedInstrument?.change).toFixed(2)} ({selectedInstrument?.change >= 0 ? "+" : ""}{selectedInstrument?.change_pct}%)
                   </div>
                 </div>
+              </div>
 
-                <div className="mt-5 space-y-3">
-                  {/* Estimated cost box */}
-                  <div className="bg-[#12202e]/60 border border-[#1d2e3f]/60 rounded-xl p-3 text-xs">
-                    <div className="flex justify-between text-[#7c91a6]">
-                      <span>Est. Value:</span>
-                      <span className="font-extrabold text-white">
-                        {selectedInstrument?.symbol === "BTC/USD" ? "$" : "₹"}
-                        {(selectedInstrument?.price * parseFloat(quantity || "0")).toLocaleString(selectedInstrument?.symbol === "BTC/USD" ? "en-US" : "en-IN")}
-                      </span>
-                    </div>
-                  </div>
+              {/* Links */}
+              <div className="px-4 pb-4 flex items-center gap-4 text-xs font-semibold text-gray-600">
+                <span className="cursor-pointer hover:text-purple-700 flex items-center gap-1"><LineChart size={14}/> Chart</span>
+                <span className="cursor-pointer hover:text-purple-700 flex items-center gap-1"><Bell size={14}/> Price Alert</span>
+                <span className="cursor-pointer hover:text-purple-700 flex items-center gap-1 border-l border-gray-300 pl-4"><CandlestickChart size={14}/> TradingView</span>
+              </div>
 
-                  <Button
-                    onClick={handlePlaceOrder}
-                    disabled={placing}
-                    className={`w-full font-black text-xs py-3 h-auto rounded-xl border-0 cursor-pointer shadow-lg transition-transform active:scale-95 ${
-                      orderType === "buy"
-                        ? "bg-[#10b981] hover:bg-[#0e9d6d] text-[#0b141d] shadow-[#10b981]/15"
-                        : "bg-[#f43f5e] hover:bg-[#e12d4c] text-white shadow-[#f43f5e]/15"
+              {/* BUY / SELL Buttons */}
+              <div className="px-4 pb-4 flex gap-2">
+                <Button 
+                  onClick={() => { setActiveTab("Orders"); setOrderType("buy"); }}
+                  className="flex-1 bg-[#10b981] hover:bg-[#059669] text-white font-bold h-10 shadow-sm"
+                >
+                  Buy
+                </Button>
+                <Button 
+                  onClick={() => { setActiveTab("Orders"); setOrderType("sell"); }}
+                  className="flex-1 bg-[#ef4444] hover:bg-[#dc2626] text-white font-bold h-10 shadow-sm"
+                >
+                  Sell
+                </Button>
+              </div>
+
+              {/* TABS */}
+              <div className="flex border-b border-gray-200 px-2">
+                {["Overview", "Orders", "Portfolio"].map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab as any)}
+                    className={`flex-1 py-2 text-sm font-semibold transition-colors ${
+                      activeTab === tab
+                        ? "text-gray-800 border-b-2 border-purple-700"
+                        : "text-gray-500 hover:text-gray-800"
                     }`}
                   >
-                    {placing ? (
-                      <><Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> Executing...</>
-                    ) : (
-                      `${orderType === "buy" ? "BUY" : "SELL"} ${selectedInstrument?.symbol}`
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* TAB SELECTOR FOR ACCOUNT BOOKS */}
-            <div className="bg-[#0e1b29]/60 px-5 py-2.5 border-b border-[#1d2e3f] flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setActiveTab("all")}
-                  className={`text-xs font-black px-3 py-1.5 rounded-lg border-0 cursor-pointer transition-colors ${
-                    activeTab === "all" ? "bg-[#1d2e3f] text-white" : "text-[#7c91a6] hover:text-white"
-                  }`}
-                >
-                  All Activity
-                </button>
-                <button
-                  onClick={() => setActiveTab("positions")}
-                  className={`text-xs font-black px-3 py-1.5 rounded-lg border-0 cursor-pointer transition-colors ${
-                    activeTab === "positions" ? "bg-[#1d2e3f] text-white" : "text-[#7c91a6] hover:text-white"
-                  }`}
-                >
-                  Position Book ({positions.length})
-                </button>
-                <button
-                  onClick={() => setActiveTab("orders")}
-                  className={`text-xs font-black px-3 py-1.5 rounded-lg border-0 cursor-pointer transition-colors ${
-                    activeTab === "orders" ? "bg-[#1d2e3f] text-white" : "text-[#7c91a6] hover:text-white"
-                  }`}
-                >
-                  Order Book ({trades.length})
-                </button>
+                    {tab}
+                  </button>
+                ))}
               </div>
 
-              <div className="text-[11px] text-[#7c91a6] font-bold">
-                Win Rate: <strong className="text-[#10b981] font-extrabold">{performance ? Math.round(performance.win_rate) : 0}%</strong>
-              </div>
-            </div>
+              {/* TAB CONTENT */}
+              <div className="p-4 bg-gray-50/50 min-h-[300px]">
+                {activeTab === "Overview" && (
+                  <div className="space-y-4 text-sm">
+                    {/* Market Stats */}
+                    <div>
+                      <h3 className="font-bold text-gray-800 mb-3 text-xs">Market Stats</h3>
+                      <div className="grid grid-cols-2 gap-y-3 gap-x-8 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Open</span>
+                          <span className="font-medium text-gray-800">{(selectedInstrument?.price * 0.995).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Prev. Close</span>
+                          <span className="font-medium text-gray-800">{(selectedInstrument?.price - selectedInstrument?.change).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Low</span>
+                          <span className="font-medium text-gray-800">{(selectedInstrument?.price * 0.98).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">High</span>
+                          <span className="font-medium text-gray-800">{(selectedInstrument?.price * 1.01).toFixed(2)}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4 text-xs">
+                        <div className="flex justify-between text-gray-500 mb-1">
+                          <span>Circuit (Lower-Upper)</span>
+                        </div>
+                        <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden relative">
+                           <div className="absolute top-0 left-[20%] right-[20%] h-full bg-orange-400"></div>
+                           <div className="absolute top-0 left-[40%] w-[2px] h-full bg-gray-800"></div>
+                        </div>
+                        <div className="flex justify-between text-gray-800 font-medium mt-1">
+                          <span>{(selectedInstrument?.price * 0.9).toFixed(2)}</span>
+                          <span>{(selectedInstrument?.price * 1.1).toFixed(2)}</span>
+                        </div>
+                      </div>
 
-            {/* LOWER VIEW LISTS */}
-            <div className="p-4 flex-grow overflow-y-auto max-h-[220px] bg-[#0c1622]/40">
-              
-              {activeTab === "positions" && (
-                <div className="space-y-2">
-                  {positions.length === 0 ? (
-                    <div className="text-center py-8 text-xs text-[#7c91a6] font-bold">No open positions. Use the order box to buy/sell shares.</div>
-                  ) : (
-                    positions.map((pos) => {
-                      const isProfit = pos.unrealized_pnl >= 0;
-                      return (
-                        <div key={pos.id} className="flex items-center justify-between p-3.5 bg-[#12202e] border border-[#1d2e3f] rounded-xl">
-                          <div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[9px] bg-[#1d2e3f] text-[#7c91a6] px-1 rounded font-black">NSE</span>
-                              <span className="font-extrabold text-sm">{pos.symbol}</span>
-                            </div>
-                            <span className="text-[10px] text-[#7c91a6] mt-0.5 block">
-                              NET QTY: <strong className="text-white">{pos.quantity}</strong> • Entry @ ₹{pos.entry_price.toLocaleString("en-IN")}
-                            </span>
+                      <div className="mt-3 text-xs">
+                        <div className="flex justify-between text-gray-500 mb-1">
+                          <span>52-week (Low-High)</span>
+                        </div>
+                        <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden relative">
+                           <div className="absolute top-0 left-[10%] right-[30%] h-full bg-orange-400"></div>
+                           <div className="absolute top-0 left-[80%] w-[2px] h-full bg-gray-800"></div>
+                        </div>
+                        <div className="flex justify-between text-gray-800 font-medium mt-1">
+                          <span>{(selectedInstrument?.price * 0.6).toFixed(2)}</span>
+                          <span>{(selectedInstrument?.price * 1.2).toFixed(2)}</span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-y-3 gap-x-8 text-xs mt-4">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Volume</span>
+                          <span className="font-medium text-gray-800">20,64,375</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Avg. traded price</span>
+                          <span className="font-medium text-gray-800">{(selectedInstrument?.price * 0.99).toFixed(2)}</span>
+                        </div>
+                      </div>
+                      <div className="text-center mt-3">
+                        <button className="text-purple-700 font-semibold text-xs hover:underline">Show more</button>
+                      </div>
+                    </div>
+
+                    <hr className="border-gray-200" />
+
+                    {/* Market Depth */}
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-bold text-gray-800 text-xs">Market Depth</h3>
+                        <MoreHorizontal size={16} className="text-gray-400 cursor-pointer" />
+                      </div>
+                      <div className="flex text-[10px] font-bold text-gray-500 mb-2">
+                        <div className="flex-1">Quantity</div>
+                        <div className="w-16 text-right text-[#10b981]">Bid Price</div>
+                        <div className="w-16 text-left pl-2 text-[#ef4444]">Ask Price</div>
+                        <div className="flex-1 text-right">Quantity</div>
+                      </div>
+                      
+                      {/* Depth Rows - Mock data */}
+                      {[
+                        { bq: 93, bp: 0.05, ap: 0.05, aq: 42, b_width: '40%', a_width: '20%' },
+                        { bq: 66, bp: 0.15, ap: 0.15, aq: 158, b_width: '30%', a_width: '60%' },
+                        { bq: 87, bp: 0.25, ap: 0.25, aq: 133, b_width: '35%', a_width: '50%' },
+                        { bq: 113, bp: 0.35, ap: 0.35, aq: 178, b_width: '50%', a_width: '70%' },
+                        { bq: 183, bp: 0.45, ap: 0.45, aq: 190, b_width: '80%', a_width: '85%' },
+                      ].map((row, i) => {
+                        const base = selectedInstrument?.price || 1000;
+                        return (
+                          <div key={i} className="flex text-xs font-medium relative py-1 hover:bg-gray-100">
+                             {/* Background bars */}
+                             <div className="absolute inset-0 flex">
+                                <div className="flex-1 flex justify-end">
+                                  <div className="bg-[#10b981]/15 h-full" style={{width: row.b_width}}></div>
+                                </div>
+                                <div className="flex-1 flex justify-start">
+                                  <div className="bg-[#ef4444]/15 h-full" style={{width: row.a_width}}></div>
+                                </div>
+                             </div>
+                             {/* Text */}
+                             <div className="flex-1 z-10 text-gray-600">{row.bq}</div>
+                             <div className="w-16 text-right z-10 text-gray-800">{(base - row.bp).toFixed(2)}</div>
+                             <div className="w-16 text-left pl-2 z-10 text-gray-800">{(base + row.ap).toFixed(2)}</div>
+                             <div className="flex-1 text-right z-10 text-gray-600">{row.aq}</div>
                           </div>
+                        )
+                      })}
+                      <div className="text-center mt-3">
+                        <button className="text-purple-700 font-semibold text-xs hover:underline">Show 20 Depth</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-                          <div className="flex items-center gap-4">
+                {activeTab === "Orders" && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 mb-4 bg-gray-100 p-1 rounded-md">
+                      <button
+                        onClick={() => setOrderStyle("market")}
+                        className={`flex-1 py-1.5 text-xs font-semibold rounded shadow-sm transition-colors ${
+                          orderStyle === "market"
+                            ? "bg-white text-gray-800"
+                            : "text-gray-500 hover:text-gray-800"
+                        }`}
+                      >
+                        Market
+                      </button>
+                      <button
+                        onClick={() => setOrderStyle("limit")}
+                        className={`flex-1 py-1.5 text-xs font-semibold rounded shadow-sm transition-colors ${
+                          orderStyle === "limit"
+                            ? "bg-white text-gray-800"
+                            : "text-gray-500 hover:text-gray-800"
+                        }`}
+                      >
+                        Limit
+                      </button>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-xs font-semibold text-gray-600">Quantity</Label>
+                        <Input
+                          type="number"
+                          value={quantity}
+                          onChange={(e) => setQuantity(e.target.value)}
+                          className="h-9 mt-1 text-sm bg-white border-gray-300 focus-visible:ring-purple-700"
+                        />
+                      </div>
+
+                      {orderStyle === "limit" && (
+                        <div>
+                          <Label className="text-xs font-semibold text-gray-600">Limit Price</Label>
+                          <Input
+                            type="number"
+                            value={limitPrice}
+                            onChange={(e) => setLimitPrice(e.target.value)}
+                            placeholder={selectedInstrument?.price?.toString()}
+                            className="h-9 mt-1 text-sm bg-white border-gray-300 focus-visible:ring-purple-700"
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-center bg-gray-50 border border-gray-200 p-3 rounded-md text-sm font-medium text-gray-800">
+                        <span>Est. Total</span>
+                        <span className={orderType === "buy" ? "text-[#10b981]" : "text-[#ef4444]"}>
+                          ₹{(selectedInstrument?.price * parseFloat(quantity || "0")).toLocaleString("en-IN")}
+                        </span>
+                      </div>
+
+                      <Button
+                        onClick={handlePlaceOrder}
+                        disabled={placing}
+                        className={`w-full font-bold h-11 text-sm shadow-md mt-4 ${
+                          orderType === "buy"
+                            ? "bg-[#10b981] hover:bg-[#059669] text-white"
+                            : "bg-[#ef4444] hover:bg-[#dc2626] text-white"
+                        }`}
+                      >
+                        {placing ? <Loader2 className="w-4 h-4 animate-spin" /> : `Place ${orderType.toUpperCase()} Order`}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "Portfolio" && (
+                  <div className="space-y-4">
+                    {/* Positions List */}
+                    <h3 className="font-bold text-gray-800 text-xs">Open Positions</h3>
+                    <div className="space-y-2">
+                      {positions.length === 0 ? (
+                        <p className="text-xs text-gray-500 italic text-center py-4">No open positions.</p>
+                      ) : (
+                        positions.map((pos) => {
+                          const isProfit = pos.unrealized_pnl >= 0;
+                          return (
+                            <div key={pos.id} className="bg-white border border-gray-200 rounded-md p-3 shadow-sm">
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <span className="font-bold text-sm text-gray-900">{pos.symbol}</span>
+                                  <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded ml-2 font-medium">Qty: {pos.quantity}</span>
+                                </div>
+                                <div className="text-right">
+                                  <span className={`text-sm font-bold block ${isProfit ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                                    {isProfit ? "+" : ""}₹{Math.round(pos.unrealized_pnl).toLocaleString("en-IN")}
+                                  </span>
+                                  <span className="text-[10px] text-gray-500">P&L</span>
+                                </div>
+                              </div>
+                              <div className="flex justify-between text-xs text-gray-600 mb-3">
+                                <span>Avg: ₹{pos.entry_price.toLocaleString("en-IN")}</span>
+                              </div>
+                              <Button
+                                onClick={() => handleClosePosition(pos.id)}
+                                variant="outline"
+                                className="w-full h-8 text-xs font-bold border-gray-300 hover:bg-gray-50 text-gray-700"
+                              >
+                                Square Off
+                              </Button>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    <hr className="border-gray-200 my-4" />
+
+                    <h3 className="font-bold text-gray-800 text-xs">Recent Trades</h3>
+                    <div className="space-y-2">
+                      {trades.slice(-5).reverse().map((trade) => {
+                        const isProfit = (trade.pnl || 0) >= 0;
+                        const isBuy = trade.side === "buy";
+                        return (
+                          <div key={trade.id} className="bg-white border border-gray-200 rounded-md p-2 flex justify-between items-center shadow-sm">
+                            <div>
+                              <span className="font-bold text-xs text-gray-900 block">{trade.symbol}</span>
+                              <span className={`text-[10px] font-bold ${isBuy ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                                {trade.side.toUpperCase()} • Qty: {trade.quantity}
+                              </span>
+                            </div>
                             <div className="text-right">
-                              <p className={`text-sm font-extrabold ${isProfit ? "text-[#10b981]" : "text-[#f43f5e]"}`}>
-                                {isProfit ? "+" : ""}₹{Math.round(pos.unrealized_pnl).toLocaleString("en-IN")}
-                              </p>
-                              <span className="text-[9px] text-[#7c91a6] font-bold uppercase tracking-wider">Unrealized MTM</span>
-                            </div>
-                            <Button
-                              size="sm"
-                              onClick={() => handleClosePosition(pos.id)}
-                              className="bg-transparent hover:bg-[#f43f5e]/10 border border-[#f43f5e]/30 hover:border-[#f43f5e] text-[#f43f5e] font-bold text-[10px] h-8 rounded-lg cursor-pointer transition-colors"
-                            >
-                              Square Off
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              )}
-
-              {activeTab === "orders" && (
-                <div className="space-y-2">
-                  {trades.length === 0 ? (
-                    <div className="text-center py-8 text-xs text-[#7c91a6] font-bold">No trade executions logged yet.</div>
-                  ) : (
-                    [...trades].reverse().map((trade) => {
-                      const isProfit = (trade.pnl || 0) >= 0;
-                      const isBuy = trade.side === "buy";
-                      return (
-                        <div key={trade.id} className="flex items-center justify-between p-3.5 bg-[#12202e] border border-[#1d2e3f] rounded-xl">
-                          <div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[9px] bg-[#1d2e3f] text-[#7c91a6] px-1 rounded font-black">NSE</span>
-                              <span className="font-extrabold text-sm">{trade.symbol}</span>
-                              <Badge className={`text-[9px] font-black rounded ${isBuy ? "bg-[#10b981]/15 text-[#10b981]" : "bg-[#f43f5e]/15 text-[#f43f5e]"}`}>
-                                {trade.side?.toUpperCase()}
-                              </Badge>
-                            </div>
-                            <span className="text-[10px] text-[#7c91a6] mt-0.5 block">
-                              QTY: <strong>{trade.quantity}</strong> • Price: ₹{trade.entry_price.toLocaleString("en-IN")}
-                            </span>
-                          </div>
-
-                          <div className="text-right">
-                            {trade.status === "closed" ? (
-                              <>
-                                <p className={`text-sm font-extrabold ${isProfit ? "text-[#10b981]" : "text-[#f43f5e]"}`}>
+                              {trade.status === "closed" ? (
+                                <span className={`text-xs font-bold ${isProfit ? "text-[#10b981]" : "text-[#ef4444]"}`}>
                                   {isProfit ? "+" : ""}₹{Math.round(trade.pnl || 0).toLocaleString("en-IN")}
-                                </p>
-                                <span className="text-[9px] text-[#7c91a6] font-bold uppercase tracking-wider">COMPLETED P&L</span>
-                              </>
-                            ) : (
-                              <Badge className="bg-[#1d2e3f] text-[#7c91a6] font-extrabold text-[10px] rounded">OPEN</Badge>
-                            )}
+                                </span>
+                              ) : (
+                                <span className="text-[10px] bg-gray-100 px-1 rounded text-gray-600 font-bold">OPEN</span>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              )}
-
-              {activeTab === "all" && (
-                <div className="grid md:grid-cols-2 gap-4">
-                  {/* Position Quick overview */}
-                  <div className="bg-[#12202e] rounded-2xl border border-[#1d2e3f] p-4 flex flex-col justify-between">
-                    <div>
-                      <h4 className="font-extrabold text-xs text-[#7c91a6] uppercase tracking-wider mb-3">Positions Book</h4>
-                      <div className="space-y-2">
-                        {positions.slice(0, 3).map(p => (
-                          <div key={p.id} className="flex justify-between items-center text-xs py-1 border-b border-[#1d2e3f]/40">
-                            <span className="font-bold text-white">{p.symbol} ({p.quantity})</span>
-                            <span className={`font-extrabold ${p.unrealized_pnl >= 0 ? "text-[#10b981]" : "text-[#f43f5e]"}`}>
-                              ₹{Math.round(p.unrealized_pnl).toLocaleString("en-IN")}
-                            </span>
-                          </div>
-                        ))}
-                        {positions.length === 0 && <p className="text-[11px] text-[#7c91a6] italic py-2">No active positions</p>}
-                      </div>
+                        )
+                      })}
                     </div>
-                    {positions.length > 3 && (
-                      <button onClick={() => setActiveTab("positions")} className="text-[10px] text-[#10b981] font-bold text-left mt-2 hover:underline border-0 bg-transparent cursor-pointer">
-                        + View all positions
-                      </button>
-                    )}
                   </div>
-
-                  {/* Orders Quick overview */}
-                  <div className="bg-[#12202e] rounded-2xl border border-[#1d2e3f] p-4 flex flex-col justify-between">
-                    <div>
-                      <h4 className="font-extrabold text-xs text-[#7c91a6] uppercase tracking-wider mb-3">Order Book Execution</h4>
-                      <div className="space-y-2">
-                        {trades.slice(-3).reverse().map(t => (
-                          <div key={t.id} className="flex justify-between items-center text-xs py-1 border-b border-[#1d2e3f]/40">
-                            <span className="font-bold text-white">{t.symbol} ({t.quantity})</span>
-                            <span className={`font-black uppercase text-[10px] ${t.side === 'buy' ? 'text-[#10b981]' : 'text-[#f43f5e]'}`}>{t.side}</span>
-                          </div>
-                        ))}
-                        {trades.length === 0 && <p className="text-[11px] text-[#7c91a6] italic py-2">No order history yet</p>}
-                      </div>
-                    </div>
-                    {trades.length > 3 && (
-                      <button onClick={() => setActiveTab("orders")} className="text-[10px] text-[#10b981] font-bold text-left mt-2 hover:underline border-0 bg-transparent cursor-pointer">
-                        + View all order history
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-
-            </div>
-
-            {/* TAB SELECTOR BOTTOM COSMETIC BAR */}
-            <div className="bg-[#0c1622] border-t border-[#1d2e3f] px-5 py-3 flex items-center justify-between text-xs text-[#7c91a6] select-none">
-              <div className="flex items-center gap-6 font-bold">
-                <span className="text-white border-b-2 border-[#10b981] pb-1 cursor-pointer">DEFAULT</span>
-                <span className="hover:text-white cursor-pointer">NSE / BSE</span>
-                <span className="hover:text-white cursor-pointer">ORDER BOOK</span>
-                <span className="hover:text-white cursor-pointer">CHARTS</span>
-                <span className="hover:text-white cursor-pointer">POSITIONS</span>
-                <Plus size={16} className="hover:text-white cursor-pointer" />
-              </div>
-              <div className="font-mono text-[10px] text-white/50">
-                Connected • Feed: Live
+                )}
               </div>
             </div>
-
           </div>
-
         </div>
-
       </div>
     </DashboardLayout>
   );
