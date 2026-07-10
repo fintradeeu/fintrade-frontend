@@ -23,6 +23,7 @@ jobs:
             cd ${{ secrets.WORK_DIR }}
 
             echo "----------------- Git Pull ------------------"
+            git reset --hard
             git pull origin ${{ secrets.BRANCH }}
 
             echo "----------------- Node Version ------------------"
