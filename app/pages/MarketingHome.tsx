@@ -582,6 +582,7 @@ export default function MarketingHome() {
   const [activeTermIndex, setActiveTermIndex] = useState(0);
   const [termsSearchQuery, setTermsSearchQuery] = useState("");
   const [termsMobileOpenIdx, setTermsMobileOpenIdx] = useState<number | null>(null);
+  const [expandedBatchTitles, setExpandedBatchTitles] = useState<Record<string, boolean>>({});
 
   const [isRegModalOpen, setIsRegModalOpen] = useState(false);
   const [selectedLectureForReg, setSelectedLectureForReg] = useState<any>(null);
@@ -1658,9 +1659,29 @@ export default function MarketingHome() {
                       <div className="flex flex-col justify-between h-full bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:border-[#D50032]/30 transition-all duration-300">
                         <div>
                           <div className="flex flex-col items-start mb-4 gap-2 w-full min-w-0">
-                            <h3 className="text-xl font-bold text-gray-900 leading-tight truncate w-full" title={batch.name}>
-                              {batch.name}
-                            </h3>
+                            <div className="w-full">
+                              <h3 
+                                className={`text-xl font-bold text-gray-900 leading-tight ${expandedBatchTitles[batch.id] ? '' : 'truncate'}`} 
+                                title={batch.name}
+                              >
+                                {batch.name}
+                              </h3>
+                              {batch.name && batch.name.length > 25 && (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setExpandedBatchTitles(prev => ({
+                                      ...prev,
+                                      [batch.id]: !prev[batch.id]
+                                    }));
+                                  }}
+                                  className="text-[#D50032] text-[11px] font-bold mt-1 hover:underline focus:outline-none"
+                                >
+                                  {expandedBatchTitles[batch.id] ? "Read Less" : "Read More"}
+                                </button>
+                              )}
+                            </div>
                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${statusColor}`}>
                               {batch.status}
                             </span>
