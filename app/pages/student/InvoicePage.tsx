@@ -466,166 +466,129 @@ export default function InvoicePage() {
             </div>
 
             {/* Printable Content */}
-            <div className="flex-1 overflow-y-auto p-4 bg-white print:p-0">
-              {/* Outer Tally Border Wrapper */}
-              <div id="invoice-printable-area" className="border-[1.5px] border-black text-black font-mono text-[11px] leading-tight bg-white">
-
-                {/* === TOP: Logo + Company Name side by side === */}
-                <div className="flex items-center gap-2 px-3 py-2 border-b border-black bg-white">
-                  <img
-                    src="/F-LOGO--RED.png"
-                    alt="FinTrade Logo"
-                    style={{ width: "160px", height: "56px", objectFit: "contain", display: "block", flexShrink: 0 }}
-                  />
-                  <div className="border-l border-gray-300 pl-2">
-                    <div className="font-bold text-sm uppercase tracking-wide leading-tight">FT EDUTECH</div>
-                    <div className="text-[9px] text-gray-500 uppercase tracking-widest">Professional Trading Education</div>
+            <div className="flex-1 overflow-y-auto px-4 py-2 bg-white print:p-0">
+              <div id="invoice-printable-area" className="bg-white text-gray-900 font-sans text-sm px-8 pt-4 pb-8 max-w-4xl mx-auto">
+                {/* Header: Logo and Title */}
+                <div className="flex justify-between items-start mb-10">
+                  <div className="flex flex-col gap-1">
+                    <img
+                      src="/F-LOGO--RED.png"
+                      alt="FinTrade Logo"
+                      style={{ height: "48px", objectFit: "contain", display: "block" }}
+                      className="mb-2"
+                    />
+                    <div className="font-bold text-[#0B2A5B] tracking-wide text-lg">FT EDUTECH</div>
+                    <div className="text-gray-500 text-xs">Professional Trading Education</div>
                   </div>
-                </div>
-
-                {/* === TAX INVOICE Title === */}
-                <div className="text-center font-bold text-sm border-b border-black py-1.5 uppercase tracking-wide bg-gray-50">
-                  Tax Invoice
-                </div>
-
-                {/* Header Row: Invoice details (no company address here) */}
-                <div className="grid grid-cols-2 border-b border-black">
-                  {/* Left Column: Buyer info */}
-                  <div className="p-3 border-r border-black space-y-1">
-                    <span className="text-[9px] text-gray-500 block uppercase">Buyer (Billed to)</span>
-                    <div className="font-bold text-xs">{userName}</div>
-                    <p className="text-gray-700">{userEmail}</p>
-                    <p className="text-gray-700">Student ID: FT-ST-29402</p>
-                  </div>
-
-                  {/* Right Column: Invoice info */}
-                  <div className="grid grid-cols-2 divide-x divide-y divide-black font-medium">
-                    <div className="p-2 col-span-2">
-                      <span className="text-[9px] text-gray-500 block uppercase">Invoice No.</span>
-                      <span className="font-bold">{selectedInvoice.invoiceNumber}</span>
+                  <div className="text-right">
+                    <h1 className="text-4xl font-light text-gray-300 tracking-wider mb-2">INVOICE</h1>
+                    <div className="text-gray-600">
+                      <span className="font-semibold text-gray-800">Invoice No:</span> {selectedInvoice.invoiceNumber}
                     </div>
-                    <div className="p-2">
-                      <span className="text-[9px] text-gray-500 block uppercase">Dated</span>
-                      <span className="font-bold">{selectedInvoice.purchaseDate}</span>
-                    </div>
-                    <div className="p-2">
-                      <span className="text-[9px] text-gray-500 block uppercase">Mode/Terms of Payment</span>
-                      <span className="font-bold">{selectedInvoice.paymentMethod}</span>
-                    </div>
-                    <div className="p-2 col-span-2 border-b-0">
-                      <span className="text-[9px] text-gray-500 block uppercase">Transaction ID</span>
-                      <span className="font-mono font-bold text-[10px] break-all">{selectedInvoice.paymentId}</span>
+                    <div className="text-gray-600">
+                      <span className="font-semibold text-gray-800">Date:</span> {selectedInvoice.purchaseDate}
                     </div>
                   </div>
                 </div>
 
-                {/* Status Row */}
-                <div className="grid grid-cols-2 border-b border-black">
-                  <div className="p-2 border-r border-black">
-                    <span className="text-[9px] text-gray-500 block uppercase">Status</span>
-                    <span className="font-bold text-green-700">{selectedInvoice.status.toUpperCase()}</span>
+                {/* Billing Info & Payment Details */}
+                <div className="flex justify-between items-start border-t border-b border-gray-100 py-6 mb-8">
+                  <div className="w-1/2 pr-4">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Billed To</h3>
+                    <div className="font-semibold text-lg text-[#0B2A5B]">{userName}</div>
+                    <div className="text-gray-600 mt-1">{userEmail}</div>
+                    <div className="text-gray-500 text-xs mt-1">Student ID: FT-ST-29402</div>
                   </div>
-                  <div className="p-2">
-                    <span className="text-[9px] text-gray-500 block uppercase">Place of Supply</span>
-                    <span className="font-bold">Ahmedabad</span>
+                  <div className="w-1/2 pl-4 border-l border-gray-100">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Payment Details</h3>
+                    <div className="grid grid-cols-2 gap-y-2 text-sm">
+                      <div className="text-gray-500">Status</div>
+                      <div className="font-semibold text-emerald-600 text-right">{selectedInvoice.status.toUpperCase()}</div>
+                      
+                      <div className="text-gray-500">Method</div>
+                      <div className="font-medium text-gray-800 text-right">{selectedInvoice.paymentMethod}</div>
+                      
+                      <div className="text-gray-500">Transaction ID</div>
+                      <div className="font-mono text-xs text-gray-600 text-right truncate" title={selectedInvoice.paymentId}>
+                        {selectedInvoice.paymentId}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Item Table */}
-                <table className="w-full text-left border-collapse border-b border-black">
-                  <thead>
-                    <tr className="border-b border-black bg-gray-50 font-bold text-[10px] uppercase text-gray-700">
-                      <th className="border-r border-black p-2 text-center w-[8%]">Sl No.</th>
-                      <th className="border-r border-black p-2 w-[52%]">Description of Goods</th>
-                      <th className="border-r border-black p-2 text-center w-[12%]">HSN/SAC</th>
-                      <th className="border-r border-black p-2 text-right w-[14%]">Rate</th>
-                      <th className="p-2 text-right w-[14%]">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="align-top">
-                      <td className="border-r border-black p-2 text-center font-bold">1</td>
-                      <td className="border-r border-black p-2">
-                        <span className="font-bold">{selectedInvoice.courseTitle}</span>
-                        <div className="text-[9px] text-gray-500 leading-normal mt-0.5">
-                          Professional Trading Program - Lifetime Access &amp; Mentor Support
-                        </div>
-                      </td>
-                      <td className="border-r border-black p-2 text-center">9992</td>
-                      <td className="border-r border-black p-2 text-right">
-                        ₹{formatCurrency(selectedInvoice.originalPrice)}
-                      </td>
-                      <td className="p-2 text-right font-bold">
-                        ₹{formatCurrency(selectedInvoice.originalPrice)}
-                      </td>
-                    </tr>
-                    <tr className="h-8">
-                      <td className="border-r border-black"></td>
-                      <td className="border-r border-black"></td>
-                      <td className="border-r border-black"></td>
-                      <td className="border-r border-black"></td>
-                      <td></td>
-                    </tr>
-                  </tbody>
-                </table>
+                {/* Items Table */}
+                <div className="mb-8">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b-2 border-gray-100">
+                        <th className="py-3 font-semibold text-gray-500 text-xs uppercase w-[50%]">Description</th>
+                        <th className="py-3 font-semibold text-gray-500 text-xs uppercase text-center w-[15%]">HSN/SAC</th>
+                        <th className="py-3 font-semibold text-gray-500 text-xs uppercase text-right w-[15%]">Rate</th>
+                        <th className="py-3 font-semibold text-gray-500 text-xs uppercase text-right w-[20%]">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      <tr>
+                        <td className="py-4">
+                          <div className="font-semibold text-[#0B2A5B] text-base">{selectedInvoice.courseTitle}</div>
+                          <div className="text-xs text-gray-500 mt-1">Professional Trading Program - Lifetime Access & Mentor Support</div>
+                        </td>
+                        <td className="py-4 text-center text-gray-600">9992</td>
+                        <td className="py-4 text-right text-gray-600">₹{formatCurrency(selectedInvoice.originalPrice)}</td>
+                        <td className="py-4 text-right font-medium text-gray-800">₹{formatCurrency(selectedInvoice.originalPrice)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
 
-                {/* Tax Totals + Declaration */}
-                <div className="grid grid-cols-2 divide-x divide-black">
-                  <div className="p-3 flex flex-col justify-between space-y-3">
+                {/* Totals section */}
+                <div className="flex justify-between items-start">
+                  {/* Left: Declaration */}
+                  <div className="w-1/2 pr-12 text-xs text-gray-500 space-y-4">
                     <div>
-                      <span className="text-[9px] text-gray-500 block uppercase mb-1">Declaration</span>
-                      <p className="text-[9px] text-gray-600 leading-relaxed font-sans font-normal">
-                        We declare that this invoice shows the actual price of the goods or services described and that all particulars are true and correct.
-                      </p>
+                      <span className="font-bold text-gray-700 block mb-1">Declaration:</span>
+                      We declare that this invoice shows the actual price of the goods or services described and that all particulars are true and correct.
                     </div>
-                    <div className="text-[9px] text-gray-400 font-sans italic border-t border-gray-200 pt-2 text-center">
+                    <div className="italic text-gray-400">
                       This is a computer-generated tax invoice.
                     </div>
                   </div>
-                  <div className="p-3 space-y-1.5 font-bold">
-                    <div className="flex justify-between">
-                      <span className="font-normal text-gray-600">Base Course Fee</span>
-                      <span>₹{formatCurrency(selectedInvoice.originalPrice)}</span>
-                    </div>
-                    {selectedInvoice.couponCode && selectedInvoice.discountAmount && selectedInvoice.discountAmount > 0 ? (
-                      <div className="flex justify-between text-green-700">
-                        <span className="font-normal">Discount ({selectedInvoice.couponCode})</span>
-                        <span>-₹{formatCurrency(selectedInvoice.discountAmount)}</span>
+
+                  {/* Right: Calculations */}
+                  <div className="w-1/2 bg-gray-50 rounded-xl p-5">
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between text-gray-600">
+                        <span>Base Course Fee</span>
+                        <span>₹{formatCurrency(selectedInvoice.originalPrice)}</span>
                       </div>
-                    ) : null}
-                    <div className="flex justify-between border-t border-gray-200 pt-1">
-                      <span className="font-normal text-gray-600">Taxable Subtotal</span>
-                      <span>₹{formatCurrency(calculateBreakdown(selectedInvoice).subtotal)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-normal text-gray-600">Integrated GST (18%)</span>
-                      <span>₹{formatCurrency(calculateBreakdown(selectedInvoice).gstAmount)}</span>
-                    </div>
-                    <div className="flex justify-between border-t-2 border-black pt-1.5 text-[#0B2A5B]">
-                      <span>Total Paid Amount</span>
-                      <span className="text-sm">₹{formatCurrency(calculateBreakdown(selectedInvoice).total)}</span>
+                      {selectedInvoice.couponCode && selectedInvoice.discountAmount && selectedInvoice.discountAmount > 0 ? (
+                        <div className="flex justify-between text-emerald-600">
+                          <span>Discount ({selectedInvoice.couponCode})</span>
+                          <span>-₹{formatCurrency(selectedInvoice.discountAmount)}</span>
+                        </div>
+                      ) : null}
+                      <div className="flex justify-between text-gray-600 pt-2 border-t border-gray-200">
+                        <span>Taxable Subtotal</span>
+                        <span>₹{formatCurrency(calculateBreakdown(selectedInvoice).subtotal)}</span>
+                      </div>
+                      <div className="flex justify-between text-gray-600">
+                        <span>Integrated GST (18%)</span>
+                        <span>₹{formatCurrency(calculateBreakdown(selectedInvoice).gstAmount)}</span>
+                      </div>
+                      <div className="flex justify-between items-end pt-3 border-t border-gray-200 mt-2">
+                        <span className="font-bold text-gray-800 text-base">Total Amount Paid</span>
+                        <span className="font-bold text-[#D50032] text-xl">₹{formatCurrency(calculateBreakdown(selectedInvoice).total)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Signatory Row */}
-                <div className="grid grid-cols-2 border-t border-black divide-x divide-black text-center text-[10px] font-bold">
-                  <div className="p-3 h-12 flex items-end justify-center">
-                    <span className="text-gray-400 font-sans font-normal text-[9px]">Buyer's Signature</span>
-                  </div>
-                  <div className="p-3 h-12 flex flex-col justify-between">
-                    <span>for FT EDUTECH</span>
-                    <span className="text-[8px] text-gray-500 uppercase tracking-wider font-normal">Authorized Signatory</span>
-                  </div>
-                </div>
-
-                {/* === BOTTOM: Company Address Footer === */}
-                <div className="border-t border-black text-center py-2 px-4 bg-gray-50 text-[9px] text-gray-600 space-y-0.5">
-                  <div className="font-bold text-[10px] text-black">FT EDUTECH</div>
+                {/* Footer Address */}
+                <div className="mt-16 pt-6 border-t border-gray-100 text-center text-xs text-gray-400 flex flex-col gap-1">
+                  <div className="font-semibold text-gray-500">FT EDUTECH</div>
                   <div>10th Floor, Shivalik Complex, Nr. Panchvati Circle, Opp. Bank of Baroda, Ambawadi, Ahmedabad, Gujarat - 380006</div>
-                  <div className="font-bold">GSTIN: 24AALFF2921N1Z9 &nbsp;|&nbsp; accounts@thefintrade.com</div>
+                  <div>GSTIN: 24AALFF2921N1Z9 &nbsp;|&nbsp; accounts@thefintrade.com</div>
                 </div>
-
               </div>
             </div>
 

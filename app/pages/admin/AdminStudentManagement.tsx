@@ -66,6 +66,10 @@ export default function AdminStudentManagement() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewTab, setViewTab] = useState<"profile" | "kyc" | "courses" | "sessions">("profile");
 
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createFormData, setCreateFormData] = useState({ full_name: "", email: "", phone: "", city: "", password: "" });
+
   const [studentKyc, setStudentKyc] = useState<any | null>(null);
   const [kycLoading, setKycLoading] = useState(false);
   
@@ -73,13 +77,42 @@ export default function AdminStudentManagement() {
 
   const fetchStudents = async () => {
     try {
-      const res = await api.get("/admin/purchased-students?limit=200");
-      setStudents(res.data.users || []);
+      setLoading(true);
+      const [resPurchased, resNonPurchased] = await Promise.all([
+        api.get("/admin/purchased-students?limit=200"),
+        api.get("/admin/users?limit=200")
+      ]);
+      const combined = [...(resPurchased.data.users || []), ...(resNonPurchased.data.users || [])];
+      combined.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setStudents(combined);
     } catch (err) {
       console.error("Failed to fetch purchased students:", err);
       toast.error("Failed to load students list.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateStudent = async () => {
+    if (!createFormData.full_name || !createFormData.email || !createFormData.phone || !createFormData.password) {
+      toast.error("Please fill in Name, Email, Phone, and Password.");
+      return;
+    }
+    if (createFormData.password.length < 8) {
+      toast.error("Password must be at least 8 characters long.");
+      return;
+    }
+    setIsCreating(true);
+    try {
+      await api.post("/admin/users/create-student", createFormData);
+      toast.success("Student created successfully! Login credentials have been emailed.");
+      setIsCreateModalOpen(false);
+      setCreateFormData({ full_name: "", email: "", phone: "", city: "", password: "" });
+      fetchStudents();
+    } catch (err: any) {
+      toast.error("Error creating student: " + (err.response?.data?.detail || err.message));
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -220,14 +253,19 @@ export default function AdminStudentManagement() {
 
   return (
     <DashboardLayout role="admin">
-      <div className="mb-8 flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-[#0B2A5B] mb-2">Student Management</h1>
-          <p className="text-[#0B2A5B]/70">Track students who have purchased courses, view their invoices, KYC status, and session activity logs.</p>
+          <h1 className="text-3xl font-black text-[#0B2A5B] tracking-tight mb-2">Student Management</h1>
+          <p className="text-[#0B2A5B]/70">Track all students, view their invoices, KYC status, and session activity logs.</p>
         </div>
-        <Button onClick={exportToCSV} className="bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] rounded-xl flex items-center gap-2">
-          <Download size={16} /> Export CSV
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button onClick={() => setIsCreateModalOpen(true)} className="bg-[#0B2A5B] text-white hover:bg-[#1a3d7a] rounded-xl flex items-center gap-2">
+            Create Student
+          </Button>
+          <Button onClick={exportToCSV} className="bg-[#C2A86A] text-[#0B2A5B] hover:bg-[#d4bd8a] rounded-xl flex items-center gap-2">
+            <Download size={16} /> Export CSV
+          </Button>
+        </div>
       </div>
 
       {/* Search Bar */}
@@ -249,7 +287,7 @@ export default function AdminStudentManagement() {
           {loading ? (
             <div className="py-10 text-center text-[#0B2A5B]/70 font-semibold">Loading student records...</div>
           ) : filtered.length === 0 ? (
-            <div className="py-10 text-center text-[#0B2A5B]/70 font-semibold">No students found with active purchases.</div>
+            <div className="py-10 text-center text-[#0B2A5B]/70 font-semibold">No students found.</div>
           ) : (
             <Table>
               <TableHeader>
@@ -570,92 +608,172 @@ export default function AdminStudentManagement() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 bg-white print:p-0 print:overflow-visible">
-              <div id="invoice-printable-area" className="border-[1.5px] border-black text-black font-mono text-[11px] leading-tight p-4 bg-white">
-                {/* Header Logo section */}
-                <div className="flex items-center gap-2 pb-3 border-b border-black">
-                  <div className="font-bold text-base uppercase tracking-wide">FINTRADE EDUTECH</div>
-                  <div className="border-l border-gray-400 pl-2">
-                    <div className="text-[8px] text-gray-500 uppercase tracking-widest">Professional Trading Education</div>
+            <div className="flex-1 overflow-y-auto px-6 py-2 bg-white print:p-0 print:overflow-visible">
+              <div id="invoice-printable-area" className="bg-white text-gray-900 font-sans text-sm px-8 pt-4 pb-8 max-w-4xl mx-auto">
+                {/* Header: Logo and Title */}
+                <div className="flex justify-between items-start mb-10">
+                  <div className="flex flex-col gap-1">
+                    <img
+                      src="/F-LOGO--RED.png"
+                      alt="FinTrade Logo"
+                      style={{ height: "48px", objectFit: "contain", display: "block" }}
+                      className="mb-2"
+                    />
+                    <div className="font-bold text-[#0B2A5B] tracking-wide text-lg">FT EDUTECH</div>
+                    <div className="text-gray-500 text-xs">Professional Trading Education</div>
                   </div>
-                </div>
-
-                <div className="text-center font-bold text-sm border-b border-black py-1.5 uppercase bg-slate-50">
-                  Tax Invoice
-                </div>
-
-                <div className="grid grid-cols-2 border-b border-black py-2">
-                  <div className="space-y-1 pr-2">
-                    <span className="text-[9px] text-gray-500 block uppercase">Buyer (Billed to)</span>
-                    <div className="font-bold text-xs">{selectedStudent.full_name}</div>
-                    <p className="text-gray-700">{selectedStudent.email}</p>
-                    <p className="text-gray-700">Student ID: FT-ST-{selectedStudent.id}</p>
-                  </div>
-                  <div className="space-y-1 pl-2 border-l border-black">
-                    <div className="grid grid-cols-2 gap-y-1">
-                      <span className="text-[9px] text-gray-500 uppercase">Invoice No:</span>
-                      <span className="font-bold text-right">{selectedInvoice.invoiceNumber}</span>
-                      <span className="text-[9px] text-gray-500 uppercase">Dated:</span>
-                      <span className="font-bold text-right">{selectedInvoice.purchaseDate}</span>
-                      <span className="text-[9px] text-gray-500 uppercase">Payment:</span>
-                      <span className="font-bold text-right">{selectedInvoice.paymentMethod}</span>
+                  <div className="text-right">
+                    <h1 className="text-4xl font-light text-gray-300 tracking-wider mb-2">INVOICE</h1>
+                    <div className="text-gray-600">
+                      <span className="font-semibold text-gray-800">Invoice No:</span> {selectedInvoice.invoiceNumber}
+                    </div>
+                    <div className="text-gray-600">
+                      <span className="font-semibold text-gray-800">Date:</span> {selectedInvoice.purchaseDate}
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 border-b border-black py-2">
-                  <div>
-                    <span className="text-[9px] text-gray-500 block uppercase">Transaction ID</span>
-                    <span className="font-bold font-mono text-[10px] break-all">{selectedInvoice.paymentId}</span>
+                {/* Billing Info & Payment Details */}
+                <div className="flex justify-between items-start border-t border-b border-gray-100 py-6 mb-8">
+                  <div className="w-1/2 pr-4">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Billed To</h3>
+                    <div className="font-semibold text-lg text-[#0B2A5B]">{selectedStudent.full_name}</div>
+                    <div className="text-gray-600 mt-1">{selectedStudent.email}</div>
+                    <div className="text-gray-500 text-xs mt-1">Student ID: FT-ST-{selectedStudent.id}</div>
                   </div>
-                  <div className="pl-2 border-l border-black">
-                    <span className="text-[9px] text-gray-500 block uppercase">Status</span>
-                    <span className="font-bold text-green-700">PAID</span>
+                  <div className="w-1/2 pl-4 border-l border-gray-100">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Payment Details</h3>
+                    <div className="grid grid-cols-2 gap-y-2 text-sm">
+                      <div className="text-gray-500">Status</div>
+                      <div className="font-semibold text-emerald-600 text-right">PAID</div>
+                      
+                      <div className="text-gray-500">Method</div>
+                      <div className="font-medium text-gray-800 text-right">{selectedInvoice.paymentMethod}</div>
+                      
+                      <div className="text-gray-500">Transaction ID</div>
+                      <div className="font-mono text-xs text-gray-600 text-right truncate" title={selectedInvoice.paymentId}>
+                        {selectedInvoice.paymentId}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <table className="w-full text-left border-collapse border-b border-black mt-2">
-                  <thead>
-                    <tr className="border-b border-black bg-slate-50 font-bold text-[9px] uppercase">
-                      <th className="p-1.5 w-[10%]">Sl.</th>
-                      <th className="p-1.5 w-[60%]">Description of Services</th>
-                      <th className="p-1.5 text-right w-[30%]">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="p-1.5">1</td>
-                      <td className="p-1.5">
-                        <span className="font-bold">{selectedInvoice.courseTitle}</span>
-                        <div className="text-[9px] text-gray-400">FinTrade LMS Lifetime Access & Mentor Support</div>
-                      </td>
-                      <td className="p-1.5 text-right font-bold">₹{formatCurrency(selectedInvoice.originalPrice)}</td>
-                    </tr>
-                    {selectedInvoice.discountAmount > 0 && (
-                      <tr className="border-t border-dashed border-gray-300">
-                        <td className="p-1.5"></td>
-                        <td className="p-1.5 text-green-600 font-semibold">
-                          Discount Applied{selectedInvoice.couponCode ? ` (${selectedInvoice.couponCode})` : ""}
-                        </td>
-                        <td className="p-1.5 text-right text-green-600 font-bold">-₹{formatCurrency(selectedInvoice.discountAmount)}</td>
+                {/* Items Table */}
+                <div className="mb-8">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b-2 border-gray-100">
+                        <th className="py-3 font-semibold text-gray-500 text-xs uppercase w-[70%]">Description</th>
+                        <th className="py-3 font-semibold text-gray-500 text-xs uppercase text-right w-[30%]">Amount</th>
                       </tr>
-                    )}
-                    <tr className="border-t border-black bg-slate-50 font-bold">
-                      <td></td>
-                      <td className="p-1.5 text-right">Total Net Amount Paid:</td>
-                      <td className="p-1.5 text-right text-[#D50032] text-xs">₹{formatCurrency(selectedInvoice.amount)}</td>
-                    </tr>
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      <tr>
+                        <td className="py-4">
+                          <div className="font-semibold text-[#0B2A5B] text-base">{selectedInvoice.courseTitle}</div>
+                          <div className="text-xs text-gray-500 mt-1">Professional Trading Program - Lifetime Access & Mentor Support</div>
+                        </td>
+                        <td className="py-4 text-right font-medium text-gray-800">₹{formatCurrency(selectedInvoice.originalPrice)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
 
-                <div className="mt-4 text-[8px] text-gray-400 text-center uppercase tracking-wider">
-                  Thank you for your enrollment. This is a computer-generated tax invoice and requires no signature.
+                {/* Totals section */}
+                <div className="flex justify-between items-start">
+                  {/* Left: Declaration */}
+                  <div className="w-1/2 pr-12 text-xs text-gray-500 space-y-4">
+                    <div>
+                      <span className="font-bold text-gray-700 block mb-1">Declaration:</span>
+                      We declare that this invoice shows the actual price of the goods or services described and that all particulars are true and correct.
+                    </div>
+                    <div className="italic text-gray-400">
+                      This is a computer-generated tax invoice and requires no signature.
+                    </div>
+                  </div>
+
+                  {/* Right: Calculations */}
+                  <div className="w-1/2 bg-gray-50 rounded-xl p-5">
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between text-gray-600">
+                        <span>Base Course Fee</span>
+                        <span>₹{formatCurrency(selectedInvoice.originalPrice)}</span>
+                      </div>
+                      {selectedInvoice.discountAmount > 0 && (
+                        <div className="flex justify-between text-emerald-600">
+                          <span>Discount Applied{selectedInvoice.couponCode ? ` (${selectedInvoice.couponCode})` : ""}</span>
+                          <span>-₹{formatCurrency(selectedInvoice.discountAmount)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-end pt-3 border-t border-gray-200 mt-2">
+                        <span className="font-bold text-gray-800 text-base">Total Amount Paid</span>
+                        <span className="font-bold text-[#D50032] text-xl">₹{formatCurrency(selectedInvoice.amount)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Address */}
+                <div className="mt-16 pt-6 border-t border-gray-100 text-center text-xs text-gray-400 flex flex-col gap-1">
+                  <div className="font-semibold text-gray-500">FT EDUTECH</div>
+                  <div>10th Floor, Shivalik Complex, Nr. Panchvati Circle, Opp. Bank of Baroda, Ambawadi, Ahmedabad, Gujarat - 380006</div>
+                  <div>GSTIN: 24AALFF2921N1Z9 &nbsp;|&nbsp; accounts@thefintrade.com</div>
                 </div>
               </div>
             </div>
           </Card>
         </div>
       )}
+
+      {/* Create Student Modal */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden flex flex-col shadow-2xl">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50/50">
+              <div>
+                <h3 className="text-xl font-bold text-[#0B2A5B]">Create New Student</h3>
+                <p className="text-xs text-[#0B2A5B]/60 mt-1">Credentials will be emailed to the student.</p>
+              </div>
+              <button onClick={() => setIsCreateModalOpen(false)} className="text-gray-400 hover:bg-white hover:text-gray-900 rounded-full p-2 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="text-sm font-semibold text-[#0B2A5B] block mb-1">Full Name *</label>
+                <Input value={createFormData.full_name} onChange={e => setCreateFormData({...createFormData, full_name: e.target.value})} placeholder="E.g. Rahul Kumar" />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-[#0B2A5B] block mb-1">Email * (Username)</label>
+                <Input type="email" value={createFormData.email} onChange={e => setCreateFormData({...createFormData, email: e.target.value})} placeholder="E.g. rahul@example.com" />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-[#0B2A5B] block mb-1">Password *</label>
+                <Input type="password" value={createFormData.password} onChange={e => setCreateFormData({...createFormData, password: e.target.value})} placeholder="At least 8 characters" />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-[#0B2A5B] block mb-1">Phone *</label>
+                <Input value={createFormData.phone} onChange={e => setCreateFormData({...createFormData, phone: e.target.value})} placeholder="10-digit mobile number" />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-[#0B2A5B] block mb-1">City (Optional)</label>
+                <Input value={createFormData.city} onChange={e => setCreateFormData({...createFormData, city: e.target.value})} placeholder="E.g. Mumbai" />
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-4">
+              <Button onClick={() => setIsCreateModalOpen(false)} variant="outline" className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={handleCreateStudent} disabled={isCreating} className="flex-1 bg-[#0B2A5B] text-white hover:bg-[#1a3d7a]">
+                {isCreating ? "Creating..." : "Create Student"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </DashboardLayout>
   );
 }

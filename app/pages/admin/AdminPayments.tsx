@@ -279,7 +279,7 @@ export default function AdminPayments() {
   };
 
   const handleDeleteCoupon = async (id: number) => {
-    if (await confirmPopup("Are you sure you want to delete this coupon?")) {
+    if (window.confirm("Are you sure you want to delete this coupon?")) {
       try {
         await api.delete(`/admin/offers/${id}`);
         fetchCoupons(isSuperAdmin);
@@ -291,7 +291,7 @@ export default function AdminPayments() {
 
   const handleApproveOfflinePayment = async () => {
     if (!selectedOfflineTransaction) return;
-    if (await confirmPopup("Are you sure you want to approve this payment and enroll the student?")) {
+    if (window.confirm("Are you sure you want to approve this payment and enroll the student?")) {
       try {
         await api.put(`/payments/admin/${selectedOfflineTransaction.id}/approve`);
         setIsOfflineActionDialogOpen(false);
@@ -309,7 +309,7 @@ export default function AdminPayments() {
       alert("Please provide a rejection reason.");
       return;
     }
-    if (await confirmPopup("Are you sure you want to reject this payment?")) {
+    if (window.confirm("Are you sure you want to reject this payment?")) {
       try {
         await api.put(`/payments/admin/${selectedOfflineTransaction.id}/reject`, {
           action: "reject",
@@ -439,75 +439,75 @@ export default function AdminPayments() {
             </div>
           </Card>
         ) : (
-        <div className="grid md:grid-cols-2 xl:grid-cols-6 gap-4">
-          <Card onClick={() => openTransactionBreakdown("total_amount")} className={`p-6 border-2 transition-all cursor-pointer ${selectedAmountMetric === "total_amount" ? "border-[#D50032] shadow-md" : "border-gray-100 hover:border-[#D50032]"}`}>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(76, 175, 80, 0.1)' }}>
-                <IndianRupee className="h-6 w-6" style={{ color: '#4CAF50' }} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4">
+          <Card onClick={() => openTransactionBreakdown("total_amount")} className={`p-4 border-2 transition-all cursor-pointer ${selectedAmountMetric === "total_amount" ? "border-[#D50032] shadow-md" : "border-gray-100 hover:border-[#D50032]"}`}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(76, 175, 80, 0.1)' }}>
+                <IndianRupee className="h-5 w-5" style={{ color: '#4CAF50' }} />
               </div>
               <div>
-                <div className="text-2xl font-bold" style={{ color: '#121212' }}>{stats.total_amount}</div>
-                <div className="text-sm text-gray-600">Total Amount</div>
+                <div className="text-lg font-bold" style={{ color: '#121212' }}>{stats.total_amount}</div>
+                <div className="text-xs text-gray-600">Total Amount</div>
               </div>
             </div>
           </Card>
 
-          <Card onClick={() => openTransactionBreakdown("total_fees")} className={`p-6 border-2 transition-all cursor-pointer ${selectedAmountMetric === "total_fees" ? "border-[#D50032] shadow-md" : "border-gray-100 hover:border-[#D50032]"}`}>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
-                <TrendingUp className="h-6 w-6" style={{ color: '#D50032' }} />
+          <Card onClick={() => openTransactionBreakdown("total_fees")} className={`p-4 border-2 transition-all cursor-pointer ${selectedAmountMetric === "total_fees" ? "border-[#D50032] shadow-md" : "border-gray-100 hover:border-[#D50032]"}`}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
+                <TrendingUp className="h-5 w-5" style={{ color: '#D50032' }} />
               </div>
               <div>
-                <div className="text-2xl font-bold" style={{ color: '#121212' }}>{stats.total_fees}</div>
-                <div className="text-sm text-gray-600">Total Fees</div>
+                <div className="text-lg font-bold" style={{ color: '#121212' }}>{stats.total_fees}</div>
+                <div className="text-xs text-gray-600">Total Fees</div>
               </div>
             </div>
           </Card>
 
-          <Card onClick={() => openTransactionBreakdown("total_gst")} className={`p-6 border-2 transition-all cursor-pointer ${selectedAmountMetric === "total_gst" ? "border-[#D50032] shadow-md" : "border-gray-100 hover:border-[#D50032]"}`}>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
-                <IndianRupee className="h-6 w-6" style={{ color: '#D50032' }} />
+          <Card onClick={() => openTransactionBreakdown("total_gst")} className={`p-4 border-2 transition-all cursor-pointer ${selectedAmountMetric === "total_gst" ? "border-[#D50032] shadow-md" : "border-gray-100 hover:border-[#D50032]"}`}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
+                <IndianRupee className="h-5 w-5" style={{ color: '#D50032' }} />
               </div>
               <div>
-                <div className="text-2xl font-bold" style={{ color: '#121212' }}>{stats.total_gst}</div>
-                <div className="text-sm text-gray-600">Total GST Amount</div>
+                <div className="text-lg font-bold" style={{ color: '#121212' }}>{stats.total_gst}</div>
+                <div className="text-xs text-gray-600">Total GST Amount</div>
               </div>
             </div>
           </Card>
 
-          <Card onClick={() => openTransactionBreakdown("total_paid")} className={`p-6 border-2 transition-all cursor-pointer ${selectedAmountMetric === "total_paid" ? "border-[#D50032] shadow-md" : "border-gray-100 hover:border-[#D50032]"}`}>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(76, 175, 80, 0.1)' }}>
-                <IndianRupee className="h-6 w-6" style={{ color: '#4CAF50' }} />
+          <Card onClick={() => openTransactionBreakdown("total_paid")} className={`p-4 border-2 transition-all cursor-pointer ${selectedAmountMetric === "total_paid" ? "border-[#D50032] shadow-md" : "border-gray-100 hover:border-[#D50032]"}`}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(76, 175, 80, 0.1)' }}>
+                <IndianRupee className="h-5 w-5" style={{ color: '#4CAF50' }} />
               </div>
               <div>
-                <div className="text-2xl font-bold" style={{ color: '#121212' }}>{stats.total_paid}</div>
-                <div className="text-sm text-gray-600">Total Paid Amount</div>
+                <div className="text-lg font-bold" style={{ color: '#121212' }}>{stats.total_paid}</div>
+                <div className="text-xs text-gray-600">Total Paid Amount</div>
               </div>
             </div>
           </Card>
 
-          <Card onClick={() => setActiveTab("coupons")} className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all cursor-pointer">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
-                <Tag className="h-6 w-6" style={{ color: '#D50032' }} />
+          <Card onClick={() => setActiveTab("coupons")} className="p-4 border-2 border-gray-100 hover:border-[#D50032] transition-all cursor-pointer">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
+                <Tag className="h-5 w-5" style={{ color: '#D50032' }} />
               </div>
               <div>
-                <div className="text-2xl font-bold" style={{ color: '#121212' }}>{stats.active_coupons}</div>
-                <div className="text-sm text-gray-600">Active Coupons</div>
+                <div className="text-lg font-bold" style={{ color: '#121212' }}>{stats.active_coupons}</div>
+                <div className="text-xs text-gray-600">Active Coupons</div>
               </div>
             </div>
           </Card>
 
-          <Card onClick={() => setActiveTab("coupons")} className="p-6 border-2 border-gray-100 hover:border-[#D50032] transition-all cursor-pointer">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
-                <Users className="h-6 w-6" style={{ color: '#D50032' }} />
+          <Card onClick={() => setActiveTab("coupons")} className="p-4 border-2 border-gray-100 hover:border-[#D50032] transition-all cursor-pointer">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(213,0,50, 0.1)' }}>
+                <Users className="h-5 w-5" style={{ color: '#D50032' }} />
               </div>
               <div>
-                <div className="text-2xl font-bold" style={{ color: '#121212' }}>{stats.total_usage}</div>
-                <div className="text-sm text-gray-600">Total Usage</div>
+                <div className="text-lg font-bold" style={{ color: '#121212' }}>{stats.total_usage}</div>
+                <div className="text-xs text-gray-600">Total Usage</div>
               </div>
             </div>
           </Card>

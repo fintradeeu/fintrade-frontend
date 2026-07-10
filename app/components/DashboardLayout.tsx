@@ -36,6 +36,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "Batch Management", path: "/admin/batches", icon: <Users size={20} /> },
         { label: "User Management", path: "/admin/students", icon: <Users size={20} /> },
         { label: "Student Management", path: "/admin/student-management", icon: <GraduationCap size={20} /> },
+        { label: "Payments & Coupons", path: "/admin/payments", icon: <IndianRupee size={20} /> },
         { label: "IB Management", path: "/admin/introducing-brokers", icon: <Handshake size={20} /> },
         { label: "Commission Management", path: "/admin/commissions", icon: <IndianRupee size={20} /> },
         { label: "Courses", path: "/admin/courses", icon: <BookOpen size={20} /> },
@@ -44,7 +45,6 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "Live Class Registrations", path: "/admin/live-class-registrations", icon: <Users size={20} /> },
         { label: "Exams", path: "/admin/exams", icon: <FileQuestion size={20} /> },
         { label: "Assignments", path: "/admin/assignments", icon: <FileText size={20} /> },
-        { label: "Payments & Coupons", path: "/admin/payments", icon: <IndianRupee size={20} /> },
         { label: "Login Details", path: "/admin/login-details", icon: <Users size={20} /> },
         { label: "Blog & CMS", path: "/admin/news", icon: <Newspaper size={20} /> },
         { label: "Advisors", path: "/admin/advisors", icon: <Users size={20} /> },
@@ -95,6 +95,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "Batch Management", path: "/admin/batches", icon: <Users size={20} /> },
         { label: "User Management", path: "/admin/students", icon: <Users size={20} /> },
         { label: "Student Management", path: "/admin/student-management", icon: <GraduationCap size={20} /> },
+        { label: "Payments & Coupons", path: "/admin/payments", icon: <IndianRupee size={20} /> },
         { label: "Courses", path: "/admin/courses", icon: <BookOpen size={20} /> },
         { label: "Module Students", path: "/admin/module-students", icon: <GraduationCap size={20} /> },
         { label: "Lectures", path: "/admin/lectures", icon: <Video size={20} /> },
@@ -627,7 +628,7 @@ export function DashboardLayout({
         )}
 
         {/* Main Content */}
-        <main className="flex-1 min-h-screen lg:ml-0">
+        <main className="flex-1 min-w-0 min-h-screen lg:ml-0">
           <div className="p-4 md:p-6 lg:p-8">{children}</div>
         </main>
       </div>

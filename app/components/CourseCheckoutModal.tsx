@@ -27,6 +27,14 @@ interface CourseCheckoutModalProps {
 }
 
 export default function CourseCheckoutModal({ course, batchId, onClose, onSuccess }: CourseCheckoutModalProps) {
+  const [isAdminCreated] = useState(() => {
+    try {
+      const u = localStorage.getItem("user");
+      return u ? JSON.parse(u).is_admin_created : false;
+    } catch {
+      return false;
+    }
+  });
   const [ibCode, setIbCode] = useState(() => localStorage.getItem("distributor_code") || "");
   const [couponCode, setCouponCode] = useState("");
   const [ibDiscount, setIbDiscount] = useState(0);
@@ -140,8 +148,8 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
       if (Number(finalPrice) > 0) {
         
         if (paymentMethod === "cash" || paymentMethod === "cheque") {
-          if (paymentMethod === "cash" && (!offlineData.payment_date || !offlineData.reference_number)) {
-            alert("Please fill in the required fields (Payment Date and Receipt Number).");
+          if (paymentMethod === "cash" && (!offlineData.payment_date)) {
+            alert("Please fill in the required fields (Payment Date).");
             setLoading(false); return;
           }
           if (paymentMethod === "cheque" && (!offlineData.reference_number || !offlineData.payment_date || !offlineData.bank_name || !offlineData.branch_name || !offlineData.account_holder_name || !chequeFile)) {
@@ -469,7 +477,7 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
           {/* Payment Method Selection */}
           <div className="bg-gray-50 rounded-lg p-5 md:p-6 mt-4">
             <h3 className="font-semibold text-sm md:text-base text-[#0B2A5B] mb-4">Payment Method</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+            <div className={`grid grid-cols-1 ${isAdminCreated ? 'sm:grid-cols-3' : 'sm:grid-cols-1'} gap-3 mb-4`}>
               <button
                 onClick={() => setPaymentMethod("razorpay")}
                 className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${paymentMethod === 'razorpay' ? 'border-[#0B2A5B] bg-[#0B2A5B]/5' : 'border-gray-200 bg-white hover:border-[#0B2A5B]/30'}`}
@@ -477,20 +485,24 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
                 <CreditCard className={`mb-2 ${paymentMethod === 'razorpay' ? 'text-[#0B2A5B]' : 'text-gray-400'}`} />
                 <span className={`text-sm font-semibold ${paymentMethod === 'razorpay' ? 'text-[#0B2A5B]' : 'text-gray-500'}`}>Razorpay</span>
               </button>
-              <button
-                onClick={() => setPaymentMethod("cash")}
-                className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${paymentMethod === 'cash' ? 'border-[#0B2A5B] bg-[#0B2A5B]/5' : 'border-gray-200 bg-white hover:border-[#0B2A5B]/30'}`}
-              >
-                <Banknote className={`mb-2 ${paymentMethod === 'cash' ? 'text-[#0B2A5B]' : 'text-gray-400'}`} />
-                <span className={`text-sm font-semibold ${paymentMethod === 'cash' ? 'text-[#0B2A5B]' : 'text-gray-500'}`}>Cash</span>
-              </button>
-              <button
-                onClick={() => setPaymentMethod("cheque")}
-                className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${paymentMethod === 'cheque' ? 'border-[#0B2A5B] bg-[#0B2A5B]/5' : 'border-gray-200 bg-white hover:border-[#0B2A5B]/30'}`}
-              >
-                <Landmark className={`mb-2 ${paymentMethod === 'cheque' ? 'text-[#0B2A5B]' : 'text-gray-400'}`} />
-                <span className={`text-sm font-semibold ${paymentMethod === 'cheque' ? 'text-[#0B2A5B]' : 'text-gray-500'}`}>Cheque</span>
-              </button>
+              {isAdminCreated && (
+                <>
+                  <button
+                    onClick={() => setPaymentMethod("cash")}
+                    className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${paymentMethod === 'cash' ? 'border-[#0B2A5B] bg-[#0B2A5B]/5' : 'border-gray-200 bg-white hover:border-[#0B2A5B]/30'}`}
+                  >
+                    <Banknote className={`mb-2 ${paymentMethod === 'cash' ? 'text-[#0B2A5B]' : 'text-gray-400'}`} />
+                    <span className={`text-sm font-semibold ${paymentMethod === 'cash' ? 'text-[#0B2A5B]' : 'text-gray-500'}`}>Cash</span>
+                  </button>
+                  <button
+                    onClick={() => setPaymentMethod("cheque")}
+                    className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${paymentMethod === 'cheque' ? 'border-[#0B2A5B] bg-[#0B2A5B]/5' : 'border-gray-200 bg-white hover:border-[#0B2A5B]/30'}`}
+                  >
+                    <Landmark className={`mb-2 ${paymentMethod === 'cheque' ? 'text-[#0B2A5B]' : 'text-gray-400'}`} />
+                    <span className={`text-sm font-semibold ${paymentMethod === 'cheque' ? 'text-[#0B2A5B]' : 'text-gray-500'}`}>Cheque</span>
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Cash Fields */}
@@ -498,7 +510,7 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
               <div className="space-y-4 pt-2 border-t border-gray-200">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-bold text-[#0B2A5B] block mb-1">Receipt Number *</label>
+                    <label className="text-xs font-bold text-[#0B2A5B] block mb-1">Receipt Number (Optional)</label>
                     <Input value={offlineData.reference_number} onChange={e => setOfflineData({...offlineData, reference_number: e.target.value})} placeholder="E.g. RCPT-123" />
                   </div>
                   <div>
@@ -591,7 +603,7 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
         <div className="p-6 md:p-8 pt-4 border-t border-gray-100 bg-gray-50/50 flex gap-4">
           <Button
             onClick={completePayment}
-            disabled={loading || (paymentMethod === "cash" && (!offlineData.payment_date || !offlineData.reference_number)) || (paymentMethod === "cheque" && (!offlineData.reference_number || !offlineData.payment_date || !offlineData.bank_name || !offlineData.branch_name || !offlineData.account_holder_name || !chequeFile))}
+            disabled={loading || (paymentMethod === "cash" && (!offlineData.payment_date)) || (paymentMethod === "cheque" && (!offlineData.reference_number || !offlineData.payment_date || !offlineData.bank_name || !offlineData.branch_name || !offlineData.account_holder_name || !chequeFile))}
             className="flex-1 bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] shadow-lg shadow-[#0B2A5B]/20 py-2.5 md:py-3.5 h-auto text-sm md:text-base font-semibold"
           >
             {loading ? "Processing..." : `Pay ₹${((initialPrice - activeDiscount) * 1.18).toFixed(2)} ${paymentMethod !== 'razorpay' ? `via ${paymentMethod === 'cash' ? 'Cash' : 'Cheque'}` : ''}`}
