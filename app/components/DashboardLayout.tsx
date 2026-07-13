@@ -12,6 +12,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import logo from "../../imports/fintrade_logo.png";
 import api from "../services/api";
+import ActivityTracker from "./ActivityTracker";
 
 interface NavItem {
   label: string;
@@ -21,9 +22,9 @@ interface NavItem {
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  role?: "student" | "teacher" | "admin" | "super_admin" | "distributor";
+  role?: "student" | "teacher" | "admin" | "super_admin" | "distributor" | "franchise_ib";
   /** @deprecated Use `role` instead */
-  userRole?: "student" | "teacher" | "admin" | "super_admin" | "distributor";
+  userRole?: "student" | "teacher" | "admin" | "super_admin" | "distributor" | "franchise_ib";
   userName?: string;
   navItems?: NavItem[];
 }
@@ -120,6 +121,12 @@ const getNavItemsByRole = (role: string): NavItem[] => {
       return [
         { label: "Dashboard", path: "/distributor/dashboard", icon: <Home size={20} /> },
         { label: "Wallet", path: "/distributor/wallet", icon: <IndianRupee size={20} /> },
+      ];
+    case "franchise_ib":
+      return [
+        { label: "Dashboard", path: "/franchise-ib/dashboard", icon: <Home size={20} /> },
+        { label: "Manage IBs", path: "/franchise-ib/ibs", icon: <Handshake size={20} /> },
+        { label: "Manage Students", path: "/franchise-ib/students", icon: <Users size={20} /> },
       ];
     default:
       return [];
@@ -431,6 +438,7 @@ export function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-[#F5F5F5]">
+      <ActivityTracker />
 
       {/* Mobile Header */}
       <div

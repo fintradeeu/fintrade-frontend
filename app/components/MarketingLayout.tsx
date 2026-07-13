@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
 import TickerStrip from "./TickerStrip";
 import PublicChatbot from "./PublicChatbot";
+import ActivityTracker from "./ActivityTracker";
 
 export default function MarketingLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -23,13 +24,6 @@ export default function MarketingLayout() {
 
   const [showAnnouncements, setShowAnnouncements] = useState(true);
   const [showCookieBanner, setShowCookieBanner] = useState(false);
-  const [cookieFormOpen, setCookieFormOpen] = useState(false);
-  const [cookieForm, setCookieForm] = useState({
-    name: "",
-    emailId: "",
-    mobileNumber: "",
-  });
-  const [cookieSaving, setCookieSaving] = useState(false);
 
   useEffect(() => {
     const consent = localStorage.getItem("cookie_consent");
@@ -43,54 +37,37 @@ export default function MarketingLayout() {
 
   const handleAcceptCookies = async () => {
     setShowCookieBanner(false);
-    setCookieFormOpen(true);
-  };
+    localStorage.setItem("cookie_consent", "accepted");
+    toast.success("Cookie preferences saved.");
 
-  const handleCookieFormSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    const payload = {
-      name: cookieForm.name.trim(),
-      emailId: cookieForm.emailId.trim(),
-      mobileNumber: cookieForm.mobileNumber.trim(),
-    };
-
-    if (!payload.name || !payload.emailId || !payload.mobileNumber) {
-      toast.error("Please fill name, email, and mobile number.");
-      return;
-    }
-
-    setCookieSaving(true);
     try {
-      const profileRes = await api.post("/api/v1/user", payload);
-      const profileData = profileRes.data;
-
-      localStorage.setItem("cookie_consent", "accepted");
-      localStorage.setItem("cookie_policy_profile", JSON.stringify({
-        ...payload,
-        id: profileData?.data?.id,
-        role: profileData?.data?.role || "user",
-      }));
+      let locationData = null;
       try {
-        await api.post("/auth/cookie-consent", { consent_type: "accepted" });
-      } catch (consentErr) {
-        console.warn("Failed to log cookie consent:", consentErr);
+        const ipRes = await fetch("https://ipapi.co/json/");
+        if (ipRes.ok) {
+          locationData = await ipRes.json();
+        }
+      } catch (err) {
+        console.warn("Failed to fetch location", err);
       }
-      setCookieFormOpen(false);
-      toast.success(profileData?.message || "User profile created successfully");
-    } catch (err: any) {
-      console.error("Saving cookie policy profile failed:", err);
-      
-      // Local fallback in case backend is unreachable or returns error
-      localStorage.setItem("cookie_consent", "accepted");
-      localStorage.setItem("cookie_policy_profile", JSON.stringify({
-        ...payload,
-        id: "offline_fallback_" + Date.now(),
-        role: "user",
-      }));
-      setCookieFormOpen(false);
-      toast.success("Accepted cookies (saved locally).");
-    } finally {
-      setCookieSaving(false);
+
+      await api.post("/logs/activity", {
+        module: "COOKIE_CONSENT",
+        action: "ACCEPTED",
+        description: "User accepted cookie policy",
+        status_code: 200,
+        status_text: "SUCCESS",
+        location_data: locationData,
+        device_data: {
+          userAgent: navigator.userAgent,
+          platform: navigator.platform,
+        },
+        metadata_json: {
+          url: window.location.href,
+        },
+      });
+    } catch (err) {
+      console.warn("Failed to log activity:", err);
     }
   };
 
@@ -287,6 +264,7 @@ export default function MarketingLayout() {
 
   return (
     <div className="min-h-screen w-full max-w-full flex flex-col font-sans" style={{ background: "radial-gradient(circle at 50% 50%, #FFFFFF 0%, #F8F8F8 50%, #F4F4F4 100%)" }}>
+      <ActivityTracker />
 
       {/* Premium Preloader Intro Screen */}
       {shouldRenderLoader && (
@@ -712,86 +690,7 @@ export default function MarketingLayout() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={cookieFormOpen} onOpenChange={setCookieFormOpen}>
-        <DialogContent className="sm:max-w-[460px] bg-white p-0 overflow-hidden rounded-2xl border border-gray-100 shadow-2xl font-sans">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100">
-            <DialogTitle className="text-[#0B2A5B] flex items-center gap-2.5 text-lg font-extrabold">
-              <span className="w-10 h-10 rounded-full bg-[#D50032]/10 text-[#D50032] flex items-center justify-center text-md font-bold">
-                🍪
-              </span>
-              Cookie Consent Details
-            </DialogTitle>
-          </DialogHeader>
-
-          <form onSubmit={handleCookieFormSubmit} className="px-6 py-5 space-y-4">
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Please provide your contact information to accept cookies and finalize compliance records.
-            </p>
-            <div>
-              <Label htmlFor="cookieConsentName" className="text-xs font-extrabold text-[#0B2A5B]">Full Name</Label>
-              <div className="relative mt-2">
-                <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="cookieConsentName"
-                  value={cookieForm.name}
-                  onChange={(event) => setCookieForm((current) => ({ ...current, name: event.target.value }))}
-                  placeholder="Sujal Gujar"
-                  className="pl-10 h-11 rounded-xl bg-slate-50 border-slate-200 focus:border-[#D50032] focus:ring-[#D50032]"
-                  disabled={cookieSaving}
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="cookieConsentEmail" className="text-xs font-extrabold text-[#0B2A5B]">Email Address</Label>
-              <div className="relative mt-2">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="cookieConsentEmail"
-                  type="email"
-                  value={cookieForm.emailId}
-                  onChange={(event) => setCookieForm((current) => ({ ...current, emailId: event.target.value }))}
-                  placeholder="name@example.com"
-                  className="pl-10 h-11 rounded-xl bg-slate-50 border-slate-200 focus:border-[#D50032] focus:ring-[#D50032]"
-                  disabled={cookieSaving}
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="cookieConsentPhone" className="text-xs font-extrabold text-[#0B2A5B]">Phone Number</Label>
-              <div className="relative mt-2">
-                <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="cookieConsentPhone"
-                  type="tel"
-                  value={cookieForm.mobileNumber}
-                  onChange={(event) => setCookieForm((current) => ({ ...current, mobileNumber: event.target.value }))}
-                  placeholder="9876543210"
-                  className="pl-10 h-11 rounded-xl bg-slate-50 border-slate-200 focus:border-[#D50032] focus:ring-[#D50032]"
-                  disabled={cookieSaving}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-5">
-              <Button
-                type="submit"
-                className="flex-1 bg-[#D50032] hover:bg-[#b00029] text-white font-extrabold px-6 py-2.5 h-11 text-sm rounded-xl shadow-lg shadow-[#D50032]/10 transition-transform active:scale-95 border-0 cursor-pointer"
-                disabled={cookieSaving}
-              >
-                <Save className="mr-2 h-4 w-4" />
-                {cookieSaving ? "Saving..." : "Save & Accept Cookies"}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Footer */}
+        {/* Footer */}
       <footer className="py-12 relative z-10" style={{ background: "#121212", color: "white" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8 mb-8">

@@ -7,6 +7,7 @@ import { Badge } from "../../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Home, Users, BarChart3, Tag, Link as LinkIcon, Copy, Sparkles, Award } from "lucide-react";
 import api from "../../services/api";
+import RegisterStudentModal from "../../components/RegisterStudentModal";
 
 const navItems = [
   { label: "Dashboard", path: "/distributor/dashboard", icon: <Home size={20} /> },
@@ -31,6 +32,7 @@ export default function DistributorDashboard() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "enrolled">("all");
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -97,11 +99,16 @@ export default function DistributorDashboard() {
 
   return (
     <DashboardLayout navItems={navItems} role="distributor">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[#0B2A5B] mb-2 flex items-center gap-2">
-          Welcome back, {userName}! <Sparkles className="text-[#C2A86A]" size={28} />
-        </h1>
-        <p className="text-[#0B2A5B]/70">Track your referral network, monitor enrollments, and check your performance metrics in real-time.</p>
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-[#0B2A5B] mb-2 flex items-center gap-2">
+            Welcome back, {userName}! <Sparkles className="text-[#C2A86A]" size={28} />
+          </h1>
+          <p className="text-[#0B2A5B]/70">Track your referral network, monitor enrollments, and check your performance metrics in real-time.</p>
+        </div>
+        <Button onClick={() => setIsRegisterModalOpen(true)} className="bg-[#0B2A5B] text-white hover:bg-[#123E7E]">
+          Register Student
+        </Button>
       </div>
 
       <div className="grid md:grid-cols-4 gap-6 mb-8">
@@ -296,6 +303,17 @@ export default function DistributorDashboard() {
           </div>
         </Card>
       </div>
+
+      {isRegisterModalOpen && (
+        <RegisterStudentModal
+          onClose={() => setIsRegisterModalOpen(false)}
+          onSuccess={() => {
+            setIsRegisterModalOpen(false);
+            fetchData();
+          }}
+          apiPrefix="/distributor"
+        />
+      )}
     </DashboardLayout>
   );
 }

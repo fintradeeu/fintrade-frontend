@@ -82,9 +82,13 @@ import CookiePolicy from "./pages/CookiePolicy";
 import AdminCookieConsents from "./pages/admin/AdminCookieConsents";
 import AdminDoubtForms from "./pages/admin/AdminDoubtForms";
 
-// Distributor Pages
 import DistributorDashboard from "./pages/distributor/DistributorDashboard";
 import DistributorWallet from "./pages/distributor/DistributorWallet";
+
+// Franchise IB Pages
+import FranchiseDashboard from "./pages/franchise-ib/FranchiseDashboard";
+import ManageIBs from "./pages/franchise-ib/ManageIBs";
+import ManageStudents from "./pages/franchise-ib/ManageStudents";
 
 export const router = createBrowserRouter([
   {
@@ -413,5 +417,18 @@ export const router = createBrowserRouter([
   {
     path: "/distributor/wallet",
     Component: DistributorWallet,
+  },
+  // Franchise IB Routes
+  {
+    path: "/franchise-ib/dashboard",
+    Component: FranchiseDashboard,
+  },
+  {
+    path: "/franchise-ib/ibs",
+    Component: ManageIBs,
+  },
+  {
+    path: "/franchise-ib/students",
+    Component: ManageStudents,
   },
 ]);
