@@ -18,6 +18,7 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
   const [courses, setCourses] = useState<any[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [batches, setBatches] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
     full_name: "",
@@ -25,6 +26,7 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
     phone: "",
     city: "",
     course_id: "",
+    batch_id: "",
     payment_mode: "razorpay", // razorpay, cash, cheque
     amount: "",
     reference_number: "",
@@ -32,24 +34,55 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
   });
 
   useEffect(() => {
-    // Fetch courses for the dropdown
-    const fetchCourses = async () => {
+    // Fetch all public batches on mount
+    const fetchBatches = async () => {
       try {
-        const res = await api.get("/courses");
-        setCourses(res.data.data || res.data || []);
+        const res = await api.get("/batches/public/list");
+        console.log("Batches API Response:", res.data);
+        const data = res.data?.data || res.data;
+        setBatches(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error("Failed to fetch courses", err);
+        console.error("Failed to fetch batches", err);
+        setBatches([]);
       }
     };
-    fetchCourses();
+    fetchBatches();
   }, []);
+
+  useEffect(() => {
+    // Update courses when a batch is selected
+    if (formData.batch_id && formData.batch_id !== "none") {
+      const selectedBatch = batches.find(b => b.id.toString() === formData.batch_id);
+      if (selectedBatch && selectedBatch.assigned_courses) {
+        setCourses(selectedBatch.assigned_courses);
+      } else {
+        setCourses([]);
+      }
+    } else {
+      setCourses([]);
+    }
+    // Reset selected course when batch changes
+    setFormData(prev => ({ ...prev, course_id: "" }));
+  }, [formData.batch_id, batches]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
+      
+      // Auto-generate receipt number for Cash
+      if (name === "payment_mode" && value === "cash") {
+        const randomReceipt = `CASH-${Math.floor(100000 + Math.random() * 900000)}`;
+        updated.reference_number = randomReceipt;
+      } else if (name === "payment_mode" && value !== "cash" && value !== "cheque") {
+        updated.reference_number = "";
+      }
+      
+      return updated;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,7 +94,8 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
     try {
       const payload = {
         ...formData,
-        course_id: formData.course_id ? parseInt(formData.course_id) : null,
+        course_id: formData.course_id && formData.course_id !== "none" ? parseInt(formData.course_id) : null,
+        batch_id: formData.batch_id && formData.batch_id !== "none" ? parseInt(formData.batch_id) : null,
         amount: formData.amount ? parseFloat(formData.amount) : 0,
       };
 
@@ -125,19 +159,36 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
           </div>
 
           <div className="space-y-2 border-t pt-4">
-            <Label htmlFor="course_id">Select Course</Label>
-            <Select value={formData.course_id} onValueChange={(v) => handleSelectChange("course_id", v)}>
+            <Label htmlFor="batch_id">Select Batch</Label>
+            <Select value={formData.batch_id} onValueChange={(v) => handleSelectChange("batch_id", v)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select a course (Optional)" />
+                <SelectValue placeholder="Select a batch (Optional)" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">-- None --</SelectItem>
-                {courses.map((c) => (
-                  <SelectItem key={c.id} value={c.id.toString()}>{c.title}</SelectItem>
+                {batches.map((b) => (
+                  <SelectItem key={b.id} value={b.id.toString()}>{b.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+
+          {formData.batch_id && formData.batch_id !== "none" && courses.length > 0 && (
+            <div className="space-y-2 pt-2">
+              <Label htmlFor="course_id">Select Course</Label>
+              <Select value={formData.course_id} onValueChange={(v) => handleSelectChange("course_id", v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a course" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">-- Select a course --</SelectItem>
+                  {courses.map((c) => (
+                    <SelectItem key={c.id} value={c.id.toString()}>{c.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-2 border-t pt-4">
             <Label>Payment Mode *</Label>

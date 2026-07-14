@@ -39,19 +39,23 @@ export default function LoginPage() {
     const isAdmin = roles.some((r: any) => r.name === "admin");
     const isFaculty = roles.some((r: any) => r.name === "faculty");
     const isDistributor = roles.some((r: any) => r.name === "distributor");
+    const isFranchiseIB = roles.some((r: any) => r.name === "franchise_ib");
 
-    if (isAffiliatePortal && !isDistributor) {
+    const hostname = typeof window !== "undefined" ? window.location.hostname.toLowerCase() : "";
+    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
+
+    if (isAffiliatePortal && !isDistributor && !isFranchiseIB) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      setErrorMsg("This portal is only for IB accounts. Please use the main FinTrade login.");
+      setErrorMsg("This portal is only for IB and Franchise IB accounts. Please use the main FinTrade login.");
       setStep("credentials");
       return;
     }
 
-    if (!isAffiliatePortal && isDistributor) {
+    if (!isAffiliatePortal && !isLocalhost && (isDistributor || isFranchiseIB)) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      setErrorMsg("IB accounts must login from affiliate.thefintrade.com/login.");
+      setErrorMsg("IB and Franchise IB accounts must login from affiliate.thefintrade.com/login.");
       setStep("credentials");
       return;
     }
@@ -62,6 +66,8 @@ export default function LoginPage() {
       navigate("/admin/dashboard");
     } else if (isFaculty) {
       navigate("/teacher/dashboard");
+    } else if (isFranchiseIB) {
+      navigate("/franchise-ib/dashboard");
     } else if (isDistributor) {
       navigate("/distributor/dashboard");
     } else {

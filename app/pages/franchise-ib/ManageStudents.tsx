@@ -5,6 +5,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../components/ui/dialog";
+import { Eye, FileText, Download, CheckCircle, Clock } from "lucide-react";
 import api from "../../services/api";
 import RegisterStudentModal from "../../components/RegisterStudentModal";
 
@@ -15,6 +17,8 @@ export default function ManageStudents() {
   const [toDate, setToDate] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "enrolled">("all");
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [detailsTab, setDetailsTab] = useState<"profile" | "courses" | "invoices">("profile");
 
   const fetchStudents = async () => {
     try {
@@ -107,6 +111,7 @@ export default function ManageStudents() {
                 <TableHead className="text-[#0B2A5B] font-semibold">Status</TableHead>
                 <TableHead className="text-[#0B2A5B] font-semibold">Timeline Progress</TableHead>
                 <TableHead className="text-[#0B2A5B] font-semibold">Joined At</TableHead>
+                <TableHead className="text-[#0B2A5B] font-semibold text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -161,6 +166,20 @@ export default function ManageStudents() {
                       <TableCell className="text-[#0B2A5B]">
                         {new Date(r.created_at).toLocaleDateString()}
                       </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedStudent(r);
+                            setDetailsTab("profile");
+                          }}
+                          className="text-[#0B2A5B] border-[#0B2A5B] hover:bg-[#0B2A5B] hover:text-white"
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          Details
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   );
                 })
@@ -180,6 +199,205 @@ export default function ManageStudents() {
           apiPrefix="/franchise-ibs"
         />
       )}
+      
+      {/* View Details Modal */}
+      <Dialog open={!!selectedStudent} onOpenChange={(open) => !open && setSelectedStudent(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-[#0B2A5B]">Student Details</DialogTitle>
+            <DialogDescription>
+              Detailed view of {selectedStudent?.student_name}'s progress and invoices.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedStudent && (
+            <div className="mt-4">
+              <div className="flex border-b border-gray-200 mb-6">
+                <button
+                  className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
+                    detailsTab === "profile" ? "border-[#0B2A5B] text-[#0B2A5B]" : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
+                  onClick={() => setDetailsTab("profile")}
+                >
+                  Profile
+                </button>
+                <button
+                  className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
+                    detailsTab === "courses" ? "border-[#0B2A5B] text-[#0B2A5B]" : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
+                  onClick={() => setDetailsTab("courses")}
+                >
+                  Course Progress
+                </button>
+                <button
+                  className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
+                    detailsTab === "invoices" ? "border-[#0B2A5B] text-[#0B2A5B]" : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
+                  onClick={() => setDetailsTab("invoices")}
+                >
+                  Invoices
+                </button>
+              </div>
+
+              {detailsTab === "profile" && (
+                <div className="grid grid-cols-2 gap-6 bg-gray-50 p-6 rounded-xl border border-gray-100">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Full Name</p>
+                    <p className="font-semibold text-lg text-[#0B2A5B]">{selectedStudent.student_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Email</p>
+                    <p className="font-semibold text-lg text-[#0B2A5B]">{selectedStudent.student_email}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Phone Number</p>
+                    <p className="font-semibold text-[#0B2A5B]">{selectedStudent.mobile_no || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">City</p>
+                    <p className="font-semibold text-[#0B2A5B]">{selectedStudent.city || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Status</p>
+                    <Badge className={selectedStudent.enrolled ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}>
+                      {selectedStudent.enrolled ? "Enrolled" : "Pending Enrollment"}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Joined Date</p>
+                    <p className="font-semibold text-[#0B2A5B]">{new Date(selectedStudent.created_at).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              )}
+
+              {detailsTab === "courses" && (
+                <div className="space-y-4">
+                  {!selectedStudent.course_progress || selectedStudent.course_progress.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+                      No course progress data available.
+                    </div>
+                  ) : (
+                    selectedStudent.course_progress.map((cp: any, idx: number) => (
+                      <div key={idx} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="font-bold text-[#0B2A5B]">{cp.title}</h4>
+                          {cp.progress >= 100 ? (
+                            <Badge className="bg-green-100 text-green-700 border-none">
+                              <CheckCircle className="w-3 h-3 mr-1" /> Completed
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-blue-100 text-blue-700 border-none">
+                              <Clock className="w-3 h-3 mr-1" /> In Progress
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full rounded-full ${cp.progress >= 100 ? 'bg-green-500' : 'bg-blue-500'}`} 
+                              style={{ width: `${Math.min(100, Math.max(0, cp.progress))}%` }} 
+                            />
+                          </div>
+                          <span className="text-sm font-semibold text-gray-700 w-12 text-right">
+                            {cp.progress}%
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {detailsTab === "invoices" && (
+                <div className="space-y-4">
+                  {!selectedStudent.transactions || selectedStudent.transactions.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+                      No transactions found for this student.
+                    </div>
+                  ) : (
+                    selectedStudent.transactions.map((tx: any, idx: number) => (
+                      <div key={idx} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-bold text-[#0B2A5B]">{tx.course_title || "Course Enrollment"}</h4>
+                            <Badge className={
+                              tx.status === "success" || tx.status === "completed" ? "bg-green-100 text-green-700 border-none" : 
+                              tx.status === "pending_verification" ? "bg-orange-100 text-orange-700 border-none" :
+                              "bg-red-100 text-red-700 border-none"
+                            }>
+                              {tx.status === "pending_verification" ? "Pending Verification" : tx.status.toUpperCase()}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-500 flex items-center gap-1">
+                            <FileText className="w-3 h-3" />
+                            TXN ID: {tx.txnid}
+                            {tx.reference_number && ` • Ref: ${tx.reference_number}`}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            Date: {new Date(tx.date).toLocaleDateString()} • Mode: {(tx.payment_mode || "N/A").toUpperCase()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4 md:flex-col md:items-end">
+                          <span className="text-xl font-bold text-gray-900">₹{tx.amount.toLocaleString()}</span>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-[#0B2A5B]"
+                            onClick={() => {
+                              // Instead of an API call for PDF, we generate a print view
+                              const printWindow = window.open('', '_blank');
+                              if (printWindow) {
+                                printWindow.document.write(`
+                                  <html>
+                                    <head>
+                                      <title>Invoice - ${tx.txnid}</title>
+                                      <style>
+                                        body { font-family: system-ui, -apple-system, sans-serif; padding: 40px; color: #333; }
+                                        .header { border-bottom: 2px solid #0B2A5B; padding-bottom: 20px; margin-bottom: 30px; }
+                                        .logo { font-size: 24px; font-weight: bold; color: #0B2A5B; }
+                                        .row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+                                        .label { color: #666; font-size: 14px; }
+                                        .value { font-weight: 500; }
+                                        .total { font-size: 20px; font-weight: bold; margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px; }
+                                      </style>
+                                    </head>
+                                    <body>
+                                      <div class="header">
+                                        <div class="logo">FinTrade LMS - Invoice</div>
+                                      </div>
+                                      <div class="row"><span class="label">Invoice No:</span> <span class="value">${tx.txnid}</span></div>
+                                      <div class="row"><span class="label">Date:</span> <span class="value">${new Date(tx.date).toLocaleString()}</span></div>
+                                      <div class="row"><span class="label">Student Name:</span> <span class="value">${selectedStudent.student_name}</span></div>
+                                      <div class="row"><span class="label">Course:</span> <span class="value">${tx.course_title || "Course Enrollment"}</span></div>
+                                      <div class="row"><span class="label">Payment Mode:</span> <span class="value">${(tx.payment_mode || "Online").toUpperCase()}</span></div>
+                                      <div class="row"><span class="label">Status:</span> <span class="value">${tx.status.toUpperCase()}</span></div>
+                                      ${tx.reference_number ? `<div class="row"><span class="label">Reference:</span> <span class="value">${tx.reference_number}</span></div>` : ''}
+                                      <div class="row total"><span>Total Paid:</span> <span>₹${tx.amount.toLocaleString()}</span></div>
+                                      
+                                      <div style="margin-top: 50px; font-size: 12px; color: #888;">
+                                        This is a computer-generated invoice and requires no physical signature.
+                                      </div>
+                                    </body>
+                                  </html>
+                                `);
+                                printWindow.document.close();
+                                setTimeout(() => printWindow.print(), 500);
+                              }
+                            }}
+                          >
+                            <Download className="w-4 h-4 mr-1.5" />
+                            Print Invoice
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

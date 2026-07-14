@@ -228,8 +228,167 @@ function AffiliateIBRegisterForm() {
   );
 }
 
+function FranchiseIBRegisterForm() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [form, setForm] = useState({
+    full_name: "",
+    email: "",
+    mobile_no: "",
+    password: "",
+    confirm_password: "",
+    pan_number: "",
+    aadhaar_number: "",
+    bank_account_holder_name: "",
+    bank_name: "",
+    bank_account_number: "",
+    bank_ifsc_code: "",
+  });
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const updateForm = (field: string, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    if (form.password !== form.confirm_password) {
+      setErrorMsg("Password and confirm password do not match.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Create a payload matching the backend FranchiseIBCreate schema
+      const payload = {
+        full_name: form.full_name,
+        email: form.email,
+        mobile_no: form.mobile_no,
+        password: form.password,
+        pan_number: form.pan_number || undefined,
+        aadhaar_number: form.aadhaar_number || undefined,
+        bank_account_holder_name: form.bank_account_holder_name || undefined,
+        bank_name: form.bank_name || undefined,
+        bank_account_number: form.bank_account_number || undefined,
+        bank_ifsc_code: form.bank_ifsc_code || undefined,
+      };
+
+      const res = await api.post("/franchise-ibs/", payload);
+      setSuccessMsg(
+        `Franchise IB account created successfully! Your referral code is: ${res.data.referral_code}. Redirecting to login...`
+      );
+      
+      // Auto-redirect to login after 3 seconds
+      setTimeout(() => {
+        navigate("/login");
+      }, 3000);
+
+    } catch (err: any) {
+      let message = "Franchise IB registration failed. Please check your details and try again.";
+      if (err.response?.data?.detail) {
+        message = Array.isArray(err.response.data.detail)
+          ? err.response.data.detail.map((item: any) => item.msg).join(", ")
+          : err.response.data.detail;
+      }
+      setErrorMsg(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "linear-gradient(135deg, #121212 0%, #2d2d2d 100%)" }}>
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-[#D50032] rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#D50032] rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="w-full max-w-5xl relative z-10">
+        <Link to="/login" className="inline-flex items-center gap-2 text-white hover:text-[#D50032] transition-colors mb-6">
+          <ArrowLeft size={20} />
+          <span>Back to Login</span>
+        </Link>
+
+        <Card className="p-8 bg-white shadow-2xl border-none">
+          <div className="flex items-start justify-between gap-4 mb-8">
+            <div>
+              <h2 className="text-3xl font-bold mb-2" style={{ color: "#121212" }}>Franchise IB Registration</h2>
+              <p className="text-gray-600">Apply to become a Franchise Introducing Broker partner.</p>
+            </div>
+            <div className="hidden sm:flex items-center h-[44px] w-[140px] overflow-hidden">
+              <img src={logo} alt="FinTrade" className="h-full w-full object-contain scale-[2.4]" />
+            </div>
+          </div>
+
+          {errorMsg && <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">{errorMsg}</div>}
+          {successMsg && <div className="mb-6 p-3 bg-green-50 border border-green-200 text-green-700 rounded-md text-sm font-medium">{successMsg}</div>}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-[#121212] mb-3">Personal Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><Label htmlFor="fib_name">Full Name</Label><Input id="fib_name" value={form.full_name} onChange={(e) => updateForm("full_name", e.target.value)} className="mt-1 bg-gray-50" required /></div>
+                <div><Label htmlFor="fib_email">Email Address</Label><Input id="fib_email" type="email" value={form.email} onChange={(e) => updateForm("email", e.target.value)} className="mt-1 bg-gray-50" required /></div>
+                <div><Label htmlFor="fib_phone">Mobile Number</Label><Input id="fib_phone" type="tel" value={form.mobile_no} onChange={(e) => updateForm("mobile_no", e.target.value)} className="mt-1 bg-gray-50" required /></div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-[#121212] mb-3">Login Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="fib_password">Password</Label>
+                  <div className="relative mt-1">
+                    <Input id="fib_password" type={showPassword ? "text" : "password"} minLength={8} value={form.password} onChange={(e) => updateForm("password", e.target.value)} className="bg-gray-50 pr-12" required />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900">
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
+                <div><Label htmlFor="fib_confirm_password">Confirm Password</Label><Input id="fib_confirm_password" type={showPassword ? "text" : "password"} minLength={8} value={form.confirm_password} onChange={(e) => updateForm("confirm_password", e.target.value)} className="mt-1 bg-gray-50" required /></div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-[#121212] mb-3">KYC Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><Label htmlFor="fib_aadhaar">Aadhaar Number</Label><Input id="fib_aadhaar" value={form.aadhaar_number} onChange={(e) => updateForm("aadhaar_number", e.target.value)} className="mt-1 bg-gray-50" placeholder="12-digit Aadhaar" /></div>
+                <div><Label htmlFor="fib_pan">PAN Number</Label><Input id="fib_pan" value={form.pan_number} onChange={(e) => updateForm("pan_number", e.target.value.toUpperCase())} className="mt-1 bg-gray-50" placeholder="10-character PAN" /></div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-[#121212] mb-3">Bank Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><Label htmlFor="fib_holder">Account Holder Name</Label><Input id="fib_holder" value={form.bank_account_holder_name} onChange={(e) => updateForm("bank_account_holder_name", e.target.value)} className="mt-1 bg-gray-50" /></div>
+                <div><Label htmlFor="fib_bank">Bank Name</Label><Input id="fib_bank" value={form.bank_name} onChange={(e) => updateForm("bank_name", e.target.value)} className="mt-1 bg-gray-50" /></div>
+                <div><Label htmlFor="fib_account">Account Number</Label><Input id="fib_account" value={form.bank_account_number} onChange={(e) => updateForm("bank_account_number", e.target.value)} className="mt-1 bg-gray-50" /></div>
+                <div><Label htmlFor="fib_ifsc">IFSC Code</Label><Input id="fib_ifsc" value={form.bank_ifsc_code} onChange={(e) => updateForm("bank_ifsc_code", e.target.value.toUpperCase())} className="mt-1 bg-gray-50" /></div>
+              </div>
+            </div>
+
+            <Button type="submit" className="w-full text-white shadow-lg" style={{ background: "#D50032", boxShadow: "0 0 20px rgba(213,0,50, 0.3)" }} size="lg" disabled={loading}>
+              {loading ? "Registering..." : "Submit Franchise IB Application"}
+            </Button>
+          </form>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
 export default function RegisterPage() {
   const params = new URLSearchParams(window.location.search);
+  const isFranchiseRegister = params.get("type") === "franchise_ib" || params.get("role") === "franchise_ib";
+  if (isFranchiseRegister) {
+    return <FranchiseIBRegisterForm />;
+  }
+
   const isAffiliateRegister =
     window.location.hostname.toLowerCase().includes("affiliate.") ||
     params.get("type") === "ib" ||

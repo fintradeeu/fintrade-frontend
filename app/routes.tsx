@@ -424,10 +424,6 @@ export const router = createBrowserRouter([
     Component: FranchiseDashboard,
   },
   {
-    path: "/franchise-ib/ibs",
-    Component: ManageIBs,
-  },
-  {
     path: "/franchise-ib/students",
     Component: ManageStudents,
   },

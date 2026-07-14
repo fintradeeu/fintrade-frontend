@@ -125,7 +125,6 @@ const getNavItemsByRole = (role: string): NavItem[] => {
     case "franchise_ib":
       return [
         { label: "Dashboard", path: "/franchise-ib/dashboard", icon: <Home size={20} /> },
-        { label: "Manage IBs", path: "/franchise-ib/ibs", icon: <Handshake size={20} /> },
         { label: "Manage Students", path: "/franchise-ib/students", icon: <Users size={20} /> },
       ];
     default:
@@ -185,6 +184,7 @@ export function DashboardLayout({
           if (roles.some((r: any) => r.name === "super_admin")) return "super_admin";
           if (roles.some((r: any) => r.name === "admin")) return "admin";
           if (roles.some((r: any) => r.name === "faculty")) return "teacher";
+          if (roles.some((r: any) => r.name === "franchise_ib")) return "franchise_ib";
           if (roles.some((r: any) => r.name === "distributor")) return "distributor";
         }
       } catch { /* ignore */ }
@@ -292,7 +292,8 @@ export function DashboardLayout({
           const actualRole = roles.some((r: any) => r.name === "super_admin") ? "super_admin" :
                              roles.some((r: any) => r.name === "admin") ? "admin" :
                              roles.some((r: any) => r.name === "faculty") ? "teacher" :
-                             roles.some((r: any) => r.name === "distributor") ? "distributor" : "student";
+                             roles.some((r: any) => r.name === "distributor") ? "distributor" : 
+                             roles.some((r: any) => r.name === "franchise_ib") ? "franchise_ib" : "student";
           setResolvedRole(actualRole);
         }
       } catch { /* ignore */ }
