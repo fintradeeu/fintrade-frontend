@@ -57,6 +57,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminStudents from "./pages/admin/AdminStudents";
 import AdminStudentManagement from "./pages/admin/AdminStudentManagement";
 import AdminIntroducingBrokers from "./pages/admin/AdminIntroducingBrokers";
+import AdminFranchiseIBs from "./pages/admin/AdminFranchiseIBs";
 import AdminCommissionManagement from "./pages/admin/AdminCommissionManagement";
 import AdminCourses from "./pages/admin/AdminCourses";
 import AdminModuleStudents from "./pages/admin/AdminModuleStudents";
@@ -308,6 +309,10 @@ export const router = createBrowserRouter([
   {
     path: "/admin/introducing-brokers",
     Component: AdminIntroducingBrokers,
+  },
+  {
+    path: "/admin/franchise-ibs",
+    Component: AdminFranchiseIBs,
   },
   {
     path: "/admin/commissions",
