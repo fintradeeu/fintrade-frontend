@@ -759,7 +759,7 @@ export default function MarketingHome() {
   const [emiConfig, setEmiConfig] = useState<any>({});
   const [certConfig, setCertConfig] = useState<any>({});
   const [liveClasses, setLiveClasses] = useState<any[]>([]);
-  const [globalOffices, setGlobalOffices] = useState<any[]>(officeCountries);
+  const [globalOffices, setGlobalOffices] = useState<any[]>([]);
 
   // States and refs for premium mobile autoslide behavior
   const coursesContainerRef = useRef<HTMLDivElement>(null);
