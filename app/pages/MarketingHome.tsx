@@ -1331,7 +1331,9 @@ export default function MarketingHome() {
 
                 </div>
 
-                <OfficePresenceStrip offices={globalOffices} />
+                {sectionVisibility.show_global_offices !== false && (
+                  <OfficePresenceStrip offices={globalOffices} />
+                )}
 
               </ScrollReveal>
             </div>

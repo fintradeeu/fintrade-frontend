@@ -6,7 +6,9 @@ import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../components/ui/dialog";
-import { Eye, FileText, Download, CheckCircle, Clock, Search, Handshake, Users } from "lucide-react";
+import { Eye, FileText, Download, CheckCircle, Clock, Search, Handshake, Users, EyeOff, Plus } from "lucide-react";
+import { Label } from "../../components/ui/label";
+import { DialogFooter } from "../../components/ui/dialog";
 import api from "../../services/api";
 import { toast } from "sonner";
 
@@ -23,6 +25,84 @@ export default function AdminFranchiseIBs() {
   // Student details modal states
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [detailsTab, setDetailsTab] = useState<"profile" | "courses" | "invoices">("profile");
+
+
+  // Add IB modal states
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [addForm, setAddForm] = useState({
+    full_name: "",
+    email: "",
+    mobile_no: "",
+    password: "",
+    confirm_password: "",
+    pan_number: "",
+    aadhaar_number: "",
+    bank_account_holder_name: "",
+    bank_name: "",
+    bank_account_number: "",
+    bank_ifsc_code: "",
+  });
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState("");
+
+  const updateAddForm = (field: string, value: string) => {
+    setAddForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleAddSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddError("");
+
+    if (addForm.password !== addForm.confirm_password) {
+      setAddError("Password and confirm password do not match.");
+      return;
+    }
+
+    setAddLoading(true);
+    try {
+      const payload = {
+        full_name: addForm.full_name,
+        email: addForm.email,
+        mobile_no: addForm.mobile_no,
+        password: addForm.password,
+        pan_number: addForm.pan_number || undefined,
+        aadhaar_number: addForm.aadhaar_number || undefined,
+        bank_account_holder_name: addForm.bank_account_holder_name || undefined,
+        bank_name: addForm.bank_name || undefined,
+        bank_account_number: addForm.bank_account_number || undefined,
+        bank_ifsc_code: addForm.bank_ifsc_code || undefined,
+      };
+
+      const res = await api.post("/franchise-ibs/", payload);
+      toast.success(`Franchise IB created successfully! Code: ${res.data.referral_code}`);
+      setIsAddModalOpen(false);
+      setAddForm({
+        full_name: "",
+        email: "",
+        mobile_no: "",
+        password: "",
+        confirm_password: "",
+        pan_number: "",
+        aadhaar_number: "",
+        bank_account_holder_name: "",
+        bank_name: "",
+        bank_account_number: "",
+        bank_ifsc_code: "",
+      });
+      fetchIBs();
+    } catch (err: any) {
+      let message = "Failed to create Franchise IB.";
+      if (err.response?.data?.detail) {
+        message = Array.isArray(err.response.data.detail)
+          ? err.response.data.detail.map((item: any) => item.msg).join(", ")
+          : err.response.data.detail;
+      }
+      setAddError(message);
+    } finally {
+      setAddLoading(false);
+    }
+  };
 
   const fetchIBs = async () => {
     try {
@@ -65,7 +145,7 @@ export default function AdminFranchiseIBs() {
 
   return (
     <DashboardLayout role="admin">
-      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="mb-8 flex flex-col md:flex-row md:items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-[#0B2A5B] flex items-center gap-3">
             <Handshake className="w-8 h-8 text-[#C2A86A]" />
@@ -75,6 +155,10 @@ export default function AdminFranchiseIBs() {
             View all Franchise IB partners, their registered students, and detailed revenue tracking.
           </p>
         </div>
+
+        <Button onClick={() => setIsAddModalOpen(true)} className="bg-[#D50032] hover:bg-[#D50032]/90 text-white mt-4 md:mt-0">
+          <Plus className="w-4 h-4 mr-2" /> Add Franchise IB
+        </Button>
       </div>
 
       <Card className="p-6 bg-white shadow-lg rounded-xl overflow-hidden">
@@ -439,6 +523,105 @@ export default function AdminFranchiseIBs() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Add Franchise IB Modal */}
+      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add Franchise IB</DialogTitle>
+            <DialogDescription>Create a new Franchise IB account. They will be able to log in with these details.</DialogDescription>
+          </DialogHeader>
+
+          {addError && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-200">
+              {addError}
+            </div>
+          )}
+
+          <form onSubmit={handleAddSubmit} className="space-y-6 mt-4">
+            <div>
+              <h3 className="text-lg font-bold text-[#0B2A5B] mb-4">Personal Details</h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Full Name</Label>
+                  <Input required value={addForm.full_name} onChange={(e) => updateAddForm("full_name", e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Email Address</Label>
+                  <Input type="email" required value={addForm.email} onChange={(e) => updateAddForm("email", e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Mobile Number</Label>
+                  <Input required value={addForm.mobile_no} onChange={(e) => updateAddForm("mobile_no", e.target.value)} />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-bold text-[#0B2A5B] mb-4">Login Details</h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Password</Label>
+                  <div className="relative">
+                    <Input type={showPassword ? "text" : "password"} required value={addForm.password} onChange={(e) => updateAddForm("password", e.target.value)} />
+                    <button type="button" className="absolute right-3 top-3 text-gray-400 hover:text-gray-600" onClick={() => setShowPassword(!showPassword)}>
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Confirm Password</Label>
+                  <Input type={showPassword ? "text" : "password"} required value={addForm.confirm_password} onChange={(e) => updateAddForm("confirm_password", e.target.value)} />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-bold text-[#0B2A5B] mb-4">KYC Details</h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Aadhaar Number (Optional)</Label>
+                  <Input value={addForm.aadhaar_number} onChange={(e) => updateAddForm("aadhaar_number", e.target.value)} placeholder="12-digit Aadhaar" />
+                </div>
+                <div className="space-y-2">
+                  <Label>PAN Number (Optional)</Label>
+                  <Input value={addForm.pan_number} onChange={(e) => updateAddForm("pan_number", e.target.value)} placeholder="10-character PAN" />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-bold text-[#0B2A5B] mb-4">Bank Details</h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Account Holder Name (Optional)</Label>
+                  <Input value={addForm.bank_account_holder_name} onChange={(e) => updateAddForm("bank_account_holder_name", e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Bank Name (Optional)</Label>
+                  <Input value={addForm.bank_name} onChange={(e) => updateAddForm("bank_name", e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Account Number (Optional)</Label>
+                  <Input value={addForm.bank_account_number} onChange={(e) => updateAddForm("bank_account_number", e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>IFSC Code (Optional)</Label>
+                  <Input value={addForm.bank_ifsc_code} onChange={(e) => updateAddForm("bank_ifsc_code", e.target.value)} />
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
+              <Button type="submit" className="bg-[#D50032] hover:bg-[#D50032]/90 text-white" disabled={addLoading}>
+                {addLoading ? "Creating..." : "Create Franchise IB"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
     </DashboardLayout>
   );
 }

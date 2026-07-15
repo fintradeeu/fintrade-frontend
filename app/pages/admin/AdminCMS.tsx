@@ -158,6 +158,7 @@ interface SectionVisibilityConfig {
   show_cta: boolean;
   show_testimonials?: boolean;
   show_terms?: boolean;
+  show_global_offices?: boolean;
 }
 
 interface EMIPaymentItem {
@@ -1335,6 +1336,7 @@ export default function AdminCMS() {
                 { key: "show_showcase_videos", label: "Watch Our Students" },
                 { key: "show_blog", label: "Market Insights (Blog)" },
                 { key: "show_terms", label: "Terms & Conditions (Section 15)" },
+                { key: "show_global_offices", label: "Global Offices" },
               ].map(item => {
                 const checked = config.section_visibility?.[item.key as keyof SectionVisibilityConfig] !== false;
                 return (
@@ -1368,6 +1370,7 @@ export default function AdminCMS() {
                               show_showcase_videos: true,
                               show_blog: true,
                               show_terms: true,
+                              show_global_offices: true,
                             }),
                             [item.key]: e.target.checked
                           }
