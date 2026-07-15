@@ -153,6 +153,10 @@ export const router = createBrowserRouter([
     path: "/register",
     Component: RegisterPage,
   },
+  {
+    path: "/register-franchise",
+    Component: RegisterPage,
+  },
   // Payment Routes
   {
     path: "/payment/success",

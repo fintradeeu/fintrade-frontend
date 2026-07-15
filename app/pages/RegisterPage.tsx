@@ -384,7 +384,10 @@ function FranchiseIBRegisterForm() {
 
 export default function RegisterPage() {
   const params = new URLSearchParams(window.location.search);
-  const isFranchiseRegister = params.get("type") === "franchise_ib" || params.get("role") === "franchise_ib";
+  const isFranchiseRegister = 
+    window.location.pathname.includes("/register-franchise") || 
+    params.get("type") === "franchise_ib" || 
+    params.get("role") === "franchise_ib";
   if (isFranchiseRegister) {
     return <FranchiseIBRegisterForm />;
   }
