@@ -44,17 +44,24 @@ export default function SuperAdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [usersRes, coursesRes, lecturesRes] = await Promise.allSettled([
-          api.get("/admin/users"),
-          api.get("/admin/courses"),
-          api.get("/lectures"),
+        const [usersRes, purchasedRes, coursesRes, lecturesRes] = await Promise.allSettled([
+          api.get("/admin/users?limit=1000"),
+          api.get("/admin/purchased-students?limit=1000"),
+          api.get("/admin/courses?limit=1000"),
+          api.get("/lectures?limit=1000"),
         ]);
 
-        const usersList = usersRes.status === "fulfilled" ? (usersRes.value.data.users || usersRes.value.data || []) : [];
+        const nonPurchasedUsers = usersRes.status === "fulfilled" ? (usersRes.value.data.users || usersRes.value.data || []) : [];
+        const purchasedUsers = purchasedRes.status === "fulfilled" ? (purchasedRes.value.data.users || purchasedRes.value.data || []) : [];
+        // Use a Map to ensure unique users by ID if there happens to be overlap
+        const userMap = new Map();
+        [...nonPurchasedUsers, ...purchasedUsers].forEach(u => userMap.set(u.id, u));
+        const usersList = Array.from(userMap.values());
+
         const totalUsers = usersList.length;
         const studentsList = usersList.filter((u: any) => u.roles?.some((r: any) => r.name === 'student') || u.role === 'student');
         const notEnrolledList = usersList.filter((u: any) => !(u.roles?.some((r: any) => r.name === 'student') || u.role === 'student'));
-        const totalIBs = usersList.filter((u: any) => u.roles?.some((r: any) => r.name === 'ib') || u.role === 'ib').length || 0;
+        const totalIBs = usersList.filter((u: any) => u.roles?.some((r: any) => r.name === 'franchise_ib' || r.name === 'distributor') || u.role === 'franchise_ib' || u.role === 'distributor').length || 0;
 
         const coursesList = coursesRes.status === "fulfilled" ? (coursesRes.value.data || []) : [];
         const topCoursesData = coursesList.slice(0, 2).map((c: any) => ({
@@ -103,7 +110,7 @@ export default function SuperAdminDashboard() {
 
     const newUsersCount = detailedData.users.filter(u => isSameDate(u.created_at, selectedDate)).length;
     const newStudentsCount = detailedData.students.filter(u => isSameDate(u.created_at, selectedDate)).length;
-    const newIBsCount = detailedData.users.filter(u => (u.roles?.some((r: any) => r.name === 'ib') || u.role === 'ib') && isSameDate(u.created_at, selectedDate)).length;
+    const newIBsCount = detailedData.users.filter(u => (u.roles?.some((r: any) => r.name === 'franchise_ib' || r.name === 'distributor') || u.role === 'franchise_ib' || u.role === 'distributor') && isSameDate(u.created_at, selectedDate)).length;
     const newCoursesCount = detailedData.courses.filter(c => isSameDate(c.created_at, selectedDate)).length;
 
     setDayWiseData({

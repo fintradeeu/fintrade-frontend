@@ -78,11 +78,8 @@ export default function AdminStudentManagement() {
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      const [resPurchased, resNonPurchased] = await Promise.all([
-        api.get("/admin/purchased-students?limit=200"),
-        api.get("/admin/users?limit=200")
-      ]);
-      const combined = [...(resPurchased.data.users || []), ...(resNonPurchased.data.users || [])];
+      const resPurchased = await api.get("/admin/purchased-students?limit=200");
+      const combined = [...(resPurchased.data.users || [])];
       combined.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       setStudents(combined);
     } catch (err) {
