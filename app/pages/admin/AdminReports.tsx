@@ -6,24 +6,7 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, R
 import api from "../../services/api";
 import { Users, BookOpen, Award, BarChart3, Star, TrendingUp } from "lucide-react";
 
-// Fallback/Sample data for charts since backend only provides totals
-const revenueData = [
-  { month: "Oct", revenue: 1200000 },
-  { month: "Nov", revenue: 1450000 },
-  { month: "Dec", revenue: 1680000 },
-  { month: "Jan", revenue: 1820000 },
-  { month: "Feb", revenue: 2100000 },
-  { month: "Mar", revenue: 2450000 },
-];
-
-const examData = [
-  { month: "Oct", passRate: 88 },
-  { month: "Nov", passRate: 91 },
-  { month: "Dec", passRate: 89 },
-  { month: "Jan", passRate: 93 },
-  { month: "Feb", passRate: 94 },
-  { month: "Mar", passRate: 92 },
-];
+// Real-time data now fetched from backend
 
 export default function AdminReports() {
   const navigate = useNavigate();
@@ -37,6 +20,8 @@ export default function AdminReports() {
     total_feedback: 0,
     avg_feedback_rating: 0,
     total_placements_eligible: 0,
+    revenue_trend: [] as any[],
+    exam_pass_rate: [] as any[],
   });
 
   const [loading, setLoading] = useState(true);
@@ -171,9 +156,9 @@ export default function AdminReports() {
 
       <div className="grid lg:grid-cols-2 gap-6">
         <Card className="p-6 bg-white shadow-lg">
-          <h3 className="text-xl font-semibold text-[#0B2A5B] mb-6">Revenue Trend (Sample)</h3>
+          <h3 className="text-xl font-semibold text-[#0B2A5B] mb-6">Revenue Trend (6 Months)</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={revenueData}>
+            <LineChart data={stats.revenue_trend}>
               <CartesianGrid strokeDasharray="3 3" stroke="#0B2A5B20" />
               <XAxis dataKey="month" stroke="#0B2A5B" />
               <YAxis stroke="#0B2A5B" />
@@ -184,9 +169,9 @@ export default function AdminReports() {
         </Card>
 
         <Card className="p-6 bg-white shadow-lg">
-          <h3 className="text-xl font-semibold text-[#0B2A5B] mb-6">Exam Pass Rate (Sample)</h3>
+          <h3 className="text-xl font-semibold text-[#0B2A5B] mb-6">Exam Pass Rate (6 Months)</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={examData}>
+            <BarChart data={stats.exam_pass_rate}>
               <CartesianGrid strokeDasharray="3 3" stroke="#0B2A5B20" />
               <XAxis dataKey="month" stroke="#0B2A5B" />
               <YAxis stroke="#0B2A5B" domain={[0, 100]} />

@@ -45,10 +45,10 @@ export default function SuperAdminDashboard() {
     const fetchStats = async () => {
       try {
         const [usersRes, purchasedRes, coursesRes, lecturesRes] = await Promise.allSettled([
-          api.get("/admin/users?limit=1000"),
-          api.get("/admin/purchased-students?limit=1000"),
-          api.get("/admin/courses?limit=1000"),
-          api.get("/lectures?limit=1000"),
+          api.get("/admin/users?limit=200"),
+          api.get("/admin/purchased-students?limit=200"),
+          api.get("/admin/courses?limit=100"),
+          api.get("/lectures?limit=100"),
         ]);
 
         const nonPurchasedUsers = usersRes.status === "fulfilled" ? (usersRes.value.data.users || usersRes.value.data || []) : [];

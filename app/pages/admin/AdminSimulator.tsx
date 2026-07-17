@@ -144,7 +144,7 @@ export default function AdminSimulator() {
                 </Button>
               )}
               
-              <Button variant="outline" className="w-full h-12 flex items-center justify-between px-4 border-gray-200 hover:border-[#D50032] hover:text-[#D50032]" onClick={() => toast.info("Opening advance configuration module...")}>
+              <Button variant="outline" className="w-full h-12 flex items-center justify-between px-4 border-gray-200 hover:bg-[#D50032] hover:text-white hover:border-[#D50032]" onClick={() => toast.info("Opening advance configuration module...")}>
                 <span className="flex items-center gap-2"><Settings className="h-4 w-4" /> Advance Config</span>
               </Button>
               <Button onClick={() => { toggleSimulator(false); toast.success("Nodes shutdown successfully"); }} variant="outline" className="w-full h-12 flex items-center justify-between px-4 border-gray-200 text-red-500 hover:bg-red-50">
