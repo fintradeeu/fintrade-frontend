@@ -31,6 +31,7 @@ export default function StudentDashboard() {
   const [userName, setUserName] = useState("Student");
   const [courseProgress, setCourseProgress] = useState(0);
   const [enrolledCount, setEnrolledCount] = useState(0);
+  const [pendingPaymentAmount, setPendingPaymentAmount] = useState(0);
   
   const [allEvents, setAllEvents] = useState<any[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<any[]>([]);
@@ -61,6 +62,16 @@ export default function StudentDashboard() {
         const enrolled = enrolledRes.data;
         const enrolledIds = enrolled.map((e: any) => e.course_id);
         
+        let totalPending = 0;
+        enrolled.forEach((e: any) => {
+          const expected = (e.course?.price || 0) - (e.discount_applied || 0);
+          const paid = e.price_paid || 0;
+          if (expected > paid) {
+            totalPending += (expected - paid);
+          }
+        });
+        setPendingPaymentAmount(totalPending);
+
         setEnrolledCount(enrolled.length);
         if (enrolled.length > 0) {
           const avg = Math.round(enrolled.reduce((s: number, e: any) => s + (e.progress_percent || 0), 0) / enrolled.length);
@@ -168,6 +179,20 @@ export default function StudentDashboard() {
            <p className="text-sm text-gray-500 mt-1">Track your progress and continue your learning journey</p>
         </div>
       </div>
+
+      {pendingPaymentAmount > 0 && (
+        <div className="mb-6 p-4 bg-orange-50 border-l-4 border-orange-500 rounded-r-xl shadow-sm flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-orange-100 p-2 rounded-full">
+              <Award className="w-5 h-5 text-orange-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-orange-800">Pending Payment Due</h3>
+              <p className="text-sm text-orange-600 font-medium">You have an outstanding balance of ₹{pendingPaymentAmount.toLocaleString()} for your enrolled courses.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         

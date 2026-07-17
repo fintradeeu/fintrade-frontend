@@ -310,6 +310,20 @@ export default function ManageStudents() {
 
               {detailsTab === "invoices" && (
                 <div className="space-y-4">
+                  {(selectedStudent.pending_amount !== undefined || selectedStudent.total_course_price !== undefined) && selectedStudent.transactions?.length > 0 && (
+                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex justify-between items-center shadow-sm">
+                      <div>
+                        <p className="text-sm text-gray-500 font-medium mb-1">Total Course Price</p>
+                        <p className="text-xl font-bold text-[#0B2A5B]">₹{(selectedStudent.total_course_price || 0).toLocaleString()}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-500 font-medium mb-1">Pending Balance</p>
+                        <p className={`text-xl font-bold ${selectedStudent.pending_amount > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                          ₹{(selectedStudent.pending_amount || 0).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   {!selectedStudent.transactions || selectedStudent.transactions.length === 0 ? (
                     <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
                       No transactions found for this student.
@@ -372,7 +386,9 @@ export default function ManageStudents() {
                                       <div class="row"><span class="label">Payment Mode:</span> <span class="value">${(tx.payment_mode || "Online").toUpperCase()}</span></div>
                                       <div class="row"><span class="label">Status:</span> <span class="value">${tx.status.toUpperCase()}</span></div>
                                       ${tx.reference_number ? `<div class="row"><span class="label">Reference:</span> <span class="value">${tx.reference_number}</span></div>` : ''}
+                                      <div class="row"><span class="label">Total Course Price:</span> <span class="value">₹${(selectedStudent.total_course_price || tx.amount).toLocaleString()}</span></div>
                                       <div class="row total"><span>Total Paid:</span> <span>₹${tx.amount.toLocaleString()}</span></div>
+                                      ${selectedStudent.pending_amount > 0 ? `<div class="row" style="color: #ea580c; font-weight: bold; margin-top: 10px;"><span>Pending Balance:</span> <span>₹${selectedStudent.pending_amount.toLocaleString()}</span></div>` : ''}
                                       
                                       <div style="margin-top: 50px; font-size: 12px; color: #888;">
                                         This is a computer-generated invoice and requires no physical signature.

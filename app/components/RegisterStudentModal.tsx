@@ -5,7 +5,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import api from "../services/api";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Upload } from "lucide-react";
 
 interface Props {
   onClose: () => void;
@@ -19,6 +19,7 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [batches, setBatches] = useState<any[]>([]);
+  const [chequeFile, setChequeFile] = useState<File | null>(null);
 
   const [formData, setFormData] = useState({
     full_name: "",
@@ -31,6 +32,10 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
     amount: "",
     reference_number: "",
     remarks: "",
+    bank_name: "",
+    branch_name: "",
+    account_holder_name: "",
+    payment_date: "",
   });
 
   useEffect(() => {
@@ -92,11 +97,27 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
     setSuccess("");
 
     try {
+      let chequeImageUrl = "";
+      if (formData.payment_mode === "cheque") {
+        if (!formData.reference_number || !formData.payment_date || !formData.bank_name || !formData.branch_name || !formData.account_holder_name || !chequeFile) {
+          setError("Please fill all required cheque details and upload a cheque image.");
+          setLoading(false);
+          return;
+        }
+        const fileData = new FormData();
+        fileData.append("file", chequeFile);
+        const uploadRes = await api.post("/payments/upload-cheque", fileData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+        chequeImageUrl = uploadRes.data.url;
+      }
+
       const payload = {
         ...formData,
         course_id: formData.course_id && formData.course_id !== "none" ? parseInt(formData.course_id) : null,
         batch_id: formData.batch_id && formData.batch_id !== "none" ? parseInt(formData.batch_id) : null,
         amount: formData.amount ? parseFloat(formData.amount) : 0,
+        cheque_image_url: chequeImageUrl || undefined,
       };
 
       await api.post(`${apiPrefix}/manual-register`, payload);
@@ -113,6 +134,11 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
   };
 
   const isOffline = formData.payment_mode === "cash" || formData.payment_mode === "cheque";
+
+  const selectedCourseObj = courses.find((c) => c.id.toString() === formData.course_id);
+  const coursePrice = selectedCourseObj?.price || 0;
+  const amountEntered = parseFloat(formData.amount) || 0;
+  const pendingAmount = Math.max(0, coursePrice - amountEntered);
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -197,27 +223,83 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="razorpay">Online (Razorpay / Payment Link)</SelectItem>
                 <SelectItem value="cash">Cash</SelectItem>
                 <SelectItem value="cheque">Cheque</SelectItem>
+                <SelectItem value="razorpay">Online Payment (Coming Soon)</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {isOffline && (
-            <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
+            <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+              {selectedCourseObj && (
+                <div className="flex justify-between items-center bg-blue-50 text-[#0B2A5B] p-3 rounded-md mb-2 text-sm border border-blue-100">
+                  <div>
+                    <span className="font-semibold block">Total Course Price:</span>
+                    <span className="text-lg font-bold">₹{coursePrice.toLocaleString()}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-semibold block">Pending Balance:</span>
+                    <span className={`text-lg font-bold ${pendingAmount > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                      ₹{pendingAmount.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="amount">Amount Collected *</Label>
+                  <Input id="amount" name="amount" type="number" min="0" step="0.01" value={formData.amount} onChange={handleChange} required={isOffline} />
+                </div>
+                
+                {formData.payment_mode === "cheque" && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Bank Name *</Label>
+                    <Input name="bank_name" value={formData.bank_name} onChange={handleChange} placeholder="e.g. HDFC Bank" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Branch Name *</Label>
+                    <Input name="branch_name" value={formData.branch_name} onChange={handleChange} placeholder="e.g. Andheri West" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Cheque Date *</Label>
+                    <Input type="date" name="payment_date" value={formData.payment_date} onChange={handleChange} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Account Holder Name *</Label>
+                    <Input name="account_holder_name" value={formData.account_holder_name} onChange={handleChange} placeholder="Name on cheque" />
+                  </div>
+                </>
+              )}
+              
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount Collected *</Label>
-                <Input id="amount" name="amount" type="number" min="0" step="0.01" value={formData.amount} onChange={handleChange} required={isOffline} />
+                <Label htmlFor="reference_number">{formData.payment_mode === "cheque" ? "Cheque Number *" : "Reference/Receipt No"}</Label>
+                <Input id="reference_number" name="reference_number" value={formData.reference_number} onChange={handleChange} placeholder={formData.payment_mode === "cheque" ? "e.g. 000123" : ""} />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="reference_number">Reference/Receipt No</Label>
-                <Input id="reference_number" name="reference_number" value={formData.reference_number} onChange={handleChange} />
-              </div>
+              
+              {formData.payment_mode === "cheque" && (
+                <div className="space-y-2 col-span-2 pt-2 border-t border-gray-200 mt-2">
+                  <Label>Upload Cheque Image (Required)</Label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors bg-white">
+                    <input type="file" id="cheque-upload" className="hidden" accept="image/*,.pdf" onChange={e => setChequeFile(e.target.files?.[0] || null)} />
+                    <label htmlFor="cheque-upload" className="cursor-pointer flex flex-col items-center">
+                      <Upload className="w-6 h-6 text-gray-400 mb-2" />
+                      <span className="text-sm text-[#0B2A5B] font-semibold">
+                        {chequeFile ? chequeFile.name : "Click to browse or drag & drop"}
+                      </span>
+                      <span className="text-xs text-gray-500 mt-1">JPEG, PNG or PDF (Max 5MB)</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+              
               <div className="space-y-2 col-span-2">
                 <Label htmlFor="remarks">Remarks</Label>
                 <Input id="remarks" name="remarks" value={formData.remarks} onChange={handleChange} placeholder="Any specific notes..." />
               </div>
+            </div>
             </div>
           )}
 
