@@ -94,81 +94,11 @@ export default function InvoicePage() {
           };
         });
 
-        // Fallback mockup if no enrolled courses exist
-        if (generatedInvoices.length === 0) {
-          generatedInvoices.push(
-            {
-              id: "inv_mock1",
-              invoiceNumber: "FT-2026-1024",
-              courseTitle: "Technical Analysis Masterclass",
-              purchaseDate: "Apr 12, 2026",
-              amount: 10028.82,
-              totalAmount: 10623,
-              feesAmount: 8499,
-              gstAmount: 1529.82,
-              totalPaidAmount: 10028.82,
-              paymentMethod: "NetBanking / Easebuzz",
-              paymentId: "pay_EB_9823412",
-              status: "Paid",
-              couponCode: "EASTER20",
-              discountAmount: 2124,
-              originalPrice: 10623,
-            },
-            {
-              id: "inv_mock2",
-              invoiceNumber: "FT-2026-0985",
-              courseTitle: "Advanced Options Trading Strategies",
-              purchaseDate: "Jan 18, 2026",
-              amount: 17698.82,
-              totalAmount: 14999,
-              feesAmount: 14999,
-              gstAmount: 2699.82,
-              totalPaidAmount: 17698.82,
-              paymentMethod: "Credit Card / Razorpay",
-              paymentId: "pay_RZP_1289410",
-              status: "Paid",
-              originalPrice: 14999,
-            }
-          );
-        }
         setInvoices(generatedInvoices);
       })
-      .catch(() => {
-        // Fallback in case of API failure
-        setInvoices([
-          {
-            id: "inv_mock1",
-            invoiceNumber: "FT-2026-1024",
-            courseTitle: "Technical Analysis Masterclass",
-            purchaseDate: "Apr 12, 2026",
-            amount: 10028.82,
-            totalAmount: 10623,
-            feesAmount: 8499,
-            gstAmount: 1529.82,
-            totalPaidAmount: 10028.82,
-            paymentMethod: "NetBanking / Easebuzz",
-            paymentId: "pay_EB_9823412",
-            status: "Paid",
-            couponCode: "EASTER20",
-            discountAmount: 2124,
-            originalPrice: 10623,
-          },
-          {
-            id: "inv_mock2",
-            invoiceNumber: "FT-2026-0985",
-            courseTitle: "Advanced Options Trading Strategies",
-            purchaseDate: "Jan 18, 2026",
-            amount: 17698.82,
-            totalAmount: 14999,
-            feesAmount: 14999,
-            gstAmount: 2699.82,
-            totalPaidAmount: 17698.82,
-            paymentMethod: "Credit Card / Razorpay",
-            paymentId: "pay_RZP_1289410",
-            status: "Paid",
-            originalPrice: 14999,
-          }
-        ]);
+      .catch((err) => {
+        console.error("Failed to fetch invoices", err);
+        setInvoices([]);
       })
       .finally(() => setLoading(false));
   }, []);

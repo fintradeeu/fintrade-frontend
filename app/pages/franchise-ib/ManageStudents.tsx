@@ -109,6 +109,7 @@ export default function ManageStudents() {
                 <TableHead className="text-[#0B2A5B] font-semibold">Contact Info</TableHead>
                 <TableHead className="text-[#0B2A5B] font-semibold">Course</TableHead>
                 <TableHead className="text-[#0B2A5B] font-semibold">Status</TableHead>
+                <TableHead className="text-[#0B2A5B] font-semibold">Payment Status</TableHead>
                 <TableHead className="text-[#0B2A5B] font-semibold">Timeline Progress</TableHead>
                 <TableHead className="text-[#0B2A5B] font-semibold">Joined At</TableHead>
                 <TableHead className="text-[#0B2A5B] font-semibold text-right">Actions</TableHead>
@@ -117,17 +118,17 @@ export default function ManageStudents() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">Loading...</TableCell>
+                  <TableCell colSpan={7} className="text-center py-8">Loading...</TableCell>
                 </TableRow>
               ) : students.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                     No students found.
                   </TableCell>
                 </TableRow>
               ) : filteredStudents.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                     No students match the selected filters.
                   </TableCell>
                 </TableRow>
@@ -148,6 +149,15 @@ export default function ManageStudents() {
                         <Badge className={isEnrolled ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}>
                           {isEnrolled ? "Enrolled" : "Pending"}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={
+                          r.payment_status === "Full Paid" ? "bg-green-100 text-green-700" : 
+                          r.payment_status === "Partial Paid" ? "bg-orange-100 text-orange-700" : "bg-red-100 text-red-700"
+                        }>
+                          {r.payment_status || "Unpaid"}
+                        </Badge>
+                        {r.balance_due > 0 && <div className="text-xs text-red-500 mt-1">Due: ₹{r.balance_due}</div>}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1.5 min-w-[260px]">

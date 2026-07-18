@@ -255,6 +255,7 @@ export default function AdminFranchiseIBs() {
                   <TableHead className="text-[#0B2A5B] font-semibold sticky top-0 bg-[#F4F1EA] z-10">Contact Info</TableHead>
                   <TableHead className="text-[#0B2A5B] font-semibold sticky top-0 bg-[#F4F1EA] z-10">Course</TableHead>
                   <TableHead className="text-[#0B2A5B] font-semibold sticky top-0 bg-[#F4F1EA] z-10">Status</TableHead>
+                  <TableHead className="text-[#0B2A5B] font-semibold sticky top-0 bg-[#F4F1EA] z-10">Payment Status</TableHead>
                   <TableHead className="text-[#0B2A5B] font-semibold sticky top-0 bg-[#F4F1EA] z-10">Timeline Progress</TableHead>
                   <TableHead className="text-[#0B2A5B] font-semibold text-right sticky top-0 bg-[#F4F1EA] z-10">Actions</TableHead>
                 </TableRow>
@@ -262,11 +263,11 @@ export default function AdminFranchiseIBs() {
               <TableBody>
                 {studentsLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">Loading Students...</TableCell>
+                    <TableCell colSpan={7} className="text-center py-8">Loading Students...</TableCell>
                   </TableRow>
                 ) : students.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                       No students referred yet.
                     </TableCell>
                   </TableRow>
@@ -287,6 +288,15 @@ export default function AdminFranchiseIBs() {
                           <Badge className={isEnrolled ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}>
                             {isEnrolled ? "Enrolled" : "Pending"}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={
+                            r.payment_status === "Full Paid" ? "bg-green-100 text-green-700" : 
+                            r.payment_status === "Partial Paid" ? "bg-orange-100 text-orange-700" : "bg-red-100 text-red-700"
+                          }>
+                            {r.payment_status || "Unpaid"}
+                          </Badge>
+                          {r.balance_due > 0 && <div className="text-xs text-red-500 mt-1">Due: ₹{r.balance_due}</div>}
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1.5 min-w-[260px]">

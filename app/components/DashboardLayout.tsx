@@ -13,6 +13,7 @@ import { Label } from "./ui/label";
 import logo from "../../imports/fintrade_logo.png";
 import api from "../services/api";
 import ActivityTracker from "./ActivityTracker";
+import CourseCheckoutModal from "./CourseCheckoutModal";
 
 interface NavItem {
   label: string;
@@ -156,6 +157,12 @@ export function DashboardLayout({
   const [showLockedModal, setShowLockedModal] = useState(false);
   const [enrolledCount, setEnrolledCount] = useState<number | null>(null);
   const [isKycVerified, setIsKycVerified] = useState<boolean>(true);
+  
+  // Partial payment states
+  const [pendingBalance, setPendingBalance] = useState<number>(0);
+  const [pendingCourse, setPendingCourse] = useState<any | null>(null);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+
   const [autoName, setAutoName] = useState(() => {
     if (typeof window !== "undefined") {
       try {
@@ -330,6 +337,21 @@ export function DashboardLayout({
         .then(([enrolledRes, kycRes, batchRes]) => {
           const enrolled = enrolledRes.data;
           setEnrolledCount(enrolled.length);
+          
+          let pendingAmt = 0;
+          let pCourse = null;
+          for (const e of enrolled) {
+            const coursePrice = e.course?.price || 0;
+            const enrollmentDiscount = e.discount_applied || 0;
+            const effective = coursePrice - enrollmentDiscount;
+            const paid = e.price_paid || 0;
+            if (paid < effective) {
+              pendingAmt += (effective - paid);
+              pCourse = e.course;
+            }
+          }
+          setPendingBalance(pendingAmt);
+          setPendingCourse(pCourse);
           
           const kycStatus = kycRes.data?.status || "not_started";
           const verified = kycStatus === "verified" || kycStatus === "approved";
@@ -640,7 +662,29 @@ export function DashboardLayout({
 
         {/* Main Content */}
         <main className="flex-1 min-w-0 min-h-screen lg:ml-0">
-          <div className="p-4 md:p-6 lg:p-8">{children}</div>
+          <div className="p-4 md:p-6 lg:p-8">
+            {pendingBalance > 0 && resolvedRole === "student" && (
+              <div className="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5"><Shield className="text-orange-500 w-5 h-5" /></div>
+                  <div>
+                    <h3 className="text-orange-800 font-bold text-lg">Pending Payment Action Required</h3>
+                    <p className="text-orange-700 mt-1">
+                      You have an outstanding balance of <strong className="font-bold">₹{pendingBalance}</strong> for your enrolled course. 
+                      Please clear your dues to ensure uninterrupted access to the curriculum and exams.
+                    </p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => setShowCheckoutModal(true)}
+                  className="bg-orange-600 text-white hover:bg-orange-700 whitespace-nowrap px-6 font-bold"
+                >
+                  Pay Balance
+                </Button>
+              </div>
+            )}
+            {children}
+          </div>
         </main>
       </div>
 
@@ -664,6 +708,17 @@ export function DashboardLayout({
           </Button>
         </DialogContent>
       </Dialog>
+
+      {pendingCourse && showCheckoutModal && (
+        <CourseCheckoutModal
+          course={pendingCourse}
+          onClose={() => setShowCheckoutModal(false)}
+          onSuccess={() => {
+            setShowCheckoutModal(false);
+            window.location.reload();
+          }}
+        />
+      )}
 
     </div>
   );

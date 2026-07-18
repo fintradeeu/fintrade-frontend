@@ -24,6 +24,7 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
+    password: "",
     phone: "",
     city: "",
     course_id: "",
@@ -173,6 +174,10 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
             <div className="space-y-2">
               <Label htmlFor="email">Email Address *</Label>
               <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password *</Label>
+              <Input id="password" name="password" type="password" value={formData.password} onChange={handleChange} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number *</Label>
