@@ -43,7 +43,7 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
   const [selectedBatchId, setSelectedBatchId] = useState<string>(batchId ? String(batchId) : "");
   const [isSuccess, setIsSuccess] = useState(false);
   const [isPending, setIsPending] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "cash" | "cheque">("razorpay");
+  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "cash" | "cheque" | "partial">("razorpay");
   const [offlineData, setOfflineData] = useState({
     payment_date: "",
     reference_number: "",
@@ -147,8 +147,8 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
       const finalAmountPaid = ((initialPrice - activeDiscount) * 1.18);
       if (Number(finalPrice) > 0) {
         
-        if (paymentMethod === "cash" || paymentMethod === "cheque") {
-          if (paymentMethod === "cash" && (!offlineData.payment_date)) {
+        if (paymentMethod === "cash" || paymentMethod === "cheque" || paymentMethod === "partial") {
+          if ((paymentMethod === "cash" || paymentMethod === "partial") && (!offlineData.payment_date)) {
             alert("Please fill in the required fields (Payment Date).");
             setLoading(false); return;
           }
@@ -320,7 +320,7 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
             </div>
             <h2 className="text-3xl font-bold text-[#0B2A5B]">Payment Submitted!</h2>
             <p className="text-slate-500 max-w-md">
-              Your {paymentMethod} payment for <strong>{course.title || course.name}</strong> has been submitted and is currently <strong>{paymentMethod === "cash" ? "Pending Verification" : "Pending Clearance"}</strong>. 
+              Your {paymentMethod} payment for <strong>{course.title || course.name}</strong> has been submitted and is currently <strong>{(paymentMethod === "cash" || paymentMethod === "partial") ? "Pending Verification" : "Pending Clearance"}</strong>. 
               An admin will review it shortly. Once approved, the course will be unlocked.
             </p>
             <button
@@ -501,12 +501,19 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
                     <Landmark className={`mb-2 ${paymentMethod === 'cheque' ? 'text-[#0B2A5B]' : 'text-gray-400'}`} />
                     <span className={`text-sm font-semibold ${paymentMethod === 'cheque' ? 'text-[#0B2A5B]' : 'text-gray-500'}`}>Cheque</span>
                   </button>
+                  <button
+                    onClick={() => setPaymentMethod("partial")}
+                    className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${paymentMethod === 'partial' ? 'border-[#0B2A5B] bg-[#0B2A5B]/5' : 'border-gray-200 bg-white hover:border-[#0B2A5B]/30'}`}
+                  >
+                    <CreditCard className={`mb-2 ${paymentMethod === 'partial' ? 'text-[#0B2A5B]' : 'text-gray-400'}`} />
+                    <span className={`text-sm font-semibold ${paymentMethod === 'partial' ? 'text-[#0B2A5B]' : 'text-gray-500'}`}>Partial</span>
+                  </button>
                 </>
               )}
             </div>
 
-            {/* Cash Fields */}
-            {paymentMethod === "cash" && (
+            {/* Cash & Partial Fields */}
+            {(paymentMethod === "cash" || paymentMethod === "partial") && (
               <div className="space-y-4 pt-2 border-t border-gray-200">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -603,10 +610,10 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
         <div className="p-6 md:p-8 pt-4 border-t border-gray-100 bg-gray-50/50 flex gap-4">
           <Button
             onClick={completePayment}
-            disabled={loading || (paymentMethod === "cash" && (!offlineData.payment_date)) || (paymentMethod === "cheque" && (!offlineData.reference_number || !offlineData.payment_date || !offlineData.bank_name || !offlineData.branch_name || !offlineData.account_holder_name || !chequeFile))}
+            disabled={loading || ((paymentMethod === "cash" || paymentMethod === "partial") && (!offlineData.payment_date)) || (paymentMethod === "cheque" && (!offlineData.reference_number || !offlineData.payment_date || !offlineData.bank_name || !offlineData.branch_name || !offlineData.account_holder_name || !chequeFile))}
             className="flex-1 bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a] shadow-lg shadow-[#0B2A5B]/20 py-2.5 md:py-3.5 h-auto text-sm md:text-base font-semibold"
           >
-            {loading ? "Processing..." : `Pay ₹${((initialPrice - activeDiscount) * 1.18).toFixed(2)} ${paymentMethod !== 'razorpay' ? `via ${paymentMethod === 'cash' ? 'Cash' : 'Cheque'}` : ''}`}
+            {loading ? "Processing..." : `Pay ₹${((initialPrice - activeDiscount) * 1.18).toFixed(2)} ${paymentMethod !== 'razorpay' ? `via ${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}` : ''}`}
           </Button>
           <Button
             onClick={onClose}
