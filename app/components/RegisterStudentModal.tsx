@@ -274,9 +274,25 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
               )}
               
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-2 col-span-2 md:col-span-1">
                   <Label htmlFor="amount">Amount Collected *</Label>
                   <Input id="amount" name="amount" type="number" min="0" step="0.01" value={formData.amount} onChange={handleChange} required={isOffline} />
+                  {formData.amount && !isNaN(parseFloat(formData.amount)) && (
+                    <div className="mt-2 bg-white p-3 rounded border border-gray-200">
+                      <div className="flex justify-between text-xs text-gray-600 mb-1">
+                        <span>Base Amount:</span>
+                        <span>₹{parseFloat(formData.amount).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-gray-600 mb-2">
+                        <span>GST (18%):</span>
+                        <span>₹{(parseFloat(formData.amount) * 0.18).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm font-bold text-[#0B2A5B] pt-2 border-t border-gray-100">
+                        <span>Total Paid by Student:</span>
+                        <span>₹{(parseFloat(formData.amount) * 1.18).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 {formData.payment_mode === "cheque" && (

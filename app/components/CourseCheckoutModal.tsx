@@ -22,11 +22,12 @@ const loadRazorpayScript = (): Promise<boolean> => {
 interface CourseCheckoutModalProps {
   course: any;
   batchId?: number | null;
+  pendingAmount?: number;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export default function CourseCheckoutModal({ course, batchId, onClose, onSuccess }: CourseCheckoutModalProps) {
+export default function CourseCheckoutModal({ course, batchId, pendingAmount, onClose, onSuccess }: CourseCheckoutModalProps) {
   const [isAdminCreated] = useState(() => {
     try {
       const u = localStorage.getItem("user");
@@ -55,9 +56,9 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
   const [chequeFile, setChequeFile] = useState<File | null>(null);
   
   const parsePrice = (p: any) => parseFloat(String(p).replace(/[^0-9.]/g, '')) || 0;
-  const initialPrice = parsePrice(course.price);
+  const initialPrice = pendingAmount ? pendingAmount : parsePrice(course.price);
   
-  const activeDiscount = couponDiscount + ibDiscount;
+  const activeDiscount = pendingAmount ? 0 : (couponDiscount + ibDiscount);
   const finalPrice = Math.max(initialPrice - activeDiscount, 0);
 
   const [loading, setLoading] = useState(false);
@@ -88,6 +89,7 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
 
   // Auto-apply saved coupon code on mount
   useEffect(() => {
+    if (pendingAmount) return; // Do not apply coupons for pending payments
     const savedCode = localStorage.getItem("distributor_code");
     if (savedCode) {
       (async () => {
@@ -171,7 +173,7 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
             course_id: course.id,
             payment_mode: paymentMethod,
             amount: Number(finalAmountPaid.toFixed(2)),
-            coupon_code: combinedCode || null,
+            coupon_code: pendingAmount ? null : (combinedCode || null),
             batch_id: selectedBatchId ? Number(selectedBatchId) : null,
             ...offlineData,
             cheque_image_url: chequeImageUrl || undefined
@@ -183,8 +185,8 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
         console.log("Initiating payment for course ID:", course.id);
         const res = await api.post("/payments/create", {
           course_id: course.id,
-          coupon_code: combinedCode || null,
-          discounted_price: activeDiscount > 0 ? finalPrice : null,
+          coupon_code: pendingAmount ? null : (combinedCode || null),
+          discounted_price: pendingAmount ? pendingAmount : (activeDiscount > 0 ? finalPrice : null),
           batch_id: selectedBatchId ? Number(selectedBatchId) : null,
         });
         console.log("Payment initiation API response:", res.data);
@@ -391,9 +393,10 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
               </div>
             )}
 
-            <div className="border-t border-[#0B2A5B]/10 pt-4 space-y-4">
-              {/* IB / Referral Code Input */}
-              <div>
+            {!pendingAmount && (
+              <div className="border-t border-[#0B2A5B]/10 pt-4 space-y-4">
+                {/* IB / Referral Code Input */}
+                <div>
                 <label className="text-xs font-bold text-[#0B2A5B] block mb-1.5 uppercase tracking-wide">
                   IB / Partner Referral Code
                 </label>
@@ -472,7 +475,7 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
                 {couponSuccessMsg && <p className="text-xs text-green-600 mt-1">✓ {couponSuccessMsg}</p>}
               </div>
             </div>
-          </div>
+            )}
 
           {/* Payment Method Selection */}
           <div className="bg-gray-50 rounded-lg p-5 md:p-6 mt-4">
@@ -577,10 +580,12 @@ export default function CourseCheckoutModal({ course, batchId, onClose, onSucces
 
 
           <div className="bg-gray-50 rounded-lg p-5 md:p-6">
-            <h3 className="font-semibold text-sm md:text-base text-[#0B2A5B] mb-4">Order Summary</h3>
+            <h3 className="font-semibold text-sm md:text-base text-[#0B2A5B] mb-4">
+              {pendingAmount ? "Pending Payment Summary" : "Order Summary"}
+            </h3>
             <div className="space-y-3 mb-4">
               <div className="flex justify-between text-[#0B2A5B]/70 text-sm">
-                <span>Course Fee</span>
+                <span>{pendingAmount ? "Pending Base Amount" : "Course Fee"}</span>
                 <span>₹{initialPrice.toLocaleString("en-IN")}</span>
               </div>
               {activeDiscount > 0 && (

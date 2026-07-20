@@ -712,6 +712,7 @@ export function DashboardLayout({
       {pendingCourse && showCheckoutModal && (
         <CourseCheckoutModal
           course={pendingCourse}
+          pendingAmount={pendingBalance}
           onClose={() => setShowCheckoutModal(false)}
           onSuccess={() => {
             setShowCheckoutModal(false);
