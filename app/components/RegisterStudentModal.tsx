@@ -71,7 +71,7 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
     if (formData.batch_id && formData.batch_id !== "none") {
       const selectedBatch = batches.find(b => b.id.toString() === formData.batch_id);
       if (selectedBatch && selectedBatch.assigned_courses) {
-        setCourses(selectedBatch.assigned_courses);
+        setCourses(selectedBatch.assigned_courses.filter((c: any) => !c.is_batch_only));
       } else {
         setCourses([]);
       }
