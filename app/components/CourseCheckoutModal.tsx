@@ -354,7 +354,7 @@ export default function CourseCheckoutModal({ course, batchId, pendingAmount, on
               </div>
             </div>
 
-            {availableBatches.length > 0 && (
+            {!pendingAmount && availableBatches.length > 0 && (
               <div className="mb-4 w-full">
                 <label className="text-[10px] text-[#0B2A5B] font-black uppercase tracking-wider block mb-2">
                   Choose Starting Batch (Cohort)
