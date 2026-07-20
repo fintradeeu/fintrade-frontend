@@ -16,6 +16,7 @@ interface Props {
 export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: Props) {
   const [loading, setLoading] = useState(false);
   const [courses, setCourses] = useState<any[]>([]);
+  const [allCourses, setAllCourses] = useState<any[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [batches, setBatches] = useState<any[]>([]);
@@ -52,7 +53,17 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
         setBatches([]);
       }
     };
+    const fetchCourses = async () => {
+      try {
+        const res = await api.get("/courses");
+        const data = res.data?.data || res.data;
+        setAllCourses(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Failed to fetch courses", err);
+      }
+    };
     fetchBatches();
+    fetchCourses();
   }, []);
 
   useEffect(() => {
@@ -65,11 +76,11 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
         setCourses([]);
       }
     } else {
-      setCourses([]);
+      setCourses(allCourses.filter((c) => !c.is_batch_only));
     }
     // Reset selected course when batch changes
     setFormData(prev => ({ ...prev, course_id: "" }));
-  }, [formData.batch_id, batches]);
+  }, [formData.batch_id, batches, allCourses]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -96,6 +107,16 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
     setLoading(true);
     setError("");
     setSuccess("");
+
+    const amountVal = formData.amount ? parseFloat(formData.amount) : 0;
+    const selectedCourseObj = courses.find((c) => c.id.toString() === formData.course_id);
+    const coursePrice = selectedCourseObj?.price || 0;
+
+    if ((formData.payment_mode === "cash" || formData.payment_mode === "cheque") && amountVal > coursePrice) {
+      setError(`Amount collected (₹${amountVal}) cannot be greater than the course price (₹${coursePrice}).`);
+      setLoading(false);
+      return;
+    }
 
     try {
       let chequeImageUrl = "";
@@ -204,7 +225,7 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
             </Select>
           </div>
 
-          {formData.batch_id && formData.batch_id !== "none" && courses.length > 0 && (
+          {courses.length > 0 && (
             <div className="space-y-2 pt-2">
               <Label htmlFor="course_id">Select Course</Label>
               <Select value={formData.course_id} onValueChange={(v) => handleSelectChange("course_id", v)}>
