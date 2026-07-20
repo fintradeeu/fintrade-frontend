@@ -476,6 +476,7 @@ export default function CourseCheckoutModal({ course, batchId, pendingAmount, on
               </div>
             </div>
             )}
+          </div>
 
           {/* Payment Method Selection */}
           <div className="bg-gray-50 rounded-lg p-5 md:p-6 mt-4">
