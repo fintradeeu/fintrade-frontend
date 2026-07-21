@@ -271,7 +271,17 @@ export default function CourseCheckoutModal({ course, batchId, pendingAmount, on
         if (combinedCode) payload.distributor_code = combinedCode;
         if (selectedBatchId) payload.batch_id = Number(selectedBatchId);
         await api.post(`/courses/${course.id}/enroll`, payload);
-        setIsSuccess(true);
+        
+        try {
+          const kycRes = await api.get("/kyc/status");
+          if (kycRes.data && (kycRes.data.status === "verified" || kycRes.data.status === "approved")) {
+             window.location.href = "/student/dashboard";
+          } else {
+             window.location.href = `/student/contract-kyc?course_id=${course.id}`;
+          }
+        } catch (e) {
+          window.location.href = `/student/contract-kyc?course_id=${course.id}`;
+        }
       }
     } catch (err: any) {
       console.error("completePayment failed with error:", err);

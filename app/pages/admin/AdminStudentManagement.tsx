@@ -62,6 +62,8 @@ export default function AdminStudentManagement() {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [franchiseIBs, setFranchiseIBs] = useState<any[]>([]);
+  const [selectedFranchiseId, setSelectedFranchiseId] = useState<string>("all");
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewTab, setViewTab] = useState<"profile" | "kyc" | "courses" | "sessions">("profile");
@@ -87,6 +89,15 @@ export default function AdminStudentManagement() {
       toast.error("Failed to load students list.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFranchiseIBs = async () => {
+    try {
+      const res = await api.get("/admin/franchise-ibs");
+      setFranchiseIBs(res.data.data || []);
+    } catch (err) {
+      console.error("Failed to fetch Franchise IBs:", err);
     }
   };
 
@@ -137,6 +148,7 @@ export default function AdminStudentManagement() {
 
   useEffect(() => {
     fetchStudents();
+    fetchFranchiseIBs();
   }, []);
 
   const exportToCSV = () => {
@@ -242,10 +254,16 @@ export default function AdminStudentManagement() {
   };
 
   const filtered = students.filter(
-    (s) =>
-      s.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.phone?.toLowerCase().includes(searchTerm.toLowerCase())
+    (s) => {
+      const matchesSearch = s.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.phone?.toLowerCase().includes(searchTerm.toLowerCase());
+        
+      const matchesFranchise = selectedFranchiseId === "all" || 
+        String(s.franchise_ib_id) === selectedFranchiseId;
+        
+      return matchesSearch && matchesFranchise;
+    }
   );
 
   return (
@@ -265,16 +283,33 @@ export default function AdminStudentManagement() {
         </div>
       </div>
 
-      {/* Search Bar */}
+      {/* Search and Filters */}
       <Card className="p-6 bg-white shadow-lg mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#0B2A5B]/40" size={20} />
-          <Input
-            placeholder="Search students by name, email or phone..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-[#F4F1EA] border-[#0B2A5B]/20 rounded-xl"
-          />
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#0B2A5B]/40" size={20} />
+            <Input
+              placeholder="Search students by name, email or phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 bg-[#F4F1EA] border-[#0B2A5B]/20 rounded-xl w-full"
+            />
+          </div>
+          <div className="w-full md:w-64 shrink-0">
+            <select
+              value={selectedFranchiseId}
+              onChange={(e) => setSelectedFranchiseId(e.target.value)}
+              className="w-full bg-[#F4F1EA] border border-[#0B2A5B]/20 rounded-xl px-4 py-2 text-[#0B2A5B] focus:outline-none focus:ring-2 focus:ring-[#0B2A5B]/30"
+            >
+              <option value="all">All Franchise IBs</option>
+              <option value="undefined">Direct Registration</option>
+              {franchiseIBs.map((ib) => (
+                <option key={ib.id} value={ib.id}>
+                  {ib.full_name} ({ib.referral_code})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </Card>
 

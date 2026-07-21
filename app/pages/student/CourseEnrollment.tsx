@@ -285,7 +285,16 @@ export default function CourseEnrollment() {
         // Free course or 100% discount
         console.log("Final price is 0, enrolling user directly...");
         await api.post(`/courses/${selectedCourse}/enroll`, { distributor_code: couponCode });
-        setIsSuccess(true);
+        try {
+          const kycRes = await api.get("/kyc/status");
+          if (kycRes.data && (kycRes.data.status === "verified" || kycRes.data.status === "approved")) {
+             window.location.href = "/student/dashboard";
+          } else {
+             setIsSuccess(true);
+          }
+        } catch (e) {
+          setIsSuccess(true);
+        }
       }
     } catch (err: any) {
       console.error("completePayment failed with error:", err);
