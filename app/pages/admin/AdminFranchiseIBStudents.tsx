@@ -6,9 +6,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../components/ui/dialog";
-import { Eye, FileText, Download, CheckCircle, Clock, ArrowLeft } from "lucide-react";
+import { Eye, FileText, Download, CheckCircle, Clock, ArrowLeft, FileSpreadsheet } from "lucide-react";
 import api from "../../services/api";
 import { toast } from "sonner";
+import * as XLSX from "xlsx";
 
 export default function AdminFranchiseIBStudents() {
   const { id } = useParams<{ id: string }>();
@@ -33,13 +34,52 @@ export default function AdminFranchiseIBStudents() {
     try {
       const res = await api.get(`/admin/franchise-ibs/${id}/students`);
       setStudents(res.data.data || []);
-      // Optional: fetch IB details here if we want to show the name in the header
-      // but for now we just show the ID or 'Students'
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "Failed to load students");
     } finally {
       setStudentsLoading(false);
     }
+  };
+
+  const exportToExcel = () => {
+    if (students.length === 0) {
+      toast.error("No student data available to export.");
+      return;
+    }
+
+    const rows = students.map((r: any) => ({
+      "Student Name": r.student_name || "",
+      "Email": r.student_email || "",
+      "Phone": r.mobile_no || "",
+      "City": r.city || "",
+      "Enrolled Courses": r.enrolled_courses?.join(", ") || r.course_title || "",
+      "Enrollment Status": r.enrolled || r.course_id || r.course_title ? "Enrolled" : "Pending",
+      "Payment Status": r.payment_status || "Unpaid",
+      "Balance Due (₹)": r.balance_due ?? 0,
+      "Total Paid (₹)": r.total_paid ?? r.price_paid ?? 0,
+      "Total Course Price (₹)": r.total_course_price ?? 0,
+      "KYC Done": r.kyc_done ? "Yes" : "No",
+      "Fees Paid": r.fees_paid ? "Yes" : "No",
+      "Registration Done": r.registered ? "Yes" : "No",
+      "Entrance Exam Given": r.entrance_exam_given ? "Yes" : "No",
+      "Entrance Exam Passed": r.entrance_exam_passed ? "Yes" : "No",
+      "Course Completed": r.course_completed ? "Yes" : "No",
+      "Joined Date": r.created_at ? new Date(r.created_at).toLocaleDateString("en-IN") : "",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "IB Students");
+
+    // Auto-size columns
+    const colWidths = Object.keys(rows[0] || {}).map((key) => ({
+      wch: Math.max(key.length, ...rows.map((r: any) => String(r[key] || "").length)) + 2,
+    }));
+    worksheet["!cols"] = colWidths;
+
+    const fileName = `franchise_ib_${id}_students_${new Date().toISOString().split("T")[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+    toast.success("Student data exported to Excel successfully!");
   };
 
   return (
@@ -50,10 +90,18 @@ export default function AdminFranchiseIBStudents() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to IBs
           </Button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold text-[#0B2A5B]">Franchise IB Students</h1>
-            <p className="text-sm text-gray-500 mt-1">Viewing all students referred by this IB.</p>
+            <p className="text-sm text-gray-500 mt-1">Viewing all students referred by this IB. ({students.length} total)</p>
           </div>
+          <Button
+            onClick={exportToExcel}
+            disabled={studentsLoading || students.length === 0}
+            className="bg-green-600 hover:bg-green-700 text-white gap-2 shadow-sm"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            Export to Excel
+          </Button>
         </div>
 
         <Card className="flex-1 bg-white border border-[#E5E0D8] rounded-xl shadow-sm overflow-hidden flex flex-col p-4">

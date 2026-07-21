@@ -6,11 +6,12 @@ import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../components/ui/dialog";
-import { Eye, FileText, Download, CheckCircle, Clock, Search, Handshake, Users, EyeOff, Plus } from "lucide-react";
+import { Eye, FileText, Download, CheckCircle, Clock, Search, Handshake, Users, EyeOff, Plus, FileSpreadsheet } from "lucide-react";
 import { Label } from "../../components/ui/label";
 import { DialogFooter } from "../../components/ui/dialog";
 import api from "../../services/api";
 import { toast } from "sonner";
+import * as XLSX from "xlsx";
 
 export default function AdminFranchiseIBs() {
   const [ibs, setIbs] = useState<any[]>([]);
@@ -136,6 +137,80 @@ export default function AdminFranchiseIBs() {
     window.location.href = `/admin/franchise-ibs/${ib.id}/students`;
   };
 
+  const [exportingAll, setExportingAll] = useState(false);
+  const exportAllToExcel = async () => {
+    if (ibs.length === 0) {
+      toast.error("No Franchise IBs found to export.");
+      return;
+    }
+    setExportingAll(true);
+    toast("Fetching all IB student data, please wait...", { id: "export-toast" });
+
+    try {
+      const workbook = XLSX.utils.book_new();
+      let totalRows: any[] = [];
+
+      for (const ib of ibs) {
+        try {
+          const res = await api.get(`/admin/franchise-ibs/${ib.id}/students`);
+          const students: any[] = res.data.data || [];
+          const rows = students.map((r: any) => ({
+            "IB Name": ib.user_name || "",
+            "IB Email": ib.user_email || "",
+            "IB Referral Code": ib.referral_code || "",
+            "Student Name": r.student_name || "",
+            "Email": r.student_email || "",
+            "Phone": r.mobile_no || "",
+            "City": r.city || "",
+            "Enrolled Courses": r.enrolled_courses?.join(", ") || r.course_title || "",
+            "Enrollment Status": r.enrolled || r.course_id || r.course_title ? "Enrolled" : "Pending",
+            "Payment Status": r.payment_status || "Unpaid",
+            "Balance Due (₹)": r.balance_due ?? 0,
+            "Total Paid (₹)": r.total_paid ?? r.price_paid ?? 0,
+            "Total Course Price (₹)": r.total_course_price ?? 0,
+            "KYC Done": r.kyc_done ? "Yes" : "No",
+            "Fees Paid": r.fees_paid ? "Yes" : "No",
+            "Registration Done": r.registered ? "Yes" : "No",
+            "Entrance Exam Given": r.entrance_exam_given ? "Yes" : "No",
+            "Entrance Exam Passed": r.entrance_exam_passed ? "Yes" : "No",
+            "Course Completed": r.course_completed ? "Yes" : "No",
+            "Joined Date": r.created_at ? new Date(r.created_at).toLocaleDateString("en-IN") : "",
+          }));
+
+          // Individual IB sheet (trim name to 31 chars for Excel limit)
+          if (rows.length > 0) {
+            const sheetName = (ib.user_name || `IB_${ib.id}`).slice(0, 28);
+            const ws = XLSX.utils.json_to_sheet(rows);
+            ws["!cols"] = Object.keys(rows[0]).map((k) => ({
+              wch: Math.max(k.length, ...rows.map((r: any) => String(r[k] || "").length)) + 2,
+            }));
+            XLSX.utils.book_append_sheet(workbook, ws, sheetName);
+            totalRows = [...totalRows, ...rows];
+          }
+        } catch {
+          // Skip this IB if it errors
+        }
+      }
+
+      // All-students summary sheet
+      if (totalRows.length > 0) {
+        const summaryWs = XLSX.utils.json_to_sheet(totalRows);
+        summaryWs["!cols"] = Object.keys(totalRows[0]).map((k) => ({
+          wch: Math.max(k.length, ...totalRows.map((r: any) => String(r[k] || "").length)) + 2,
+        }));
+        XLSX.utils.book_append_sheet(workbook, summaryWs, "All IB Students");
+      }
+
+      const fileName = `all_franchise_ib_students_${new Date().toISOString().split("T")[0]}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+      toast.success(`Exported ${totalRows.length} students from ${ibs.length} Franchise IBs!`, { id: "export-toast" });
+    } catch (err) {
+      toast.error("Failed to export data.", { id: "export-toast" });
+    } finally {
+      setExportingAll(false);
+    }
+  };
+
   return (
     <DashboardLayout role="admin">
       <div className="mb-8 flex flex-col md:flex-row md:items-start md:items-center justify-between gap-4">
@@ -151,6 +226,14 @@ export default function AdminFranchiseIBs() {
 
         <Button onClick={() => setIsAddModalOpen(true)} className="bg-[#D50032] hover:bg-[#D50032]/90 text-white mt-4 md:mt-0">
           <Plus className="w-4 h-4 mr-2" /> Add Franchise IB
+        </Button>
+        <Button
+          onClick={exportAllToExcel}
+          disabled={exportingAll || loading || ibs.length === 0}
+          className="bg-green-600 hover:bg-green-700 text-white mt-4 md:mt-0 gap-2"
+        >
+          <FileSpreadsheet className="w-4 h-4" />
+          {exportingAll ? "Exporting..." : "Export All Students"}
         </Button>
       </div>
 
