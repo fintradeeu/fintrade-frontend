@@ -43,6 +43,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "IB Management", path: "/admin/introducing-brokers", icon: <Handshake size={20} /> },
         { label: "Franchise IBs", path: "/admin/franchise-ibs", icon: <Handshake size={20} /> },
         { label: "Commission Management", path: "/admin/commissions", icon: <IndianRupee size={20} /> },
+        { label: "IB Revenue Analytics", path: "/admin/franchise-ib-revenue", icon: <BarChart3 size={20} /> },
         { label: "Courses", path: "/admin/courses", icon: <BookOpen size={20} /> },
         { label: "Module Students", path: "/admin/module-students", icon: <GraduationCap size={20} /> },
         { label: "Lectures", path: "/admin/lectures", icon: <Video size={20} /> },
@@ -130,6 +131,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
       return [
         { label: "Dashboard", path: "/franchise-ib/dashboard", icon: <Home size={20} /> },
         { label: "Manage Students", path: "/franchise-ib/students", icon: <Users size={20} /> },
+        { label: "Wallet & Withdrawals", path: "/franchise-ib/wallet", icon: <IndianRupee size={20} /> },
       ];
     default:
       return [];

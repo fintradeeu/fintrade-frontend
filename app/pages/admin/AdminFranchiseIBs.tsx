@@ -144,7 +144,8 @@ export default function AdminFranchiseIBs() {
       totalCommission += ib.commission_revenue || 0;
     });
     
-    return { totalRevenue, totalStudents, totalCommission };
+    const totalSuperadminNet = totalRevenue - totalCommission;
+    return { totalRevenue, totalStudents, totalCommission, totalSuperadminNet };
   }, [ibs]);
 
   const handleViewStudents = (ib: any) => {
@@ -251,14 +252,15 @@ export default function AdminFranchiseIBs() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <Card className="p-6 bg-white shadow-md rounded-xl border border-gray-100 flex items-center gap-4">
           <div className="p-4 bg-green-50 text-green-600 rounded-lg">
             <TrendingUp className="w-8 h-8" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-[#0B2A5B]/70">Total Revenue Generated</p>
+            <p className="text-sm font-semibold text-[#0B2A5B]/70">Total Gross Revenue</p>
             <h3 className="text-2xl font-bold text-green-700 mt-1">₹{stats.totalRevenue.toLocaleString("en-IN")}</h3>
+            <p className="text-xs text-gray-400 mt-0.5">All IB student fees</p>
           </div>
         </Card>
 
@@ -267,8 +269,20 @@ export default function AdminFranchiseIBs() {
             <DollarSign className="w-8 h-8" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-[#0B2A5B]/70">Total IB Commission</p>
+            <p className="text-sm font-semibold text-[#0B2A5B]/70">IB Commission Paid</p>
             <h3 className="text-2xl font-bold text-[#D50032] mt-1">₹{stats.totalCommission.toLocaleString("en-IN")}</h3>
+            <p className="text-xs text-gray-400 mt-0.5">Paid out to IBs</p>
+          </div>
+        </Card>
+
+        <Card className="p-6 bg-white shadow-md rounded-xl border border-[#0B2A5B]/20 bg-[#0B2A5B]/3 flex items-center gap-4 ring-2 ring-[#0B2A5B]/10">
+          <div className="p-4 bg-[#0B2A5B]/10 text-[#0B2A5B] rounded-lg">
+            <TrendingUp className="w-8 h-8" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-[#0B2A5B]/70">Superadmin Net Revenue</p>
+            <h3 className="text-2xl font-bold text-[#0B2A5B] mt-1">₹{stats.totalSuperadminNet.toLocaleString("en-IN")}</h3>
+            <p className="text-xs text-emerald-600 font-semibold mt-0.5">Gross − IB Commission</p>
           </div>
         </Card>
 
@@ -279,6 +293,7 @@ export default function AdminFranchiseIBs() {
           <div>
             <p className="text-sm font-semibold text-[#0B2A5B]/70">Total Referred Students</p>
             <h3 className="text-2xl font-bold text-blue-700 mt-1">{stats.totalStudents.toLocaleString("en-IN")}</h3>
+            <p className="text-xs text-gray-400 mt-0.5">Via Franchise IB codes</p>
           </div>
         </Card>
       </div>
@@ -303,25 +318,31 @@ export default function AdminFranchiseIBs() {
               <TableRow className="bg-[#F4F1EA] hover:bg-[#F4F1EA]">
                 <TableHead className="text-[#0B2A5B] font-semibold">Franchise Details</TableHead>
                 <TableHead className="text-[#0B2A5B] font-semibold">Referral Code</TableHead>
-                <TableHead className="text-[#0B2A5B] font-semibold">Total Students</TableHead>
-                <TableHead className="text-[#0B2A5B] font-semibold">Total Revenue</TableHead>
-                <TableHead className="text-[#0B2A5B] font-semibold">IB Revenue (Commission)</TableHead>
+                <TableHead className="text-[#0B2A5B] font-semibold">Students</TableHead>
+                <TableHead className="text-[#0B2A5B] font-semibold">Gross Revenue</TableHead>
+                <TableHead className="text-[#0B2A5B] font-semibold">IB Commission</TableHead>
+                <TableHead className="text-[#0B2A5B] font-semibold bg-emerald-50">Superadmin Net</TableHead>
                 <TableHead className="text-[#0B2A5B] font-semibold text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">Loading Franchise IBs...</TableCell>
+                  <TableCell colSpan={7} className="text-center py-8">Loading Franchise IBs...</TableCell>
                 </TableRow>
               ) : filteredIBs.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                     No Franchise IBs found.
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredIBs.map((ib) => (
+                filteredIBs.map((ib) => {
+                  const gross = ib.total_revenue_generated || 0;
+                  const commission = ib.commission_revenue || 0;
+                  const superadminNet = gross - commission;
+                  const netPct = gross > 0 ? ((superadminNet / gross) * 100).toFixed(0) : "100";
+                  return (
                   <TableRow key={ib.id} className="hover:bg-gray-50">
                     <TableCell>
                       <div className="font-semibold text-[#0B2A5B]">{ib.user_name}</div>
@@ -337,11 +358,22 @@ export default function AdminFranchiseIBs() {
                       <span className="font-bold text-gray-700">{ib.total_students_referred}</span>
                     </TableCell>
                     <TableCell>
-                      <span className="font-bold text-green-700">₹{(ib.total_revenue_generated || 0).toLocaleString()}</span>
+                      <span className="font-bold text-green-700">₹{gross.toLocaleString()}</span>
                     </TableCell>
                     <TableCell>
-                      <span className="font-bold text-[#D50032]">₹{(ib.commission_revenue || 0).toLocaleString()}</span>
+                      <span className="font-bold text-[#D50032]">₹{commission.toLocaleString()}</span>
                       <div className="text-xs text-gray-500">at {ib.commission_percentage ?? 100}%</div>
+                    </TableCell>
+                    <TableCell className="bg-emerald-50/40">
+                      <div className="font-black text-emerald-700 text-base">₹{superadminNet.toLocaleString()}</div>
+                      <div className="text-[11px] text-gray-400">{netPct}% of gross</div>
+                      {/* Mini bar */}
+                      {gross > 0 && (
+                        <div className="flex rounded-full overflow-hidden h-1.5 mt-1.5 bg-gray-200 w-20">
+                          <div className="bg-emerald-500" style={{ width: `${netPct}%` }} />
+                          <div className="bg-red-400" style={{ width: `${100 - parseInt(netPct)}%` }} />
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -355,7 +387,8 @@ export default function AdminFranchiseIBs() {
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))
+                  );
+                })
               )}
             </TableBody>
           </Table>

@@ -60,6 +60,7 @@ import AdminStudentManagement from "./pages/admin/AdminStudentManagement";
 import AdminIntroducingBrokers from "./pages/admin/AdminIntroducingBrokers";
 import AdminFranchiseIBs from "./pages/admin/AdminFranchiseIBs";
 import AdminFranchiseIBStudents from "./pages/admin/AdminFranchiseIBStudents";
+import AdminFranchiseIBRevenue from "./pages/admin/AdminFranchiseIBRevenue";
 import AdminCommissionManagement from "./pages/admin/AdminCommissionManagement";
 import AdminCourses from "./pages/admin/AdminCourses";
 import AdminModuleStudents from "./pages/admin/AdminModuleStudents";
@@ -92,6 +93,7 @@ import DistributorWallet from "./pages/distributor/DistributorWallet";
 import FranchiseDashboard from "./pages/franchise-ib/FranchiseDashboard";
 import ManageIBs from "./pages/franchise-ib/ManageIBs";
 import ManageStudents from "./pages/franchise-ib/ManageStudents";
+import FranchiseWallet from "./pages/franchise-ib/FranchiseWallet";
 
 export const router = createBrowserRouter([
   {
@@ -329,6 +331,10 @@ export const router = createBrowserRouter([
     Component: AdminFranchiseIBStudents,
   },
   {
+    path: "/admin/franchise-ib-revenue",
+    Component: AdminFranchiseIBRevenue,
+  },
+  {
     path: "/admin/commissions",
     Component: AdminCommissionManagement,
   },
@@ -445,5 +451,9 @@ export const router = createBrowserRouter([
   {
     path: "/franchise-ib/students",
     Component: ManageStudents,
+  },
+  {
+    path: "/franchise-ib/wallet",
+    Component: FranchiseWallet,
   },
 ]);

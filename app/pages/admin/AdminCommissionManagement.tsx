@@ -88,8 +88,17 @@ export default function AdminCommissionManagement() {
   const loadWithdrawals = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/admin/commissions/withdrawals");
-      setWithdrawals(res.data || []);
+      const [ibWithdrawalsRes, fibWithdrawalsRes] = await Promise.all([
+        api.get("/admin/commissions/withdrawals").catch(() => ({ data: [] })),
+        api.get("/franchise-ibs/admin/withdrawals").catch(() => ({ data: [] })),
+      ]);
+      const ibList = (ibWithdrawalsRes.data || []).map((r: any) => ({ ...r, is_franchise: false }));
+      const fibList = (fibWithdrawalsRes.data || []).map((r: any) => ({
+        ...r,
+        is_franchise: true,
+        ib_name: r.franchise_ib_name || r.ib_name || `Franchise IB #${r.franchise_ib_id}`,
+      }));
+      setWithdrawals([...fibList, ...ibList]);
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "Failed to load withdrawals.");
     } finally {
@@ -148,7 +157,10 @@ export default function AdminCommissionManagement() {
     const ok = await confirmPopup(`${action === "approve" ? "Approve" : "Reject"} withdrawal request for ${inr(request.amount)}?`);
     if (!ok) return;
     try {
-      await api.post(`/admin/commissions/withdrawals/${request.id}/${action}`, { admin_remarks: "" });
+      const endpoint = request.is_franchise
+        ? `/franchise-ibs/admin/withdrawals/${request.id}/${action}`
+        : `/admin/commissions/withdrawals/${request.id}/${action}`;
+      await api.post(endpoint, { admin_remarks: "" });
       toast.success(`Withdrawal ${action === "approve" ? "approved" : "rejected"}.`);
       loadWithdrawals();
       loadReports();
@@ -165,7 +177,10 @@ export default function AdminCommissionManagement() {
     if (paidForm.transaction_reference) formData.append("transaction_reference", paidForm.transaction_reference);
     if (paidForm.proof_file) formData.append("proof_file", paidForm.proof_file);
     try {
-      await api.post(`/admin/commissions/withdrawals/${payingRequest.id}/mark-paid`, formData, {
+      const endpoint = payingRequest.is_franchise
+        ? `/franchise-ibs/admin/withdrawals/${payingRequest.id}/mark-paid`
+        : `/admin/commissions/withdrawals/${payingRequest.id}/mark-paid`;
+      await api.post(endpoint, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       toast.success("Withdrawal marked as paid.");
@@ -313,11 +328,19 @@ export default function AdminCommissionManagement() {
         <Card className="p-6 bg-white shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader><TableRow className="bg-[#F4F1EA]"><TableHead>IB</TableHead><TableHead>Amount</TableHead><TableHead>Method</TableHead><TableHead>Requested</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow className="bg-[#F4F1EA]"><TableHead>IB Partner</TableHead><TableHead>Type</TableHead><TableHead>Amount</TableHead><TableHead>Method</TableHead><TableHead>Requested</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
               <TableBody>
                 {withdrawals.map((request) => (
-                  <TableRow key={request.id}>
-                    <TableCell><p className="font-semibold text-[#0B2A5B]">{request.ib_name || "-"}</p><p className="text-xs text-[#0B2A5B]/60">{request.upi_id || request.bank_name || "-"}</p></TableCell>
+                  <TableRow key={`${request.is_franchise ? 'fib' : 'ib'}-${request.id}`}>
+                    <TableCell>
+                      <p className="font-semibold text-[#0B2A5B]">{request.ib_name || "-"}</p>
+                      <p className="text-xs text-[#0B2A5B]/60">{request.upi_id || request.bank_name || "-"}</p>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={request.is_franchise ? "bg-[#0B2A5B] text-white" : "bg-blue-100 text-blue-800"}>
+                        {request.is_franchise ? "Franchise IB" : "Distributor IB"}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="font-bold">{inr(request.amount)}</TableCell>
                     <TableCell>{request.withdrawal_method}</TableCell>
                     <TableCell>{dateText(request.requested_at)}</TableCell>
