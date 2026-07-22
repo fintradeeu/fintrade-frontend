@@ -41,15 +41,9 @@ export default function MarketingLayout() {
     toast.success("Cookie preferences saved.");
 
     try {
-      let locationData = null;
-      try {
-        const ipRes = await fetch("https://ipapi.co/json/");
-        if (ipRes.ok) {
-          locationData = await ipRes.json();
-        }
-      } catch (err) {
-        console.warn("Failed to fetch location", err);
-      }
+      const locationData = {
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
 
       await api.post("/logs/activity", {
         module: "COOKIE_CONSENT",

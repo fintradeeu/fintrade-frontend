@@ -13,15 +13,9 @@ export default function ActivityTracker() {
 
     const logPageView = async () => {
       try {
-        let locationData = null;
-        try {
-          const ipRes = await fetch("https://ipapi.co/json/");
-          if (ipRes.ok) {
-            locationData = await ipRes.json();
-          }
-        } catch (e) {
-          // Ignore IP fetch errors silently
-        }
+        const locationData = {
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        };
 
         await api.post("/logs/activity", {
           module: "NAVIGATION",

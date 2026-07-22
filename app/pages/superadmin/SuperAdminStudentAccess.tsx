@@ -29,6 +29,8 @@ const STUDENT_MODULES = [
   { key: "invoice", label: "Invoice", path: "/student/invoice" },
 ];
 
+import PerformKycModal from "../../components/PerformKycModal";
+
 export default function SuperAdminStudentAccess() {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +40,10 @@ export default function SuperAdminStudentAccess() {
   const [saving, setSaving] = useState(false);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
 
+  // Perform eKYC modal state
+  const [kycStudent, setKycStudent] = useState<any | null>(null);
+  const [showKycModal, setShowKycModal] = useState(false);
+
   // Edit state for the selected student's enrollment
   const [editPaymentDue, setEditPaymentDue] = useState("");
   const [editAccessBlocked, setEditAccessBlocked] = useState(false);
@@ -46,8 +52,8 @@ export default function SuperAdminStudentAccess() {
   const fetchStudents = async () => {
     setLoading(true);
     try {
-      // Fetch purchased/enrolled students
-      const res = await api.get("/admin/purchased-students?limit=500");
+      // Fetch purchased/enrolled students (API limit max is 200 per page)
+      const res = await api.get("/admin/purchased-students?limit=200");
       const raw = res.data?.users || res.data || [];
       // Flatten enrollments into rows
       const rows: any[] = [];
@@ -70,6 +76,7 @@ export default function SuperAdminStudentAccess() {
               allowed_modules: enr.allowed_modules || null,
               course_price: enr.course?.price || 0,
               discount_applied: enr.discount_applied || 0,
+              kyc_status: u.kyc_status || "not_started",
             });
           }
         } else if (u.course_id) {
@@ -78,8 +85,8 @@ export default function SuperAdminStudentAccess() {
             user_name: u.full_name || u.name || u.email,
             user_email: u.email,
             user_phone: u.phone || "",
-            enrollment_id: u.enrollment_id,
-            course_id: u.course_id,
+            enrollment_id: u.enrollment_id || u.course_id || 1,
+            course_id: u.course_id || 1,
             course_title: u.course_title || "Unknown Course",
             price_paid: u.price_paid || 0,
             payment_status: u.payment_status || "full",
@@ -88,6 +95,7 @@ export default function SuperAdminStudentAccess() {
             allowed_modules: u.allowed_modules || null,
             course_price: u.course_price || 0,
             discount_applied: u.discount_applied || 0,
+            kyc_status: u.kyc_status || "not_started",
           });
         }
       }
@@ -118,7 +126,7 @@ export default function SuperAdminStudentAccess() {
 
   const openStudent = (s: any) => {
     setSelectedStudent(s);
-    setEditPaymentDue(s.payment_due_date ? s.payment_due_date.slice(0, 16) : "");
+    setEditPaymentDue(s.payment_due_date ? new Date(s.payment_due_date).toISOString().slice(0, 16) : "");
     setEditAccessBlocked(s.access_blocked || false);
     setEditPaymentStatus(s.payment_status || "full");
   };
@@ -126,6 +134,21 @@ export default function SuperAdminStudentAccess() {
   const saveChanges = async () => {
     if (!selectedStudent) return;
     setSaving(true);
+    const targetUserId = selectedStudent.user_id;
+    const targetEnrId = selectedStudent.enrollment_id;
+
+    // Optimistic UI state update
+    setStudents(prev => prev.map(item =>
+      (item.user_id === targetUserId && item.enrollment_id === targetEnrId)
+        ? {
+            ...item,
+            access_blocked: editAccessBlocked,
+            payment_status: editPaymentStatus,
+            payment_due_date: editPaymentDue ? new Date(editPaymentDue).toISOString() : null
+          }
+        : item
+    ));
+
     try {
       await api.put(
         `/admin/users/${selectedStudent.user_id}/enrollments/${selectedStudent.enrollment_id}/partial-payment`,
@@ -145,26 +168,36 @@ export default function SuperAdminStudentAccess() {
       fetchStudents();
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "Failed to save changes");
+      fetchStudents();
     } finally {
       setSaving(false);
     }
   };
 
   const quickToggleBlock = async (s: any) => {
+    const newBlocked = !s.access_blocked;
+    // Optimistic UI state update
+    setStudents(prev => prev.map(item =>
+      (item.user_id === s.user_id && item.enrollment_id === s.enrollment_id)
+        ? { ...item, access_blocked: newBlocked }
+        : item
+    ));
+
     try {
       await api.put(
         `/admin/users/${s.user_id}/enrollments/${s.enrollment_id}/partial-payment`,
         {
           payment_status: s.payment_status,
           payment_due_date: s.payment_due_date ? new Date(s.payment_due_date).toISOString() : null,
-          access_blocked: !s.access_blocked,
+          access_blocked: newBlocked,
           allowed_modules: s.allowed_modules,
         }
       );
-      toast.success(!s.access_blocked ? `🔒 Access blocked for ${s.user_name}` : `🔓 Access restored for ${s.user_name}`);
+      toast.success(newBlocked ? `🔒 Access blocked for ${s.user_name}` : `🔓 Access restored for ${s.user_name}`);
       fetchStudents();
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "Failed to update access");
+      fetchStudents();
     }
   };
 
@@ -295,6 +328,30 @@ export default function SuperAdminStudentAccess() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
+                        {s.kyc_status === "verified" || s.kyc_status === "approved" ? (
+                          <Badge className="bg-green-100 text-green-700 font-semibold border border-green-200 flex items-center gap-1 text-xs py-1 px-2.5">
+                            <CheckCircle className="w-3.5 h-3.5 text-green-600" /> KYC Done
+                          </Badge>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setKycStudent({
+                                id: s.user_id,
+                                full_name: s.user_name,
+                                email: s.user_email,
+                                phone: s.user_phone,
+                                course_id: s.course_id,
+                              });
+                              setShowKycModal(true);
+                            }}
+                            className="text-green-700 border-green-300 hover:bg-green-50 text-xs"
+                            title="Perform eKYC"
+                          >
+                            <Shield className="w-3 h-3 mr-1 text-green-600" /> Perform eKYC
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
@@ -444,6 +501,21 @@ export default function SuperAdminStudentAccess() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Perform eKYC Modal */}
+      {showKycModal && kycStudent && (
+        <PerformKycModal
+          open={showKycModal}
+          onClose={() => {
+            setShowKycModal(false);
+            setKycStudent(null);
+          }}
+          onSuccess={() => {
+            fetchStudents();
+          }}
+          student={kycStudent}
+        />
+      )}
     </DashboardLayout>
   );
 }

@@ -5,13 +5,13 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import {
-  Search, Download, Eye, X, UserPlus, Pencil, Trash2,
-  UserCheck, UserX, FileText, CheckCircle, Clock, AlertCircle,
-  Fingerprint, Camera, Shield, ChevronDown, ExternalLink
+  Search, RefreshCw, X, Download, ShieldCheck,
+  CheckCircle, Clock, XCircle, AlertCircle, Pencil, Trash2, UserX, UserCheck, Eye, Plus, Fingerprint, FileText, Camera, Shield, ExternalLink
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import api from "../../services/api";
 import { confirmPopup } from "../../utils/popup";
+import PerformKycModal from "../../components/PerformKycModal";
 import { Switch } from "../../components/ui/switch";
 import { toast } from "sonner";
 
@@ -36,7 +36,7 @@ const getStoredIsSuperAdmin = () => {
   }
 };
 
-// ── Excel export helper (HTML spreadsheet format for styled output and clickable links) ──────────────────────────
+// ── Excel export helper ───────────────────────────────────────────────────────
 function exportToExcel(users: any[], kycMap: Record<number, any>, apiBaseUrl: string) {
   const getAbsoluteUrl = (path?: string) => {
     if (!path) return "";
@@ -198,7 +198,6 @@ export default function AdminStudents() {
     region: "", referral_code: "", discount_percentage: 10,
     permissions: { ...DEFAULT_FACULTY_PERMISSIONS }
   });
-
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewTab, setViewTab] = useState<"profile" | "kyc" | "referrals">("profile");
@@ -206,6 +205,7 @@ export default function AdminStudents() {
   const [referralsLoading, setReferralsLoading] = useState(false);
   const [selectedUserKyc, setSelectedUserKyc] = useState<any | null>(null);
   const [kycLoading, setKycLoading] = useState(false);
+  const [kycModalUser, setKycModalUser] = useState<any | null>(null);
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -214,7 +214,6 @@ export default function AdminStudents() {
     discount_percentage: 10, permissions: { ...DEFAULT_FACULTY_PERMISSIONS }
   });
 
-  // KYC map for all users (for Excel export)
   const [kycMap, setKycMap] = useState<Record<number, any>>({});
   const [exporting, setExporting] = useState(false);
   const [distributors, setDistributors] = useState<any[]>([]);
@@ -356,171 +355,129 @@ export default function AdminStudents() {
   const handleEditUser = async (e: React.FormEvent) => {
     e.preventDefault(); setUpdating(true);
     try {
-      const payload: any = { email: editForm.email, full_name: editForm.full_name, phone: editForm.phone || null, city: editForm.city || null };
-      if (isSuperAdmin && isDistributorUser(selectedUser)) {
-        payload.region = editForm.region; payload.referral_code = editForm.referral_code; payload.discount_percentage = editForm.discount_percentage;
-      }
-      if (selectedUser.roles?.some((r: any) => r.name === "faculty")) payload.permissions = editForm.permissions;
-      await api.put(`/admin/users/${selectedUser.id}`, payload);
-      setShowEditModal(false); fetchUsers();
+      await api.put(`/admin/users/${selectedUser.id}`, {
+        full_name: editForm.full_name, email: editForm.email, phone: editForm.phone || undefined, city: editForm.city || undefined,
+        permissions: selectedUser.roles?.some((r: any) => r.name === "faculty") ? editForm.permissions : undefined,
+      });
+      setShowEditModal(false);
+      fetchUsers();
     } catch (err: any) { alert("Error: " + (err.response?.data?.detail || err.message)); }
     finally { setUpdating(false); }
   };
 
-  const filtered = users.filter(u => {
-    if (isDistributorUser(u)) return false;
-    const hasPrivilegedRole = u.roles?.some((ro: any) => 
-      ro.name === "admin" || ro.name === "super_admin" || ro.name === "faculty"
-    );
-    if (hasPrivilegedRole) return false;
-    const s = u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || u.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    const r = roleFilter === "all" || u.roles?.some((ro: any) => ro.name === roleFilter);
-    return s && r;
+  const filtered = users.filter((u) => {
+    const matchesSearch = !searchTerm || u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || u.email?.toLowerCase().includes(searchTerm.toLowerCase()) || u.phone?.includes(searchTerm);
+    if (!matchesSearch) return false;
+    if (roleFilter === "all") return true;
+    return u.roles?.some((r: any) => r.name === roleFilter);
   });
-  const visibleRoleFilters = ROLE_FILTERS;
-  const countRole = (r: string) => {
-    const visibleUsers = users.filter(u => {
-      if (isDistributorUser(u)) return false;
-      const hasPrivilegedRole = u.roles?.some((ro: any) => 
-        ro.name === "admin" || ro.name === "super_admin" || ro.name === "faculty"
-      );
-      return !hasPrivilegedRole;
-    });
-    return r === "all" ? visibleUsers.length : visibleUsers.filter(u => u.roles?.some((ro: any) => ro.name === r)).length;
-  };
 
   return (
-    <DashboardLayout role="admin">
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-[#0B2A5B] mb-2">User Management</h1>
-          <p className="text-[#0B2A5B]/70">View registered users who have not purchased a course yet</p>
-        </div>
-        <Button
-          onClick={handleExportExcel}
-          disabled={exporting || loading}
-          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white shadow-lg"
-        >
-          <Download size={16} />
-          {exporting ? "Exporting..." : "Export to Excel"}
-        </Button>
-      </div>
-
-      {/* Role filter cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-        {visibleRoleFilters.map(role => (
-          <Card key={role} className={`p-4 cursor-pointer transition-all shadow-lg hover:shadow-xl ${roleFilter === role ? "bg-[#0B2A5B] text-[#F4F1EA] ring-2 ring-[#C2A86A]" : "bg-white"}`} onClick={() => setRoleFilter(role)}>
-            <p className={`text-xs uppercase tracking-wider mb-1 ${roleFilter === role ? "text-[#F4F1EA]/70" : "text-[#0B2A5B]/60"}`}>{role === "all" ? "All Users" : role === "distributor" ? "Introducing Brokers (IB)" : role.charAt(0).toUpperCase() + role.slice(1) + "s"}</p>
-            <p className={`text-2xl font-bold ${roleFilter === role ? "text-[#C2A86A]" : "text-[#0B2A5B]"}`}>{countRole(role)}</p>
-          </Card>
-        ))}
-      </div>
-
-      {/* Search + Add */}
-      <Card className="p-6 bg-white shadow-lg mb-6">
-        <div className="flex gap-4 items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#0B2A5B]/40" size={20} />
-            <Input placeholder="Search by name or email..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 bg-[#F4F1EA] border-[#0B2A5B]/20" />
+    <DashboardLayout>
+      <div className="p-6 space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-[#0B2A5B]">User Management</h1>
+            <p className="text-sm text-gray-500 mt-1">Manage all students, faculty, and system users.</p>
           </div>
-          <Button onClick={() => setShowAddModal(true)} className="bg-[#0B2A5B] text-[#F4F1EA] hover:bg-[#1a3d7a]"><UserPlus size={16} className="mr-2" />Add User</Button>
+          <div className="flex items-center gap-3">
+            <Button onClick={handleExportExcel} disabled={exporting} variant="outline" className="border-green-600 text-green-700 hover:bg-green-50 gap-2">
+              <Download size={16} />
+              {exporting ? "Exporting..." : "Export to Excel"}
+            </Button>
+            <Button onClick={() => setShowAddModal(true)} className="bg-[#0B2A5B] hover:bg-[#1a3d7a] text-white gap-2">
+              <Plus size={16} /> Add New User
+            </Button>
+          </div>
         </div>
-      </Card>
 
-      {/* Users table */}
-      <Card className="p-6 bg-white shadow-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader><TableRow className="bg-[#F4F1EA]">
-              <TableHead className="text-[#0B2A5B]">User</TableHead>
-              {isSuperAdmin && roleFilter === "distributor" ? (
-                <>
-                  <TableHead className="text-[#0B2A5B]">Region</TableHead>
-                  <TableHead className="text-[#0B2A5B]">Referral Code</TableHead>
-                  <TableHead className="text-[#0B2A5B]">Discount %</TableHead>
-                  <TableHead className="text-[#0B2A5B]">Students Referred</TableHead>
-                  <TableHead className="text-[#0B2A5B]">Total Revenue</TableHead>
-                  <TableHead className="text-[#0B2A5B]">Referral Link</TableHead>
-                </>
-              ) : (
-                <>
-                  <TableHead className="text-[#0B2A5B]">Phone</TableHead>
-                  <TableHead className="text-[#0B2A5B]">City</TableHead>
-                  <TableHead className="text-[#0B2A5B]">Roles</TableHead>
-                  <TableHead className="text-[#0B2A5B]">KYC</TableHead>
-                </>
-              )}
-              <TableHead className="text-[#0B2A5B]">Joined</TableHead>
-              <TableHead className="text-[#0B2A5B]">Status</TableHead>
-              <TableHead className="text-[#0B2A5B]">Actions</TableHead>
-            </TableRow></TableHeader>
-            <TableBody>
-              {filtered.map(u => {
-                const distInfo = isSuperAdmin && roleFilter === "distributor" ? getDistributorStats(u.id) : null;
-                return (
-                  <TableRow key={u.id} className="hover:bg-[#F4F1EA]/50">
-                    <TableCell><div><p className="font-semibold text-[#0B2A5B]">{u.full_name}</p><p className="text-xs text-[#0B2A5B]/60">{u.email}</p></div></TableCell>
-                    {isSuperAdmin && roleFilter === "distributor" ? (
-                      <>
-                        <TableCell className="text-[#0B2A5B] text-sm">{distInfo?.region || u.distributor_profile?.region || "—"}</TableCell>
-                        <TableCell className="text-[#0B2A5B] text-sm font-mono font-bold text-orange-600">{distInfo?.referral_code || u.distributor_profile?.referral_code || "—"}</TableCell>
-                        <TableCell className="text-[#0B2A5B] text-sm font-semibold">{distInfo?.discount_percentage ?? u.distributor_profile?.discount_percentage ?? 10}%</TableCell>
-                        <TableCell className="text-[#0B2A5B] text-sm font-bold">{distInfo?.total_students_referred ?? 0}</TableCell>
-                        <TableCell className="text-[#0B2A5B] text-sm font-bold text-green-700">₹{distInfo?.total_revenue_generated?.toLocaleString("en-IN") ?? 0}</TableCell>
-                        <TableCell>
-                          {(distInfo?.referral_code || u.distributor_profile?.referral_code) ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={async () => {
-                                const code = distInfo?.referral_code || u.distributor_profile?.referral_code;
-                                const link = `${window.location.origin}/register?ref=${code}`;
-                                navigator.clipboard.writeText(link);
-                                toast.success("Referral link copied!");
-                              }}
-                              className="text-xs border-orange-200 text-orange-700 hover:bg-orange-50 px-2 py-1 h-auto"
-                            >
-                              Copy Link
-                            </Button>
-                          ) : "—"}
-                        </TableCell>
-                      </>
-                    ) : (
-                      <>
-                        <TableCell className="text-[#0B2A5B] text-sm">{u.phone || "—"}</TableCell>
-                        <TableCell className="text-[#0B2A5B] text-sm">{u.city || "—"}</TableCell>
-                        <TableCell>{u.roles?.filter((r: any) => isSuperAdmin || r.name !== "distributor").map((r: any) => (
-                          <Badge key={r.id} className={`mr-1 ${r.name === "admin" ? "bg-red-100 text-red-700" : r.name === "faculty" ? "bg-purple-100 text-purple-700" : r.name === "distributor" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}`}>{r.name === "distributor" ? "Introducing Broker (IB)" : r.name}</Badge>
-                        ))}</TableCell>
-                        <TableCell><KycBadge status={u.kyc_status} /></TableCell>
-                      </>
-                    )}
-                    <TableCell className="text-[#0B2A5B] text-sm">{new Date(u.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell><Badge className={u.is_active ? "bg-green-100 text-green-700 hover:bg-green-100" : "bg-red-100 text-red-700 hover:bg-red-100"}>{u.is_active ? "Active" : "Inactive"}</Badge></TableCell>
-                    <TableCell>
-                      <div className="flex gap-1.5">
-                        <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 hover:bg-[#F4F1EA]" onClick={() => handleOpenView(u)} title="View User"><Eye size={14} /></Button>
-                        <Button size="sm" variant="outline" className="border-[#0B2A5B]/20 hover:bg-[#F4F1EA]" onClick={() => handleOpenEdit(u)} title="Edit User"><Pencil size={14} /></Button>
-                        <Button size="sm" variant="outline" className={`border-[#0B2A5B]/20 ${u.is_active ? "text-orange-500 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"}`} onClick={() => handleToggleStatus(u)} title={u.is_active ? "Deactivate" : "Activate"}>
-                          {u.is_active ? <UserX size={14} /> : <UserCheck size={14} />}
-                        </Button>
-                        <Button size="sm" variant="outline" className="border-red-300 text-red-500 hover:bg-red-50" onClick={() => handleDeleteUser(u)} title="Delete"><Trash2 size={14} /></Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {filtered.length === 0 && !loading && <TableRow><TableCell colSpan={isSuperAdmin && roleFilter === "distributor" ? 9 : 8} className="text-center text-[#0B2A5B]/60 py-8">No users found</TableCell></TableRow>}
-            </TableBody>
-          </Table>
-        </div>
-      </Card>
+        <Card className="p-4 bg-white border border-[#E5E0D8] rounded-xl shadow-sm">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+            <div className="relative flex-1 max-w-md w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input placeholder="Search name, email, phone..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 bg-[#F4F1EA] border-[#0B2A5B]/20" />
+            </div>
+            <div className="text-xs text-gray-500 font-medium">{filtered.length} users found</div>
+          </div>
+
+          <div className="overflow-x-auto rounded-lg border border-gray-100">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-[#F4F1EA] hover:bg-[#F4F1EA]">
+                  <TableHead className="text-[#0B2A5B] font-bold">User Name</TableHead>
+                  <TableHead className="text-[#0B2A5B] font-bold">Email / Phone</TableHead>
+                  <TableHead className="text-[#0B2A5B] font-bold">City</TableHead>
+                  <TableHead className="text-[#0B2A5B] font-bold">Roles</TableHead>
+                  <TableHead className="text-[#0B2A5B] font-bold">Joined Date</TableHead>
+                  <TableHead className="text-[#0B2A5B] font-bold">Status</TableHead>
+                  <TableHead className="text-[#0B2A5B] font-bold text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow><TableCell colSpan={7} className="text-center py-10 text-gray-400">Loading Users...</TableCell></TableRow>
+                ) : filtered.length === 0 ? (
+                  <TableRow><TableCell colSpan={7} className="text-center py-10 text-gray-400">No users found.</TableCell></TableRow>
+                ) : (
+                  filtered.map((u) => (
+                    <TableRow key={u.id} className="hover:bg-gray-50">
+                      <TableCell className="font-semibold text-[#0B2A5B]">
+                        <div>{u.full_name}</div>
+                        <div className="text-xs text-gray-400 font-normal">ID: #{u.id}</div>
+                      </TableCell>
+                      <TableCell className="text-[#0B2A5B]/80 text-sm">
+                        <div>{u.email}</div>
+                        <div className="text-xs text-gray-400">{u.phone || "—"}</div>
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">{u.city || "—"}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {u.roles?.map((r: any) => (
+                            <Badge key={r.id} className={r.name === "super_admin" ? "bg-purple-100 text-purple-700 border-none" : r.name === "admin" ? "bg-red-100 text-red-700 border-none" : r.name === "faculty" ? "bg-blue-100 text-blue-700 border-none" : "bg-gray-100 text-gray-700 border-none"}>
+                              {r.name}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">{new Date(u.created_at).toLocaleDateString("en-IN")}</TableCell>
+                      <TableCell>
+                        <Badge className={u.is_active ? "bg-green-100 text-green-700 border-none" : "bg-red-100 text-red-700 border-none"}>
+                          {u.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setKycModalUser(u)}
+                            className="text-green-700 border-green-300 hover:bg-green-50 text-xs px-2 py-1 h-8"
+                            title="Perform eKYC"
+                          >
+                            <ShieldCheck className="w-3.5 h-3.5 mr-1 text-green-600" />
+                            eKYC
+                          </Button>
+                          <Button size="sm" variant="outline" className="border-gray-200 hover:bg-gray-50 h-8 w-8 p-0" onClick={() => handleOpenView(u)} title="View User"><Eye size={14} /></Button>
+                          <Button size="sm" variant="outline" className="border-gray-200 hover:bg-gray-50 h-8 w-8 p-0" onClick={() => handleOpenEdit(u)} title="Edit User"><Pencil size={14} /></Button>
+                          <Button size="sm" variant="outline" className={`border-gray-200 h-8 w-8 p-0 ${u.is_active ? "text-orange-500 hover:bg-orange-50" : "text-green-600 hover:bg-green-50"}`} onClick={() => handleToggleStatus(u)} title={u.is_active ? "Deactivate" : "Activate"}>
+                            {u.is_active ? <UserX size={14} /> : <UserCheck size={14} />}
+                          </Button>
+                          <Button size="sm" variant="outline" className="border-red-200 text-red-500 hover:bg-red-50 h-8 w-8 p-0" onClick={() => handleDeleteUser(u)} title="Delete"><Trash2 size={14} /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
+      </div>
 
       {/* ── View User Modal with KYC tab ──────────────────────────────── */}
       {showViewModal && selectedUser && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <div>
                 <h2 className="text-xl font-bold text-[#0B2A5B]">{selectedUser.full_name}</h2>
@@ -529,7 +486,6 @@ export default function AdminStudents() {
               <button onClick={() => setShowViewModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors"><X size={22} /></button>
             </div>
 
-            {/* Tabs */}
             <div className="flex border-b border-gray-100">
               {(isSuperAdmin && isDistributorUser(selectedUser)
                 ? ["profile", "kyc", "referrals"]
@@ -549,7 +505,6 @@ export default function AdminStudents() {
               ))}
             </div>
 
-            {/* Tab Content */}
             <div className="overflow-y-auto flex-1 p-6">
               {viewTab === "profile" && (
                 <div className="space-y-3">
@@ -569,71 +524,59 @@ export default function AdminStudents() {
                   <div className="flex items-start gap-3 py-2">
                     <span className="w-28 text-xs font-semibold text-gray-400 uppercase tracking-wide mt-0.5">Roles</span>
                     <div className="flex flex-wrap gap-1">
-                      {selectedUser.roles?.filter((r: any) => isSuperAdmin || r.name !== "distributor").map((r: any) => (
-                        <Badge key={r.id} className={r.name === "admin" ? "bg-red-100 text-red-700" : r.name === "faculty" ? "bg-purple-100 text-purple-700" : r.name === "distributor" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}>{r.name === "distributor" ? "Introducing Broker (IB)" : r.name}</Badge>
+                      {selectedUser.roles?.map((r: any) => (
+                        <Badge key={r.id} className="bg-blue-100 text-blue-700">{r.name}</Badge>
                       ))}
                     </div>
-                  </div>
-                  {isSuperAdmin && isDistributorUser(selectedUser) && selectedUser.distributor_profile && (
-                    <div className="mt-4 bg-orange-50 rounded-xl p-4 space-y-2 border border-orange-100">
-                      <p className="text-xs font-bold text-orange-700 uppercase tracking-wider">Introducing Broker (IB) Profile</p>
-                      {[
-                        ["Region", selectedUser.distributor_profile.region],
-                        ["Code", selectedUser.distributor_profile.referral_code],
-                        ["Discount", `${selectedUser.distributor_profile.discount_percentage}%`],
-                        ["Students Referred", getDistributorStats(selectedUser.id)?.total_students_referred ?? 0]
-                      ].map(([k, v]) => (
-                        <div key={k} className="flex gap-3 text-sm"><span className="text-gray-500 w-36">{k}:</span><span className="font-medium text-[#0B2A5B]">{v}</span></div>
-                      ))}
-                      
-                      <div className="pt-2">
-                        <Button
-                          size="sm"
-                          onClick={async () => {
-                            const code = selectedUser.distributor_profile.referral_code;
-                            const link = `${window.location.origin}/register?ref=${code}`;
-                            navigator.clipboard.writeText(link);
-                            toast.success("Referral link copied!");
-                          }}
-                          className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs h-9"
-                        >
-                          Copy Referral Link
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                  <div className="pt-4">
-                    <Button onClick={handleSwitchToKyc} variant="outline" className="w-full border-[#0B2A5B]/20 text-[#0B2A5B] hover:bg-[#F4F1EA]">
-                      <FileText size={15} className="mr-2" /> View KYC Details →
-                    </Button>
                   </div>
                 </div>
               )}
 
               {viewTab === "kyc" && (
                 <div>
+                  <div className="flex items-center justify-between p-3.5 mb-4 rounded-xl bg-purple-50 border border-purple-100">
+                    <div>
+                      <h4 className="text-xs font-bold text-purple-900 uppercase tracking-wider">SuperAdmin eKYC Control</h4>
+                      <p className="text-xs text-purple-700">Directly enter details, verify documents, and generate signed agreement contract.</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => setKycModalUser(selectedUser)}
+                      className="bg-green-600 hover:bg-green-700 text-white font-bold text-xs gap-1.5 shadow-sm"
+                    >
+                      <ShieldCheck className="w-4 h-4" />
+                      Perform / Complete eKYC
+                    </Button>
+                  </div>
+
                   {kycLoading ? (
                     <div className="flex flex-col items-center justify-center py-16 gap-3">
                       <div className="w-10 h-10 border-4 border-[#0B2A5B]/20 border-t-[#0B2A5B] rounded-full animate-spin" />
                       <p className="text-sm text-gray-400">Loading KYC details...</p>
                     </div>
                   ) : !selectedUserKyc || selectedUserKyc.status === "not_started" ? (
-                    <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                        <Shield className="h-8 w-8 text-gray-300" />
+                    <div className="flex flex-col items-center justify-center py-12 text-center gap-3 bg-gray-50 border border-dashed rounded-xl p-6">
+                      <div className="w-14 h-14 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center">
+                        <ShieldCheck className="h-7 w-7" />
                       </div>
-                      <p className="text-lg font-semibold text-gray-400">KYC Not Started</p>
-                      <p className="text-sm text-gray-300">This user hasn't submitted any KYC details yet.</p>
+                      <p className="text-base font-semibold text-gray-700">KYC Not Completed Yet</p>
+                      <p className="text-xs text-gray-500 max-w-sm">This student hasn't completed their self-service eKYC yet. You can complete it for them right now.</p>
+                      <Button
+                        size="sm"
+                        onClick={() => setKycModalUser(selectedUser)}
+                        className="bg-green-600 hover:bg-green-700 text-white font-bold text-xs gap-1.5 mt-2"
+                      >
+                        <ShieldCheck className="w-4 h-4" />
+                        Perform eKYC Now
+                      </Button>
                     </div>
                   ) : (
                     <div className="space-y-6">
-                      {/* Status header */}
                       <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
                         <span className="text-sm font-semibold text-gray-600">KYC Status</span>
                         <KycBadge status={selectedUserKyc.status} />
                       </div>
 
-                      {/* Personal details */}
                       <div>
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Personal Information</p>
                         <div className="grid grid-cols-2 gap-x-6 gap-y-2">
@@ -659,7 +602,6 @@ export default function AdminStudents() {
                         )}
                       </div>
 
-                      {/* Verification Status */}
                       <div>
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Verification</p>
                         <div className="flex gap-4">
@@ -675,7 +617,6 @@ export default function AdminStudents() {
                         </div>
                       </div>
 
-                      {/* Document previews */}
                       <div>
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Uploaded Documents</p>
                         <div className="grid grid-cols-3 gap-3">
@@ -685,7 +626,6 @@ export default function AdminStudents() {
                         </div>
                       </div>
 
-                      {/* Signature & Biometric */}
                       <div>
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Signature & Biometric</p>
                         <div className="grid grid-cols-2 gap-3">
@@ -695,60 +635,6 @@ export default function AdminStudents() {
                       </div>
                     </div>
                   )}
-                </div>
-              )}
-
-              {isSuperAdmin && viewTab === "referrals" && (
-                <div className="space-y-6">
-                  {/* Summary Cards */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-center">
-                      <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Total Referred Students</p>
-                      <p className="text-3xl font-bold text-[#0B2A5B] mt-1">{getDistributorStats(selectedUser.id)?.total_students_referred ?? 0}</p>
-                    </div>
-                    <div className="bg-green-50 border border-green-100 rounded-xl p-4 text-center">
-                      <p className="text-xs font-semibold text-green-600 uppercase tracking-wider">Total Revenue Generated</p>
-                      <p className="text-3xl font-bold text-green-700 mt-1">₹{(getDistributorStats(selectedUser.id)?.total_revenue_generated ?? 0).toLocaleString("en-IN")}</p>
-                    </div>
-                  </div>
-
-                  {/* Referrals list */}
-                  <div>
-                    <h3 className="text-sm font-bold text-[#0B2A5B] mb-3 uppercase tracking-wider">Referred Student List</h3>
-                    {referralsLoading ? (
-                      <div className="flex flex-col items-center justify-center py-12 gap-3">
-                        <div className="w-8 h-8 border-4 border-[#0B2A5B]/20 border-t-[#0B2A5B] rounded-full animate-spin" />
-                        <p className="text-xs text-gray-400">Loading referred students...</p>
-                      </div>
-                    ) : distReferrals.length === 0 ? (
-                      <div className="py-8 text-center text-gray-400 text-sm font-medium border border-dashed rounded-xl bg-gray-50/50">
-                        No students have registered under this Introducing Broker yet.
-                      </div>
-                    ) : (
-                      <div className="border border-gray-100 rounded-xl overflow-hidden max-h-[40vh] overflow-y-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="bg-[#F4F1EA] hover:bg-[#F4F1EA]">
-                              <TableHead className="text-[#0B2A5B] text-xs font-bold py-2">Student Name</TableHead>
-                              <TableHead className="text-[#0B2A5B] text-xs font-bold py-2">Email</TableHead>
-                              <TableHead className="text-[#0B2A5B] text-xs font-bold py-2">Enrolled Course</TableHead>
-                              <TableHead className="text-[#0B2A5B] text-xs font-bold py-2">Referral Date</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {distReferrals.map((r) => (
-                              <TableRow key={r.id} className="hover:bg-gray-50">
-                                <TableCell className="font-semibold text-[#0B2A5B] text-xs py-2">{r.student_name || "—"}</TableCell>
-                                <TableCell className="text-[#0B2A5B]/70 text-xs py-2">{r.student_email || "—"}</TableCell>
-                                <TableCell className="text-[#0B2A5B] text-xs py-2">{r.course_title || <span className="text-gray-400 italic">Pending Enrollment</span>}</TableCell>
-                                <TableCell className="text-[#0B2A5B]/80 text-xs py-2">{new Date(r.created_at).toLocaleDateString("en-IN")}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    )}
-                  </div>
                 </div>
               )}
             </div>
@@ -779,21 +665,8 @@ export default function AdminStudents() {
               <div><label className="text-sm font-medium text-[#0B2A5B]">Phone</label><Input type="tel" placeholder="+91 98765 43210" value={newUser.phone} onChange={e => setNewUser({ ...newUser, phone: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">City</label><Input type="text" placeholder="Mumbai" value={newUser.city} onChange={e => setNewUser({ ...newUser, city: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Password *</label><Input required type="password" minLength={8} placeholder="Min 8 characters" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
-              {newUser.role === "faculty" && (
-                <div className="space-y-3 border-t pt-4 mt-4">
-                  <h3 className="font-semibold text-sm text-[#0B2A5B]">Faculty Permissions</h3>
-                  <div className="grid grid-cols-2 gap-3 bg-[#F4F1EA] p-3 rounded-lg">
-                    {[{ key: "manageCourses", label: "Courses" }, { key: "manageStudents", label: "Students" }, { key: "manageLectures", label: "Lectures" }, { key: "manageDoubts", label: "Doubts" }, { key: "manageAssignments", label: "Assignments" }, { key: "manageExams", label: "Exams" }, { key: "viewReports", label: "Reports" }].map(perm => (
-                      <div key={perm.key} className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-[#0B2A5B]">{perm.label}</span>
-                        <Switch checked={!!(newUser.permissions as any)[perm.key]} onCheckedChange={checked => setNewUser({ ...newUser, permissions: { ...newUser.permissions, [perm.key]: checked } })} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
               <Button type="submit" disabled={creating} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a] shadow-lg">
-                {creating ? "Creating..." : `Create ${newUser.role === "distributor" ? "Introducing Broker (IB)" : newUser.role.charAt(0).toUpperCase() + newUser.role.slice(1)}`}
+                {creating ? "Creating..." : `Create User`}
               </Button>
             </form>
           </Card>
@@ -811,33 +684,25 @@ export default function AdminStudents() {
               <div><label className="text-sm font-medium text-[#0B2A5B]">Email *</label><Input required type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">Phone</label><Input type="tel" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
               <div><label className="text-sm font-medium text-[#0B2A5B]">City</label><Input type="text" value={editForm.city} onChange={e => setEditForm({ ...editForm, city: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
-              {isSuperAdmin && isDistributorUser(selectedUser) && (
-                <div className="space-y-3 border-t pt-4 mt-4">
-                  <h3 className="font-semibold text-sm text-[#0B2A5B]">Introducing Broker (IB) Settings</h3>
-                  <div><label className="text-sm font-medium text-[#0B2A5B]">Region *</label><Input required value={editForm.region} onChange={e => setEditForm({ ...editForm, region: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
-                  <div><label className="text-sm font-medium text-[#0B2A5B]">Referral Code *</label><Input required minLength={3} value={editForm.referral_code} onChange={e => setEditForm({ ...editForm, referral_code: e.target.value })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
-                  <div><label className="text-sm font-medium text-[#0B2A5B]">Discount % *</label><Input required type="number" min="0" max="100" value={editForm.discount_percentage} onChange={e => setEditForm({ ...editForm, discount_percentage: parseFloat(e.target.value) || 0 })} className="bg-[#F4F1EA] border-[#0B2A5B]/20 mt-1" /></div>
-                </div>
-              )}
-              {selectedUser.roles?.some((r: any) => r.name === "faculty") && (
-                <div className="space-y-3 border-t pt-4 mt-4">
-                  <h3 className="font-semibold text-sm text-[#0B2A5B]">Faculty Permissions</h3>
-                  <div className="grid grid-cols-2 gap-3 bg-[#F4F1EA] p-3 rounded-lg">
-                    {[{ key: "manageCourses", label: "Courses" }, { key: "manageStudents", label: "Students" }, { key: "manageLectures", label: "Lectures" }, { key: "manageDoubts", label: "Doubts" }, { key: "manageAssignments", label: "Assignments" }, { key: "manageExams", label: "Exams" }, { key: "viewReports", label: "Reports" }].map(perm => (
-                      <div key={perm.key} className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-[#0B2A5B]">{perm.label}</span>
-                        <Switch checked={!!(editForm.permissions as any)[perm.key]} onCheckedChange={checked => setEditForm({ ...editForm, permissions: { ...editForm.permissions, [perm.key]: checked } })} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
               <Button type="submit" disabled={updating} className="w-full bg-[#0B2A5B] text-white hover:bg-[#1a3d7a] shadow-lg mt-6">
                 {updating ? "Saving Changes..." : "Save Changes"}
               </Button>
             </form>
           </Card>
         </div>
+      )}
+
+      {/* Perform eKYC Modal */}
+      {kycModalUser && (
+        <PerformKycModal
+          open={!!kycModalUser}
+          onClose={() => setKycModalUser(null)}
+          onSuccess={() => {
+            fetchUsers();
+            if (selectedUser) loadKycForUser(selectedUser.id);
+          }}
+          student={kycModalUser}
+        />
       )}
     </DashboardLayout>
   );

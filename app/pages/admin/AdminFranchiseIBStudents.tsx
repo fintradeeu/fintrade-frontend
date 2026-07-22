@@ -6,10 +6,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../components/ui/dialog";
-import { Eye, FileText, Download, CheckCircle, Clock, ArrowLeft, FileSpreadsheet } from "lucide-react";
+import { Eye, FileText, Download, CheckCircle, Clock, ArrowLeft, FileSpreadsheet, ShieldCheck } from "lucide-react";
 import api from "../../services/api";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import PerformKycModal from "../../components/PerformKycModal";
 
 export default function AdminFranchiseIBStudents() {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +23,10 @@ export default function AdminFranchiseIBStudents() {
   // Student details modal states
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [detailsTab, setDetailsTab] = useState<"profile" | "courses" | "invoices">("profile");
+
+  // Perform eKYC modal states
+  const [kycStudent, setKycStudent] = useState<any | null>(null);
+  const [showKycModal, setShowKycModal] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -178,18 +183,44 @@ export default function AdminFranchiseIBStudents() {
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedStudent(r);
-                              setDetailsTab("profile");
-                            }}
-                            className="text-[#0B2A5B] border-[#0B2A5B] hover:bg-[#0B2A5B] hover:text-white"
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            Details
-                          </Button>
+                          <div className="flex items-center justify-end gap-2">
+                            {r.kyc_done ? (
+                              <Badge className="bg-green-100 text-green-700 font-semibold border border-green-200 flex items-center gap-1 text-xs py-1.5 px-3">
+                                <CheckCircle className="w-4 h-4 text-green-600" /> KYC Done
+                              </Badge>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setKycStudent({
+                                    id: r.student_id || r.user_id || r.id,
+                                    full_name: r.student_name,
+                                    email: r.student_email,
+                                    phone: r.mobile_no,
+                                    course_id: r.course_id,
+                                  });
+                                  setShowKycModal(true);
+                                }}
+                                className="text-green-700 border-green-300 hover:bg-green-50"
+                              >
+                                <ShieldCheck className="w-4 h-4 mr-1.5" />
+                                Perform eKYC
+                              </Button>
+                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedStudent(r);
+                                setDetailsTab("profile");
+                              }}
+                              className="text-[#0B2A5B] border-[#0B2A5B] hover:bg-[#0B2A5B] hover:text-white"
+                            >
+                              <Eye className="w-4 h-4 mr-1.5" />
+                              Details
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -414,6 +445,21 @@ export default function AdminFranchiseIBStudents() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Perform eKYC Modal */}
+      {showKycModal && kycStudent && (
+        <PerformKycModal
+          open={showKycModal}
+          onClose={() => {
+            setShowKycModal(false);
+            setKycStudent(null);
+          }}
+          onSuccess={() => {
+            fetchStudents();
+          }}
+          student={kycStudent}
+        />
+      )}
     </DashboardLayout>
   );
 }
