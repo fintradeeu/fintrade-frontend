@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Eye, FileText, Download, CheckCircle, Clock, Edit, Save, X } from "lucide-react";
 import api from "../../services/api";
 import RegisterStudentModal from "../../components/RegisterStudentModal";
+import InvoiceModal from "../../components/InvoiceModal";
 import { toast } from "sonner";
 
 export default function ManageStudents() {
@@ -20,6 +21,7 @@ export default function ManageStudents() {
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [detailsTab, setDetailsTab] = useState<"profile" | "courses" | "invoices">("profile");
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -481,51 +483,21 @@ export default function ManageStudents() {
                             size="sm" 
                             className="text-[#0B2A5B]"
                             onClick={() => {
-                              // Instead of an API call for PDF, we generate a print view
-                              const printWindow = window.open('', '_blank');
-                              if (printWindow) {
-                                printWindow.document.write(`
-                                  <html>
-                                    <head>
-                                      <title>Invoice - ${tx.txnid}</title>
-                                      <style>
-                                        body { font-family: system-ui, -apple-system, sans-serif; padding: 40px; color: #333; }
-                                        .header { border-bottom: 2px solid #0B2A5B; padding-bottom: 20px; margin-bottom: 30px; }
-                                        .logo { font-size: 24px; font-weight: bold; color: #0B2A5B; }
-                                        .row { display: flex; justify-content: space-between; margin-bottom: 10px; }
-                                        .label { color: #666; font-size: 14px; }
-                                        .value { font-weight: 500; }
-                                        .total { font-size: 20px; font-weight: bold; margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px; }
-                                      </style>
-                                    </head>
-                                    <body>
-                                      <div class="header">
-                                        <div class="logo">FinTrade LMS - Invoice</div>
-                                      </div>
-                                      <div class="row"><span class="label">Invoice No:</span> <span class="value">${tx.txnid}</span></div>
-                                      <div class="row"><span class="label">Date:</span> <span class="value">${new Date(tx.date).toLocaleString()}</span></div>
-                                      <div class="row"><span class="label">Student Name:</span> <span class="value">${selectedStudent.student_name}</span></div>
-                                      <div class="row"><span class="label">Course:</span> <span class="value">${tx.course_title || "Course Enrollment"}</span></div>
-                                      <div class="row"><span class="label">Payment Mode:</span> <span class="value">${(tx.payment_mode || "Online").toUpperCase()}</span></div>
-                                      <div class="row"><span class="label">Status:</span> <span class="value">${tx.status.toUpperCase()}</span></div>
-                                      ${tx.reference_number ? `<div class="row"><span class="label">Reference:</span> <span class="value">${tx.reference_number}</span></div>` : ''}
-                                      <div class="row"><span class="label">Total Course Price:</span> <span class="value">₹${(selectedStudent.total_course_price || tx.amount).toLocaleString()}</span></div>
-                                      <div class="row total"><span>Total Paid:</span> <span>₹${tx.amount.toLocaleString()}</span></div>
-                                      ${selectedStudent.pending_amount > 0 ? `<div class="row" style="color: #ea580c; font-weight: bold; margin-top: 10px;"><span>Pending Balance:</span> <span>₹${selectedStudent.pending_amount.toLocaleString()}</span></div>` : ''}
-                                      
-                                      <div style="margin-top: 50px; font-size: 12px; color: #888;">
-                                        This is a computer-generated invoice and requires no physical signature.
-                                      </div>
-                                    </body>
-                                  </html>
-                                `);
-                                printWindow.document.close();
-                                setTimeout(() => printWindow.print(), 500);
-                              }
+                              setSelectedInvoice({
+                                invoiceNumber: `FT-2026-${1000 + (selectedStudent.student_id || selectedStudent.id || 1)}`,
+                                purchaseDate: new Date(tx.date || Date.now()).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+                                courseTitle: tx.course_title || "Professional Trading Course",
+                                originalPrice: selectedStudent.total_course_price || tx.amount || 0,
+                                discountAmount: (selectedStudent.total_course_price || 0) > tx.amount ? (selectedStudent.total_course_price - tx.amount) : 0,
+                                amountPaid: tx.amount || 0,
+                                paymentMethod: (tx.payment_mode || "Cash / Cheque / Online").toUpperCase(),
+                                paymentId: tx.txnid || tx.reference_number || `TXN${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+                                status: tx.status === "success" || tx.status === "completed" ? "PAID" : tx.status,
+                              });
                             }}
                           >
-                            <Download className="w-4 h-4 mr-1.5" />
-                            Print Invoice
+                            <FileText className="w-4 h-4 mr-1.5" />
+                            Tax Invoice
                           </Button>
                         </div>
                       </div>
@@ -537,6 +509,21 @@ export default function ManageStudents() {
           )}
         </DialogContent>
       </Dialog>
+      
+      {/* Tax Invoice Summary Modal */}
+      {selectedInvoice && selectedStudent && (
+        <InvoiceModal
+          open={!!selectedInvoice}
+          onClose={() => setSelectedInvoice(null)}
+          student={{
+            id: selectedStudent.student_id || selectedStudent.id || 1,
+            full_name: selectedStudent.student_name,
+            email: selectedStudent.student_email || selectedStudent.email,
+            phone: selectedStudent.mobile_no || selectedStudent.phone,
+          }}
+          invoice={selectedInvoice}
+        />
+      )}
     </DashboardLayout>
   );
 }
