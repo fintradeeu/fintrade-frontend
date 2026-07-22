@@ -6,9 +6,10 @@ import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../components/ui/dialog";
-import { Eye, FileText, Download, CheckCircle, Clock } from "lucide-react";
+import { Eye, FileText, Download, CheckCircle, Clock, Edit, Save, X } from "lucide-react";
 import api from "../../services/api";
 import RegisterStudentModal from "../../components/RegisterStudentModal";
+import { toast } from "sonner";
 
 export default function ManageStudents() {
   const [students, setStudents] = useState<any[]>([]);
@@ -19,6 +20,47 @@ export default function ManageStudents() {
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [detailsTab, setDetailsTab] = useState<"profile" | "courses" | "invoices">("profile");
+  
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editForm, setEditForm] = useState({
+    full_name: "",
+    phone: "",
+    city: ""
+  });
+  const [updatingProfile, setUpdatingProfile] = useState(false);
+
+  const startEditing = () => {
+    setEditForm({
+      full_name: selectedStudent?.student_name || "",
+      phone: selectedStudent?.mobile_no || "",
+      city: selectedStudent?.city || ""
+    });
+    setIsEditingProfile(true);
+  };
+
+  const saveProfile = async () => {
+    if (!selectedStudent) return;
+    setUpdatingProfile(true);
+    try {
+      await api.put(`/franchise-ibs/students/${selectedStudent.student_id}`, editForm);
+      toast.success("Student details updated successfully");
+      
+      setSelectedStudent((prev: any) => ({
+        ...prev,
+        student_name: editForm.full_name,
+        mobile_no: editForm.phone,
+        city: editForm.city
+      }));
+      
+      setIsEditingProfile(false);
+      fetchStudents();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.detail || "Failed to update student details");
+    } finally {
+      setUpdatingProfile(false);
+    }
+  };
 
   const fetchStudents = async () => {
     try {
@@ -211,7 +253,7 @@ export default function ManageStudents() {
       )}
       
       {/* View Details Modal */}
-      <Dialog open={!!selectedStudent} onOpenChange={(open) => !open && setSelectedStudent(null)}>
+      <Dialog open={!!selectedStudent} onOpenChange={(open) => { if (!open) { setSelectedStudent(null); setIsEditingProfile(false); } }}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl text-[#0B2A5B]">Student Details</DialogTitle>
@@ -250,33 +292,104 @@ export default function ManageStudents() {
               </div>
 
               {detailsTab === "profile" && (
-                <div className="grid grid-cols-2 gap-6 bg-gray-50 p-6 rounded-xl border border-gray-100">
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Full Name</p>
-                    <p className="font-semibold text-lg text-[#0B2A5B]">{selectedStudent.student_name}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Email</p>
-                    <p className="font-semibold text-lg text-[#0B2A5B]">{selectedStudent.student_email}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Phone Number</p>
-                    <p className="font-semibold text-[#0B2A5B]">{selectedStudent.mobile_no || "N/A"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">City</p>
-                    <p className="font-semibold text-[#0B2A5B]">{selectedStudent.city || "N/A"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Status</p>
-                    <Badge className={selectedStudent.enrolled ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}>
-                      {selectedStudent.enrolled ? "Enrolled" : "Pending Enrollment"}
-                    </Badge>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Joined Date</p>
-                    <p className="font-semibold text-[#0B2A5B]">{new Date(selectedStudent.created_at).toLocaleDateString()}</p>
-                  </div>
+                <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 flex flex-col gap-6">
+                  {isEditingProfile ? (
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="text-sm font-semibold text-gray-500 mb-1 block">Full Name</label>
+                        <Input
+                          value={editForm.full_name}
+                          onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                          className="bg-white border-gray-200"
+                        />
+                      </div>
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="text-sm font-semibold text-gray-500 mb-1 block">Email (Cannot Edit)</label>
+                        <Input
+                          value={selectedStudent.student_email}
+                          disabled
+                          className="bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed"
+                        />
+                      </div>
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="text-sm font-semibold text-gray-500 mb-1 block">Phone Number</label>
+                        <Input
+                          value={editForm.phone}
+                          onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                          className="bg-white border-gray-200"
+                        />
+                      </div>
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="text-sm font-semibold text-gray-500 mb-1 block">City</label>
+                        <Input
+                          value={editForm.city}
+                          onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                          className="bg-white border-gray-200"
+                        />
+                      </div>
+                      
+                      <div className="col-span-2 flex justify-end gap-3 mt-2 border-t pt-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setIsEditingProfile(false)}
+                          disabled={updatingProfile}
+                          className="gap-2 border-gray-200 hover:bg-gray-100 text-gray-700"
+                        >
+                          <X className="w-4 h-4" /> Cancel
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={saveProfile}
+                          disabled={updatingProfile || !editForm.full_name || !editForm.phone}
+                          className="gap-2 bg-[#0B2A5B] hover:bg-[#0B2A5B]/90 text-white"
+                        >
+                          <Save className="w-4 h-4" /> {updatingProfile ? "Saving..." : "Save Changes"}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 gap-6">
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">Full Name</p>
+                          <p className="font-semibold text-lg text-[#0B2A5B]">{selectedStudent.student_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">Email</p>
+                          <p className="font-semibold text-lg text-[#0B2A5B]">{selectedStudent.student_email}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">Phone Number</p>
+                          <p className="font-semibold text-[#0B2A5B]">{selectedStudent.mobile_no || "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">City</p>
+                          <p className="font-semibold text-[#0B2A5B]">{selectedStudent.city || "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">Status</p>
+                          <Badge className={selectedStudent.enrolled ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}>
+                            {selectedStudent.enrolled ? "Enrolled" : "Pending Enrollment"}
+                          </Badge>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">Joined Date</p>
+                          <p className="font-semibold text-[#0B2A5B]">{new Date(selectedStudent.created_at).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end border-t pt-4 mt-2">
+                        <Button
+                          type="button"
+                          onClick={startEditing}
+                          className="gap-2 bg-[#C2A86A] hover:bg-[#a68c53] text-white"
+                        >
+                          <Edit className="w-4 h-4" /> Edit Profile
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 

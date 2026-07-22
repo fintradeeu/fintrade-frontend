@@ -6,7 +6,7 @@ import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../components/ui/dialog";
-import { Eye, FileText, Download, CheckCircle, Clock, Search, Handshake, Users, EyeOff, Plus, FileSpreadsheet } from "lucide-react";
+import { Eye, FileText, Download, CheckCircle, Clock, Search, Handshake, Users, EyeOff, Plus, FileSpreadsheet, DollarSign, TrendingUp } from "lucide-react";
 import { Label } from "../../components/ui/label";
 import { DialogFooter } from "../../components/ui/dialog";
 import api from "../../services/api";
@@ -133,6 +133,20 @@ export default function AdminFranchiseIBs() {
     );
   }, [ibs, searchTerm]);
 
+  const stats = useMemo(() => {
+    let totalRevenue = 0;
+    let totalStudents = 0;
+    let totalCommission = 0;
+    
+    ibs.forEach((ib) => {
+      totalRevenue += ib.total_revenue_generated || 0;
+      totalStudents += ib.total_students_referred || 0;
+      totalCommission += ib.commission_revenue || 0;
+    });
+    
+    return { totalRevenue, totalStudents, totalCommission };
+  }, [ibs]);
+
   const handleViewStudents = (ib: any) => {
     window.location.href = `/admin/franchise-ibs/${ib.id}/students`;
   };
@@ -235,6 +249,38 @@ export default function AdminFranchiseIBs() {
           <FileSpreadsheet className="w-4 h-4" />
           {exportingAll ? "Exporting..." : "Export All Students"}
         </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card className="p-6 bg-white shadow-md rounded-xl border border-gray-100 flex items-center gap-4">
+          <div className="p-4 bg-green-50 text-green-600 rounded-lg">
+            <TrendingUp className="w-8 h-8" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-[#0B2A5B]/70">Total Revenue Generated</p>
+            <h3 className="text-2xl font-bold text-green-700 mt-1">₹{stats.totalRevenue.toLocaleString("en-IN")}</h3>
+          </div>
+        </Card>
+
+        <Card className="p-6 bg-white shadow-md rounded-xl border border-gray-100 flex items-center gap-4">
+          <div className="p-4 bg-[#D50032]/5 text-[#D50032] rounded-lg">
+            <DollarSign className="w-8 h-8" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-[#0B2A5B]/70">Total IB Commission</p>
+            <h3 className="text-2xl font-bold text-[#D50032] mt-1">₹{stats.totalCommission.toLocaleString("en-IN")}</h3>
+          </div>
+        </Card>
+
+        <Card className="p-6 bg-white shadow-md rounded-xl border border-gray-100 flex items-center gap-4">
+          <div className="p-4 bg-blue-50 text-blue-600 rounded-lg">
+            <Users className="w-8 h-8" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-[#0B2A5B]/70">Total Referred Students</p>
+            <h3 className="text-2xl font-bold text-blue-700 mt-1">{stats.totalStudents.toLocaleString("en-IN")}</h3>
+          </div>
+        </Card>
       </div>
 
       <Card className="p-6 bg-white shadow-lg rounded-xl overflow-hidden">
