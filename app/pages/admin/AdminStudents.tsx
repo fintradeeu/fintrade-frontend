@@ -12,6 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import api from "../../services/api";
 import { confirmPopup } from "../../utils/popup";
 import PerformKycModal from "../../components/PerformKycModal";
+import RegisterStudentModal from "../../components/RegisterStudentModal";
+import InvoiceModal from "../../components/InvoiceModal";
 import { Switch } from "../../components/ui/switch";
 import { toast } from "sonner";
 
@@ -214,6 +216,9 @@ export default function AdminStudents() {
     discount_percentage: 10, permissions: { ...DEFAULT_FACULTY_PERMISSIONS }
   });
 
+  const [showRegisterStudentModal, setShowRegisterStudentModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
+  const [selectedInvoiceStudent, setSelectedInvoiceStudent] = useState<any | null>(null);
   const [kycMap, setKycMap] = useState<Record<number, any>>({});
   const [exporting, setExporting] = useState(false);
   const [distributors, setDistributors] = useState<any[]>([]);
@@ -385,6 +390,9 @@ export default function AdminStudents() {
               <Download size={16} />
               {exporting ? "Exporting..." : "Export to Excel"}
             </Button>
+            <Button onClick={() => setShowRegisterStudentModal(true)} className="bg-emerald-700 hover:bg-emerald-800 text-white gap-2 font-medium shadow-sm">
+              <Plus size={16} /> Register Student (Cash/Cheque)
+            </Button>
             <Button onClick={() => setShowAddModal(true)} className="bg-[#0B2A5B] hover:bg-[#1a3d7a] text-white gap-2">
               <Plus size={16} /> Add New User
             </Button>
@@ -456,6 +464,28 @@ export default function AdminStudents() {
                           >
                             <ShieldCheck className="w-3.5 h-3.5 mr-1 text-green-600" />
                             eKYC
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-[#0B2A5B]/30 text-[#0B2A5B] hover:bg-blue-50 h-8 px-2 gap-1 text-xs font-medium"
+                            onClick={() => {
+                              const ec = u.enrolled_courses?.[0] || {};
+                              setSelectedInvoiceStudent(u);
+                              setSelectedInvoice({
+                                invoiceNumber: `FT-2026-${1000 + u.id}`,
+                                purchaseDate: new Date(u.created_at || Date.now()).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+                                courseTitle: ec.course_title || "Professional Trading Course",
+                                originalPrice: ec.price_paid || 0,
+                                amountPaid: ec.price_paid || 0,
+                                paymentMethod: ec.payment_mode || "Cash / Cheque / Online",
+                                paymentId: ec.payment_txnid || `TXN${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+                                status: "PAID",
+                              });
+                            }}
+                            title="Tax Invoice"
+                          >
+                            <FileText size={13} /> Invoice
                           </Button>
                           <Button size="sm" variant="outline" className="border-gray-200 hover:bg-gray-50 h-8 w-8 p-0" onClick={() => handleOpenView(u)} title="View User"><Eye size={14} /></Button>
                           <Button size="sm" variant="outline" className="border-gray-200 hover:bg-gray-50 h-8 w-8 p-0" onClick={() => handleOpenEdit(u)} title="Edit User"><Pencil size={14} /></Button>
@@ -702,6 +732,29 @@ export default function AdminStudents() {
             if (selectedUser) loadKycForUser(selectedUser.id);
           }}
           student={kycModalUser}
+        />
+      )}
+
+      {/* SuperAdmin Manual Student Registration Modal */}
+      {showRegisterStudentModal && (
+        <RegisterStudentModal
+          open={showRegisterStudentModal}
+          onClose={() => setShowRegisterStudentModal(false)}
+          onSuccess={() => {
+            setShowRegisterStudentModal(false);
+            fetchUsers();
+            toast.success("Student registered successfully with payment details!");
+          }}
+          apiPrefix="/admin"
+        />
+      )}
+      {/* Tax Invoice Summary Modal */}
+      {selectedInvoice && selectedInvoiceStudent && (
+        <InvoiceModal
+          open={!!selectedInvoice}
+          onClose={() => setSelectedInvoice(null)}
+          student={selectedInvoiceStudent}
+          invoice={selectedInvoice}
         />
       )}
     </DashboardLayout>

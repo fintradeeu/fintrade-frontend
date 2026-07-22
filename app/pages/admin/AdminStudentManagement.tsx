@@ -253,18 +253,37 @@ export default function AdminStudentManagement() {
     return Array.from(new Set<string>(codes));
   };
 
-  const filtered = students.filter(
-    (s) => {
-      const matchesSearch = s.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.phone?.toLowerCase().includes(searchTerm.toLowerCase());
-        
-      const matchesFranchise = selectedFranchiseId === "all" || 
-        String(s.franchise_ib_id) === selectedFranchiseId;
-        
-      return matchesSearch && matchesFranchise;
+  // Bifurcation stats
+  const directCount = students.filter((s) => !s.franchise_ib_id).length;
+  const franchiseCount = students.filter((s) => !!s.franchise_ib_id).length;
+  const ibGroups: Record<string, { name: string; code: string; count: number }> = {};
+  franchiseIBs.forEach((ib) => {
+    ibGroups[ib.id] = { name: ib.full_name, code: ib.referral_code, count: 0 };
+  });
+  students.forEach((s) => {
+    if (s.franchise_ib_id && ibGroups[s.franchise_ib_id]) {
+      ibGroups[s.franchise_ib_id].count++;
     }
-  );
+  });
+
+  const filtered = students.filter((s) => {
+    const matchesSearch =
+      s.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.phone?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    let matchesFranchise = true;
+    if (selectedFranchiseId === "all") {
+      matchesFranchise = true;
+    } else if (selectedFranchiseId === "direct") {
+      // Direct Registration = no franchise IB assigned
+      matchesFranchise = !s.franchise_ib_id;
+    } else {
+      matchesFranchise = String(s.franchise_ib_id) === selectedFranchiseId;
+    }
+
+    return matchesSearch && matchesFranchise;
+  });
 
   return (
     <DashboardLayout role="admin">
@@ -282,6 +301,69 @@ export default function AdminStudentManagement() {
           </Button>
         </div>
       </div>
+
+      {/* Bifurcation Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {/* Total */}
+        <button
+          onClick={() => setSelectedFranchiseId("all")}
+          className={`p-4 rounded-2xl border-2 text-left transition-all shadow-sm cursor-pointer hover:shadow-md ${selectedFranchiseId === "all" ? "border-[#0B2A5B] bg-[#0B2A5B]/5" : "border-gray-100 bg-white"}`}
+        >
+          <div className="text-2xl font-black text-[#0B2A5B]">{students.length}</div>
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-1">Total Students</div>
+          <div className="text-[11px] text-gray-400 mt-0.5">All registered</div>
+        </button>
+
+        {/* Direct */}
+        <button
+          onClick={() => setSelectedFranchiseId("direct")}
+          className={`p-4 rounded-2xl border-2 text-left transition-all shadow-sm cursor-pointer hover:shadow-md ${selectedFranchiseId === "direct" ? "border-blue-500 bg-blue-50" : "border-gray-100 bg-white"}`}
+        >
+          <div className="text-2xl font-black text-blue-600">{directCount}</div>
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-1">Direct / Superadmin</div>
+          <div className="text-[11px] text-gray-400 mt-0.5">No Franchise IB</div>
+        </button>
+
+        {/* Via Franchise IB */}
+        <button
+          className="p-4 rounded-2xl border-2 border-gray-100 bg-white text-left shadow-sm cursor-default"
+        >
+          <div className="text-2xl font-black text-emerald-600">{franchiseCount}</div>
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-1">Via Franchise IB</div>
+          <div className="text-[11px] text-gray-400 mt-0.5">Through referral codes</div>
+        </button>
+
+        {/* Active Franchise IBs */}
+        <button
+          className="p-4 rounded-2xl border-2 border-gray-100 bg-white text-left shadow-sm cursor-default"
+        >
+          <div className="text-2xl font-black text-purple-600">{franchiseIBs.length}</div>
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-1">Active Franchise IBs</div>
+          <div className="text-[11px] text-gray-400 mt-0.5">Select below to filter</div>
+        </button>
+      </div>
+
+      {/* Per-IB breakdown row if any IBs exist */}
+      {franchiseIBs.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-5">
+          {franchiseIBs.map((ib) => (
+            <button
+              key={ib.id}
+              onClick={() => setSelectedFranchiseId(String(ib.id))}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                selectedFranchiseId === String(ib.id)
+                  ? "bg-[#0B2A5B] text-white border-[#0B2A5B]"
+                  : "bg-white text-[#0B2A5B] border-[#0B2A5B]/30 hover:bg-[#0B2A5B]/10"
+              }`}
+            >
+              🤝 {ib.full_name} <span className="opacity-70">({ib.referral_code})</span>
+              <span className="ml-1.5 bg-white/20 px-1.5 py-0.5 rounded-full">
+                {ibGroups[ib.id]?.count ?? 0}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Search and Filters */}
       <Card className="p-6 bg-white shadow-lg mb-6">
@@ -301,11 +383,11 @@ export default function AdminStudentManagement() {
               onChange={(e) => setSelectedFranchiseId(e.target.value)}
               className="w-full bg-[#F4F1EA] border border-[#0B2A5B]/20 rounded-xl px-4 py-2 text-[#0B2A5B] focus:outline-none focus:ring-2 focus:ring-[#0B2A5B]/30"
             >
-              <option value="all">All Franchise IBs</option>
-              <option value="undefined">Direct Registration</option>
+              <option value="all">All Students ({students.length})</option>
+              <option value="direct">🏢 Direct / Superadmin ({directCount})</option>
               {franchiseIBs.map((ib) => (
-                <option key={ib.id} value={ib.id}>
-                  {ib.full_name} ({ib.referral_code})
+                <option key={ib.id} value={String(ib.id)}>
+                  🤝 {ib.full_name} — {ib.referral_code} ({ibGroups[ib.id]?.count ?? 0})
                 </option>
               ))}
             </select>

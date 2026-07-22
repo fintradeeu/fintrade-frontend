@@ -380,22 +380,27 @@ export default function LoginPage() {
         
         {/* Left Side — Branding & Features */}
         <div className="lg:col-span-5 hidden lg:flex flex-col justify-between space-y-8 pr-4">
-          <div className="space-y-6">
-            <Link
-              to="/"
-              className="inline-flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-white transition-all bg-white/5 hover:bg-white/10 px-4 py-2 rounded-full border border-white/10 backdrop-blur-md group"
-            >
-              <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform text-[#D50032]" />
-              <span>Back to Home</span>
-            </Link>
+          <div className="space-y-5">
+            {/* Logo Container — Aligned to Left */}
+            <div className="flex items-center">
+              <div className="inline-flex items-center h-[90px] w-[260px] overflow-hidden p-2 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-xl shadow-2xl">
+                <img
+                  src="/fintrade_logo_dark.png"
+                  alt="FinTrade"
+                  className="h-full w-full object-contain scale-[3.8] -translate-x-4"
+                />
+              </div>
+            </div>
 
-            {/* Logo Container */}
-            <div className="inline-flex items-center h-[90px] w-[260px] overflow-hidden p-2 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-xl shadow-2xl">
-              <img
-                src="/fintrade_logo_dark.png"
-                alt="FinTrade"
-                className="h-full w-full object-contain scale-[3.8] -translate-x-4"
-              />
+            {/* Back to Home Button — Set directly under the logo */}
+            <div>
+              <Link
+                to="/"
+                className="inline-flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-white transition-all bg-white/5 hover:bg-white/10 px-4 py-2 rounded-full border border-white/10 backdrop-blur-md group"
+              >
+                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform text-[#D50032]" />
+                <span>Back to Home</span>
+              </Link>
             </div>
 
             <div className="space-y-3">

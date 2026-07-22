@@ -5,15 +5,19 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import api from "../services/api";
-import { AlertCircle, CheckCircle2, Upload } from "lucide-react";
+import { AlertCircle, CheckCircle2, Upload, FileText, Download, ShieldCheck, Tag } from "lucide-react";
+import { toast } from "sonner";
+import InvoiceModal from "./InvoiceModal";
 
 interface Props {
+  open?: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  apiPrefix: "/franchise-ibs" | "/distributor";
+  onPerformKyc?: (student: any) => void;
+  apiPrefix?: string;
 }
 
-export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: Props) {
+export default function RegisterStudentModal({ open = true, onClose, onSuccess, onPerformKyc, apiPrefix = "/franchise-ibs" }: Props) {
   const [loading, setLoading] = useState(false);
   const [courses, setCourses] = useState<any[]>([]);
   const [allCourses, setAllCourses] = useState<any[]>([]);
@@ -21,6 +25,14 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
   const [success, setSuccess] = useState("");
   const [batches, setBatches] = useState<any[]>([]);
   const [chequeFile, setChequeFile] = useState<File | null>(null);
+
+  // Coupon state
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [couponSuccess, setCouponSuccess] = useState("");
+  const [couponError, setCouponError] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState(0);
+  const [createdStudentData, setCreatedStudentData] = useState<any | null>(null);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
   const [formData, setFormData] = useState({
     full_name: "",
@@ -39,6 +51,7 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
     account_holder_name: "",
     payment_date: "",
     payment_due_date: "", // deadline for remaining balance
+    coupon_code: "",
   });
 
   useEffect(() => {
@@ -103,6 +116,149 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
     });
   };
 
+  const handleApplyCoupon = async () => {
+    if (!formData.coupon_code.trim()) {
+      setCouponError("Please enter a coupon code");
+      return;
+    }
+    setValidatingCoupon(true);
+    setCouponError("");
+    setCouponSuccess("");
+    try {
+      const courseId = formData.course_id ? parseInt(formData.course_id) : null;
+      const res = await api.post("/offers/validate", {
+        code: formData.coupon_code.trim().toUpperCase(),
+        course_id: courseId || 1,
+      });
+      if (res.data) {
+        const disc = res.data.discount_amount || res.data.discount || 0;
+        const discountedPrice = res.data.discounted_price !== undefined ? res.data.discounted_price : Math.max(0, coursePrice - disc);
+        setAppliedDiscount(disc);
+        setFormData(prev => ({ ...prev, amount: discountedPrice.toString() }));
+        setCouponSuccess(`✅ Coupon "${formData.coupon_code.trim().toUpperCase()}" applied! Discount: ₹${disc.toLocaleString("en-IN")} | Net Fee: ₹${discountedPrice.toLocaleString("en-IN")}`);
+        toast.success(`Coupon applied! Discount ₹${disc}`);
+      }
+    } catch (err: any) {
+      setCouponError(err.response?.data?.detail || "Invalid or expired coupon code.");
+      setAppliedDiscount(0);
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const downloadTaxInvoice = (stData?: any) => {
+    const selectedCourseObj = allCourses.find((c) => c.id.toString() === formData.course_id);
+    const selectedBatchObj = batches.find((b) => b.id.toString() === formData.batch_id);
+    const invoiceNo = `FT-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+    const dateStr = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+    const amountPaid = parseFloat(formData.amount) || 0;
+    const coursePrice = selectedCourseObj?.price || amountPaid;
+    const discount = appliedDiscount || 0;
+    const taxableAmount = (amountPaid / 1.18).toFixed(2);
+    const gstAmount = (amountPaid - parseFloat(taxableAmount)).toFixed(2);
+
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>FinTrade Tax Invoice - ${invoiceNo}</title>
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 40px; color: #1e293b; }
+          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0B2A5B; padding-bottom: 16px; margin-bottom: 24px; }
+          .logo { font-size: 26px; font-weight: 800; color: #0B2A5B; }
+          .subtitle { font-size: 12px; color: #64748b; }
+          .inv-title { font-size: 20px; font-weight: bold; color: #0B2A5B; text-align: right; }
+          .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+          .box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; }
+          .box h4 { margin: 0 0 8px 0; font-size: 13px; color: #0B2A5B; text-transform: uppercase; letter-spacing: 0.5px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 16px; margin-bottom: 24px; }
+          th { background: #0B2A5B; color: white; padding: 10px 12px; text-align: left; font-size: 13px; }
+          td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+          .totals { width: 300px; margin-left: auto; margin-top: 16px; }
+          .totals-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+          .totals-row.grand { font-size: 16px; font-weight: bold; border-top: 2px solid #0B2A5B; color: #0B2A5B; padding-top: 10px; }
+          .footer { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 16px; font-size: 11px; color: #94a3b8; text-align: center; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <div class="logo">FinTrade Learning Solutions</div>
+            <div class="subtitle">Official Student Enrollment Tax Invoice</div>
+          </div>
+          <div>
+            <div class="inv-title">TAX INVOICE</div>
+            <div style="font-size:12px; color:#64748b;">Invoice No: <strong>${invoiceNo}</strong></div>
+            <div style="font-size:12px; color:#64748b;">Date: ${dateStr}</div>
+          </div>
+        </div>
+
+        <div class="details-grid">
+          <div class="box">
+            <h4>Billed To (Student)</h4>
+            <div><strong>${formData.full_name}</strong></div>
+            <div>Email: ${formData.email}</div>
+            <div>Phone: ${formData.phone}</div>
+            <div>City: ${formData.city || 'N/A'}</div>
+          </div>
+          <div class="box">
+            <h4>Payment Information</h4>
+            <div>Payment Method: <strong style="text-transform:uppercase;">${formData.payment_mode}</strong></div>
+            ${formData.reference_number ? `<div>Ref / Receipt No: ${formData.reference_number}</div>` : ''}
+            ${formData.bank_name ? `<div>Bank: ${formData.bank_name} (${formData.branch_name || ''})</div>` : ''}
+            <div>Payment Status: <strong style="color:#16a34a;">${formData.payment_due_date ? 'Partial Paid' : 'Full Paid'}</strong></div>
+            ${formData.payment_due_date ? `<div>Remaining Balance Due Date: ${new Date(formData.payment_due_date).toLocaleDateString("en-IN")}</div>` : ''}
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Batch</th>
+              <th style="text-align:right;">Original Fee</th>
+              <th style="text-align:right;">Discount</th>
+              <th style="text-align:right;">Amount Paid (Inc. 18% GST)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>${selectedCourseObj?.title || 'FinTrade Trading Course'}</strong></td>
+              <td>${selectedBatchObj?.name || 'Standard Batch'}</td>
+              <td style="text-align:right;">₹${coursePrice.toLocaleString('en-IN')}</td>
+              <td style="text-align:right; color:#dc2626;">${discount > 0 ? `-₹${discount.toLocaleString('en-IN')}` : '₹0'}</td>
+              <td style="text-align:right; font-weight:bold;">₹${amountPaid.toLocaleString('en-IN')}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="totals">
+          <div class="totals-row">
+            <span>Taxable Amount:</span>
+            <span>₹${taxableAmount}</span>
+          </div>
+          <div class="totals-row">
+            <span>CGST (9%) + SGST (9%):</span>
+            <span>₹${gstAmount}</span>
+          </div>
+          <div class="totals-row grand">
+            <span>Total Paid:</span>
+            <span>₹${amountPaid.toLocaleString('en-IN')}</span>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>FinTrade Learning Solutions | Computer Generated Tax Invoice — Requires No Signature</p>
+        </div>
+        <script>window.onload = function() { window.print(); }</script>
+      </body>
+      </html>
+    `);
+    win.document.close();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -162,11 +318,13 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
 
   const selectedCourseObj = courses.find((c) => c.id.toString() === formData.course_id);
   const coursePrice = selectedCourseObj?.price || 0;
+  const netCoursePrice = Math.max(0, coursePrice - appliedDiscount);
   const amountEntered = parseFloat(formData.amount) || 0;
-  const pendingAmount = Math.max(0, coursePrice - amountEntered);
+  const pendingAmount = Math.max(0, netCoursePrice - amountEntered);
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <>
+    <Dialog open={open} onOpenChange={(val) => !val && onClose()}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Register New Student</DialogTitle>
@@ -183,9 +341,29 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
         )}
 
         {success && (
-          <div className="bg-green-50 text-green-700 p-3 rounded-lg flex items-center gap-2 text-sm mb-4">
-            <CheckCircle2 size={16} />
-            {success}
+          <div className="bg-green-50 border border-green-200 text-green-800 p-4 rounded-xl space-y-3 mb-4">
+            <div className="flex items-center gap-2 text-base font-semibold text-green-900">
+              <CheckCircle2 size={20} className="text-green-600" />
+              Student Successfully Registered!
+            </div>
+            <p className="text-xs text-green-700">
+              Account created for <strong>{formData.full_name}</strong> ({formData.email}). Login credentials sent to email.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-green-200">
+              <Button
+                type="button"
+                onClick={() => setShowInvoiceModal(true)}
+                className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs gap-1.5 shadow-sm"
+              >
+                <FileText size={14} /> View Tax Invoice
+              </Button>
+              {onPerformKyc && (
+                <Button type="button" onClick={() => onPerformKyc(createdStudentData || { email: formData.email, full_name: formData.full_name })} className="bg-[#0B2A5B] hover:bg-[#123E7E] text-white text-xs gap-1.5 shadow-sm">
+                  <ShieldCheck size={14} /> Perform eKYC Now
+                </Button>
+              )}
+            </div>
           </div>
         )}
 
@@ -245,6 +423,28 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
             </div>
           )}
 
+          {/* Coupon Code Section */}
+          <div className="space-y-2 border-t pt-3">
+            <Label htmlFor="coupon_code" className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+              <Tag size={14} className="text-[#0B2A5B]" /> Coupon Code (Optional)
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="coupon_code"
+                name="coupon_code"
+                placeholder="Enter coupon code (e.g. SAVE20)"
+                value={formData.coupon_code}
+                onChange={(e) => setFormData(prev => ({ ...prev, coupon_code: e.target.value.toUpperCase() }))}
+                className="uppercase text-sm"
+              />
+              <Button type="button" variant="outline" onClick={handleApplyCoupon} disabled={validatingCoupon || !formData.coupon_code} className="text-xs font-semibold border-[#0B2A5B]/30 text-[#0B2A5B]">
+                {validatingCoupon ? "Checking..." : "Apply Coupon"}
+              </Button>
+            </div>
+            {couponSuccess && <p className="text-xs text-[#16A34A] font-medium mt-1">{couponSuccess}</p>}
+            {couponError && <p className="text-xs text-red-500 font-medium mt-1">{couponError}</p>}
+          </div>
+
           <div className="space-y-2 border-t pt-4">
             <Label>Payment Mode *</Label>
             <Select value={formData.payment_mode} onValueChange={(v) => handleSelectChange("payment_mode", v)}>
@@ -262,14 +462,27 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
           {isOffline && (
             <div className="bg-gray-50 p-4 rounded-lg space-y-4">
               {selectedCourseObj && (
-                <div className="flex justify-between items-center bg-blue-50 text-[#0B2A5B] p-3 rounded-md mb-2 text-sm border border-blue-100">
-                  <div>
-                    <span className="font-semibold block">Total Course Price:</span>
-                    <span className="text-lg font-bold">₹{coursePrice.toLocaleString()}</span>
+                <div className="bg-blue-50/80 text-[#0B2A5B] p-3.5 rounded-lg mb-2 text-sm border border-blue-100 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <span className="text-xs text-gray-500 block">Original Price:</span>
+                      <span className="text-base font-bold text-gray-800">₹{coursePrice.toLocaleString()}</span>
+                    </div>
+                    {appliedDiscount > 0 && (
+                      <div className="text-center">
+                        <span className="text-xs text-green-600 font-semibold block">Coupon Discount:</span>
+                        <span className="text-base font-bold text-green-700">-₹{appliedDiscount.toLocaleString()}</span>
+                      </div>
+                    )}
+                    <div className="text-right">
+                      <span className="text-xs text-gray-500 block">Net Fee Payable:</span>
+                      <span className="text-base font-extrabold text-[#0B2A5B]">₹{netCoursePrice.toLocaleString()}</span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className="font-semibold block">Pending Balance:</span>
-                    <span className={`text-lg font-bold ${pendingAmount > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                  
+                  <div className="flex justify-between items-center pt-2 border-t border-blue-200/60 text-xs">
+                    <span className="font-semibold text-gray-600">Pending Remaining Balance:</span>
+                    <span className={`font-bold text-sm ${pendingAmount > 0 ? 'text-orange-600' : 'text-green-600'}`}>
                       ₹{pendingAmount.toLocaleString()}
                     </span>
                   </div>
@@ -381,5 +594,37 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
         </form>
       </DialogContent>
     </Dialog>
+
+    {/* Tax Invoice Summary Modal — same UI as Admin Students */}
+    {showInvoiceModal && createdStudentData && (() => {
+      const selectedCourseObj = allCourses.find((c) => c.id.toString() === formData.course_id);
+      const amtPaid = parseFloat(formData.amount) || 0;
+      const originalPrice = selectedCourseObj?.price || amtPaid;
+      const disc = appliedDiscount > 0 ? originalPrice - amtPaid : 0;
+      return (
+        <InvoiceModal
+          open={showInvoiceModal}
+          onClose={() => setShowInvoiceModal(false)}
+          student={{
+            id: createdStudentData.id || createdStudentData.user_id || 0,
+            full_name: formData.full_name,
+            email: formData.email,
+            phone: formData.phone,
+          }}
+          invoice={{
+            invoiceNumber: `FT-2026-${Math.floor(10000 + Math.random() * 90000)}`,
+            purchaseDate: new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+            courseTitle: selectedCourseObj?.title || "Professional Trading Course",
+            originalPrice,
+            discountAmount: disc,
+            amountPaid: amtPaid,
+            paymentMethod: (formData.payment_mode || "Cash / Cheque").toUpperCase(),
+            paymentId: createdStudentData.payment_id || `TXN${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+            status: "PAID",
+          }}
+        />
+      );
+    })()}
+    </>
   );
 }
