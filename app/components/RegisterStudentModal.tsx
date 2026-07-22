@@ -38,6 +38,7 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
     branch_name: "",
     account_holder_name: "",
     payment_date: "",
+    payment_due_date: "", // deadline for remaining balance
   });
 
   useEffect(() => {
@@ -140,6 +141,7 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
         batch_id: formData.batch_id && formData.batch_id !== "none" ? parseInt(formData.batch_id) : null,
         amount: formData.amount ? parseFloat(formData.amount) : 0,
         cheque_image_url: chequeImageUrl || undefined,
+        payment_due_date: formData.payment_due_date || undefined,
       };
 
       await api.post(`${apiPrefix}/manual-register`, payload);
@@ -341,6 +343,28 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
                 <Label htmlFor="remarks">Remarks</Label>
                 <Input id="remarks" name="remarks" value={formData.remarks} onChange={handleChange} placeholder="Any specific notes..." />
               </div>
+
+              {/* Payment Due Date — only when partial payment */}
+              {pendingAmount > 0 && (
+                <div className="space-y-2 col-span-2 border-t pt-4">
+                  <Label htmlFor="payment_due_date" className="flex items-center gap-2 text-orange-700 font-semibold">
+                    <span>⏰</span> Payment Due Date (Deadline for Remaining ₹{pendingAmount.toLocaleString()})
+                  </Label>
+                  <p className="text-xs text-gray-500 mb-1">Set the date and time by which the student must pay the outstanding balance. The student will be shown this deadline in their dashboard.</p>
+                  <Input
+                    id="payment_due_date"
+                    name="payment_due_date"
+                    type="datetime-local"
+                    value={formData.payment_due_date}
+                    onChange={handleChange}
+                    className="border-orange-300 focus:ring-orange-400"
+                    required
+                  />
+                  {!formData.payment_due_date && (
+                    <p className="text-xs text-orange-600 font-medium">⚠️ Required for partial payments — superadmin can block access after this date if unpaid.</p>
+                  )}
+                </div>
+              )}
             </div>
             </div>
           )}

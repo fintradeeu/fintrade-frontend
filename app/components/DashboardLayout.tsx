@@ -35,6 +35,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
     case "super_admin":
       return [
         { label: "Dashboard", path: "/superadmin/dashboard", icon: <Home size={20} /> },
+        { label: "Student Access Control", path: "/superadmin/student-access", icon: <Shield size={20} /> },
         { label: "Batch Management", path: "/admin/batches", icon: <Users size={20} /> },
         { label: "User Management", path: "/admin/students", icon: <Users size={20} /> },
         { label: "Student Management", path: "/admin/student-management", icon: <GraduationCap size={20} /> },
@@ -161,6 +162,8 @@ export function DashboardLayout({
   // Partial payment states
   const [pendingBalance, setPendingBalance] = useState<number>(0);
   const [pendingCourse, setPendingCourse] = useState<any | null>(null);
+  const [pendingDueDate, setPendingDueDate] = useState<string | null>(null);
+  const [accessBlocked, setAccessBlocked] = useState<boolean>(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
   const [autoName, setAutoName] = useState(() => {
@@ -340,18 +343,24 @@ export function DashboardLayout({
           
           let pendingAmt = 0;
           let pCourse = null;
+          let pDueDate: string | null = null;
+          let pAccessBlocked = false;
           for (const e of enrolled) {
             const coursePrice = e.course?.price || 0;
             const enrollmentDiscount = e.discount_applied || 0;
             const effective = coursePrice - enrollmentDiscount;
             const paid = e.price_paid || 0;
             if (paid < effective) {
-              pendingAmt += (effective - paid);
+              pendingAmt = Math.round((pendingAmt + (effective - paid)) * 100) / 100;
               pCourse = e.course;
+              pDueDate = e.payment_due_date || null;
             }
+            if (e.access_blocked) pAccessBlocked = true;
           }
           setPendingBalance(pendingAmt);
           setPendingCourse(pCourse);
+          setPendingDueDate(pDueDate);
+          setAccessBlocked(pAccessBlocked);
           
           const kycStatus = kycRes.data?.status || "not_started";
           const verified = kycStatus === "verified" || kycStatus === "approved";
@@ -663,6 +672,20 @@ export function DashboardLayout({
         {/* Main Content */}
         <main className="flex-1 min-w-0 min-h-screen lg:ml-0">
           <div className="p-4 md:p-6 lg:p-8">
+            {accessBlocked && resolvedRole === "student" && (
+              <div className="mb-6 bg-red-50 border-l-4 border-red-600 p-4 rounded-r-lg shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5"><Shield className="text-red-600 w-5 h-5" /></div>
+                  <div>
+                    <h3 className="text-red-800 font-bold text-lg">Access Suspended</h3>
+                    <p className="text-red-700 mt-1">
+                      Your access to platform features has been suspended by the administrator due to a pending payment. 
+                      Please contact your Franchise IB or the administration to resolve this.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             {pendingBalance > 0 && resolvedRole === "student" && (
               <div className="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-start gap-3">
@@ -670,9 +693,21 @@ export function DashboardLayout({
                   <div>
                     <h3 className="text-orange-800 font-bold text-lg">Pending Payment Action Required</h3>
                     <p className="text-orange-700 mt-1">
-                      You have an outstanding balance of <strong className="font-bold">₹{pendingBalance}</strong> for your enrolled course. 
-                      Please clear your dues to ensure uninterrupted access to the curriculum and exams.
+                      You have an outstanding balance of{" "}
+                      <strong className="font-bold">
+                        ₹{pendingBalance.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                      </strong>{" "}
+                      for your enrolled course. Please clear your dues to ensure uninterrupted access to the curriculum and exams.
                     </p>
+                    {pendingDueDate && (
+                      <p className="text-orange-600 font-semibold text-sm mt-1">
+                        ⏰ Payment Due By:{" "}
+                        {new Date(pendingDueDate).toLocaleString("en-IN", {
+                          day: "2-digit", month: "short", year: "numeric",
+                          hour: "2-digit", minute: "2-digit"
+                        })}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <Button 
