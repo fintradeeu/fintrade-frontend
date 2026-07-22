@@ -141,7 +141,8 @@ export default function RegisterStudentModal({ onClose, onSuccess, apiPrefix }: 
         batch_id: formData.batch_id && formData.batch_id !== "none" ? parseInt(formData.batch_id) : null,
         amount: formData.amount ? parseFloat(formData.amount) : 0,
         cheque_image_url: chequeImageUrl || undefined,
-        payment_due_date: formData.payment_due_date || undefined,
+        payment_date: formData.payment_date ? new Date(formData.payment_date).toISOString() : undefined,
+        payment_due_date: formData.payment_due_date ? new Date(formData.payment_due_date).toISOString() : undefined,
       };
 
       await api.post(`${apiPrefix}/manual-register`, payload);
