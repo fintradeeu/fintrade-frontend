@@ -34,6 +34,8 @@ export default function RegisterStudentModal({ open = true, onClose, onSuccess, 
   const [createdStudentData, setCreatedStudentData] = useState<any | null>(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
+  const [paymentType, setPaymentType] = useState<"full" | "installment">("full");
+
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
@@ -52,6 +54,8 @@ export default function RegisterStudentModal({ open = true, onClose, onSuccess, 
     payment_date: "",
     payment_due_date: "", // deadline for remaining balance
     coupon_code: "",
+    installment_months: "",
+    preferred_payment_date: "",
   });
 
   useEffect(() => {
@@ -269,7 +273,7 @@ export default function RegisterStudentModal({ open = true, onClose, onSuccess, 
     const selectedCourseObj = courses.find((c) => c.id.toString() === formData.course_id);
     const coursePrice = selectedCourseObj?.price || 0;
 
-    if ((formData.payment_mode === "cash" || formData.payment_mode === "cheque") && amountVal > coursePrice) {
+    if (paymentType === "full" && (formData.payment_mode === "cash" || formData.payment_mode === "cheque") && amountVal > coursePrice) {
       setError(`Amount collected (₹${amountVal}) cannot be greater than the course price (₹${coursePrice}).`);
       setLoading(false);
       return;
@@ -299,6 +303,9 @@ export default function RegisterStudentModal({ open = true, onClose, onSuccess, 
         cheque_image_url: chequeImageUrl || undefined,
         payment_date: formData.payment_date ? new Date(formData.payment_date).toISOString() : undefined,
         payment_due_date: formData.payment_due_date ? new Date(formData.payment_due_date).toISOString() : undefined,
+        is_installment: paymentType === "installment",
+        installment_months: paymentType === "installment" && formData.installment_months ? parseInt(formData.installment_months) : undefined,
+        preferred_payment_date: paymentType === "installment" && formData.preferred_payment_date ? parseInt(formData.preferred_payment_date) : undefined,
       };
 
       await api.post(`${apiPrefix}/manual-register`, payload);
@@ -445,19 +452,80 @@ export default function RegisterStudentModal({ open = true, onClose, onSuccess, 
             {couponError && <p className="text-xs text-red-500 font-medium mt-1">{couponError}</p>}
           </div>
 
-          <div className="space-y-2 border-t pt-4">
-            <Label>Payment Mode *</Label>
-            <Select value={formData.payment_mode} onValueChange={(v) => handleSelectChange("payment_mode", v)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="cheque">Cheque</SelectItem>
-                <SelectItem value="razorpay">Online Payment (Coming Soon)</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4 border-t pt-4">
+            <div className="space-y-2">
+              <Label>Payment Type *</Label>
+              <Select value={paymentType} onValueChange={(v: "full" | "installment") => setPaymentType(v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="full">Full / Partial Payment</SelectItem>
+                  <SelectItem value="installment">Monthly EMI / Installment</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Payment Mode *</Label>
+              <Select value={formData.payment_mode} onValueChange={(v) => handleSelectChange("payment_mode", v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                  <SelectItem value="razorpay">Online Payment (Coming Soon)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
+          {paymentType === "installment" && (
+            <div className="grid grid-cols-2 gap-4 border-t pt-4 bg-orange-50/50 p-4 rounded-lg border border-orange-100">
+              <div className="space-y-2 col-span-2 md:col-span-1">
+                <Label>Number of Months *</Label>
+                <Select value={formData.installment_months} onValueChange={(v) => handleSelectChange("installment_months", v)}>
+                  <SelectTrigger className="bg-white">
+                    <SelectValue placeholder="Select months" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2">2 Months</SelectItem>
+                    <SelectItem value="3">3 Months</SelectItem>
+                    <SelectItem value="4">4 Months</SelectItem>
+                    <SelectItem value="6">6 Months</SelectItem>
+                    <SelectItem value="9">9 Months</SelectItem>
+                    <SelectItem value="12">12 Months</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2 col-span-2 md:col-span-1">
+                <Label>Preferred Payment Date *</Label>
+                <Select value={formData.preferred_payment_date} onValueChange={(v) => handleSelectChange("preferred_payment_date", v)}>
+                  <SelectTrigger className="bg-white">
+                    <SelectValue placeholder="Day of Month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5, 6, 7, 10, 15, 20, 25, 28].map(day => (
+                      <SelectItem key={day} value={day.toString()}>{day} of every month</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {formData.installment_months && selectedCourseObj && (
+                <div className="col-span-2 mt-2 bg-white p-3 rounded border border-orange-200">
+                  <div className="flex justify-between text-xs text-gray-600 mb-1">
+                    <span>Total Course Fee (Inc. 18% GST):</span>
+                    <span>₹{(netCoursePrice * 1.18).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-bold text-orange-700 pt-2 border-t border-orange-100">
+                    <span>Monthly EMI Amount:</span>
+                    <span>₹{((netCoursePrice * 1.18) / parseInt(formData.installment_months)).toFixed(2)} / month</span>
+                  </div>
+                  <p className="text-xs text-orange-600 mt-2">The first EMI of ₹{((netCoursePrice * 1.18) / parseInt(formData.installment_months)).toFixed(2)} will be collected now via {formData.payment_mode}.</p>
+                </div>
+              )}
+            </div>
+          )}
 
           {isOffline && (
             <div className="bg-gray-50 p-4 rounded-lg space-y-4">
@@ -490,9 +558,10 @@ export default function RegisterStudentModal({ open = true, onClose, onSuccess, 
               )}
               
               <div className="grid grid-cols-2 gap-4">
+                {paymentType === "full" && (
                 <div className="space-y-2 col-span-2 md:col-span-1">
                   <Label htmlFor="amount">Amount Collected *</Label>
-                  <Input id="amount" name="amount" type="number" min="0" step="0.01" value={formData.amount} onChange={handleChange} required={isOffline} />
+                  <Input id="amount" name="amount" type="number" min="0" step="0.01" value={formData.amount} onChange={handleChange} required={isOffline && paymentType === "full"} />
                   {formData.amount && !isNaN(parseFloat(formData.amount)) && (
                     <div className="mt-2 bg-white p-3 rounded border border-gray-200">
                       <div className="flex justify-between text-xs text-gray-600 mb-1">
@@ -510,6 +579,7 @@ export default function RegisterStudentModal({ open = true, onClose, onSuccess, 
                     </div>
                   )}
                 </div>
+                )}
                 
                 {formData.payment_mode === "cheque" && (
                 <>
@@ -559,7 +629,7 @@ export default function RegisterStudentModal({ open = true, onClose, onSuccess, 
               </div>
 
               {/* Payment Due Date — only when partial payment */}
-              {pendingAmount > 0 && (
+              {paymentType === "full" && pendingAmount > 0 && (
                 <div className="space-y-2 col-span-2 border-t pt-4">
                   <Label htmlFor="payment_due_date" className="flex items-center gap-2 text-orange-700 font-semibold">
                     <span>⏰</span> Payment Due Date (Deadline for Remaining ₹{pendingAmount.toLocaleString()})

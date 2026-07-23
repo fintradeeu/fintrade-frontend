@@ -7,7 +7,7 @@ import { Badge } from "../../components/ui/badge";
 import {
   Search, Download, Eye, X, BookOpen, Clock, AlertCircle, CheckCircle,
   FileText, Calendar, CreditCard, Printer, Shield, ChevronDown, ExternalLink,
-  Laptop, Smartphone, Globe, Tag
+  Laptop, Smartphone, Globe, Tag, Trash2
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import api from "../../services/api";
@@ -213,6 +213,17 @@ export default function AdminStudentManagement() {
     setStudentKyc(null);
     setViewTab("profile");
     setShowViewModal(true);
+  };
+
+  const handleDeleteStudent = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this student and all their related data? This action cannot be undone.")) return;
+    try {
+      await api.delete(`/admin/users/${id}`);
+      toast.success("Student deleted successfully");
+      fetchStudents();
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "Failed to delete student");
+    }
   };
 
   const formatCurrency = (val?: number) => {
@@ -454,14 +465,25 @@ export default function AdminStudentManagement() {
                       {s.created_at ? new Date(s.created_at).toLocaleDateString("en-IN") : "—"}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Button
-                        onClick={() => handleOpenView(s)}
-                        size="sm"
-                        variant="outline"
-                        className="border-[#0B2A5B] text-[#0B2A5B] hover:bg-[#0B2A5B]/10 rounded-xl"
-                      >
-                        <Eye size={14} className="mr-1" /> View Details
-                      </Button>
+                      <div className="flex justify-center gap-2">
+                        <Button
+                          onClick={() => handleOpenView(s)}
+                          size="sm"
+                          variant="outline"
+                          className="border-[#0B2A5B] text-[#0B2A5B] hover:bg-[#0B2A5B]/10 rounded-xl"
+                        >
+                          <Eye size={14} className="mr-1" /> View Details
+                        </Button>
+                        <Button
+                          onClick={() => handleDeleteStudent(s.id)}
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 border-red-200 hover:bg-red-50 rounded-xl"
+                          title="Delete Student"
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

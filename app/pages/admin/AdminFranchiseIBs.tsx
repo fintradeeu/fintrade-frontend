@@ -6,7 +6,7 @@ import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../components/ui/dialog";
-import { Eye, FileText, Download, CheckCircle, Clock, Search, Handshake, Users, EyeOff, Plus, FileSpreadsheet, DollarSign, TrendingUp } from "lucide-react";
+import { Eye, FileText, Download, CheckCircle, Clock, Search, Handshake, Users, EyeOff, Plus, FileSpreadsheet, DollarSign, TrendingUp, Trash2 } from "lucide-react";
 import { Label } from "../../components/ui/label";
 import { DialogFooter } from "../../components/ui/dialog";
 import api from "../../services/api";
@@ -150,6 +150,17 @@ export default function AdminFranchiseIBs() {
 
   const handleViewStudents = (ib: any) => {
     window.location.href = `/admin/franchise-ibs/${ib.id}/students`;
+  };
+
+  const handleDeleteIB = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this Franchise IB? This will also delete all their underlying students and data. This action cannot be undone.")) return;
+    try {
+      await api.delete(`/admin/franchise-ibs/${id}`);
+      toast.success("Franchise IB deleted successfully");
+      fetchIBs();
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "Failed to delete Franchise IB");
+    }
   };
 
   const [exportingAll, setExportingAll] = useState(false);
@@ -376,15 +387,26 @@ export default function AdminFranchiseIBs() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewStudents(ib)}
-                        className="text-[#0B2A5B] border-[#0B2A5B] hover:bg-[#0B2A5B] hover:text-white"
-                      >
-                        <Users className="w-4 h-4 mr-2" />
-                        View Students
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewStudents(ib)}
+                          className="text-[#0B2A5B] border-[#0B2A5B] hover:bg-[#0B2A5B] hover:text-white"
+                        >
+                          <Users className="w-4 h-4 mr-2" />
+                          View Students
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteIB(ib.id)}
+                          className="text-red-600 border-red-200 hover:bg-red-50"
+                          title="Delete Franchise IB"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                   );

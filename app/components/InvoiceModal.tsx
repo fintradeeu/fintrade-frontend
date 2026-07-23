@@ -57,7 +57,7 @@ export default function InvoiceModal({ open, onClose, student, invoice }: Invoic
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm print:absolute print:inset-0 print:p-0 print:bg-white print:z-[9999]">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm print:absolute print:inset-0 print:p-0 print:bg-white print:z-[9999]">
       <Card className="w-full max-w-2xl bg-white shadow-2xl rounded-2xl overflow-hidden flex flex-col max-h-[90vh] print:shadow-none print:rounded-none print:max-h-full print:border-none">
         {/* Modal Top Bar */}
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-slate-50 print:hidden">

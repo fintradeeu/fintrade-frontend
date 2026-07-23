@@ -6,7 +6,7 @@ import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import api from "../../services/api";
-import { Copy, Eye, Pencil, Plus, Search, X } from "lucide-react";
+import { Copy, Eye, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 const emptyForm = {
@@ -109,6 +109,17 @@ export default function AdminIntroducingBrokers() {
       toast.error(err.response?.data?.detail || "Failed to load referrals.");
     } finally {
       setReferralsLoading(false);
+    }
+  };
+
+  const handleDeleteBroker = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this IB account? This action cannot be undone and will remove all their data.")) return;
+    try {
+      await api.delete(`/admin/distributors/${id}`);
+      toast.success("IB account deleted successfully");
+      fetchBrokers();
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "Failed to delete IB account");
     }
   };
 
@@ -308,6 +319,7 @@ export default function AdminIntroducingBrokers() {
                       <Button size="sm" variant="outline" onClick={() => openReferrals(broker)} title="View referrals"><Eye size={14} /></Button>
                       <Button size="sm" variant="outline" onClick={() => openEdit(broker)} title="Edit IB"><Pencil size={14} /></Button>
                       <Button size="sm" variant="outline" onClick={() => copyReferralLink(broker.referral_code)} title="Copy referral link"><Copy size={14} /></Button>
+                      <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteBroker(broker.id)} title="Delete IB"><Trash2 size={14} /></Button>
                     </div>
                   </TableCell>
                 </TableRow>

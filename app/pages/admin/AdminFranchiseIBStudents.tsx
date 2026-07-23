@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../components/ui/dialog";
-import { Eye, FileText, Download, CheckCircle, Clock, ArrowLeft, FileSpreadsheet, ShieldCheck } from "lucide-react";
+import { Eye, FileText, Download, CheckCircle, Clock, ArrowLeft, FileSpreadsheet, ShieldCheck, Trash2 } from "lucide-react";
 import api from "../../services/api";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -48,6 +48,17 @@ export default function AdminFranchiseIBStudents() {
       toast.error(err.response?.data?.detail || "Failed to load students");
     } finally {
       setStudentsLoading(false);
+    }
+  };
+
+  const handleDeleteStudent = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this student and all their related data? This action cannot be undone.")) return;
+    try {
+      await api.delete(`/admin/users/${id}`);
+      toast.success("Student deleted successfully");
+      fetchStudents();
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "Failed to delete student");
     }
   };
 
@@ -224,6 +235,15 @@ export default function AdminFranchiseIBStudents() {
                             >
                               <Eye className="w-4 h-4 mr-1.5" />
                               Details
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteStudent(r.student_id || r.user_id || r.id)}
+                              className="text-red-600 border-red-200 hover:bg-red-50"
+                              title="Delete Student"
+                            >
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </TableCell>
