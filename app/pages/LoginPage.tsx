@@ -20,7 +20,7 @@ import {
   AlertCircle,
   MapPin
 } from "lucide-react";
-import logo from "../../imports/fintrade_logo.png";
+import logo from "../../imports/fintrade_new_logo.png";
 import api from "../services/api";
 import { isGoogleAuthConfigured } from "../config/googleAuth";
 
@@ -383,11 +383,11 @@ export default function LoginPage() {
           <div className="space-y-5">
             {/* Logo Container — Aligned to Left */}
             <div className="flex items-center">
-              <div className="inline-flex items-center h-[90px] w-[260px] overflow-hidden p-2 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-xl shadow-2xl">
+              <div className="inline-flex items-center justify-center h-[90px] w-[260px] p-2 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-xl shadow-2xl">
                 <img
-                  src="/fintrade_logo_dark.png"
+                  src={logo}
                   alt="FinTrade"
-                  className="h-full w-full object-contain scale-[3.8] -translate-x-4"
+                  className="max-h-full max-w-full object-contain"
                 />
               </div>
             </div>
