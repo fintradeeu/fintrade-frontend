@@ -85,6 +85,7 @@ import AdminGlobalOffices from "./pages/admin/AdminGlobalOffices";
 import CookiePolicy from "./pages/CookiePolicy";
 import AdminCookieConsents from "./pages/admin/AdminCookieConsents";
 import AdminDoubtForms from "./pages/admin/AdminDoubtForms";
+import AdminMobileDevices from "./pages/admin/AdminMobileDevices";
 
 import DistributorDashboard from "./pages/distributor/DistributorDashboard";
 import DistributorWallet from "./pages/distributor/DistributorWallet";
@@ -429,6 +430,10 @@ export const router = createBrowserRouter([
   {
     path: "/admin/doubt-forms",
     Component: AdminDoubtForms,
+  },
+  {
+    path: "/superadmin/mobile-devices",
+    Component: AdminMobileDevices,
   },
   {
     path: "/feedback/submit/:formId",

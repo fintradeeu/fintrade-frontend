@@ -27,6 +27,7 @@ interface ActivityLog {
   tenant_id: string;
   suspicious: boolean;
   created_at: string;
+  log_metadata?: any;
 }
 
 export default function AdminCookieConsents() {
@@ -51,6 +52,24 @@ export default function AdminCookieConsents() {
   useEffect(() => {
     fetchLogs();
   }, []);
+
+  const handleExportUsers = async () => {
+    try {
+      toast.info("Preparing export...");
+      const res = await api.get("/api/v1/users/export?type=excel", { responseType: "blob" });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "users_export.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success("Export successful!");
+    } catch (err: any) {
+      toast.error("Failed to export users");
+      console.error(err);
+    }
+  };
 
   const toggleRow = (id: number) => {
     setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
@@ -93,13 +112,22 @@ export default function AdminCookieConsents() {
                 className="pl-10 h-10 rounded-xl bg-slate-50 border-slate-200 focus:border-[#D50032]"
               />
             </div>
-            <Button
-              variant="outline"
-              className="h-10 rounded-xl border-slate-200 text-[#0B2A5B] font-bold"
-              onClick={() => fetchLogs()}
-            >
-              Refresh
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="h-10 rounded-xl border-slate-200 text-[#0B2A5B] font-bold"
+                onClick={() => fetchLogs()}
+              >
+                Refresh
+              </Button>
+              <Button
+                className="h-10 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold flex items-center gap-2"
+                onClick={handleExportUsers}
+              >
+                <Download className="w-4 h-4" />
+                Export Users
+              </Button>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
@@ -202,26 +230,30 @@ export default function AdminCookieConsents() {
                                   <div className="flex justify-between items-start text-sm">
                                     <span className="text-slate-500 flex items-center gap-2 whitespace-nowrap"><MapPin className="w-4 h-4 text-slate-400"/> Location</span>
                                     <span className="font-semibold text-slate-700 text-right">
-                                      {log.location_data ? `${log.location_data.city || ""}, ${log.location_data.region || ""}, ${log.location_data.country_name || ""}` : "Unknown"}
+                                      {log.log_metadata ? `${log.log_metadata.city || ""}, ${log.log_metadata.state || ""}, ${log.log_metadata.country || ""} ${log.log_metadata.postal_code || ""}` : (log.location_data ? `${log.location_data.city || ""}, ${log.location_data.region || ""}, ${log.location_data.country_name || ""}` : "Unknown")}
                                     </span>
                                   </div>
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-500 flex items-center gap-2"><Map className="w-4 h-4 text-slate-400"/> Google Map</span>
-                                    {log.location_data?.latitude && log.location_data?.longitude ? (
-                                      <a href={`https://maps.google.com/?q=${log.location_data.latitude},${log.location_data.longitude}`} target="_blank" rel="noreferrer" className="font-bold text-[#D50032] hover:underline">View Map</a>
+                                    {(log.log_metadata?.latitude && log.log_metadata?.longitude) || (log.location_data?.latitude && log.location_data?.longitude) ? (
+                                      <a href={`https://maps.google.com/?q=${log.log_metadata?.latitude || log.location_data?.latitude},${log.log_metadata?.longitude || log.location_data?.longitude}`} target="_blank" rel="noreferrer" className="font-bold text-[#D50032] hover:underline">View Map</a>
                                     ) : (
                                       <span className="text-slate-400 italic">N/A</span>
                                     )}
                                   </div>
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-500 flex items-center gap-2"><Lock className="w-4 h-4 text-slate-400"/> Permission</span>
-                                    <span className="font-semibold text-slate-700">{log.location_data ? "GRANTED" : "NOT_ASKED"}</span>
+                                    <span className="font-semibold text-slate-700">{log.log_metadata?.permission_status || (log.location_data ? "GRANTED" : "NOT_ASKED")}</span>
                                   </div>
                                   <div className="flex justify-between items-start text-sm">
                                     <span className="text-slate-500 flex items-center gap-2 whitespace-nowrap"><Smartphone className="w-4 h-4 text-slate-400"/> Device</span>
-                                    <span className="font-semibold text-slate-700 text-right text-xs truncate max-w-[150px]" title={log.user_agent}>
-                                      {log.device_data?.platform || (log.user_agent ? log.user_agent.split(" ")[0] : "Unknown")}
+                                    <span className="font-semibold text-slate-700 text-right text-xs truncate max-w-[150px]" title={log.log_metadata?.os || log.device_data?.platform || log.user_agent}>
+                                      {log.log_metadata ? `${log.log_metadata.os || ""} ${log.log_metadata.os_version || ""} - ${log.log_metadata.browser || ""} ${log.log_metadata.browser_version || ""}` : (log.device_data?.platform || (log.user_agent ? log.user_agent.split(" ")[0] : "Unknown"))}
                                     </span>
+                                  </div>
+                                  <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-500 flex items-center gap-2"><Monitor className="w-4 h-4 text-slate-400"/> Resolution</span>
+                                    <span className="font-semibold text-slate-700">{log.log_metadata?.screen_width ? `${log.log_metadata.screen_width}x${log.log_metadata.screen_height}` : "Unknown"}</span>
                                   </div>
                                   <div className="flex justify-between items-center text-sm">
                                     <span className="text-slate-500 flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-slate-400"/> Suspicious</span>
@@ -235,9 +267,9 @@ export default function AdminCookieConsents() {
                                 <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                   <Code className="w-3.5 h-3.5" /> Metadata
                                 </h4>
-                                <div className="bg-slate-900 p-4 rounded-xl shadow-sm overflow-hidden h-full max-h-48">
-                                  <pre className="text-xs text-green-400 font-mono overflow-auto h-full w-full">
-                                    {JSON.stringify(log.metadata_json || {
+                                <div className="bg-slate-900 p-4 rounded-xl shadow-sm overflow-hidden h-full max-h-56">
+                                  <pre className="text-[10px] text-green-400 font-mono overflow-auto h-full w-full whitespace-pre-wrap break-all">
+                                    {JSON.stringify(log.log_metadata || log.metadata_json || {
                                       ip_address: log.ip_address,
                                       user_agent: log.user_agent,
                                       tenant: log.tenant_id

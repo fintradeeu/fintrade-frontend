@@ -4,7 +4,7 @@ import {
   Menu, X, LogOut, Home, Users, BookOpen, Video, FileQuestion,
   IndianRupee, Bot, TrendingUp, BarChart3, Settings, Award,
   GraduationCap, MessageCircle, LineChart, Briefcase, Shield,
-  Newspaper, FileText, Trophy, LayoutTemplate, UserCircle, Handshake, Globe
+  Newspaper, FileText, Trophy, LayoutTemplate, UserCircle, Handshake, Globe, Smartphone
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent } from "./ui/dialog";
@@ -63,6 +63,7 @@ const getNavItemsByRole = (role: string): NavItem[] => {
         { label: "Reports", path: "/admin/reports", icon: <BarChart3 size={20} /> },
         { label: "Contracts", path: "/admin/contracts", icon: <FileText size={20} /> },
         { label: "Cookie Consents", path: "/admin/cookie-consents", icon: <Shield size={20} /> },
+        { label: "Mobile Devices", path: "/superadmin/mobile-devices", icon: <Smartphone size={20} /> },
         { label: "Settings", path: "/admin/settings", icon: <Settings size={20} /> },
       ];
     case "student":
@@ -440,6 +441,50 @@ export function DashboardLayout({
       (nav as HTMLElement).scrollTop = parseInt(savedScroll, 10);
     }
   }, [location.pathname]);
+
+  // Request Geolocation and send to backend
+  useEffect(() => {
+    const trackLocation = async () => {
+      try {
+        const hasTracked = sessionStorage.getItem("location_tracked");
+        if (hasTracked) return;
+        
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              try {
+                await api.post("/api/v1/device/location", {
+                  device_id: localStorage.getItem("device_id") || "web-browser",
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude
+                });
+                sessionStorage.setItem("location_tracked", "true");
+              } catch (e) {
+                console.error("Failed to sync location to backend", e);
+              }
+            },
+            async (error) => {
+              if (error.code === error.PERMISSION_DENIED) {
+                try {
+                  await api.post("/api/v1/device/location", {
+                    device_id: localStorage.getItem("device_id") || "web-browser",
+                    permission_status: "DENIED"
+                  });
+                  sessionStorage.setItem("location_tracked", "true");
+                } catch (e) {
+                  console.error("Failed to sync denied status to backend", e);
+                }
+              }
+            }
+          );
+        }
+      } catch (err) {
+        console.error("Error with geolocation tracking", err);
+      }
+    };
+
+    trackLocation();
+  }, []);
 
   const handleNavClick = () => {
     const nav = document.querySelector("#sidebar-nav");
