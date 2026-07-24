@@ -473,12 +473,12 @@ export default function AdminFranchiseIBs() {
               <h3 className="text-lg font-bold text-[#0B2A5B] mb-4">KYC Details</h3>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Aadhaar Number (Optional)</Label>
-                  <Input value={addForm.aadhaar_number} onChange={(e) => updateAddForm("aadhaar_number", e.target.value)} placeholder="12-digit Aadhaar" />
+                  <Label>Aadhaar Number</Label>
+                  <Input required value={addForm.aadhaar_number} onChange={(e) => updateAddForm("aadhaar_number", e.target.value)} placeholder="12-digit Aadhaar" />
                 </div>
                 <div className="space-y-2">
-                  <Label>PAN Number (Optional)</Label>
-                  <Input value={addForm.pan_number} onChange={(e) => updateAddForm("pan_number", e.target.value)} placeholder="10-character PAN" />
+                  <Label>PAN Number</Label>
+                  <Input required value={addForm.pan_number} onChange={(e) => updateAddForm("pan_number", e.target.value)} placeholder="10-character PAN" />
                 </div>
               </div>
             </div>
@@ -487,20 +487,20 @@ export default function AdminFranchiseIBs() {
               <h3 className="text-lg font-bold text-[#0B2A5B] mb-4">Bank Details</h3>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Account Holder Name (Optional)</Label>
-                  <Input value={addForm.bank_account_holder_name} onChange={(e) => updateAddForm("bank_account_holder_name", e.target.value)} />
+                  <Label>Account Holder Name</Label>
+                  <Input required value={addForm.bank_account_holder_name} onChange={(e) => updateAddForm("bank_account_holder_name", e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Bank Name (Optional)</Label>
-                  <Input value={addForm.bank_name} onChange={(e) => updateAddForm("bank_name", e.target.value)} />
+                  <Label>Bank Name</Label>
+                  <Input required value={addForm.bank_name} onChange={(e) => updateAddForm("bank_name", e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Account Number (Optional)</Label>
-                  <Input value={addForm.bank_account_number} onChange={(e) => updateAddForm("bank_account_number", e.target.value)} />
+                  <Label>Account Number</Label>
+                  <Input required value={addForm.bank_account_number} onChange={(e) => updateAddForm("bank_account_number", e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>IFSC Code (Optional)</Label>
-                  <Input value={addForm.bank_ifsc_code} onChange={(e) => updateAddForm("bank_ifsc_code", e.target.value)} />
+                  <Label>IFSC Code</Label>
+                  <Input required value={addForm.bank_ifsc_code} onChange={(e) => updateAddForm("bank_ifsc_code", e.target.value)} />
                 </div>
               </div>
             </div>

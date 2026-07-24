@@ -77,6 +77,16 @@ export default function AdminStudentManagement() {
   
   const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
 
+  // Manual KYC Form State
+  const [showManualKyc, setShowManualKyc] = useState(false);
+  const [manualKycData, setManualKycData] = useState({
+    dob: "", qualification: "", address: "", aadhaar_number: "", pan_number: ""
+  });
+  const [manualKycFiles, setManualKycFiles] = useState<{ [key: string]: File | null }>({
+    aadhaar: null, pan: null, photo: null, signature: null, biometric: null
+  });
+  const [isSubmittingManualKyc, setIsSubmittingManualKyc] = useState(false);
+
   const fetchStudents = async () => {
     try {
       setLoading(true);
@@ -215,6 +225,16 @@ export default function AdminStudentManagement() {
     setShowViewModal(true);
   };
 
+  const handleOpenKyc = (student: any) => {
+    setSelectedStudent(student);
+    setStudentKyc(null);
+    setViewTab("kyc");
+    setShowViewModal(true);
+    loadKycForUser(student.id);
+    // Optionally open the manual form by default if you want:
+    // setShowManualKyc(true);
+  };
+
   const handleDeleteStudent = async (id: number) => {
     if (!confirm("Are you sure you want to delete this student and all their related data? This action cannot be undone.")) return;
     try {
@@ -223,6 +243,74 @@ export default function AdminStudentManagement() {
       fetchStudents();
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "Failed to delete student");
+    }
+  };
+
+  const handleForceKYC = async (student: any) => {
+    if (!confirm(`Are you sure you want to bypass and force-complete eKYC for ${student.full_name}?`)) return;
+    
+    const courseId = student.enrolled_courses && student.enrolled_courses.length > 0 
+      ? student.enrolled_courses[0].course_id 
+      : null;
+      
+    try {
+      toast.info("Force completing eKYC...");
+      await api.post("/kyc/admin/direct-complete", {
+        user_id: student.id,
+        full_name: student.full_name,
+        mobile: student.phone || "0000000000",
+        course_id: courseId,
+        mark_verified: true,
+        generate_contract: true
+      });
+      toast.success("eKYC force-completed successfully!");
+      loadKycForUser(student.id);
+    } catch (err: any) {
+      toast.error("Failed to force complete eKYC: " + (err.response?.data?.detail || err.message));
+    }
+  };
+
+  const handleManualKycSubmit = async () => {
+    if (!selectedStudent) return;
+    setIsSubmittingManualKyc(true);
+    try {
+      // 1. Upload files if any
+      const fileTypes = ["aadhaar", "pan", "photo", "signature", "biometric"];
+      for (const type of fileTypes) {
+        if (manualKycFiles[type]) {
+          const formData = new FormData();
+          formData.append("file", manualKycFiles[type] as File);
+          await api.post(`/kyc/admin/upload-document-for-user?user_id=${selectedStudent.id}&doc_type=${type}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" }
+          });
+        }
+      }
+
+      // 2. Submit text data & complete
+      const courseId = selectedStudent.enrolled_courses && selectedStudent.enrolled_courses.length > 0 
+        ? selectedStudent.enrolled_courses[0].course_id : null;
+
+      await api.post("/kyc/admin/direct-complete", {
+        user_id: selectedStudent.id,
+        full_name: selectedStudent.full_name,
+        mobile: selectedStudent.phone || "0000000000",
+        course_id: courseId,
+        dob: manualKycData.dob,
+        qualification: manualKycData.qualification,
+        address: manualKycData.address,
+        aadhaar_number: manualKycData.aadhaar_number,
+        pan_number: manualKycData.pan_number,
+        mark_verified: true,
+        generate_contract: true
+      });
+
+      toast.success("eKYC manually completed successfully!");
+      setShowManualKyc(false);
+      loadKycForUser(selectedStudent.id);
+    } catch (err: any) {
+      toast.error("Failed to complete eKYC: " + (err.response?.data?.detail || err.message));
+    } finally {
+      setIsSubmittingManualKyc(false);
     }
   };
 
@@ -465,7 +553,21 @@ export default function AdminStudentManagement() {
                       {s.created_at ? new Date(s.created_at).toLocaleDateString("en-IN") : "—"}
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="flex justify-center gap-2">
+                      <div className="flex justify-center gap-2 items-center">
+                        {s.kyc_status === 'verified' || s.kyc_status === 'approved' ? (
+                          <Badge className="bg-green-100 text-green-700 font-bold border-green-200">
+                            <CheckCircle size={12} className="mr-1 inline" /> Done
+                          </Badge>
+                        ) : (
+                          <Button
+                            onClick={() => handleOpenKyc(s)}
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white rounded-xl"
+                            title="Do eKYC"
+                          >
+                            <CheckCircle size={14} className="mr-1" /> eKYC
+                          </Button>
+                        )}
                         <Button
                           onClick={() => handleOpenView(s)}
                           size="sm"
@@ -563,8 +665,76 @@ export default function AdminStudentManagement() {
                 <div>
                   {kycLoading ? (
                     <div className="py-10 text-center text-slate-500 font-semibold">Fetching KYC documents...</div>
-                  ) : !studentKyc ? (
-                    <div className="py-10 text-center text-slate-500 font-semibold">No KYC details retrieved.</div>
+                  ) : showManualKyc ? (
+                    <div className="space-y-4 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                      <div className="flex items-center justify-between border-b pb-4 mb-4">
+                        <h4 className="font-bold text-[#0B2A5B]">Manual eKYC Entry</h4>
+                        <Button variant="ghost" size="sm" onClick={() => setShowManualKyc(false)}><X size={16}/></Button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 block">Date of Birth</label>
+                          <Input type="date" value={manualKycData.dob} onChange={e => setManualKycData({...manualKycData, dob: e.target.value})} className="bg-white" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 block">Qualification</label>
+                          <Input placeholder="e.g. B.Com, MBA" value={manualKycData.qualification} onChange={e => setManualKycData({...manualKycData, qualification: e.target.value})} className="bg-white" />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="text-xs font-bold text-slate-500 mb-1 block">Full Address</label>
+                          <Input placeholder="Full residential address" value={manualKycData.address} onChange={e => setManualKycData({...manualKycData, address: e.target.value})} className="bg-white" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 block">Aadhaar Number</label>
+                          <Input placeholder="12-digit number" value={manualKycData.aadhaar_number} onChange={e => setManualKycData({...manualKycData, aadhaar_number: e.target.value})} className="bg-white" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 block">Aadhaar Document (Optional)</label>
+                          <Input type="file" onChange={e => setManualKycFiles({...manualKycFiles, aadhaar: e.target.files?.[0] || null})} className="bg-white" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 block">PAN Number</label>
+                          <Input placeholder="10-character alphanumeric" value={manualKycData.pan_number} onChange={e => setManualKycData({...manualKycData, pan_number: e.target.value})} className="bg-white" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 block">PAN Document (Optional)</label>
+                          <Input type="file" onChange={e => setManualKycFiles({...manualKycFiles, pan: e.target.files?.[0] || null})} className="bg-white" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 block">Passport Photo (Optional)</label>
+                          <Input type="file" onChange={e => setManualKycFiles({...manualKycFiles, photo: e.target.files?.[0] || null})} className="bg-white" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 block">Digital Signature (Optional)</label>
+                          <Input type="file" onChange={e => setManualKycFiles({...manualKycFiles, signature: e.target.files?.[0] || null})} className="bg-white" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 block">Biometric Selfie (Optional)</label>
+                          <Input type="file" onChange={e => setManualKycFiles({...manualKycFiles, biometric: e.target.files?.[0] || null})} className="bg-white" />
+                        </div>
+                      </div>
+                      <div className="flex justify-end pt-4 mt-4 border-t">
+                        <Button 
+                          onClick={handleManualKycSubmit} 
+                          disabled={isSubmittingManualKyc}
+                          className="bg-[#C2A86A] hover:bg-[#d4bd8a] text-[#0B2A5B] font-bold rounded-xl"
+                        >
+                          {isSubmittingManualKyc ? "Submitting..." : "Submit & Verify eKYC"}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : !studentKyc || studentKyc.status === "not_started" ? (
+                    <div className="py-10 flex flex-col items-center justify-center gap-4">
+                      <div className="text-slate-500 font-semibold">No KYC details retrieved.</div>
+                      <div className="flex gap-3">
+                        <Button onClick={() => setShowManualKyc(true)} className="bg-white border-2 border-[#0B2A5B] text-[#0B2A5B] hover:bg-slate-50 rounded-xl">
+                          Enter Details Manually
+                        </Button>
+                        <Button onClick={() => handleForceKYC(selectedStudent)} className="bg-[#0B2A5B] hover:bg-[#1a3d7a] text-white rounded-xl">
+                          <CheckCircle className="mr-2 h-4 w-4" /> Bypass eKYC
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
                     <div className="space-y-6">
                       <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
@@ -583,6 +753,18 @@ export default function AdminStudentManagement() {
                           <Badge className={studentKyc.email_verified ? "bg-green-100 text-green-700 border-green-200" : "bg-red-100 text-red-700 border-red-200"}>
                             {studentKyc.email_verified ? "Verified" : "Pending"}
                           </Badge>
+                        </div>
+                        <div className="ml-auto">
+                          <div className="flex gap-2">
+                            <Button onClick={() => setShowManualKyc(true)} size="sm" variant="outline" className="border-[#0B2A5B] text-[#0B2A5B] rounded-xl">
+                              {studentKyc.status === 'verified' || studentKyc.status === 'approved' ? 'Edit Details' : 'Enter Details'}
+                            </Button>
+                            {studentKyc.status !== 'verified' && studentKyc.status !== 'approved' && (
+                              <Button onClick={() => handleForceKYC(selectedStudent)} size="sm" className="bg-[#0B2A5B] hover:bg-[#1a3d7a] text-white rounded-xl">
+                                Bypass eKYC
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
 
