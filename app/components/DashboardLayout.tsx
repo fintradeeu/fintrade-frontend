@@ -454,9 +454,9 @@ export function DashboardLayout({
             async (position) => {
               try {
                 await api.post("/api/v1/device/location", {
-                  device_id: localStorage.getItem("device_id") || "web-browser",
                   latitude: position.coords.latitude,
-                  longitude: position.coords.longitude
+                  longitude: position.coords.longitude,
+                  permission: "GRANTED"
                 });
                 sessionStorage.setItem("location_tracked", "true");
               } catch (e) {
@@ -467,8 +467,7 @@ export function DashboardLayout({
               if (error.code === error.PERMISSION_DENIED) {
                 try {
                   await api.post("/api/v1/device/location", {
-                    device_id: localStorage.getItem("device_id") || "web-browser",
-                    permission_status: "DENIED"
+                    permission: "DENIED"
                   });
                   sessionStorage.setItem("location_tracked", "true");
                 } catch (e) {

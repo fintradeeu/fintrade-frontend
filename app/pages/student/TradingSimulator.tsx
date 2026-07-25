@@ -19,10 +19,16 @@ import {
   CandlestickChart,
   MoreHorizontal,
   ChevronDown,
-  Wallet,
-  UserCircle
+  UserCircle,
+  BarChart2,
+  Activity,
+  Check
 } from "lucide-react";
 import api from "../../services/api";
+import TradingJournalTab from "../../components/simulator/TradingJournalTab";
+import StrategyBuilderTab from "../../components/simulator/StrategyBuilderTab";
+import AdvancedAnalyticsTab from "../../components/simulator/AdvancedAnalyticsTab";
+import RiskCalculatorModal from "../../components/simulator/RiskCalculatorModal";
 
 export default function TradingSimulator() {
   const [marketData, setMarketData] = useState<any[]>([]);
@@ -44,7 +50,40 @@ export default function TradingSimulator() {
   const [placing, setPlacing] = useState(false);
   const [startingAccount, setStartingAccount] = useState(false);
   
-  const [activeTab, setActiveTab] = useState<"Overview" | "Orders" | "Portfolio">("Overview");
+  const [activeTab, setActiveTab] = useState<"Overview" | "Orders" | "Portfolio" | "Journal" | "Strategy" | "Analytics">("Overview");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showCalcModal, setShowCalcModal] = useState(false);
+  const [scripSearchQuery, setScripSearchQuery] = useState("");
+  const [customSymbols, setCustomSymbols] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem("fintrade_custom_scrips");
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  const [chartStyle, setChartStyle] = useState<string>("1");
+  const [showStyleMenu, setShowStyleMenu] = useState<boolean>(false);
+  const [timeframe, setTimeframe] = useState<string>("D");
+  const [showTimeframeMenu, setShowTimeframeMenu] = useState<boolean>(false);
+
+  const chartStyles = [
+    { id: "0", label: "Bars", icon: <BarChart2 size={15} className="rotate-90 text-gray-700" /> },
+    { id: "1", label: "Candles", icon: <CandlestickChart size={15} className="text-purple-700" /> },
+    { id: "9", label: "Hollow candles", icon: <CandlestickChart size={15} className="text-gray-400" /> },
+    { id: "2", label: "Line", icon: <LineChart size={15} className="text-blue-600" /> },
+    { id: "3", label: "Area", icon: <TrendingUp size={15} className="text-emerald-600" /> },
+    { id: "8", label: "Heikin Ashi", icon: <CandlestickChart size={15} className="text-indigo-600" /> },
+    { id: "10", label: "Baseline", icon: <Activity size={15} className="text-amber-600" /> },
+  ];
+
+  const timeframeOptions = [
+    { id: "1", label: "1m" },
+    { id: "5", label: "5m" },
+    { id: "15", label: "15m" },
+    { id: "60", label: "1h" },
+    { id: "D", label: "1D" },
+    { id: "W", label: "1W" },
+  ];
 
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const fetchingRef = useRef(false);
@@ -60,21 +99,17 @@ export default function TradingSimulator() {
       chartDiv.style.height = "100%";
       chartContainerRef.current.appendChild(chartDiv);
 
-      const script = document.createElement("script");
-      script.src = "https://s3.tradingview.com/tv.js";
-      script.type = "text/javascript";
-      script.async = true;
-      script.onload = () => {
+      const initWidget = () => {
         if (typeof (window as any).TradingView !== 'undefined') {
           try {
             new (window as any).TradingView.widget({
               "width": "100%",
               "height": "100%",
               "symbol": selectedInstrument.tv_symbol,
-              "interval": "D",
+              "interval": timeframe,
               "timezone": "Asia/Kolkata",
               "theme": "light", // Light theme matching Upstox
-              "style": "1",
+              "style": chartStyle,
               "locale": "en",
               "enable_publishing": false,
               "hide_top_toolbar": true, // We have our own mock toolbar
@@ -90,31 +125,140 @@ export default function TradingSimulator() {
           }
         }
       };
-      document.body.appendChild(script);
+
+      if (typeof (window as any).TradingView !== 'undefined') {
+        initWidget();
+      } else {
+        const script = document.createElement("script");
+        script.src = "https://s3.tradingview.com/tv.js";
+        script.type = "text/javascript";
+        script.async = true;
+        script.onload = initWidget;
+        document.body.appendChild(script);
+      }
       
       return () => {
-        if (document.body.contains(script)) {
-          document.body.removeChild(script);
+        if (chartContainerRef.current) {
+          chartContainerRef.current.innerHTML = '';
         }
       };
     }
-  }, [selectedInstrument]);
+  }, [selectedInstrument, chartStyle, timeframe]);
+
+  const availableScrips = [
+    { symbol: "RELIANCE", name: "Reliance Industries", price: 2950.45, change: 12.30, change_pct: 0.42, tv_symbol: "BSE:RELIANCE", exchange: "BSE EQ" },
+    { symbol: "TCS", name: "Tata Consultancy", price: 3840.10, change: -15.20, change_pct: -0.39, tv_symbol: "BSE:TCS", exchange: "BSE EQ" },
+    { symbol: "HDFCBANK", name: "HDFC Bank", price: 1645.80, change: 8.50, change_pct: 0.52, tv_symbol: "BSE:HDFCBANK", exchange: "BSE EQ" },
+    { symbol: "INFY", name: "Infosys Ltd", price: 1520.65, change: 5.40, change_pct: 0.36, tv_symbol: "BSE:INFY", exchange: "BSE EQ" },
+    { symbol: "SENSEX", name: "BSE Sensex", price: 76941.99, change: 438.39, change_pct: 0.57, tv_symbol: "BSE:SENSEX", exchange: "BSE" },
+    { symbol: "NIFTY", name: "Nifty 50", price: 24024.75, change: 142.70, change_pct: 0.60, tv_symbol: "NSE:NIFTY50", exchange: "NSE" },
+    { symbol: "BANKNIFTY", name: "Bank Nifty", price: 51500.00, change: 320.50, change_pct: 0.63, tv_symbol: "NSE:BANKNIFTY", exchange: "NSE" },
+    { symbol: "SBIN", name: "State Bank of India", price: 830.50, change: 6.20, change_pct: 0.75, tv_symbol: "BSE:SBIN", exchange: "BSE EQ" },
+    { symbol: "BHARTIARTL", name: "Bharti Airtel", price: 1420.00, change: 14.50, change_pct: 1.03, tv_symbol: "BSE:BHARTIARTL", exchange: "BSE EQ" },
+    { symbol: "LT", name: "Larsen & Toubro", price: 3650.00, change: -22.00, change_pct: -0.60, tv_symbol: "BSE:LT", exchange: "BSE EQ" },
+    { symbol: "HINDUNILVR", name: "Hindustan Unilever", price: 2480.00, change: 18.00, change_pct: 0.73, tv_symbol: "BSE:HINDUNILVR", exchange: "BSE EQ" },
+    { symbol: "AXISBANK", name: "Axis Bank", price: 1250.00, change: 11.20, change_pct: 0.90, tv_symbol: "BSE:AXISBANK", exchange: "BSE EQ" },
+    { symbol: "KOTAKBANK", name: "Kotak Mahindra Bank", price: 1780.00, change: -8.50, change_pct: -0.48, tv_symbol: "BSE:KOTAKBANK", exchange: "BSE EQ" },
+    { symbol: "TATAMOTORS", name: "Tata Motors", price: 960.00, change: -5.20, change_pct: -0.54, tv_symbol: "BSE:TATAMOTORS", exchange: "BSE EQ" },
+    { symbol: "ICICIBANK", name: "ICICI Bank", price: 1120.00, change: 8.40, change_pct: 0.75, tv_symbol: "BSE:ICICIBANK", exchange: "BSE EQ" },
+    { symbol: "WIPRO", name: "Wipro Ltd", price: 485.00, change: -2.10, change_pct: -0.43, tv_symbol: "BSE:WIPRO", exchange: "BSE EQ" },
+    { symbol: "ITC", name: "ITC Limited", price: 430.00, change: 1.80, change_pct: 0.42, tv_symbol: "BSE:ITC", exchange: "BSE EQ" },
+    { symbol: "MARUTI", name: "Maruti Suzuki", price: 12800.00, change: 125.00, change_pct: 0.99, tv_symbol: "BSE:MARUTI", exchange: "BSE EQ" },
+    { symbol: "SUNPHARMA", name: "Sun Pharma", price: 1540.00, change: 15.40, change_pct: 1.01, tv_symbol: "BSE:SUNPHARMA", exchange: "BSE EQ" },
+    { symbol: "TITAN", name: "Titan Company", price: 3400.00, change: 25.00, change_pct: 0.74, tv_symbol: "BSE:TITAN", exchange: "BSE EQ" },
+    { symbol: "BAJFINANCE", name: "Bajaj Finance", price: 7200.00, change: 65.00, change_pct: 0.91, tv_symbol: "BSE:BAJFINANCE", exchange: "BSE EQ" },
+    { symbol: "ASIANPAINT", name: "Asian Paints", price: 2900.00, change: -14.00, change_pct: -0.48, tv_symbol: "BSE:ASIANPAINT", exchange: "BSE EQ" },
+    { symbol: "HCLTECH", name: "HCL Technologies", price: 1600.00, change: 12.00, change_pct: 0.76, tv_symbol: "BSE:HCLTECH", exchange: "BSE EQ" },
+    { symbol: "BTC/USD", name: "Bitcoin USD", price: 67500.00, change: -450.00, change_pct: -0.66, tv_symbol: "BINANCE:BTCUSDT", exchange: "CRYPTO" },
+    { symbol: "ETH/USD", name: "Ethereum USD", price: 3500.00, change: -45.00, change_pct: -1.27, tv_symbol: "BINANCE:ETHUSDT", exchange: "CRYPTO" },
+    { symbol: "SOL/USD", name: "Solana USD", price: 150.00, change: 4.50, change_pct: 3.09, tv_symbol: "BINANCE:SOLUSDT", exchange: "CRYPTO" },
+    { symbol: "AAPL", name: "Apple Inc.", price: 175.50, change: 1.25, change_pct: 0.72, tv_symbol: "NASDAQ:AAPL", exchange: "NASDAQ" },
+    { symbol: "GOOGL", name: "Alphabet Inc.", price: 175.00, change: 2.10, change_pct: 1.21, tv_symbol: "NASDAQ:GOOGL", exchange: "NASDAQ" },
+    { symbol: "AMZN", name: "Amazon.com Inc.", price: 185.00, change: -1.50, change_pct: -0.80, tv_symbol: "NASDAQ:AMZN", exchange: "NASDAQ" },
+    { symbol: "META", name: "Meta Platforms", price: 490.00, change: 8.50, change_pct: 1.76, tv_symbol: "NASDAQ:META", exchange: "NASDAQ" },
+  ];
+
+  const handleAddScrip = (scrip: any) => {
+    if (!customSymbols.includes(scrip.symbol)) {
+      const updated = [...customSymbols, scrip.symbol];
+      setCustomSymbols(updated);
+      localStorage.setItem("fintrade_custom_scrips", JSON.stringify(updated));
+      setMarketData((prev: any[]) => {
+        if (prev.some(i => i.symbol === scrip.symbol)) return prev;
+        return [...prev, scrip];
+      });
+    }
+    setSelectedInstrument(scrip);
+    setShowAddModal(false);
+  };
 
   const fetchMarketData = async () => {
     if (fetchingRef.current) return;
     fetchingRef.current = true;
     try {
-      const res = await api.get("/simulator/market-data");
+      const allSymbols = Array.from(new Set(["RELIANCE", "TCS", "HDFCBANK", "INFY", "SENSEX", "NIFTY", "TATAMOTORS", "ICICIBANK", "WIPRO", "ITC", "BTC/USD", "AAPL", ...customSymbols])).join(",");
+      const res = await api.get(`/simulator/market-data?symbols=${allSymbols}`);
       if (!res.data || res.data.length === 0) {
         throw new Error("Market data is empty (likely 503 fallback from backend)");
       }
-      setMarketData(res.data);
+      const nameMap: any = {
+        "RELIANCE": "Reliance Industries",
+        "TCS": "Tata Consultancy",
+        "HDFCBANK": "HDFC Bank",
+        "INFY": "Infosys Ltd",
+        "SENSEX": "BSE Sensex",
+        "NIFTY": "Nifty 50",
+        "TATAMOTORS": "Tata Motors",
+        "ICICIBANK": "ICICI Bank",
+        "WIPRO": "Wipro Ltd",
+        "ITC": "ITC Limited",
+        "BTC/USD": "Bitcoin USD",
+        "AAPL": "Apple Inc."
+      };
+      const tvSymbolMap: any = {
+        "SENSEX": "BSE:SENSEX",
+        "NIFTY": "NSE:NIFTY50",
+        "BANKNIFTY": "NSE:BANKNIFTY",
+        "RELIANCE": "BSE:RELIANCE",
+        "TCS": "BSE:TCS",
+        "HDFCBANK": "BSE:HDFCBANK",
+        "INFY": "BSE:INFY",
+        "TATAMOTORS": "BSE:TATAMOTORS",
+        "ICICIBANK": "BSE:ICICIBANK",
+        "WIPRO": "BSE:WIPRO",
+        "ITC": "BSE:ITC",
+        "SBIN": "BSE:SBIN",
+        "BHARTIARTL": "BSE:BHARTIARTL",
+        "LT": "BSE:LT",
+        "HINDUNILVR": "BSE:HINDUNILVR",
+        "AXISBANK": "BSE:AXISBANK",
+        "KOTAKBANK": "BSE:KOTAKBANK",
+        "MARUTI": "BSE:MARUTI",
+        "SUNPHARMA": "BSE:SUNPHARMA",
+        "TITAN": "BSE:TITAN",
+        "BAJFINANCE": "BSE:BAJFINANCE",
+        "ASIANPAINT": "BSE:ASIANPAINT",
+        "HCLTECH": "BSE:HCLTECH",
+        "BTC/USD": "BINANCE:BTCUSDT",
+        "ETH/USD": "BINANCE:ETHUSDT",
+        "SOL/USD": "BINANCE:SOLUSDT",
+        "AAPL": "NASDAQ:AAPL",
+        "GOOGL": "NASDAQ:GOOGL",
+        "AMZN": "NASDAQ:AMZN",
+        "META": "NASDAQ:META",
+      };
+      const enrichedData = res.data.map((i: any) => ({
+        ...i,
+        name: i.name || nameMap[i.symbol] || i.symbol,
+        tv_symbol: i.tv_symbol || tvSymbolMap[i.symbol] || (i.symbol.includes("/") ? `BINANCE:${i.symbol.replace("/", "")}` : `BSE:${i.symbol}`)
+      }));
+      setMarketData(enrichedData);
       setSelectedInstrument((prev: any) => {
         if (prev) {
-          const updated = res.data.find((i: any) => i.symbol === prev.symbol);
-          return updated || res.data[0];
+          const updated = enrichedData.find((i: any) => i.symbol === prev.symbol);
+          return updated || enrichedData[0];
         }
-        return res.data[0];
+        return enrichedData[0];
       });
     } catch (err) {
       console.error("Failed to fetch market data, using fallback mock data", err);
@@ -125,7 +269,7 @@ export default function TradingSimulator() {
         { symbol: "HDFCBANK", name: "HDFC Bank", price: 1645.80, change: 8.50, change_pct: 0.52, tv_symbol: "BSE:HDFCBANK" },
         { symbol: "INFY", name: "Infosys Ltd", price: 1520.65, change: 5.40, change_pct: 0.36, tv_symbol: "BSE:INFY" },
         { symbol: "SENSEX", name: "BSE Sensex", price: 76941.99, change: 438.39, change_pct: 0.57, tv_symbol: "BSE:SENSEX" },
-        { symbol: "NIFTY", name: "Nifty 50", price: 24024.75, change: 142.70, change_pct: 0.60, tv_symbol: "NSE:NIFTY" },
+        { symbol: "NIFTY", name: "Nifty 50", price: 24024.75, change: 142.70, change_pct: 0.60, tv_symbol: "NSE:NIFTY50" },
       ];
       setMarketData(mockData);
       setSelectedInstrument((prev: any) => prev || mockData[3]);
@@ -233,9 +377,10 @@ export default function TradingSimulator() {
   const getExchangeLabel = (symbol: string) => {
     const sym = symbol.toUpperCase();
     if (sym === "SENSEX") return "BSE";
-    if (sym === "NIFTY" || sym === "RELIANCE" || sym === "TATAMOTORS" || sym === "ICICIBANK" || sym === "WIPRO" || sym === "ITC") return "NSE EQ";
-    if (sym === "BTC/USD") return "CRYPTO";
-    return "NSE EQ";
+    if (["NIFTY", "RELIANCE", "TCS", "HDFCBANK", "INFY", "TATAMOTORS", "ICICIBANK", "WIPRO", "ITC", "SBIN", "BHARTIARTL", "LT", "HINDUNILVR", "AXISBANK"].includes(sym)) return "NSE EQ";
+    if (["AAPL", "GOOGL", "AMZN", "META", "TSLA", "NVDA", "MSFT"].includes(sym)) return "NASDAQ";
+    if (sym.includes("/") || ["BTC", "ETH", "SOL", "BITCOIN"].includes(sym)) return "CRYPTO";
+    return "EQUITY";
   };
 
   // Portfolio calculations
@@ -252,7 +397,7 @@ export default function TradingSimulator() {
       <DashboardLayout role="student">
         <div className="flex flex-col items-center justify-center min-h-[70vh] bg-white rounded-lg p-8 border border-gray-200 shadow-sm">
           <Loader2 className="w-12 h-12 text-[#6d28d9] animate-spin mb-4" />
-          <p className="text-gray-600 font-medium">Loading Upstox Pro Environment...</p>
+          <p className="text-gray-600 font-medium">Loading FinTrade Pro Simulator...</p>
         </div>
       </DashboardLayout>
     );
@@ -293,10 +438,14 @@ export default function TradingSimulator() {
         <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between text-sm shadow-[0_1px_2px_rgba(0,0,0,0.02)] z-10">
           <div className="flex items-center gap-8">
             {/* Logo / Brand */}
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-[#4f1699] rounded text-white font-bold flex items-center justify-center text-[10px]">
-                Up
+            <div className="flex items-center gap-2.5 pr-3 border-r border-gray-200">
+              <div className="w-8 h-8 bg-gradient-to-br from-[#6d28d9] via-[#4f1699] to-[#3b0764] rounded-lg text-white font-black flex items-center justify-center text-sm shadow-md border border-purple-400/30">
+                F
               </div>
+              <span className="font-extrabold text-sm tracking-tight text-gray-900 flex items-center">
+                Fin<span className="text-[#6d28d9]">Trade</span>
+                <span className="ml-1.5 text-[10px] bg-purple-100 text-purple-800 font-bold px-1.5 py-0.5 rounded shadow-2xs">PRO</span>
+              </span>
             </div>
 
             {/* Indices */}
@@ -336,15 +485,9 @@ export default function TradingSimulator() {
               <span className={`cursor-pointer hover:text-gray-800 pb-[10px] ${activeTab === 'Overview' ? 'text-purple-700 border-b-2 border-purple-700' : ''}`} onClick={() => setActiveTab('Overview')}>My List</span>
               <span className={`cursor-pointer hover:text-gray-800 pb-[10px] ${activeTab === 'Orders' ? 'text-purple-700 border-b-2 border-purple-700' : ''}`} onClick={() => setActiveTab('Orders')}>Orders</span>
               <span className={`cursor-pointer hover:text-gray-800 pb-[10px] ${activeTab === 'Portfolio' ? 'text-purple-700 border-b-2 border-purple-700' : ''}`} onClick={() => setActiveTab('Portfolio')}>Positions & Holdings</span>
-              <span className="cursor-pointer hover:text-gray-800 pb-[10px] flex items-center gap-1">More <ChevronDown size={14}/></span>
-            </div>
-            
-            <div className="flex items-center gap-3 ml-2 border-l border-gray-200 pl-4">
-              <button className="bg-[#1e1b4b] text-white px-3 py-1 rounded font-bold text-xs flex items-center gap-1 cursor-pointer">
-                <Plus size={12} /> Plus
-              </button>
-              <button className="text-gray-600 hover:text-gray-900 cursor-pointer"><Wallet size={18} /></button>
-              <button className="w-7 h-7 bg-purple-700 text-white rounded-full flex items-center justify-center font-bold text-xs cursor-pointer">SP</button>
+              <span className={`cursor-pointer hover:text-gray-800 pb-[10px] ${activeTab === 'Journal' ? 'text-purple-700 border-b-2 border-purple-700' : ''}`} onClick={() => setActiveTab('Journal')}>Journal</span>
+              <span className={`cursor-pointer hover:text-gray-800 pb-[10px] ${activeTab === 'Strategy' ? 'text-purple-700 border-b-2 border-purple-700' : ''}`} onClick={() => setActiveTab('Strategy')}>Strategy Lab</span>
+              <span className={`cursor-pointer hover:text-gray-800 pb-[10px] ${activeTab === 'Analytics' ? 'text-purple-700 border-b-2 border-purple-700' : ''}`} onClick={() => setActiveTab('Analytics')}>Analytics</span>
             </div>
           </div>
         </div>
@@ -359,10 +502,10 @@ export default function TradingSimulator() {
                 <button className="text-gray-400 hover:text-gray-700">&lt;</button>
                 <span className="font-bold text-sm">1</span>
                 <button className="text-gray-400 hover:text-gray-700">&gt;</button>
-                <button className="text-gray-600 hover:text-gray-900 ml-1"><Plus size={16} /></button>
+                <button onClick={() => setShowAddModal(true)} className="text-gray-600 hover:text-gray-900 ml-1 cursor-pointer"><Plus size={16} /></button>
               </div>
               <div className="flex items-center gap-2">
-                <span className="bg-gray-800 text-white text-[11px] px-2 py-0.5 rounded font-medium cursor-pointer">Manage scrips</span>
+                <span onClick={() => setShowAddModal(true)} className="bg-gray-800 text-white text-[11px] px-2 py-0.5 rounded font-medium cursor-pointer hover:bg-black">Manage scrips</span>
                 <MoreHorizontal size={16} className="text-gray-600 cursor-pointer" />
               </div>
             </div>
@@ -375,8 +518,8 @@ export default function TradingSimulator() {
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-500 font-medium">{marketData.length} / 100</span>
                 <button className="text-gray-500 hover:text-gray-800"><MoreHorizontal size={14} /></button>
-                <button className="text-gray-500 hover:text-gray-800"><Search size={14} /></button>
-                <button className="w-6 h-6 bg-purple-700 text-white rounded flex items-center justify-center cursor-pointer">
+                <button onClick={() => setShowAddModal(true)} className="text-gray-500 hover:text-gray-800 cursor-pointer"><Search size={14} /></button>
+                <button onClick={() => setShowAddModal(true)} className="w-6 h-6 bg-purple-700 hover:bg-purple-800 text-white rounded flex items-center justify-center cursor-pointer">
                   <Plus size={14} />
                 </button>
               </div>
@@ -441,20 +584,70 @@ export default function TradingSimulator() {
             </div>
 
             {/* Chart Toolbar */}
-            <div className="border-b border-gray-200 px-3 py-2 flex items-center justify-between text-gray-600 text-sm bg-white shadow-sm z-10 relative">
+            <div className={`border-b border-gray-200 px-3 py-2 flex items-center justify-between text-gray-600 text-sm bg-white shadow-sm z-10 relative ${["Journal", "Strategy", "Analytics"].includes(activeTab) ? "hidden" : ""}`}>
               <div className="flex items-center gap-4">
-                <Search size={16} className="cursor-pointer" />
+                <Search onClick={() => setShowAddModal(true)} size={16} className="cursor-pointer hover:text-gray-900" />
                 <span className="font-bold text-gray-800">{selectedInstrument?.symbol.split('/')[0]} {getExchangeLabel(selectedInstrument?.symbol)}</span>
-                <button className="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 cursor-pointer">
+                <button onClick={() => setShowAddModal(true)} className="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 cursor-pointer">
                   <Plus size={12} />
                 </button>
-                <div className="flex items-center gap-1 border-l border-gray-200 pl-3">
-                  <span className="cursor-pointer hover:text-gray-900 font-medium">1m</span>
-                  <ChevronDown size={14} className="cursor-pointer" />
+                {/* Timeframe Dropdown */}
+                <div className="relative border-l border-gray-200 pl-3">
+                  <div 
+                    onClick={() => { setShowTimeframeMenu(!showTimeframeMenu); setShowStyleMenu(false); }}
+                    className="flex items-center gap-1 cursor-pointer hover:text-gray-900 font-medium px-2 py-1 rounded hover:bg-gray-100 transition-colors"
+                  >
+                    <span>{timeframeOptions.find((t) => t.id === timeframe)?.label || "1D"}</span>
+                    <ChevronDown size={14} />
+                  </div>
+
+                  {showTimeframeMenu && (
+                    <div className="absolute top-full left-3 mt-1 w-24 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50 animate-in fade-in zoom-in-95 duration-100">
+                      {timeframeOptions.map((t) => (
+                        <div
+                          key={t.id}
+                          onClick={() => { setTimeframe(t.id); setShowTimeframeMenu(false); }}
+                          className={`px-3 py-1.5 text-xs flex items-center justify-between cursor-pointer hover:bg-gray-50 ${timeframe === t.id ? "bg-purple-50 text-purple-700 font-bold" : "text-gray-700"}`}
+                        >
+                          <span>{t.label}</span>
+                          {timeframe === t.id && <Check size={12} className="text-purple-700" />}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-2 border-l border-gray-200 pl-3">
-                  <CandlestickChart size={16} className="cursor-pointer" />
-                  <LineChart size={16} className="cursor-pointer" />
+
+                {/* Chart Style Dropdown (Bars, Candles, Heikin Ashi, etc.) */}
+                <div className="relative border-l border-gray-200 pl-3">
+                  <div 
+                    onClick={() => { setShowStyleMenu(!showStyleMenu); setShowTimeframeMenu(false); }}
+                    className="flex items-center gap-1.5 cursor-pointer hover:text-gray-900 font-medium px-2.5 py-1 rounded hover:bg-gray-100 transition-colors bg-gray-50 border border-gray-200/80 shadow-2xs"
+                  >
+                    {chartStyles.find((s) => s.id === chartStyle)?.icon || <CandlestickChart size={15} />}
+                    <span className="text-xs font-bold text-gray-800">{chartStyles.find((s) => s.id === chartStyle)?.label || "Candles"}</span>
+                    <ChevronDown size={14} className="text-gray-500" />
+                  </div>
+
+                  {showStyleMenu && (
+                    <div className="absolute top-full left-3 mt-1.5 w-48 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
+                      <div className="px-3 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 mb-1">
+                        Chart Style
+                      </div>
+                      {chartStyles.map((s) => (
+                        <div
+                          key={s.id}
+                          onClick={() => { setChartStyle(s.id); setShowStyleMenu(false); }}
+                          className={`px-3 py-2 text-xs flex items-center justify-between cursor-pointer hover:bg-purple-50/50 transition-colors ${chartStyle === s.id ? "bg-purple-50 text-purple-700 font-bold" : "text-gray-700"}`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            {s.icon}
+                            <span>{s.label}</span>
+                          </div>
+                          {chartStyle === s.id && <Check size={14} className="text-purple-700" />}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-1 border-l border-gray-200 pl-3 cursor-pointer hover:text-gray-900">
                   <span className="font-medium">Instant Order</span>
@@ -470,12 +663,29 @@ export default function TradingSimulator() {
             </div>
 
             {/* Chart Container */}
-            <div className="flex-1 relative bg-white">
+            <div className={`flex-1 relative bg-white ${["Journal", "Strategy", "Analytics"].includes(activeTab) ? "hidden" : ""}`}>
               <div ref={chartContainerRef} className="absolute inset-0" />
             </div>
 
+            {/* Feature Tabs Content overlaying the center area */}
+            {activeTab === "Journal" && (
+              <div className="flex-1 overflow-y-auto p-6 bg-[#f8fafc]">
+                <TradingJournalTab />
+              </div>
+            )}
+            {activeTab === "Strategy" && (
+              <div className="flex-1 overflow-y-auto p-6 bg-[#f8fafc]">
+                <StrategyBuilderTab />
+              </div>
+            )}
+            {activeTab === "Analytics" && (
+              <div className="flex-1 overflow-y-auto p-6 bg-[#f8fafc]">
+                <AdvancedAnalyticsTab />
+              </div>
+            )}
+
             {/* Bottom Toolbar & Status Bar */}
-            <div className="border-t border-gray-200 bg-white shadow-[0_-1px_2px_rgba(0,0,0,0.02)] z-10">
+            <div className={`border-t border-gray-200 bg-white shadow-[0_-1px_2px_rgba(0,0,0,0.02)] z-10 ${["Journal", "Strategy", "Analytics"].includes(activeTab) ? "hidden" : ""}`}>
               <div className="px-4 py-1 flex items-center justify-between text-xs text-gray-600 font-semibold border-b border-gray-100">
                 <div className="flex items-center gap-3">
                   <span className="hover:text-gray-900 cursor-pointer">5Y</span>
@@ -514,71 +724,79 @@ export default function TradingSimulator() {
           </div>
 
           {/* RIGHT SIDEBAR: SCRIP INFO / ORDER PANEL */}
-          <div className="w-[350px] flex-shrink-0 bg-white flex flex-col z-10 shadow-[-1px_0_2px_rgba(0,0,0,0.02)]">
+          <div className={`w-[350px] flex-shrink-0 bg-white flex flex-col z-10 shadow-[-1px_0_2px_rgba(0,0,0,0.02)] ${["Journal", "Strategy", "Analytics"].includes(activeTab) ? "hidden" : ""}`}>
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
-              <span className="font-semibold text-sm text-gray-800">Scrip Info</span>
+              <span className="font-semibold text-sm text-gray-800">{activeTab === "Overview" ? "Scrip Info" : activeTab === "Orders" ? "Order Placement Panel" : activeTab === "Portfolio" ? "Quick Portfolio Panel" : `${activeTab} Panel`}</span>
               <div className="flex items-center gap-2 text-gray-500">
                 <X size={16} className="cursor-pointer hover:text-gray-800" />
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto">
-              {/* Selected Scrip Title Area */}
-              <div className="px-4 py-4 flex justify-between items-start">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-bold text-gray-900 leading-none">{selectedInstrument?.symbol.split('/')[0]}</h2>
-                    <span className="w-5 h-5 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center font-bold text-[10px]">T</span>
+              {/* Selected Scrip Title Area - Only show for Overview and Orders */}
+              {activeTab !== "Portfolio" && (
+                <>
+                  <div className="px-4 py-4 flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-lg font-bold text-gray-900 leading-none">{selectedInstrument?.symbol.split('/')[0]}</h2>
+                        <span className="w-5 h-5 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center font-bold text-[10px]">T</span>
+                      </div>
+                      <span className="text-xs text-gray-500 font-medium">{getExchangeLabel(selectedInstrument?.symbol)}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-lg font-bold leading-none ${selectedInstrument?.change >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                        {selectedInstrument?.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      </div>
+                      <div className={`text-xs font-medium ${selectedInstrument?.change >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                        {selectedInstrument?.change >= 0 ? "+" : ""}{Math.abs(selectedInstrument?.change).toFixed(2)} ({selectedInstrument?.change >= 0 ? "+" : ""}{selectedInstrument?.change_pct}%)
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-xs text-gray-500 font-medium">{getExchangeLabel(selectedInstrument?.symbol)}</span>
-                </div>
-                <div className="text-right">
-                  <div className={`text-lg font-bold leading-none ${selectedInstrument?.change >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}`}>
-                    {selectedInstrument?.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                  </div>
-                  <div className={`text-xs font-medium ${selectedInstrument?.change >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}`}>
-                    {selectedInstrument?.change >= 0 ? "+" : ""}{Math.abs(selectedInstrument?.change).toFixed(2)} ({selectedInstrument?.change >= 0 ? "+" : ""}{selectedInstrument?.change_pct}%)
-                  </div>
-                </div>
-              </div>
 
-              {/* Links */}
-              <div className="px-4 pb-4 flex items-center gap-4 text-xs font-semibold text-gray-600">
-                <span className="cursor-pointer hover:text-purple-700 flex items-center gap-1"><LineChart size={14}/> Chart</span>
-                <span className="cursor-pointer hover:text-purple-700 flex items-center gap-1"><Bell size={14}/> Price Alert</span>
-                <span className="cursor-pointer hover:text-purple-700 flex items-center gap-1 border-l border-gray-300 pl-4"><CandlestickChart size={14}/> TradingView</span>
-              </div>
+                  {/* Links */}
+                  <div className="mx-4 mb-4 p-1 bg-gray-100 rounded-lg flex items-center justify-between text-xs font-semibold text-gray-700">
+                    <button className="flex-1 py-1.5 rounded-md hover:bg-white hover:shadow-sm transition-all flex items-center justify-center gap-1.5 text-gray-700"><LineChart size={14} className="text-blue-600"/> Chart</button>
+                    <button onClick={() => setShowCalcModal(true)} className="flex-1 py-1.5 rounded-md hover:bg-white hover:shadow-sm transition-all flex items-center justify-center gap-1.5 text-purple-700 font-bold bg-white/60"><TrendingUp size={14} className="text-purple-600"/> Risk Calc</button>
+                    <button className="flex-1 py-1.5 rounded-md hover:bg-white hover:shadow-sm transition-all flex items-center justify-center gap-1.5 text-gray-700"><CandlestickChart size={14} className="text-orange-500"/> TradingView</button>
+                  </div>
 
-              {/* BUY / SELL Buttons */}
-              <div className="px-4 pb-4 flex gap-2">
-                <Button 
-                  onClick={() => { setActiveTab("Orders"); setOrderType("buy"); }}
-                  className="flex-1 bg-[#10b981] hover:bg-[#059669] text-white font-bold h-10 shadow-sm"
-                >
-                  Buy
-                </Button>
-                <Button 
-                  onClick={() => { setActiveTab("Orders"); setOrderType("sell"); }}
-                  className="flex-1 bg-[#ef4444] hover:bg-[#dc2626] text-white font-bold h-10 shadow-sm"
-                >
-                  Sell
-                </Button>
-              </div>
+                  {/* BUY / SELL Buttons */}
+                  <div className="px-4 pb-4 flex gap-3">
+                    <Button 
+                      onClick={() => { setActiveTab("Orders"); setOrderType("buy"); }}
+                      className="flex-1 bg-[#10b981] hover:bg-[#059669] text-white font-bold h-11 rounded-xl shadow-md shadow-emerald-500/15 transition-all active:scale-[0.98] text-sm tracking-wide"
+                    >
+                      BUY
+                    </Button>
+                    <Button 
+                      onClick={() => { setActiveTab("Orders"); setOrderType("sell"); }}
+                      className="flex-1 bg-[#ef4444] hover:bg-[#dc2626] text-white font-bold h-11 rounded-xl shadow-md shadow-red-500/15 transition-all active:scale-[0.98] text-sm tracking-wide"
+                    >
+                      SELL
+                    </Button>
+                  </div>
+                </>
+              )}
 
               {/* TABS */}
-              <div className="flex border-b border-gray-200 px-2">
-                {["Overview", "Orders", "Portfolio"].map(tab => (
+              <div className="flex border-b border-gray-200 px-4 gap-5 overflow-x-auto scrollbar-none">
+                {[
+                  { id: "Overview", label: "My List Info" },
+                  { id: "Orders", label: "Orders" },
+                  { id: "Portfolio", label: "Holdings" }
+                ].map(tab => (
                   <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab as any)}
-                    className={`flex-1 py-2 text-sm font-semibold transition-colors ${
-                      activeTab === tab
-                        ? "text-gray-800 border-b-2 border-purple-700"
-                        : "text-gray-500 hover:text-gray-800"
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`whitespace-nowrap py-2.5 text-xs font-bold transition-all border-b-2 -mb-[2px] flex-shrink-0 ${
+                      activeTab === tab.id
+                        ? "text-purple-700 border-purple-700"
+                        : "text-gray-500 hover:text-gray-800 border-transparent"
                     }`}
                   >
-                    {tab}
+                    {tab.label}
                   </button>
                 ))}
               </div>
@@ -793,11 +1011,56 @@ export default function TradingSimulator() {
                         {placing ? <Loader2 className="w-4 h-4 animate-spin" /> : `Place ${orderType.toUpperCase()} Order`}
                       </Button>
                     </div>
+
+                    <hr className="border-gray-200 my-4" />
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="font-bold text-gray-800 text-xs">All Order Logs</h3>
+                      <span className="bg-purple-100 text-purple-700 font-bold text-[10px] px-2 py-0.5 rounded-full">{trades.length} Total</span>
+                    </div>
+                    <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                      {trades.length === 0 ? (
+                        <p className="text-xs text-gray-400 italic text-center py-4">No order history found yet.</p>
+                      ) : (
+                        trades.slice().reverse().map((trade) => {
+                          const isProfit = (trade.pnl || 0) >= 0;
+                          return (
+                            <div key={trade.id} className="bg-white border border-gray-200 rounded-md p-2.5 shadow-sm text-xs">
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="font-bold text-gray-900">{trade.symbol}</span>
+                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase ${trade.side === "buy" ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"}`}>
+                                  {trade.side} • QTY: {trade.quantity}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center text-gray-500 text-[11px]">
+                                <span>Price: ₹{trade.entry_price?.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                                <span className={`font-bold ${trade.status === 'open' ? 'text-blue-600' : (isProfit ? 'text-[#10b981]' : 'text-[#ef4444]')}`}>
+                                  {trade.status === 'open' ? 'OPEN' : `${isProfit ? '+' : ''}₹${Math.round(trade.pnl || 0)}`}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
                 )}
 
                 {activeTab === "Portfolio" && (
                   <div className="space-y-4">
+                    {/* KPI Banner */}
+                    <div className="grid grid-cols-2 gap-2 bg-purple-50/60 p-2.5 rounded-lg border border-purple-100 text-xs">
+                      <div>
+                        <span className="text-[10px] text-gray-500 block uppercase font-bold">Portfolio Value</span>
+                        <span className="font-extrabold text-gray-900 text-sm">₹{portfolioValue.toLocaleString("en-IN", { minimumFractionDigits: 0 })}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-gray-500 block uppercase font-bold">Realized P&L</span>
+                        <span className={`font-extrabold text-sm ${totalPnl >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                          {totalPnl >= 0 ? "+" : ""}₹{totalPnl.toLocaleString("en-IN", { minimumFractionDigits: 0 })}
+                        </span>
+                      </div>
+                    </div>
+
                     {/* Positions List */}
                     <h3 className="font-bold text-gray-800 text-xs">Open Positions</h3>
                     <div className="space-y-2">
@@ -871,6 +1134,86 @@ export default function TradingSimulator() {
           </div>
         </div>
       </div>
+
+      {/* Dynamic Add Scrips Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full border border-gray-200 overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="p-4 bg-[#6d28d9] text-white flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Search size={18} />
+                <h3 className="font-bold text-base">Add Scrips to Simulator Watchlist</h3>
+              </div>
+              <button onClick={() => setShowAddModal(false)} className="text-white/80 hover:text-white cursor-pointer">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-4 border-b border-gray-200 bg-gray-50">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 text-gray-400" size={16} />
+                <Input 
+                  placeholder="Search shares, indices, crypto (e.g. SBIN, TITAN, ETH/USD)..." 
+                  value={scripSearchQuery} 
+                  onChange={(e) => setScripSearchQuery(e.target.value)}
+                  className="pl-9 bg-white border-gray-300 h-10 text-sm"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-2 divide-y divide-gray-100">
+              {availableScrips
+                .filter(s => s.symbol.toLowerCase().includes(scripSearchQuery.toLowerCase()) || s.name.toLowerCase().includes(scripSearchQuery.toLowerCase()))
+                .map((scrip) => {
+                  const isAlreadyAdded = marketData.some(m => m.symbol === scrip.symbol);
+                  const isBullish = scrip.change >= 0;
+                  return (
+                    <div key={scrip.symbol} className="p-3 flex items-center justify-between hover:bg-purple-50/60 rounded transition-colors">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-gray-900 text-sm">{scrip.symbol}</span>
+                          <span className="bg-gray-100 text-gray-600 text-[10px] px-1.5 py-0.5 rounded font-medium">{scrip.exchange}</span>
+                        </div>
+                        <span className="text-xs text-gray-500">{scrip.name}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <div className={`font-bold text-sm ${isBullish ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                            ₹{scrip.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                          </div>
+                          <div className={`text-[11px] font-medium ${isBullish ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                            {isBullish ? "+" : ""}{scrip.change} ({isBullish ? "+" : ""}{scrip.change_pct}%)
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => handleAddScrip(scrip)}
+                          className={isAlreadyAdded ? "bg-purple-100 text-purple-700 hover:bg-purple-200 font-bold" : "bg-[#6d28d9] hover:bg-[#5b21b6] text-white font-bold cursor-pointer"}
+                        >
+                          {isAlreadyAdded ? "Select" : "+ Add"}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Risk Calculator Modal */}
+      {showCalcModal && (
+        <RiskCalculatorModal
+          onClose={() => setShowCalcModal(false)}
+          defaultPrice={selectedInstrument?.price || 1000}
+          equity={account?.equity || 100000}
+          onApplyQuantity={(qty) => {
+            setQuantity(qty.toString());
+            setActiveTab("Orders");
+          }}
+        />
+      )}
     </DashboardLayout>
   );
 }

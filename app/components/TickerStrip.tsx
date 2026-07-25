@@ -6,15 +6,15 @@ import api from '../services/api';
 // Baseline data
 const fallbackTickers = [
   { label: "SENSEX", value: "74,243.34", change: "-116.67", pct: "-0.16%", up: false, symbol: "BSE:SENSEX" },
-  { label: "SBI", value: "1,002.70", change: "+12.30", pct: "+1.5%", up: true, symbol: "NSE:SBIN" },
-  { label: "RELIANCE", value: "2,934.10", change: "+45.20", pct: "+1.6%", up: true, symbol: "NSE:RELIANCE" },
-  { label: "HDFC BANK", value: "1,520.40", change: "-5.60", pct: "-0.4%", up: false, symbol: "NSE:HDFCBANK" },
-  { label: "ICICI BANK", value: "1,120.50", change: "+10.40", pct: "+0.93%", up: true, symbol: "NSE:ICICIBANK" },
-  { label: "TATA MOTORS", value: "950.40", change: "+18.30", pct: "+1.96%", up: true, symbol: "NSE:TATAMOTORS" },
-  { label: "ITC", value: "430.20", change: "-2.10", pct: "-0.49%", up: false, symbol: "NSE:ITC" },
-  { label: "WIPRO", value: "480.10", change: "-3.40", pct: "-0.70%", up: false, symbol: "NSE:WIPRO" },
-  { label: "TCS", value: "3,890.00", change: "+25.40", pct: "+0.7%", up: true, symbol: "NSE:TCS" },
-  { label: "INFOSYS", value: "1,450.20", change: "+15.10", pct: "+1.1%", up: true, symbol: "NSE:INFY" },
+  { label: "SBI", value: "1,002.70", change: "+12.30", pct: "+1.5%", up: true, symbol: "BSE:SBIN" },
+  { label: "RELIANCE", value: "2,934.10", change: "+45.20", pct: "+1.6%", up: true, symbol: "BSE:RELIANCE" },
+  { label: "HDFC BANK", value: "1,520.40", change: "-5.60", pct: "-0.4%", up: false, symbol: "BSE:HDFCBANK" },
+  { label: "ICICI BANK", value: "1,120.50", change: "+10.40", pct: "+0.93%", up: true, symbol: "BSE:ICICIBANK" },
+  { label: "TATA MOTORS", value: "950.40", change: "+18.30", pct: "+1.96%", up: true, symbol: "BSE:TATAMOTORS" },
+  { label: "ITC", value: "430.20", change: "-2.10", pct: "-0.49%", up: false, symbol: "BSE:ITC" },
+  { label: "WIPRO", value: "480.10", change: "-3.40", pct: "-0.70%", up: false, symbol: "BSE:WIPRO" },
+  { label: "TCS", value: "3,890.00", change: "+25.40", pct: "+0.7%", up: true, symbol: "BSE:TCS" },
+  { label: "INFOSYS", value: "1,450.20", change: "+15.10", pct: "+1.1%", up: true, symbol: "BSE:INFY" },
   { label: "GOLD", value: "$2,350.00", change: "+15.20", pct: "+0.65%", up: true, symbol: "TVC:GOLD" },
   { label: "SILVER", value: "$63.50", change: "-1.80", pct: "-2.75%", up: false, symbol: "TVC:SILVER" },
   { label: "CRUDE OIL", value: "$78.50", change: "-0.25", pct: "-0.32%", up: false, symbol: "TVC:USOIL" },
@@ -32,15 +32,15 @@ export default function TickerStrip() {
     const API_KEY = "e87f52a331c6412db67db7f2fd2b56b6";
     const twelveDataMappings = [
       { twelveSymbol: "BSESN", label: "SENSEX", isUSD: false, symbol: "BSE:SENSEX" },
-      { twelveSymbol: "SBIN", label: "SBI", isUSD: false, symbol: "NSE:SBIN" },
-      { twelveSymbol: "RELIANCE", label: "RELIANCE", isUSD: false, symbol: "NSE:RELIANCE" },
-      { twelveSymbol: "HDFCBANK", label: "HDFC BANK", isUSD: false, symbol: "NSE:HDFCBANK" },
-      { twelveSymbol: "ICICIBANK", label: "ICICI BANK", isUSD: false, symbol: "NSE:ICICIBANK" },
-      { twelveSymbol: "TATAMOTORS", label: "TATA MOTORS", isUSD: false, symbol: "NSE:TATAMOTORS" },
-      { twelveSymbol: "ITC", label: "ITC", isUSD: false, symbol: "NSE:ITC" },
-      { twelveSymbol: "WIPRO", label: "WIPRO", isUSD: false, symbol: "NSE:WIPRO" },
-      { twelveSymbol: "TCS", label: "TCS", isUSD: false, symbol: "NSE:TCS" },
-      { twelveSymbol: "INFY", label: "INFOSYS", isUSD: false, symbol: "NSE:INFY" },
+      { twelveSymbol: "SBIN", label: "SBI", isUSD: false, symbol: "BSE:SBIN" },
+      { twelveSymbol: "RELIANCE", label: "RELIANCE", isUSD: false, symbol: "BSE:RELIANCE" },
+      { twelveSymbol: "HDFCBANK", label: "HDFC BANK", isUSD: false, symbol: "BSE:HDFCBANK" },
+      { twelveSymbol: "ICICIBANK", label: "ICICI BANK", isUSD: false, symbol: "BSE:ICICIBANK" },
+      { twelveSymbol: "TATAMOTORS", label: "TATA MOTORS", isUSD: false, symbol: "BSE:TATAMOTORS" },
+      { twelveSymbol: "ITC", label: "ITC", isUSD: false, symbol: "BSE:ITC" },
+      { twelveSymbol: "WIPRO", label: "WIPRO", isUSD: false, symbol: "BSE:WIPRO" },
+      { twelveSymbol: "TCS", label: "TCS", isUSD: false, symbol: "BSE:TCS" },
+      { twelveSymbol: "INFY", label: "INFOSYS", isUSD: false, symbol: "BSE:INFY" },
       { twelveSymbol: "XAU/USD", label: "GOLD", isUSD: true, symbol: "TVC:GOLD" },
       { twelveSymbol: "XAG/USD", label: "SILVER", isUSD: true, symbol: "TVC:SILVER" },
       { twelveSymbol: "WTI/USD", label: "CRUDE OIL", isUSD: true, symbol: "TVC:USOIL" },
@@ -193,11 +193,7 @@ export default function TickerStrip() {
   useEffect(() => {
     if (selectedSymbol && chartContainer.current) {
       chartContainer.current.innerHTML = '';
-      const script = document.createElement("script");
-      script.src = "https://s3.tradingview.com/tv.js";
-      script.type = "text/javascript";
-      script.async = true;
-      script.onload = () => {
+      const initWidget = () => {
         if (typeof (window as any).TradingView !== 'undefined') {
           new (window as any).TradingView.widget({
             "width": "100%",
@@ -216,11 +212,21 @@ export default function TickerStrip() {
           });
         }
       };
-      document.body.appendChild(script);
+
+      if (typeof (window as any).TradingView !== 'undefined') {
+        initWidget();
+      } else {
+        const script = document.createElement("script");
+        script.src = "https://s3.tradingview.com/tv.js";
+        script.type = "text/javascript";
+        script.async = true;
+        script.onload = initWidget;
+        document.body.appendChild(script);
+      }
       
       return () => {
-        if (document.body.contains(script)) {
-          document.body.removeChild(script);
+        if (chartContainer.current) {
+          chartContainer.current.innerHTML = '';
         }
       }
     }
