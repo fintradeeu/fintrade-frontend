@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createChart, ColorType, CandlestickSeries, LineSeries, AreaSeries, BarSeries, BaselineSeries, HistogramSeries } from "lightweight-charts";
 import DashboardLayout from "../../components/DashboardLayout";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -30,9 +31,11 @@ import StrategyBuilderTab from "../../components/simulator/StrategyBuilderTab";
 import AdvancedAnalyticsTab from "../../components/simulator/AdvancedAnalyticsTab";
 import RiskCalculatorModal from "../../components/simulator/RiskCalculatorModal";
 
+const DEFAULT_SCRIP = { symbol: "RELIANCE", name: "Reliance Industries", price: 2950.45, change: 12.30, change_pct: 0.42, tv_symbol: "BSE:RELIANCE", exchange: "BSE EQ" };
+
 export default function TradingSimulator() {
   const [marketData, setMarketData] = useState<any[]>([]);
-  const [selectedInstrument, setSelectedInstrument] = useState<any>(null);
+  const [selectedInstrument, setSelectedInstrument] = useState<any>(DEFAULT_SCRIP);
   const [orderType, setOrderType] = useState<"buy" | "sell">("buy");
   const [orderStyle, setOrderStyle] = useState<"market" | "limit">("market");
   
@@ -87,63 +90,198 @@ export default function TradingSimulator() {
 
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const fetchingRef = useRef(false);
+  const chartRef = useRef<any>(null);
+  const seriesRef = useRef<any>(null);
+  const volumeSeriesRef = useRef<any>(null);
+  const lastPriceRef = useRef<number | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
+  // Hook 1: Create chart and initialize historical baseline candles
   useEffect(() => {
-    if (selectedInstrument && selectedInstrument.tv_symbol && chartContainerRef.current) {
-      chartContainerRef.current.innerHTML = '';
-      const containerId = `tv_chart_${selectedInstrument.symbol.replace(/[^a-zA-Z0-9]/g, '_')}`;
-      
-      const chartDiv = document.createElement("div");
-      chartDiv.id = containerId;
-      chartDiv.style.width = "100%";
-      chartDiv.style.height = "100%";
-      chartContainerRef.current.appendChild(chartDiv);
+    if (!selectedInstrument || !chartContainerRef.current) return;
 
-      const initWidget = () => {
-        if (typeof (window as any).TradingView !== 'undefined') {
-          try {
-            new (window as any).TradingView.widget({
-              "width": "100%",
-              "height": "100%",
-              "symbol": selectedInstrument.tv_symbol,
-              "interval": timeframe,
-              "timezone": "Asia/Kolkata",
-              "theme": "light", // Light theme matching Upstox
-              "style": chartStyle,
-              "locale": "en",
-              "enable_publishing": false,
-              "hide_top_toolbar": true, // We have our own mock toolbar
-              "hide_legend": false,
-              "save_image": false,
-              "container_id": containerId,
-              "backgroundColor": "#ffffff",
-              "gridColor": "rgba(229, 231, 235, 0.5)",
-              "toolbar_bg": "#ffffff"
-            });
-          } catch (e) {
-            console.error("TradingView widget init error", e);
-          }
-        }
-      };
-
-      if (typeof (window as any).TradingView !== 'undefined') {
-        initWidget();
-      } else {
-        const script = document.createElement("script");
-        script.src = "https://s3.tradingview.com/tv.js";
-        script.type = "text/javascript";
-        script.async = true;
-        script.onload = initWidget;
-        document.body.appendChild(script);
-      }
-      
-      return () => {
-        if (chartContainerRef.current) {
-          chartContainerRef.current.innerHTML = '';
-        }
-      };
+    if (chartRef.current) {
+      chartRef.current.remove();
+      chartRef.current = null;
     }
-  }, [selectedInstrument, chartStyle, timeframe]);
+    chartContainerRef.current.innerHTML = "";
+
+    const chart = createChart(chartContainerRef.current, {
+      width: chartContainerRef.current.clientWidth || 800,
+      height: chartContainerRef.current.clientHeight || 450,
+      layout: {
+        background: { type: ColorType.Solid, color: "#ffffff" },
+        textColor: "#334155",
+        fontFamily: "'Inter', sans-serif",
+      },
+      grid: {
+        vertLines: { color: "rgba(229, 231, 235, 0.5)" },
+        horzLines: { color: "rgba(229, 231, 235, 0.5)" },
+      },
+      crosshair: {
+        mode: 0,
+      },
+      rightPriceScale: {
+        borderColor: "#cbd5e1",
+        scaleMargins: {
+          top: 0.1,
+          bottom: 0.25,
+        },
+      },
+      timeScale: {
+        borderColor: "#cbd5e1",
+        timeVisible: true,
+        secondsVisible: false,
+      },
+    });
+
+    chartRef.current = chart;
+
+    const handleResize = () => {
+      if (chartContainerRef.current && chartRef.current) {
+        chartRef.current.applyOptions({
+          width: chartContainerRef.current.clientWidth,
+          height: chartContainerRef.current.clientHeight,
+        });
+      }
+    };
+    window.addEventListener("resize", handleResize);
+
+    let series: any;
+    if (chartStyle === "2") {
+      series = chart.addSeries(LineSeries, { color: "#2563eb", lineWidth: 2 });
+    } else if (chartStyle === "3") {
+      series = chart.addSeries(AreaSeries, {
+        lineColor: "#10b981",
+        topColor: "rgba(16, 185, 129, 0.4)",
+        bottomColor: "rgba(16, 185, 129, 0.0)",
+        lineWidth: 2,
+      });
+    } else if (chartStyle === "0") {
+      series = chart.addSeries(BarSeries, {
+        upColor: "#10b981",
+        downColor: "#ef4444",
+      });
+    } else if (chartStyle === "10") {
+      series = chart.addSeries(BaselineSeries, {
+        baseValue: { type: "price", price: selectedInstrument.price || 100 },
+        topLineColor: "#10b981",
+        topFillColor1: "rgba(16, 185, 129, 0.28)",
+        topFillColor2: "rgba(16, 185, 129, 0.05)",
+        bottomLineColor: "#ef4444",
+        bottomFillColor1: "rgba(239, 68, 68, 0.05)",
+        bottomFillColor2: "rgba(239, 68, 68, 0.28)",
+      });
+    } else {
+      series = chart.addSeries(CandlestickSeries, {
+        upColor: "#10b981",
+        downColor: "#ef4444",
+        borderVisible: false,
+        wickUpColor: "#10b981",
+        wickDownColor: "#ef4444",
+      });
+    }
+    seriesRef.current = series;
+
+    const volumeSeries = chart.addSeries(HistogramSeries, {
+      color: "#94a3b8",
+      priceFormat: { type: "volume" },
+      priceScaleId: "",
+    });
+    volumeSeries.priceScale().applyOptions({
+      scaleMargins: { top: 0.8, bottom: 0 },
+    });
+    volumeSeriesRef.current = volumeSeries;
+
+    const currentPrice = selectedInstrument.price || 100;
+    lastPriceRef.current = currentPrice;
+
+    const numCandles = 80;
+    const now = Math.floor(Date.now() / 1000);
+    const stepSeconds = timeframe === "1" ? 60 : timeframe === "5" ? 300 : timeframe === "15" ? 900 : timeframe === "60" ? 3600 : timeframe === "W" ? 604800 : 86400;
+    
+    const startTime = now - (numCandles * stepSeconds);
+    const mainData: any[] = [];
+    const volData: any[] = [];
+
+    let simPrice = currentPrice;
+    const prices: number[] = [currentPrice];
+    for (let i = 0; i < numCandles - 1; i++) {
+      const changePercent = (Math.random() - 0.49) * 0.015;
+      simPrice = simPrice / (1 + changePercent);
+      prices.unshift(simPrice);
+    }
+
+    for (let i = 0; i < numCandles; i++) {
+      const time = startTime + (i * stepSeconds);
+      const close = prices[i];
+      const prevClose = i > 0 ? prices[i - 1] : close * 0.998;
+      const open = prevClose;
+      const high = Math.max(open, close) * (1 + Math.random() * 0.004);
+      const low = Math.min(open, close) * (1 - Math.random() * 0.004);
+      const vol = Math.floor(1000 + Math.random() * 50000);
+
+      if (chartStyle === "2" || chartStyle === "3" || chartStyle === "10") {
+        mainData.push({ time, value: close });
+      } else {
+        mainData.push({ time, open, high, low, close });
+      }
+
+      volData.push({
+        time,
+        value: vol,
+        color: close >= open ? "rgba(16, 185, 129, 0.4)" : "rgba(239, 68, 68, 0.4)",
+      });
+    }
+
+    series.setData(mainData);
+    volumeSeries.setData(volData);
+    chart.timeScale().fitContent();
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (chartRef.current) {
+        chartRef.current.remove();
+        chartRef.current = null;
+      }
+    };
+  }, [selectedInstrument?.symbol, chartStyle, timeframe]);
+
+  // Hook 2: Dynamic real-time live updates when simulator price changes
+  useEffect(() => {
+    if (!seriesRef.current || !selectedInstrument?.price) return;
+    const newPrice = selectedInstrument.price;
+    if (newPrice === lastPriceRef.current) return;
+
+    const now = Math.floor(Date.now() / 1000);
+    const stepSeconds = timeframe === "1" ? 60 : timeframe === "5" ? 300 : timeframe === "15" ? 900 : timeframe === "60" ? 3600 : timeframe === "W" ? 604800 : 86400;
+    
+    const lastBarTime = Math.floor(now / stepSeconds) * stepSeconds;
+
+    try {
+      if (chartStyle === "2" || chartStyle === "3" || chartStyle === "10") {
+        seriesRef.current.update({
+          time: lastBarTime,
+          value: newPrice,
+        });
+      } else {
+        const prevPrice = lastPriceRef.current || newPrice * 0.999;
+        const tickOpen = selectedInstrument.open || prevPrice;
+        const tickHigh = selectedInstrument.high || Math.max(prevPrice, newPrice);
+        const tickLow = selectedInstrument.low || Math.min(prevPrice, newPrice);
+        seriesRef.current.update({
+          time: lastBarTime,
+          open: tickOpen,
+          high: tickHigh,
+          low: tickLow,
+          close: newPrice,
+        });
+      }
+      lastPriceRef.current = newPrice;
+    } catch (e) {
+      console.warn("Chart update error", e);
+    }
+  }, [selectedInstrument?.price, selectedInstrument?.timestamp, chartStyle, timeframe]);
 
   const availableScrips = [
     { symbol: "RELIANCE", name: "Reliance Industries", price: 2950.45, change: 12.30, change_pct: 0.42, tv_symbol: "BSE:RELIANCE", exchange: "BSE EQ" },
@@ -283,20 +421,146 @@ export default function TradingSimulator() {
     fetchMarketData();
 
     let active = true;
-    const poll = async () => {
+    let reconnectTimeoutId: any = null;
+
+    const connectWs = () => {
       if (!active) return;
-      await fetchMarketData();
-      if (active) {
-        setTimeout(poll, 5000);
+      try {
+        const base = api.defaults.baseURL || window.location.origin;
+        const wsBase = base.replace(/^http/, "ws");
+        const wsUrl = `${wsBase.replace(/\/$/, "")}/simulator/ws/market`;
+        const ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+          if (!active) return;
+          const symbols = Array.from(new Set([
+            "RELIANCE", "TCS", "HDFCBANK", "INFY", "SENSEX", "NIFTY", "TATAMOTORS", "ICICIBANK", "WIPRO", "ITC", "BTC/USD", "AAPL",
+            ...customSymbols,
+            ...(selectedInstrument ? [selectedInstrument.symbol] : [])
+          ]));
+          ws.send(JSON.stringify({ action: "subscribe", symbols }));
+        };
+
+        ws.onmessage = (event) => {
+          if (!active) return;
+          try {
+            const msg = JSON.parse(event.data);
+            if (msg.type === "tick" && Array.isArray(msg.data)) {
+              const nameMap: any = {
+                "RELIANCE": "Reliance Industries",
+                "TCS": "Tata Consultancy",
+                "HDFCBANK": "HDFC Bank",
+                "INFY": "Infosys Ltd",
+                "SENSEX": "BSE Sensex",
+                "NIFTY": "Nifty 50",
+                "TATAMOTORS": "Tata Motors",
+                "ICICIBANK": "ICICI Bank",
+                "WIPRO": "Wipro Ltd",
+                "ITC": "ITC Limited",
+                "BTC/USD": "Bitcoin USD",
+                "AAPL": "Apple Inc."
+              };
+              const tvSymbolMap: any = {
+                "SENSEX": "BSE:SENSEX",
+                "NIFTY": "NSE:NIFTY50",
+                "BANKNIFTY": "NSE:BANKNIFTY",
+                "RELIANCE": "BSE:RELIANCE",
+                "TCS": "BSE:TCS",
+                "HDFCBANK": "BSE:HDFCBANK",
+                "INFY": "BSE:INFY",
+                "TATAMOTORS": "BSE:TATAMOTORS",
+                "ICICIBANK": "BSE:ICICIBANK",
+                "WIPRO": "BSE:WIPRO",
+                "ITC": "BSE:ITC",
+                "SBIN": "BSE:SBIN",
+                "BHARTIARTL": "BSE:BHARTIARTL",
+                "LT": "BSE:LT",
+                "HINDUNILVR": "BSE:HINDUNILVR",
+                "AXISBANK": "BSE:AXISBANK",
+                "KOTAKBANK": "BSE:KOTAKBANK",
+                "MARUTI": "BSE:MARUTI",
+                "SUNPHARMA": "BSE:SUNPHARMA",
+                "TITAN": "BSE:TITAN",
+                "BAJFINANCE": "BSE:BAJFINANCE",
+                "ASIANPAINT": "BSE:ASIANPAINT",
+                "HCLTECH": "BSE:HCLTECH",
+                "BTC/USD": "BINANCE:BTCUSDT",
+                "ETH/USD": "BINANCE:ETHUSDT",
+                "SOL/USD": "BINANCE:SOLUSDT",
+                "AAPL": "NASDAQ:AAPL",
+                "GOOGL": "NASDAQ:GOOGL",
+                "AMZN": "NASDAQ:AMZN",
+                "META": "NASDAQ:META",
+              };
+              const enrichedData = msg.data.map((i: any) => ({
+                ...i,
+                name: i.name || nameMap[i.symbol] || i.symbol,
+                tv_symbol: i.tv_symbol || tvSymbolMap[i.symbol] || (i.symbol.includes("/") ? `BINANCE:${i.symbol.replace("/", "")}` : `BSE:${i.symbol}`)
+              }));
+
+              setMarketData((prev: any[]) => {
+                const map = new Map(prev.map(item => [item.symbol, item]));
+                enrichedData.forEach((item: any) => {
+                  if (map.has(item.symbol)) {
+                    map.set(item.symbol, { ...map.get(item.symbol), ...item });
+                  } else {
+                    map.set(item.symbol, item);
+                  }
+                });
+                return Array.from(map.values());
+              });
+
+              setSelectedInstrument((prev: any) => {
+                if (!prev) return DEFAULT_SCRIP;
+                const updatedTick = enrichedData.find((i: any) => i.symbol === prev.symbol);
+                if (updatedTick) {
+                  return { ...prev, ...updatedTick };
+                }
+                return prev;
+              });
+            }
+          } catch (e) {
+            console.warn("WebSocket parse error", e);
+          }
+        };
+
+        ws.onclose = () => {
+          if (!active) return;
+          wsRef.current = null;
+          reconnectTimeoutId = setTimeout(connectWs, 2000);
+        };
+
+        ws.onerror = () => {
+          ws.close();
+        };
+      } catch (err) {
+        console.warn("WS connect failed", err);
       }
     };
 
-    const timeoutId = setTimeout(poll, 5000);
+    connectWs();
+
     return () => {
       active = false;
-      clearTimeout(timeoutId);
+      if (reconnectTimeoutId) clearTimeout(reconnectTimeoutId);
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
     };
   }, []);
+
+  useEffect(() => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      const symbols = Array.from(new Set([
+        "RELIANCE", "TCS", "HDFCBANK", "INFY", "SENSEX", "NIFTY", "TATAMOTORS", "ICICIBANK", "WIPRO", "ITC", "BTC/USD", "AAPL",
+        ...customSymbols,
+        ...(selectedInstrument ? [selectedInstrument.symbol] : [])
+      ]));
+      wsRef.current.send(JSON.stringify({ action: "subscribe", symbols }));
+    }
+  }, [customSymbols, selectedInstrument?.symbol]);
 
   const loadData = async () => {
     setLoading(true);
@@ -374,7 +638,8 @@ export default function TradingSimulator() {
     }
   };
 
-  const getExchangeLabel = (symbol: string) => {
+  const getExchangeLabel = (symbol?: string) => {
+    if (!symbol || typeof symbol !== "string") return "EQUITY";
     const sym = symbol.toUpperCase();
     if (sym === "SENSEX") return "BSE";
     if (["NIFTY", "RELIANCE", "TCS", "HDFCBANK", "INFY", "TATAMOTORS", "ICICIBANK", "WIPRO", "ITC", "SBIN", "BHARTIARTL", "LT", "HINDUNILVR", "AXISBANK"].includes(sym)) return "NSE EQ";
@@ -383,9 +648,25 @@ export default function TradingSimulator() {
     return "EQUITY";
   };
 
-  // Portfolio calculations
+  // Portfolio calculations synchronized with live WebSocket ticks
+  const livePositions = positions.map((pos) => {
+    const liveScrip = marketData.find((m) => m.symbol === pos.symbol);
+    const currentPrice = liveScrip ? liveScrip.price : pos.current_price || pos.entry_price;
+    const diff = pos.side === "buy" ? (currentPrice - pos.entry_price) : (pos.entry_price - currentPrice);
+    const livePnl = diff * pos.quantity;
+    return {
+      ...pos,
+      current_price: currentPrice,
+      unrealized_pnl: livePnl
+    };
+  });
+
+  const staticOpenPnl = positions.reduce((acc, pos) => acc + (pos.unrealized_pnl || 0), 0);
+  const liveOpenPnl = livePositions.reduce((acc, pos) => acc + (pos.unrealized_pnl || 0), 0);
+  const baseTotalPnl = performance?.total_pnl || 0;
+  const totalPnl = baseTotalPnl - staticOpenPnl + liveOpenPnl;
+
   const initialCapital = performance?.initial_balance || 500000;
-  const totalPnl = performance?.total_pnl || 0;
   const portfolioValue = initialCapital + totalPnl;
   const pnlPercentage = initialCapital > 0 ? ((totalPnl / initialCapital) * 100).toFixed(2) : "0.00";
 
@@ -453,7 +734,7 @@ export default function TradingSimulator() {
               <div className="flex flex-col">
                 <span className="text-gray-600 text-xs font-semibold uppercase">NIFTY</span>
                 <div className="flex items-center gap-1.5 font-medium text-xs">
-                  <span className="text-gray-800">{niftyObj.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                  <span className="text-gray-800">{niftyObj.price.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   <span className={`${niftyObj.change >= 0 ? "text-green-600" : "text-red-500"}`}>
                     {niftyObj.change >= 0 ? "+" : ""}{Math.abs(niftyObj.change).toFixed(2)} ({niftyObj.change >= 0 ? "+" : ""}{niftyObj.change_pct}%)
                   </span>
@@ -462,7 +743,7 @@ export default function TradingSimulator() {
               <div className="flex flex-col">
                 <span className="text-gray-600 text-xs font-semibold uppercase flex items-center gap-1">SENSEX <span className="bg-orange-100 text-orange-600 text-[9px] px-1 rounded font-bold">EXPIRY</span></span>
                 <div className="flex items-center gap-1.5 font-medium text-xs">
-                  <span className="text-gray-800">{sensexObj.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                  <span className="text-gray-800">{sensexObj.price.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   <span className={`${sensexObj.change >= 0 ? "text-green-600" : "text-red-500"}`}>
                     {sensexObj.change >= 0 ? "+" : ""}{Math.abs(sensexObj.change).toFixed(2)} ({sensexObj.change >= 0 ? "+" : ""}{sensexObj.change_pct}%)
                   </span>
@@ -542,16 +823,16 @@ export default function TradingSimulator() {
                   >
                     <div className="flex flex-col">
                       <span className="font-semibold text-sm text-gray-800">
-                        {item.symbol.split('/')[0]}
+                        {(item?.symbol || "RELIANCE").split('/')[0]}
                       </span>
                       <span className="text-[10px] text-gray-500 font-medium">
-                        {getExchangeLabel(item.symbol)}
+                        {getExchangeLabel(item?.symbol)}
                       </span>
                     </div>
 
                     <div className="flex flex-col items-end">
                       <span className={`text-sm font-semibold ${isBullish ? "text-[#10b981]" : "text-[#ef4444]"}`}>
-                        {item.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        {item.price.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                       <span className={`text-[11px] font-medium ${isBullish ? "text-[#10b981]" : "text-[#ef4444]"}`}>
                         {isBullish ? "+" : ""}{Math.abs(item.change).toFixed(2)} ({isBullish ? "+" : ""}{item.change_pct}%)
@@ -587,7 +868,7 @@ export default function TradingSimulator() {
             <div className={`border-b border-gray-200 px-3 py-2 flex items-center justify-between text-gray-600 text-sm bg-white shadow-sm z-10 relative ${["Journal", "Strategy", "Analytics"].includes(activeTab) ? "hidden" : ""}`}>
               <div className="flex items-center gap-4">
                 <Search onClick={() => setShowAddModal(true)} size={16} className="cursor-pointer hover:text-gray-900" />
-                <span className="font-bold text-gray-800">{selectedInstrument?.symbol.split('/')[0]} {getExchangeLabel(selectedInstrument?.symbol)}</span>
+                <span className="font-bold text-gray-800">{(selectedInstrument?.symbol || "RELIANCE").split('/')[0]} {getExchangeLabel(selectedInstrument?.symbol)}</span>
                 <button onClick={() => setShowAddModal(true)} className="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 cursor-pointer">
                   <Plus size={12} />
                 </button>
@@ -740,17 +1021,17 @@ export default function TradingSimulator() {
                   <div className="px-4 py-4 flex justify-between items-start">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h2 className="text-lg font-bold text-gray-900 leading-none">{selectedInstrument?.symbol.split('/')[0]}</h2>
+                        <h2 className="text-lg font-bold text-gray-900 leading-none">{(selectedInstrument?.symbol || "RELIANCE").split('/')[0]}</h2>
                         <span className="w-5 h-5 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center font-bold text-[10px]">T</span>
                       </div>
                       <span className="text-xs text-gray-500 font-medium">{getExchangeLabel(selectedInstrument?.symbol)}</span>
                     </div>
                     <div className="text-right">
-                      <div className={`text-lg font-bold leading-none ${selectedInstrument?.change >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}`}>
-                        {selectedInstrument?.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      <div className={`text-lg font-bold leading-none ${(selectedInstrument?.change || 0) >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                        {(selectedInstrument?.price || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
-                      <div className={`text-xs font-medium ${selectedInstrument?.change >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}`}>
-                        {selectedInstrument?.change >= 0 ? "+" : ""}{Math.abs(selectedInstrument?.change).toFixed(2)} ({selectedInstrument?.change >= 0 ? "+" : ""}{selectedInstrument?.change_pct}%)
+                      <div className={`text-xs font-medium ${(selectedInstrument?.change || 0) >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                        {(selectedInstrument?.change || 0) >= 0 ? "+" : ""}{Math.abs(selectedInstrument?.change || 0).toFixed(2)} ({(selectedInstrument?.change || 0) >= 0 ? "+" : ""}{selectedInstrument?.change_pct || 0}%)
                       </div>
                     </div>
                   </div>
@@ -1032,7 +1313,7 @@ export default function TradingSimulator() {
                                 </span>
                               </div>
                               <div className="flex justify-between items-center text-gray-500 text-[11px]">
-                                <span>Price: ₹{trade.entry_price?.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                                <span>Price: ₹{trade.entry_price?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 <span className={`font-bold ${trade.status === 'open' ? 'text-blue-600' : (isProfit ? 'text-[#10b981]' : 'text-[#ef4444]')}`}>
                                   {trade.status === 'open' ? 'OPEN' : `${isProfit ? '+' : ''}₹${Math.round(trade.pnl || 0)}`}
                                 </span>
@@ -1064,10 +1345,10 @@ export default function TradingSimulator() {
                     {/* Positions List */}
                     <h3 className="font-bold text-gray-800 text-xs">Open Positions</h3>
                     <div className="space-y-2">
-                      {positions.length === 0 ? (
+                      {livePositions.length === 0 ? (
                         <p className="text-xs text-gray-500 italic text-center py-4">No open positions.</p>
                       ) : (
-                        positions.map((pos) => {
+                        livePositions.map((pos) => {
                           const isProfit = pos.unrealized_pnl >= 0;
                           return (
                             <div key={pos.id} className="bg-white border border-gray-200 rounded-md p-3 shadow-sm">
@@ -1180,7 +1461,7 @@ export default function TradingSimulator() {
                       <div className="flex items-center gap-4">
                         <div className="text-right">
                           <div className={`font-bold text-sm ${isBullish ? "text-[#10b981]" : "text-[#ef4444]"}`}>
-                            ₹{scrip.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                            ₹{scrip.price.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </div>
                           <div className={`text-[11px] font-medium ${isBullish ? "text-[#10b981]" : "text-[#ef4444]"}`}>
                             {isBullish ? "+" : ""}{scrip.change} ({isBullish ? "+" : ""}{scrip.change_pct}%)
